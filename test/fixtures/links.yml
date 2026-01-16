@@ -1,0 +1,29 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+# This model initially had no columns defined. If you add columns to the
+# model remove the "{}" from the fixture names and add the columns immediately
+# below each fixture, per the syntax in the comments below
+#
+# == Schema Information
+#
+# Table name: links
+#
+#  id            :bigint           not null, primary key
+#  active        :boolean          default(TRUE)
+#  linkable_type :string(255)      not null
+#  sort_order    :integer
+#  text          :string(255)
+#  url           :string(255)      not null
+#  created_at    :datetime         not null
+#  updated_at    :datetime         not null
+#  linkable_id   :bigint           not null
+#
+# Indexes
+#
+#  index_links_on_linkable  (linkable_type,linkable_id)
+#
+one: {}
+# column: value
+#
+two: {}
+# column: value

@@ -1,0 +1,29 @@
+# == Schema Information
+#
+# Table name: unit_people
+#
+#  id         :bigint           not null, primary key
+#  part       :integer          default("vocal"), not null
+#  status     :integer          default("active"), not null
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#  person_id  :bigint           not null
+#  unit_id    :bigint           not null
+#
+# Indexes
+#
+#  index_unit_people_on_person_id  (person_id)
+#  index_unit_people_on_unit_id    (unit_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (person_id => people.id)
+#  fk_rails_...  (unit_id => units.id)
+#
+require "test_helper"
+
+class UnitPersonTest < ActiveSupport::TestCase
+  # test "the truth" do
+  #   assert true
+  # end
+end

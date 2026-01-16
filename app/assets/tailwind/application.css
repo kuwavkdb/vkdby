@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+@theme {
+  --color-unit: #6366f1;
+  --color-person: #ec4899;
+}
+
+@layer base {
+  body {
+    @apply bg-linear-to-br from-slate-50 to-slate-200 dark:from-slate-900 dark:to-slate-800 text-slate-900 dark:text-slate-100 min-h-screen antialiased font-sans;
+  }
+}
