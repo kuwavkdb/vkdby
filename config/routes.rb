@@ -13,9 +13,8 @@ Rails.application.routes.draw do
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
-  resources :people, param: :key, only: [:show]
-  resources :units, param: :key, only: [:show]
+  resources :people, param: :key, only: [ :show ]
+  resources :units, param: :key, only: [ :show ]
 
   get "/:key", to: "profiles#show", as: :profile
-
 end
