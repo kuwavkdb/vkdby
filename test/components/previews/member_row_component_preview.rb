@@ -33,7 +33,7 @@ class MemberRowComponentPreview < ViewComponent::Preview
   def with_logs
     # Using Struct to mock the object graph since AR associations on new records can be tricky
     mock_unit = Struct.new(:name, :key, keyword_init: true).new(name: "Other Unit", key: "other_unit")
-    
+
     mock_log1 = Struct.new(:log_date, :status, :unit, :unit_name, :name, :sort_order, keyword_init: true).new(
       log_date: Date.today.to_s,
       status: "join",
@@ -42,7 +42,7 @@ class MemberRowComponentPreview < ViewComponent::Preview
       name: nil,
       sort_order: 1
     )
-    
+
     mock_log2 = Struct.new(:log_date, :status, :unit, :unit_name, :name, :sort_order, keyword_init: true).new(
       log_date: (Date.today - 365).to_s,
       status: "stay",
@@ -55,7 +55,7 @@ class MemberRowComponentPreview < ViewComponent::Preview
     mock_person = Struct.new(:name, :key, :person_logs, keyword_init: true).new(
       name: "Logged Person",
       key: "logged_person",
-      person_logs: [mock_log1, mock_log2]
+      person_logs: [ mock_log1, mock_log2 ]
     )
 
     mock_member = Struct.new(:person, :part, :status, keyword_init: true).new(
