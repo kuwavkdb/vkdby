@@ -1,10 +1,10 @@
 class ProfilesController < ApplicationController
   def show
-    @resource = Unit.includes(:links, unit_people: :person).find_by(key: params[:key]) || 
+    @resource = Unit.includes(:links, unit_people: :person).find_by(key: params[:key]) ||
                 Person.includes(:person_logs, :links).find_by!(key: params[:key])
-    
+
     @links = @resource.links.where(active: true).order(:sort_order)
-    
+
     if @resource.is_a?(Person)
       @logs = @resource.person_logs.order(:sort_order, :log_date)
     elsif @resource.is_a?(Unit)
@@ -15,9 +15,9 @@ class ProfilesController < ApplicationController
       # ユニットの履歴を統合 (UnitLog + PersonLog)
       unit_logs = @resource.unit_logs
       person_logs = @resource.person_logs.includes(:person)
-      @history = (unit_logs + person_logs).sort_by { |l| [l.log_date.to_s, l.is_a?(PersonLog) ? 1 : 0] }
+      @history = (unit_logs + person_logs).sort_by { |l| [ l.log_date.to_s, l.is_a?(PersonLog) ? 1 : 0 ] }
     end
-    
+
     respond_to do |format|
       format.html
       format.json { render json: @resource }

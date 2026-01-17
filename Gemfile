@@ -59,6 +59,8 @@ group :development do
   gem "web-console"
   gem "annotaterb"
   gem "tailwindcss-rails"
+  gem "view_component"
+  gem "lookbook"
 end
 
 group :test do
