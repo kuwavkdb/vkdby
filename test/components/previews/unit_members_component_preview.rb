@@ -13,11 +13,11 @@ class UnitMembersComponentPreview < ViewComponent::Preview
     )
 
     unit = Unit.new(name: "Unit Name")
-    
+
     render(UnitMembersComponent.new(
       unit: unit,
-      active_members: [active_member],
-      past_members: [past_member]
+      active_members: [ active_member ],
+      past_members: [ past_member ]
     ))
   end
 
@@ -31,7 +31,7 @@ class UnitMembersComponentPreview < ViewComponent::Preview
 
     render(UnitMembersComponent.new(
       unit: unit,
-      active_members: [active_member],
+      active_members: [ active_member ],
       past_members: []
     ))
   end
