@@ -31,7 +31,7 @@ class PersonLog < ApplicationRecord
   belongs_to :unit, optional: true
 
   enum :status, { stay: 0, join: 1, leave: 2, pending: 3, rename: 4, convert: 5, retirement: 90, passed_away: 98, unknown: 99 }, prefix: true
-  enum :part, { vocal: 0, guitar: 1, bass: 2, drums: 3, keyboard: 4, dj: 5 }
+  enum :part, { vocal: 0, guitar: 1, bass: 2, drums: 3, keyboard: 4, dj: 5, etc: 99 }
 
   validates :name, presence: true
   validates :status, presence: true
