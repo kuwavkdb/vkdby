@@ -1,0 +1,18 @@
+  <!DOCTYPE html>
+<html>
+  <head>
+    <title>Component Preview</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+  </head>
+
+  <body class="bg-gray-100 dark:bg-slate-900 min-h-screen" style="padding: 20px;">
+    <div style="width: 90%; max-width: 1200px; margin: 0 auto;">
+      <%= yield %>
+    </div>
+  </body>
+</html>

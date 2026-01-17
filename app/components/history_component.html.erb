@@ -1,0 +1,37 @@
+<section>
+  <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">History</h2>
+  <div class="grid gap-6 relative before:absolute before:left-3 before:top-0 before:bottom-0 before:w-0.5 before:bg-slate-200 dark:before:bg-slate-700">
+    <% @logs.each do |log| %>
+      <div class="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-5 pl-10 relative border border-slate-100 dark:border-slate-700 hover:translate-x-1 transition-transform group">
+        <div class="absolute left-[0.45rem] top-6 w-2.5 h-2.5 bg-person border-2 border-white dark:border-slate-800 rounded-full z-10 shadow-[0_0_0_2px_rgba(226,232,240,1)] dark:shadow-[0_0_0_2px_rgba(51,65,85,1)]"></div>
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-xs font-black text-slate-400 dark:text-slate-500 tracking-tighter"><%= log.log_date %></span>
+          <% if log.is_a?(PersonLog) %>
+            <% unless log.status == "stay" %>
+              <span class="text-[0.65rem] font-black uppercase px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"><%= log.status %></span>
+            <% end %>
+          <% elsif log.is_a?(UnitLog) %>
+            <span class="text-[0.65rem] font-black uppercase px-2 py-0.5 rounded-md bg-unit/10 text-unit"><%= log.phenomenon.capitalize %></span>
+          <% end %>
+        </div>
+        <div>
+          <% if log.text.present? %>
+            <p class="text-sm font-bold text-slate-700 dark:text-slate-300 leading-relaxed"><%= log.text %></p>
+          <% elsif log.is_a?(PersonLog) %>
+            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">
+              <%= link_to log.person.name, profile_path(log.person.key), class: "hover:text-person transition-colors underline decoration-slate-200 dark:decoration-slate-700 underline-offset-4" %>
+              <span class="text-slate-400 dark:text-slate-500 font-medium ml-1">
+                at <%= log.unit_name.presence || log.unit&.name || "Unknown Unit" %>
+              </span>
+            </h3>
+            <% if log.part.present? %>
+              <p class="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider"><%= log.part.capitalize %></p>
+            <% end %>
+          <% elsif log.is_a?(UnitLog) %>
+            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tight"><%= log.phenomenon.capitalize.gsub('_', ' ') %></h3>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</section>

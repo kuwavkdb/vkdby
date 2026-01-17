@@ -1,0 +1,9 @@
+<header class="p-6 md:p-8 text-center text-white relative <%= bg_class %>">
+  <div class="text-[0.7rem] font-black uppercase tracking-widest opacity-80 mb-2">
+    <%= type_label %>
+  </div>
+  <h1 class="text-3xl md:text-4xl font-black mb-1 tracking-tight"><%= name %></h1>
+  <% if name_kana.present? %>
+    <p class="text-sm md:text-base opacity-90 font-medium"><%= name_kana %></p>
+  <% end %>
+</header>

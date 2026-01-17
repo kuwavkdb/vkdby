@@ -1,0 +1,21 @@
+<section class="mt-12">
+  <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">Links</h2>
+  <ul class="grid gap-3">
+    <% @links.each do |link| %>
+      <% if link == embed_target %>
+        <li class="mt-2">
+          <div class="relative pb-[56.25%] h-0 overflow-hidden rounded-2xl shadow-lg ring-1 ring-slate-200 dark:ring-slate-700">
+            <iframe src="https://www.youtube.com/embed/<%= link.youtube_video_id %>" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="absolute top-0 left-0 w-full h-full border-0"></iframe>
+          </div>
+        </li>
+      <% else %>
+        <li>
+          <%= link_to link.url, target: "_blank", rel: "noopener", class: "group block p-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700 rounded-xl hover:border-unit hover:scale-[1.02] transition-all relative pr-10" do %>
+            <span class="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-unit"><%= link.display_text %></span>
+            <span class="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-unit">→</span>
+          <% end %>
+        </li>
+      <% end %>
+    <% end %>
+  </ul>
+</section>
