@@ -51,6 +51,6 @@ class PersonLog < ApplicationRecord
   }
 
   def status_text
-    STATUS_TRANSLATIONS[status] || status&.humanize
+    status_alias || STATUS_TRANSLATIONS[status] || status&.humanize
   end
 end

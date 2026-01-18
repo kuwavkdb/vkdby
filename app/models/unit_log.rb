@@ -35,6 +35,6 @@ class UnitLog < ApplicationRecord
   }
 
   def phenomenon_text
-    PHENOMENON_TRANSLATIONS[phenomenon] || phenomenon.humanize
+    status_alias || PHENOMENON_TRANSLATIONS[phenomenon] || phenomenon&.humanize
   end
 end
