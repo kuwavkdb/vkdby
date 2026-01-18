@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_18_041805) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_18_135216) do
   create_table "links", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.boolean "active", default: true
     t.datetime "created_at", null: false
@@ -50,6 +50,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_18_041805) do
     t.bigint "person_id", null: false
     t.integer "sort_order"
     t.integer "status", null: false
+    t.string "status_alias"
     t.text "text"
     t.bigint "unit_id"
     t.string "unit_key"
@@ -64,6 +65,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_18_041805) do
     t.datetime "created_at", null: false
     t.date "log_date"
     t.integer "phenomenon"
+    t.string "status_alias"
     t.text "text"
     t.bigint "unit_id", null: false
     t.datetime "updated_at", null: false

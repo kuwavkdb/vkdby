@@ -23,4 +23,10 @@ class UnitHistoryItemComponentPreview < ViewComponent::Preview
 
     render(UnitHistoryItemComponent.new(log: log))
   end
+  def with_alias
+    unit = Unit.new(name: "Unit Name", key: "unit_key")
+    log = UnitLog.new(log_date: Date.today, phenomenon: "finish", status_alias: "集結")
+
+    render(UnitHistoryItemComponent.new(log: log))
+  end
 end

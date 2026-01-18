@@ -24,4 +24,12 @@ class PersonHistoryItemComponentPreview < ViewComponent::Preview
 
     render(PersonHistoryItemComponent.new(log: log))
   end
+
+  def with_alias
+    person = Person.new(name: "Person Name", key: "person_key")
+    unit = Unit.new(name: "Unit Name", key: "unit_key")
+    log = PersonLog.new(log_date: Date.today, status: "leave", status_alias: "卒業", person: person, unit: unit)
+
+    render(PersonHistoryItemComponent.new(log: log))
+  end
 end
