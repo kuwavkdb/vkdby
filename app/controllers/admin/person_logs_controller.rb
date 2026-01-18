@@ -55,7 +55,7 @@ module Admin
     end
 
     def person_log_params
-      params.require(:person_log).permit(:log_date, :status, :status_alias, :unit_name, :unit_key, :name, :part, :text)
+      params.require(:person_log).permit(:log_date, :status, :status_alias, :unit_id, :unit_name, :unit_key, :name, :part, :text)
     end
   end
 end
