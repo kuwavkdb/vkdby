@@ -17,7 +17,7 @@ class UnitHistoryComponentPreview < ViewComponent::Preview
     logs = [
       PersonLog.new(log_date: Date.today, status: "join", person: person, unit: unit, part: "guitar"),
       PersonLog.new(log_date: Date.today - 1.year, status: "leave", person: person, unit: unit, part: nil),
-      UnitLog.new(log_date: Date.today - 2.years, phenomenon: "form")
+      UnitLog.new(log_date: Date.today - 2.years, phenomenon: "announcement")
     ]
     render(UnitHistoryComponent.new(unit: unit, logs: logs))
   end
