@@ -13,7 +13,7 @@ class UnitHistoryComponentPreview < ViewComponent::Preview
   def with_member_logs
     unit = Unit.new(name: "My Unit", key: "my_unit")
     person = Person.new(name: "Member Name", key: "member_key")
-    
+
     logs = [
       PersonLog.new(log_date: Date.today, status: "join", person: person, unit: unit, part: "guitar"),
       PersonLog.new(log_date: Date.today - 1.year, status: "leave", person: person, unit: unit, part: nil),
