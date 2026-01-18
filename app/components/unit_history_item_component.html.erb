@@ -3,9 +3,7 @@
   <div class="flex justify-between items-center mb-2">
     <span class="text-xs font-black text-slate-400 dark:text-slate-500 tracking-tighter"><%= @log.log_date %></span>
     <% if @log.is_a?(PersonLog) %>
-      <% unless @log.status == "stay" %>
-        <span class="text-[0.65rem] font-black uppercase px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"><%= @log.status_text %></span>
-      <% end %>
+      <!-- Status badge removed for PersonLog -->
     <% elsif @log.is_a?(UnitLog) %>
       <span class="text-[0.65rem] font-black uppercase px-2 py-0.5 rounded-md bg-unit/10 text-unit"><%= @log.phenomenon_text %></span>
     <% end %>
@@ -14,6 +12,7 @@
     <% if @log.is_a?(PersonLog) %>
       <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">
         <%= link_to @log.person.name, profile_path(@log.person.key), class: "hover:text-person transition-colors" %>
+        <span class="text-xs font-normal text-slate-500 ml-1"><%= @log.status_text %></span>
       </h3>
     <% elsif @log.is_a?(UnitLog) %>
       <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tight"><%= @log.phenomenon_text %></h3>
