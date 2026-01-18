@@ -90,10 +90,19 @@
     <%= form.submit class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
   </div>
 
-  <div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
-    <div class="flex justify-between items-center">
-      <h3 class="text-lg font-medium text-gray-900 dark:text-white">Career Logs</h3>
-      <%= link_to "Manage Logs (#{person.person_logs.count})", admin_person_person_logs_path(person), class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800" %>
+  <% if person.persisted? %>
+    <div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Career Logs</h3>
+        <%= link_to "Manage Logs (#{person.person_logs.count})", admin_person_person_logs_path(person), class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800" %>
+      </div>
     </div>
-  </div>
+  <% else %>
+    <div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Career Logs</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Save this person to manage logs.</p>
+      </div>
+    </div>
+  <% end %>
 <% end %>
