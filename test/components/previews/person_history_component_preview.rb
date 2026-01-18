@@ -8,7 +8,7 @@ class PersonHistoryComponentPreview < ViewComponent::Preview
     logs = [
       PersonLog.new(log_date: Date.today, status: "join", person: person, unit: unit, part: "vocal"),
       PersonLog.new(log_date: Date.today - 1.year, status: "stay", person: person, unit: unit),
-      PersonLog.new(log_date: Date.today - 2.years, text: "Some text log", person: person, unit: unit),
+      PersonLog.new(log_date: Date.today - 2.years, text: "Some text log", status: "stay", person: person, unit: unit),
       PersonLog.new(log_date: Date.today - 3.years, status: "rename", name: "Old Person Name", unit: unit),
       PersonLog.new(log_date: Date.today - 4.years, status: "rename", name: "Older Person Name", unit_name: "Old Unit Name")
     ]
