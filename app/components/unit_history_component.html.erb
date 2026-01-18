@@ -17,25 +17,7 @@
         <div>
           <% if log.is_a?(PersonLog) %>
             <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">
-
-                <% if @resource.is_a?(Unit) %>
-                  <%= link_to log.person.name, profile_path(log.person.key), class: "hover:text-person transition-colors" %>
-                <% else %>
-                  <% if log.status == "rename" %>
-                    <%= log.name %>
-                    <span class="text-slate-400 font-normal ml-1">
-                      <% if log.unit %>
-                        (<%= link_to log.unit.name, profile_path(log.unit.key), class: "hover:text-person transition-colors" %>)
-                      <% elsif log.unit_name %>
-                        (<%= log.unit_name %>)
-                      <% end %>
-                    </span>
-                  <% elsif log.unit %>
-                    <%= link_to log.unit.name, profile_path(log.unit.key), class: "hover:text-person transition-colors" %>
-                  <% else %>
-                    <%= log.unit_name || "Unknown Unit" %>
-                  <% end %>
-                <% end %>
+              <%= link_to log.person.name, profile_path(log.person.key), class: "hover:text-person transition-colors" %>
             </h3>
           <% elsif log.is_a?(UnitLog) %>
             <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tight"><%= log.phenomenon_text %></h3>

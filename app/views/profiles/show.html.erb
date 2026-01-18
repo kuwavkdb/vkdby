@@ -18,11 +18,10 @@
             ) %>
           <% end %>
 
-          <% if (@resource.is_a?(Person) && @logs.present?) || (@resource.is_a?(Unit) && @history.present?) %>
-            <%
-              logs_to_display = @resource.is_a?(Person) ? @logs : @history
-            %>
-            <%= render HistoryComponent.new(logs: logs_to_display, resource: @resource) %>
+          <% if @resource.is_a?(Person) && @logs.present? %>
+            <%= render PersonHistoryComponent.new(person: @resource, logs: @logs) %>
+          <% elsif @resource.is_a?(Unit) && @history.present? %>
+            <%= render UnitHistoryComponent.new(unit: @resource, logs: @history) %>
           <% end %>
         </div>
       </div>
