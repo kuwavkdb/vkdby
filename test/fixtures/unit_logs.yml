@@ -22,10 +22,10 @@
 #
 one:
   unit: one
-  date: 2026-01-14
+  log_date: 2026-01-14
   phenomenon: 1
 
 two:
   unit: two
-  date: 2026-01-14
+  log_date: 2026-01-14
   phenomenon: 1

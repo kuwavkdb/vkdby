@@ -1,5 +1,13 @@
-<h1>User#welcome_email</h1>
-
+<h1>Welcome back to VKDBY, <%= @user.name %>!</h1>
 <p>
-  <%= @greeting %>, find me in app/views/user_mailer/welcome_email.html.erb
+  You have been registered as a user on VKDBY.<br>
+  Here are your login details:
 </p>
+<p>
+  Email: <%= @user.email %><br>
+  Temporary Password: <%= @temp_password %>
+</p>
+<p>
+  Please login at <%= link_to 'Login Page', @url %> and change your password immediately.
+</p>
+<p>Thanks, <br>VKDBY Team</p>

@@ -17,15 +17,13 @@
 #  index_users_on_email  (email) UNIQUE
 #
 one:
-  email: MyString
-  name: MyString
-  uid: MyString
-  provider: MyString
+  email: one@example.com
+  name: User One
   role: 1
+  password_digest: <%= BCrypt::Password.create('password') %>
 
 two:
-  email: MyString
-  name: MyString
-  uid: MyString
-  provider: MyString
+  email: two@example.com
+  name: User Two
   role: 1
+  password_digest: <%= BCrypt::Password.create('password') %>

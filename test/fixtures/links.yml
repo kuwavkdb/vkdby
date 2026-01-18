@@ -22,8 +22,17 @@
 #
 #  index_links_on_linkable  (linkable_type,linkable_id)
 #
-one: {}
-# column: value
-#
-two: {}
+one:
+  url: "https://example.com/1"
+  text: "Link 1"
+  linkable: one (Unit)
+  sort_order: 1
+  active: true
+
+two:
+  url: "https://example.com/2"
+  text: "Link 2"
+  linkable: two (Unit)
+  sort_order: 2
+  active: true
 # column: value
