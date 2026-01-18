@@ -2,12 +2,20 @@
   <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">Basic Information</h2>
   <dl class="grid gap-4">
     <% if @resource.is_a?(Person) %>
+      <% if @resource.parts.present? %>
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0">
+          <dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">Parts</dt>
+          <dd class="text-[0.9375rem] font-bold text-slate-800 dark:text-slate-200 text-right"><%= @resource.parts.map(&:humanize).join(", ") %></dd>
+        </div>
+      <% end %>
+
       <% if @resource.birthday.present? %>
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0">
           <dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">Birthday</dt>
-          <dd class="text-[0.9375rem] font-bold text-slate-800 dark:text-slate-200"><%= @resource.birthday %></dd>
+          <dd class="text-[0.9375rem] font-bold text-slate-800 dark:text-slate-200"><%= @resource.birthday_display %></dd>
         </div>
       <% end %>
+
       <% if @resource.blood.present? %>
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0">
           <dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">Blood Type</dt>
@@ -32,7 +40,7 @@
     <% if @resource.status.present? %>
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0">
         <dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">Status</dt>
-        <dd><span class="bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full text-xs font-bold text-slate-600 dark:text-slate-300"><%= @resource.status.capitalize %></span></dd>
+        <dd><span class="bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full text-xs font-bold text-slate-600 dark:text-slate-300"><%= @resource.status_text %></span></dd>
       </div>
     <% end %>
   </dl>

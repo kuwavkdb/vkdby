@@ -1,0 +1,22 @@
+databases:
+  - name: vkdby-db
+    databaseName: vkdby_production
+    user: vkdby
+    plan: starter # Note: Render Managed MySQL does not have a free tier. Starts at ~$7/mo.
+    region: singapore # Adjust as needed (e.g., oregon, frankfurt)
+
+services:
+  - type: web
+    name: vkdby
+    runtime: ruby
+    buildCommand: "./bin/render-build.sh"
+    startCommand: "bundle exec rails server"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vkdby-db
+          property: connectionString
+      - key: RAILS_MASTER_KEY
+        sync: false
+    region: singapore
+    plan: free # Web service has a free tier.

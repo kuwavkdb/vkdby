@@ -11,7 +11,7 @@ class BasicAttributesComponent < ViewComponent::Base
 
   def attributes_present?
     if @resource.is_a?(Person)
-      @resource.birthday.present? || @resource.blood.present? || @resource.hometown.present? || @resource.status.present?
+      @resource.birthday.present? || @resource.blood.present? || @resource.hometown.present? || @resource.status.present? || @resource.parts.present?
     elsif @resource.is_a?(Unit)
       @resource.unit_type.present? || @resource.status.present?
     else

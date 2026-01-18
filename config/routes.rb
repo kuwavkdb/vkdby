@@ -1,5 +1,23 @@
 Rails.application.routes.draw do
+  get "/login", to: "sessions#new"
+  post "/login", to: "sessions#create"
+  delete "/logout", to: "sessions#destroy"
+
+  resource :password, only: %i[edit update]
+
+  namespace :admin do
+    root to: "users#index"
+    resources :users
+    resources :people do
+      resources :person_logs do
+        collection do
+          patch :reorder
+        end
+      end
+    end
+  end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+  root "units#index"
 
   if Rails.env.development?
     mount Lookbook::Engine, at: "/lookbook"

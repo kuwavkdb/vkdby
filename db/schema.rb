@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_16_133441) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_18_041805) do
   create_table "links", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.boolean "active", default: true
     t.datetime "created_at", null: false
@@ -24,6 +24,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_16_133441) do
   end
 
   create_table "people", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.boolean "birth_year_unknown"
     t.date "birthday"
     t.string "blood"
     t.datetime "created_at", null: false
@@ -32,6 +33,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_16_133441) do
     t.string "name"
     t.string "name_kana"
     t.string "old_key"
+    t.json "parts"
     t.integer "status", default: 1, null: false
     t.datetime "updated_at", null: false
     t.index ["key"], name: "index_people_on_key", unique: true
@@ -50,8 +52,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_16_133441) do
     t.integer "status", null: false
     t.text "text"
     t.bigint "unit_id"
+    t.string "unit_key"
     t.string "unit_name"
     t.datetime "updated_at", null: false
+    t.index ["person_id", "sort_order"], name: "index_person_logs_on_person_id_and_sort_order"
     t.index ["person_id"], name: "index_person_logs_on_person_id"
     t.index ["unit_id"], name: "index_person_logs_on_unit_id"
   end
@@ -89,6 +93,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_16_133441) do
     t.index ["key"], name: "index_units_on_key", unique: true
     t.index ["name"], name: "index_units_on_name"
     t.index ["old_key"], name: "index_units_on_old_key", unique: true
+  end
+
+  create_table "users", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.string "name"
+    t.string "password_digest"
+    t.integer "role", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_users_on_email", unique: true
   end
 
   create_table "wikipages", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|

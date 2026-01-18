@@ -1,0 +1,42 @@
+<div class="flex items-center justify-center min-h-screen bg-gray-100">
+  <div class="px-8 py-6 mt-4 text-left bg-white shadow-lg w-full max-w-md">
+    <h3 class="text-2xl font-bold text-center">Change Password</h3>
+
+    <% if @user && @user.errors.any? %>
+      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+        <ul>
+          <% @user.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <% if flash[:alert] %>
+      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+        <%= flash[:alert] %>
+      </div>
+    <% end %>
+
+    <%= form_with url: password_path, method: :patch, local: true do |f| %>
+      <div class="mt-4">
+        <%= f.label :current_password, "Current Password", class: "block" %>
+        <%= f.password_field :current_password, class: "w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600", required: true %>
+      </div>
+
+      <div class="mt-4">
+        <%= f.label :new_password, "New Password", class: "block" %>
+        <%= f.password_field :new_password, class: "w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600", required: true %>
+      </div>
+
+      <div class="mt-4">
+        <%= f.label :password_confirmation, "Confirm New Password", class: "block" %>
+        <%= f.password_field :password_confirmation, class: "w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600", required: true %>
+      </div>
+
+      <div class="flex items-baseline justify-between">
+        <%= f.submit "Update Password", class: "px-6 py-2 mt-4 text-white bg-blue-600 rounded-lg hover:bg-blue-900 w-full" %>
+      </div>
+    <% end %>
+  </div>
+</div>

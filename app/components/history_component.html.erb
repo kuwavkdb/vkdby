@@ -8,30 +8,37 @@
           <span class="text-xs font-black text-slate-400 dark:text-slate-500 tracking-tighter"><%= log.log_date %></span>
           <% if log.is_a?(PersonLog) %>
             <% unless log.status == "stay" %>
-              <span class="text-[0.65rem] font-black uppercase px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"><%= log.status %></span>
+              <span class="text-[0.65rem] font-black uppercase px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"><%= log.status_text %></span>
             <% end %>
           <% elsif log.is_a?(UnitLog) %>
-            <span class="text-[0.65rem] font-black uppercase px-2 py-0.5 rounded-md bg-unit/10 text-unit"><%= log.phenomenon.capitalize %></span>
+            <span class="text-[0.65rem] font-black uppercase px-2 py-0.5 rounded-md bg-unit/10 text-unit"><%= log.phenomenon_text %></span>
           <% end %>
         </div>
         <div>
           <% if log.is_a?(PersonLog) %>
             <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">
-              <% if log.part.present? %>
-                <span class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mr-2"><%= log.part.capitalize %></span>
-              <% end %>
-              <% if @resource.is_a?(Unit) %>
-                <%= link_to log.person.name, profile_path(log.person.key), class: "hover:text-person transition-colors" %>
-              <% else %>
-                <% if log.unit %>
-                  <%= link_to log.unit.name, profile_path(log.unit.key), class: "hover:text-person transition-colors" %>
+
+                <% if @resource.is_a?(Unit) %>
+                  <%= link_to log.person.name, profile_path(log.person.key), class: "hover:text-person transition-colors" %>
                 <% else %>
-                  <%= log.unit_name || "Unknown Unit" %>
+                  <% if log.status == "rename" %>
+                    <%= log.name %>
+                    <span class="text-slate-400 font-normal ml-1">
+                      <% if log.unit %>
+                        (<%= link_to log.unit.name, profile_path(log.unit.key), class: "hover:text-person transition-colors" %>)
+                      <% elsif log.unit_name %>
+                        (<%= log.unit_name %>)
+                      <% end %>
+                    </span>
+                  <% elsif log.unit %>
+                    <%= link_to log.unit.name, profile_path(log.unit.key), class: "hover:text-person transition-colors" %>
+                  <% else %>
+                    <%= log.unit_name || "Unknown Unit" %>
+                  <% end %>
                 <% end %>
-              <% end %>
             </h3>
           <% elsif log.is_a?(UnitLog) %>
-            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tight"><%= log.phenomenon.capitalize.gsub('_', ' ') %></h3>
+            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tight"><%= log.phenomenon_text %></h3>
           <% end %>
         </div>
       </div>
