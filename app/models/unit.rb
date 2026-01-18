@@ -28,4 +28,16 @@ class Unit < ApplicationRecord
   enum :status, { pre: 0, active: 1, freeze: 2, disbanded: 3, unknown: 99 }
 
   validates :status, presence: true
+
+  STATUS_TRANSLATIONS = {
+    "pre" => "準備中",
+    "active" => "活動中",
+    "freeze" => "活動休止",
+    "disbanded" => "解散",
+    "unknown" => "不明"
+  }
+
+  def status_text
+    STATUS_TRANSLATIONS[status] || status.humanize
+  end
 end

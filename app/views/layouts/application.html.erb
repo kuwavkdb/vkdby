@@ -24,7 +24,37 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
-    <%= yield %>
+  <body class="bg-gray-100 dark:bg-gray-900 dark:text-gray-100">
+    <nav class="bg-white shadow dark:bg-gray-800">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex">
+            <div class="flex-shrink-0 flex items-center">
+              <%= link_to "VKDBY", root_path, class: "text-xl font-bold text-gray-800 dark:text-white" %>
+            </div>
+            <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+              <%= link_to "Units", units_path, class: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" %>
+              <%= link_to "People", people_path, class: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" %>
+              <% if logged_in? %>
+                <%= link_to "Admin: Users", admin_users_path, class: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" %>
+                <%= link_to "Admin: People", admin_people_path, class: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" %>
+              <% end %>
+            </div>
+          </div>
+          <div class="flex items-center">
+            <% if logged_in? %>
+              <span class="text-gray-700 mr-4 dark:text-gray-300"><%= current_user.name %></span>
+              <%= link_to "Settings", edit_password_path, class: "text-gray-500 hover:text-gray-700 mr-4 text-sm dark:text-gray-400 dark:hover:text-gray-200" %>
+              <%= button_to "Logout", logout_path, method: :delete, class: "text-red-600 hover:text-red-800 text-sm bg-transparent border-0 cursor-pointer dark:text-red-400 dark:hover:text-red-300" %>
+            <% else %>
+              <%= link_to "Login", login_path, class: "text-indigo-600 hover:text-indigo-900 text-sm font-medium dark:text-indigo-400 dark:hover:text-indigo-300" %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <%= yield %>
+    </main>
   </body>
 </html>

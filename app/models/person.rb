@@ -2,17 +2,19 @@
 #
 # Table name: people
 #
-#  id         :bigint           not null, primary key
-#  birthday   :date
-#  blood      :string(255)
-#  hometown   :string(255)
-#  key        :string(255)
-#  name       :string(255)
-#  name_kana  :string(255)
-#  old_key    :string(255)
-#  status     :integer          default("active"), not null
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
+#  id                 :bigint           not null, primary key
+#  birth_year_unknown :boolean
+#  birthday           :date
+#  blood              :string(255)
+#  hometown           :string(255)
+#  key                :string(255)
+#  name               :string(255)
+#  name_kana          :string(255)
+#  old_key            :string(255)
+#  parts              :json
+#  status             :integer          default("active"), not null
+#  created_at         :datetime         not null
+#  updated_at         :datetime         not null
 #
 # Indexes
 #
@@ -26,5 +28,45 @@ class Person < ApplicationRecord
   has_many :units, through: :unit_people
   has_many :person_logs
 
-  enum :status, { pre: 0, active: 1, retirement: 90, passed_away: 98, unknown: 99 }
+  enum :status, { pre: 0, active: 1, free: 2, hiatus: 3, retirement: 90, passed_away: 98, unknown: 99 }
+
+  # Valid parts for a person
+  AVAILABLE_PARTS = %w[vocal guitar bass drums keyboard dj dancer manipulator]
+
+  STATUS_TRANSLATIONS = {
+    "pre" => "準備中",
+    "active" => "活動中",
+    "free" => "フリー",
+    "hiatus" => "活動休止",
+    "retirement" => "引退",
+    "passed_away" => "死去",
+    "unknown" => "不明"
+  }
+
+  DUMMY_BIRTH_YEAR = 1904 # Leap year for Feb 29 compatibility
+
+  before_save :set_dummy_birth_year, if: :birth_year_unknown
+
+  def status_text
+    STATUS_TRANSLATIONS[status] || status.humanize
+  end
+
+  def birthday_display
+    return nil unless birthday
+
+    if birth_year_unknown
+      birthday.strftime("%-m月%-d日")
+    else
+      birthday.strftime("%Y年%-m月%-d日")
+    end
+  end
+
+  private
+
+  def set_dummy_birth_year
+    return unless birthday
+
+    # Change year to DUMMY_BIRTH_YEAR while keeping month/day
+    self.birthday = birthday.change(year: DUMMY_BIRTH_YEAR)
+  end
 end

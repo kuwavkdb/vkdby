@@ -10,6 +10,7 @@
 #  sort_order :integer
 #  status     :integer          not null
 #  text       :text(65535)
+#  unit_key   :string(255)
 #  unit_name  :string(255)
 #  created_at :datetime         not null
 #  updated_at :datetime         not null
