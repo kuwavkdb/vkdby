@@ -22,7 +22,7 @@
             <section>
               <div class="flex items-center justify-between mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
                 <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">History</h2>
-                <% if @resource.is_a?(Person) && helpers.respond_to?(:logged_in?) && helpers.logged_in? %>
+                <% if @resource.is_a?(Person) && defined?(logged_in?) && logged_in? %>
                   <%= link_to "Edit", admin_person_person_logs_path(@resource), class: "text-xs font-medium text-slate-400 hover:text-indigo-500 transition-colors" %>
                 <% end %>
               </div>
