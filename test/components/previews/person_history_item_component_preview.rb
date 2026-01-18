@@ -1,0 +1,27 @@
+class PersonHistoryItemComponentPreview < ViewComponent::Preview
+  layout "component_preview"
+
+  def default
+    person = Person.new(name: "Person Name", key: "person_key")
+    unit = Unit.new(name: "Unit Name", key: "unit_key")
+    log = PersonLog.new(log_date: Date.today, status: "join", person: person, unit: unit, part: "vocal")
+
+    render(PersonHistoryItemComponent.new(log: log))
+  end
+
+  def with_rename
+    person = Person.new(name: "New Name", key: "person_key")
+    unit = Unit.new(name: "Unit Name", key: "unit_key")
+    log = PersonLog.new(log_date: Date.today, status: "rename", name: "Old Name", unit: unit)
+
+    render(PersonHistoryItemComponent.new(log: log))
+  end
+
+  def with_text
+    person = Person.new(name: "Person Name", key: "person_key")
+    unit = Unit.new(name: "Unit Name", key: "unit_key")
+    log = PersonLog.new(log_date: Date.today, text: "Some text log", status: "stay", person: person, unit: unit)
+
+    render(PersonHistoryItemComponent.new(log: log))
+  end
+end
