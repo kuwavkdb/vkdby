@@ -2,11 +2,6 @@
   <div class="absolute left-[0.45rem] top-6 w-2.5 h-2.5 bg-person border-2 border-white dark:border-slate-800 rounded-full z-10 shadow-[0_0_0_2px_rgba(226,232,240,1)] dark:shadow-[0_0_0_2px_rgba(51,65,85,1)]"></div>
   <div class="flex justify-between items-center mb-2">
     <span class="text-xs font-black text-slate-400 dark:text-slate-500 tracking-tighter"><%= @log.log_date %></span>
-    <% if @log.is_a?(PersonLog) %>
-      <!-- Status badge removed for PersonLog -->
-    <% elsif @log.is_a?(UnitLog) %>
-      <span class="text-[0.65rem] font-black uppercase px-2 py-0.5 rounded-md bg-unit/10 text-unit"><%= @log.phenomenon_text %></span>
-    <% end %>
   </div>
   <div>
     <% if @log.is_a?(PersonLog) %>

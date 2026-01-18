@@ -7,14 +7,7 @@
     <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">
       <% if @log.status == "rename" %>
         <%= @log.name %>
-        <span class="text-slate-400 font-normal ml-1">
-          <% if @log.unit %>
-            (<%= link_to @log.unit.name, profile_path(@log.unit.key), class: "hover:text-person transition-colors" %>)
-          <% elsif @log.unit_name %>
-            (<%= @log.unit_name %>)
-          <% end %>
-        </span>
-        <span class="text-xs font-normal text-slate-500 ml-1"><%= @log.status_text %></span>
+        <span class="text-xs font-normal text-slate-500 ml-1">に <%= @log.status_text %></span>
       <% elsif @log.unit %>
         <%= link_to @log.unit.name, profile_path(@log.unit.key), class: "hover:text-person transition-colors" %>
         <span class="text-xs font-normal text-slate-500 ml-1"><%= @log.status_text %></span>
