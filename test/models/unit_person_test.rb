@@ -2,18 +2,21 @@
 #
 # Table name: unit_people
 #
-#  id         :bigint           not null, primary key
-#  part       :integer          default("vocal"), not null
-#  status     :integer          default("active"), not null
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
-#  person_id  :bigint           not null
-#  unit_id    :bigint           not null
+#  id              :bigint           not null, primary key
+#  order_in_period :integer          default(1), not null
+#  part            :integer          default("vocal"), not null
+#  period          :integer          default(1), not null
+#  status          :integer          default("active"), not null
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#  person_id       :bigint           not null
+#  unit_id         :bigint           not null
 #
 # Indexes
 #
-#  index_unit_people_on_person_id  (person_id)
-#  index_unit_people_on_unit_id    (unit_id)
+#  index_unit_people_on_person_id                               (person_id)
+#  index_unit_people_on_unit_id                                 (unit_id)
+#  index_unit_people_on_unit_id_and_period_and_order_in_period  (unit_id,period,order_in_period)
 #
 # Foreign Keys
 #

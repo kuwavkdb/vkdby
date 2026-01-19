@@ -23,7 +23,7 @@ PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle exec rails generate migration NameO
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle exec rails console
 
 # Annotate（モデル定義のコメント更新）
-PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle exec annotate --models
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle exec annotaterb models
 ```
 
 ## 注意事項
