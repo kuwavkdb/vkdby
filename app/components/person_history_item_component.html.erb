@@ -5,15 +5,15 @@
   </div>
   <div>
     <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">
-      <% if @log.status == "rename" %>
+      <% if @log.phenomenon == "rename" %>
         <%= @log.name %>
-        <span class="text-xs font-normal text-slate-500 ml-1">に <%= @log.status_text %></span>
+        <span class="text-xs font-normal text-slate-500 ml-1">に <%= @log.phenomenon_text %></span>
       <% elsif @log.unit %>
         <%= link_to @log.unit.name, profile_path(@log.unit.key), class: "hover:text-person transition-colors" %>
-        <span class="text-xs font-normal text-slate-500 ml-1"><%= @log.status_text %></span>
+        <span class="text-xs font-normal text-slate-500 ml-1"><%= @log.phenomenon_text %></span>
       <% else %>
         <%= @log.unit_name || "Unknown Unit" %>
-        <span class="text-xs font-normal text-slate-500 ml-1"><%= @log.status_text %></span>
+        <span class="text-xs font-normal text-slate-500 ml-1"><%= @log.phenomenon_text %></span>
       <% end %>
     </h3>
   </div>

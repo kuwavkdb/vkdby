@@ -21,7 +21,8 @@
 require "test_helper"
 
 class UnitLogTest < ActiveSupport::TestCase
-  # test "the truth" do
-  #   assert true
-  # end
+  test "should not save unit log without phenomenon" do
+    unit_log = UnitLog.new(unit: units(:one), log_date: Date.today)
+    assert_not unit_log.save, "Saved the unit log without a phenomenon"
+  end
 end

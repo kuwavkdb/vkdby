@@ -10,28 +10,31 @@
     </div>
   <% end %>
 
-  <div>
+  <div data-controller="date-picker">
     <%= form.label :log_date, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.text_field :log_date, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <div class="flex gap-2">
+      <%= form.text_field :log_date, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white", data: { date_picker_target: "input", action: "input->date-picker#syncPickerFromInput" } %>
+      <input type="date" class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white w-auto" data-date-picker-target="picker" data-action="input->date-picker#apply">
+    </div>
     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">YYYY/MM/DD or YYYY/MM</p>
   </div>
 
   <div>
-    <%= form.label :status, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= form.label :phenomenon, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
     <div class="mt-2 flex flex-wrap gap-4">
-      <% PersonLog.statuses.keys.each do |status| %>
+      <% PersonLog.phenomenons.keys.each do |phenomenon| %>
         <label class="inline-flex items-center">
-          <%= form.radio_button :status, status, class: "form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
-          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300"><%= PersonLog::STATUS_TRANSLATIONS[status] %></span>
+          <%= form.radio_button :phenomenon, phenomenon, class: "form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
+          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300"><%= PersonLog::PHENOMENON_TRANSLATIONS[phenomenon] %></span>
         </label>
       <% end %>
     </div>
   </div>
 
   <div>
-    <%= form.label :status_alias, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.text_field :status_alias, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
-    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Optional: Custom text to display instead of the standard status name (e.g., "卒業" instead of "脱退").</p>
+    <%= form.label :phenomenon_alias, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= form.text_field :phenomenon_alias, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Optional: Custom text to display instead of the standard phenomenon name (e.g., "卒業" instead of "脱退").</p>
   </div>
 
   <div>
@@ -71,6 +74,16 @@
   <div>
     <%= form.label :text, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
     <%= form.text_area :text, rows: 3, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+  </div>
+
+  <div>
+    <%= form.label :quote_text, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= form.text_area :quote_text, rows: 3, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+  </div>
+
+  <div>
+    <%= form.label :source_url, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= form.text_field :source_url, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
   </div>
 
   <div class="flex justify-end gap-x-4">

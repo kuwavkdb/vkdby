@@ -2,13 +2,16 @@
 #
 # Table name: unit_logs
 #
-#  id         :bigint           not null, primary key
-#  log_date   :date
-#  phenomenon :integer
-#  text       :text(65535)
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
-#  unit_id    :bigint           not null
+#  id               :bigint           not null, primary key
+#  log_date         :date
+#  phenomenon       :integer
+#  phenomenon_alias :string(255)
+#  quote_text       :text(65535)
+#  source_url       :string(255)
+#  text             :text(65535)
+#  created_at       :datetime         not null
+#  updated_at       :datetime         not null
+#  unit_id          :bigint           not null
 #
 # Indexes
 #
@@ -23,6 +26,8 @@ class UnitLog < ApplicationRecord
 
   enum :phenomenon, { announcement: 1, first_live: 2, finish: 3, pending: 5, rename: 6, pause: 7, etc: 98, unknown: 99 }, prefix: true
 
+  validates :phenomenon, presence: true
+
   PHENOMENON_TRANSLATIONS = {
     "announcement" => "結成",
     "first_live" => "始動",
@@ -35,6 +40,6 @@ class UnitLog < ApplicationRecord
   }
 
   def phenomenon_text
-    phenomenon_alias || PHENOMENON_TRANSLATIONS[phenomenon] || phenomenon&.humanize
+    phenomenon_alias.presence || PHENOMENON_TRANSLATIONS[phenomenon] || phenomenon&.humanize
   end
 end

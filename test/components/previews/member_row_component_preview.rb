@@ -34,18 +34,20 @@ class MemberRowComponentPreview < ViewComponent::Preview
     # Using Struct to mock the object graph since AR associations on new records can be tricky
     mock_unit = Struct.new(:name, :key, keyword_init: true).new(name: "Other Unit", key: "other_unit")
 
-    mock_log1 = Struct.new(:log_date, :status, :unit, :unit_name, :name, :sort_order, keyword_init: true).new(
+    mock_log1 = Struct.new(:log_date, :phenomenon, :phenomenon_text, :unit, :unit_name, :name, :sort_order, keyword_init: true).new(
       log_date: Date.today.to_s,
-      status: "join",
+      phenomenon: "join",
+      phenomenon_text: "加入",
       unit: mock_unit,
       unit_name: nil,
       name: nil,
       sort_order: 1
     )
 
-    mock_log2 = Struct.new(:log_date, :status, :unit, :unit_name, :name, :sort_order, keyword_init: true).new(
+    mock_log2 = Struct.new(:log_date, :phenomenon, :phenomenon_text, :unit, :unit_name, :name, :sort_order, keyword_init: true).new(
       log_date: (Date.today - 365).to_s,
-      status: "stay",
+      phenomenon: "stay",
+      phenomenon_text: "残留",
       unit: nil,
       unit_name: "Previous Band",
       name: "Previous Band",

@@ -20,10 +20,10 @@
               <% if log.unit %>
                 <%= link_to (log.unit_name.presence || log.unit.name), profile_path(log.unit.key), class: "font-bold text-slate-600 dark:text-slate-300 hover:text-person" %>
               <% else %>
-                <span class="font-bold"><%= log.name %></span>
+                <span class="font-bold"><%= log.unit_name %></span>
               <% end %>
-              <% if log.status.present? && log.status != "stay" %>
-                <small class="text-[0.65rem] opacity-70 ml-1">(<%= log.status %>)</small>
+              <% if log.phenomenon.present? && log.phenomenon != "stay" %>
+                <small class="text-[0.65rem] opacity-70 ml-1">(<%= log.try(:phenomenon_text) || log.phenomenon %>)</small>
               <% end %>
             </span>
           </div>
