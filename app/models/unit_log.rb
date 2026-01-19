@@ -27,7 +27,7 @@ class UnitLog < ApplicationRecord
   enum :phenomenon, { announcement: 1, first_live: 2, finish: 3, pending: 5, rename: 6, pause: 7, etc: 98, unknown: 99 }, prefix: true
 
   validates :phenomenon, presence: true
-  
+
   PHENOMENON_TRANSLATIONS = {
     "announcement" => "結成",
     "first_live" => "始動",

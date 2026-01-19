@@ -57,7 +57,7 @@ class Unit < ApplicationRecord
       next unless log.person
 
       member = unit_people.find_or_initialize_by(person: log.person)
-      
+
       # Determine part
       target_part = log.part
       if UnitPerson.parts.keys.include?(target_part)
@@ -66,7 +66,7 @@ class Unit < ApplicationRecord
 
       # Set default status if new record
       member.status ||= :active
-      
+
       member.save!
     end
   end
