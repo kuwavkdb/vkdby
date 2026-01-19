@@ -9,6 +9,8 @@
 *   **データベース:** MySQL
 *   **フロントエンド:** Tailwind CSS
 *   **テスト:** Minitest
+*   **コンポーネント:** ViewComponent
+*   **UIカタログ:** Lookbook
 
 ## 主な機能
 
