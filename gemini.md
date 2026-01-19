@@ -1,43 +1,43 @@
-# Project Name (vkdby)
+# プロジェクト名 (vkdby)
 
-## Overview
-This project is a Ruby on Rails application for creating and managing a database of Visual Kei bands (Units) and band members (People). It allows tracking the history of members joining and leaving bands, managing profile information, and linking to external resources.
+## 概要
+このプロジェクトは、ヴィジュアル系バンド（ユニット）とバンドメンバー（個人）のデータベースを作成・管理するためのRuby on Railsアプリケーションです。メンバーの加入・脱退履歴の追跡、プロフィール情報の管理、および外部リソースへのリンク機能などを提供します。
 
-## Architecture
+## アーキテクチャ
 
-*   **Backend:** Ruby on Rails
-*   **Database:** MySQL
-*   **Frontend Check:** Tailwind CSS
-*   **Testing:** Minitest
+*   **バックエンド:** Ruby on Rails
+*   **データベース:** MySQL
+*   **フロントエンド:** Tailwind CSS
+*   **テスト:** Minitest
 
-## Key Features
+## 主な機能
 
-*   **Unit Management:** Create and manage bands (Units).
-*   **Person Management:** Create and manage band members (People).
-*   **History Tracking:** comprehensive log system (`PersonLog`, `UnitLog`) to track career history (joins, leaves, formation, disbandment, etc.).
-*   **Aliases:** Support for custom status text (e.g., "卒業" instead of "脱退").
-*   **Admin Interface:** Dedicated admin interfaces for managing data.
+*   **ユニット管理:** バンド（ユニット）の作成と管理。
+*   **個人管理:** バンドメンバー（個人）の作成と管理。
+*   **履歴追跡:** 包括的なログシステム（`PersonLog`, `UnitLog`）によるキャリア履歴（加入、脱退、結成、解散など）の追跡。
+*   **エイリアス機能:** カスタムステータステキストのサポート（例：「脱退」の代わりに「卒業」と表示）。
+*   **管理画面:** データ管理のための専用管理インターフェース。
 
-## Development Setup
+## 開発セットアップ
 
-1.  **Clone the repository:**
+1.  **リポジトリのクローン:**
     ```bash
     git clone https://github.com/kuwavkdb/vkdby.git
     cd vkdby
     ```
 
-2.  **Install dependencies:**
+2.  **依存関係のインストール:**
     ```bash
     bundle install
     ```
 
-3.  **Setup database:**
+3.  **データベースのセットアップ:**
     ```bash
     rails db:create
     rails db:migrate
     ```
 
-4.  **Start the server:**
+4.  **サーバーの起動:**
     ```bash
     bin/rails server
     ```
