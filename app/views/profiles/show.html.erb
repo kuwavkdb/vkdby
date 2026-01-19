@@ -24,6 +24,8 @@
                 <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">History</h2>
                 <% if @resource.is_a?(Person) && defined?(logged_in?) && logged_in? %>
                   <%= link_to "Edit", admin_person_person_logs_path(@resource), class: "text-xs font-medium text-slate-400 hover:text-indigo-500 transition-colors" %>
+                <% elsif @resource.is_a?(Unit) && defined?(logged_in?) && logged_in? %>
+                  <%= link_to "Edit", admin_unit_unit_logs_path(@resource), class: "text-xs font-medium text-slate-400 hover:text-indigo-500 transition-colors" %>
                 <% end %>
               </div>
               <div class="grid gap-6 relative before:absolute before:left-3 before:top-0 before:bottom-0 before:w-0.5 before:bg-slate-200 dark:before:bg-slate-700">

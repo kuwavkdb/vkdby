@@ -8,6 +8,9 @@ Rails.application.routes.draw do
   namespace :admin do
     root to: "users#index"
     resources :users
+    resources :units do
+      resources :unit_logs
+    end
     resources :people do
       resources :person_logs do
         collection do
