@@ -7,10 +7,11 @@ class Admin::UnitsController < Admin::BaseController
   end
 
   def new
-    @unit = Unit.new
+    @unit = Unit.new(params[:unit]&.permit(:name, :key, :name_kana, :status, :unit_type))
   end
 
   def edit
+    @unit_logs = @unit.unit_logs.order(:log_date)
   end
 
   def create

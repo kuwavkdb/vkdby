@@ -21,9 +21,11 @@ PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle exec rails generate migration NameO
 
 # Rails コンソール
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle exec rails console
+
+# Annotate（モデル定義のコメント更新）
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle exec annotate --models
 ```
 
 ## 注意事項
 - サーバー起動後は `http://127.0.0.1:3000` でアクセス可能です。
 - `bin/rails` 等を直接叩くとシステム Ruby が呼ばれてエラーになる可能性があるため、上記のように明示的にパスを通した実行を強く推奨します。
-

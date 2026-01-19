@@ -11,7 +11,7 @@ class UnitHistoryItemComponentPreview < ViewComponent::Preview
   def person_log_join
     unit = Unit.new(name: "Unit Name", key: "unit_key")
     person = Person.new(name: "Member Name", key: "member_key")
-    log = PersonLog.new(log_date: Date.today, status: "join", person: person, unit: unit, part: "guitar")
+    log = PersonLog.new(log_date: Date.today, phenomenon: "join", person: person, unit: unit, part: "guitar")
 
     render(UnitHistoryItemComponent.new(log: log))
   end
@@ -19,13 +19,13 @@ class UnitHistoryItemComponentPreview < ViewComponent::Preview
   def person_log_leave
     unit = Unit.new(name: "Unit Name", key: "unit_key")
     person = Person.new(name: "Member Name", key: "member_key")
-    log = PersonLog.new(log_date: Date.today, status: "leave", person: person, unit: unit)
+    log = PersonLog.new(log_date: Date.today, phenomenon: "leave", person: person, unit: unit)
 
     render(UnitHistoryItemComponent.new(log: log))
   end
   def with_alias
     unit = Unit.new(name: "Unit Name", key: "unit_key")
-    log = UnitLog.new(log_date: Date.today, phenomenon: "finish", status_alias: "集結")
+    log = UnitLog.new(log_date: Date.today, phenomenon: "finish", phenomenon_alias: "集結")
 
     render(UnitHistoryItemComponent.new(log: log))
   end

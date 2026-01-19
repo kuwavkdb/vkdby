@@ -11,6 +11,7 @@ class Admin::PeopleController < Admin::BaseController
   end
 
   def edit
+    @person_logs = @person.person_logs.order(:log_date)
   end
 
   def create

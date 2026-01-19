@@ -47,6 +47,6 @@ class Admin::UnitLogsController < Admin::BaseController
   end
 
   def unit_log_params
-    params.require(:unit_log).permit(:log_date, :phenomenon, :phenomenon_alias, :text)
+    params.require(:unit_log).permit(:log_date, :phenomenon, :phenomenon_alias, :text, :source_url, :quote_text)
   end
 end

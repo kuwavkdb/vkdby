@@ -2,20 +2,23 @@
 #
 # Table name: person_logs
 #
-#  id         :bigint           not null, primary key
-#  log_date   :string(255)
-#  log_type   :integer
-#  name       :string(255)
-#  part       :integer
-#  sort_order :integer
-#  status     :integer          not null
-#  text       :text(65535)
-#  unit_key   :string(255)
-#  unit_name  :string(255)
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
-#  person_id  :bigint           not null
-#  unit_id    :bigint
+#  id               :bigint           not null, primary key
+#  log_date         :string(255)
+#  log_type         :integer
+#  name             :string(255)
+#  part             :integer
+#  sort_order       :integer
+#  phenomenon       :integer          not null
+#  phenomenon_alias :string(255)
+#  quote_text       :text(65535)
+#  source_url       :string(255)
+#  text             :text(65535)
+#  unit_key         :string(255)
+#  unit_name        :string(255)
+#  created_at       :datetime         not null
+#  updated_at       :datetime         not null
+#  person_id        :bigint           not null
+#  unit_id          :bigint
 #
 # Indexes
 #
@@ -31,13 +34,13 @@ class PersonLog < ApplicationRecord
   belongs_to :person
   belongs_to :unit, optional: true
 
-  enum :status, { original_member: 0, join: 1, leave: 2, pending: 3, rename: 4, convert: 5, stay: 6, retirement: 90, passed_away: 98, unknown: 99 }, prefix: true
+  enum :phenomenon, { original_member: 0, join: 1, leave: 2, pending: 3, rename: 4, convert: 5, stay: 6, retirement: 90, passed_away: 98, unknown: 99 }, prefix: true
   enum :part, { vocal: 0, guitar: 1, bass: 2, drums: 3, keyboard: 4, dj: 5, etc: 99 }
 
-  validates :status, presence: true
+  validates :phenomenon, presence: true
   validates :log_date, format: { with: /\A\d{4}(\/\d{2}(\/\d{2})?)?\z/ }, allow_blank: true
 
-  STATUS_TRANSLATIONS = {
+  PHENOMENON_TRANSLATIONS = {
     "original_member" => "初期メンバー",
     "join" => "加入",
     "leave" => "脱退",
@@ -50,7 +53,7 @@ class PersonLog < ApplicationRecord
     "unknown" => "不明"
   }
 
-  def status_text
-    status_alias || STATUS_TRANSLATIONS[status] || status&.humanize
+  def phenomenon_text
+    phenomenon_alias.presence || PHENOMENON_TRANSLATIONS[phenomenon] || phenomenon&.humanize
   end
 end

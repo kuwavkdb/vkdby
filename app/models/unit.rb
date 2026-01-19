@@ -40,4 +40,34 @@ class Unit < ApplicationRecord
   def status_text
     STATUS_TRANSLATIONS[status] || status.humanize
   end
+
+  private
+
+  after_create :link_related_person_logs_and_members
+
+  def link_related_person_logs_and_members
+    return if key.blank?
+
+    logs = PersonLog.where(unit_key: key)
+    return if logs.empty?
+
+    logs.update_all(unit_id: id)
+
+    logs.includes(:person).order(:log_date).each do |log|
+      next unless log.person
+
+      member = unit_people.find_or_initialize_by(person: log.person)
+      
+      # Determine part
+      target_part = log.part
+      if UnitPerson.parts.keys.include?(target_part)
+        member.part = target_part
+      end
+
+      # Set default status if new record
+      member.status ||= :active
+      
+      member.save!
+    end
+  end
 end

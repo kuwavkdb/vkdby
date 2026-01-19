@@ -7,10 +7,12 @@
     <% if @log.is_a?(PersonLog) %>
       <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">
         <%= link_to @log.person.name, profile_path(@log.person.key), class: "hover:text-person transition-colors" %>
-        <span class="text-xs font-normal text-slate-500 ml-1"><%= @log.status_text %></span>
+        <span class="text-xs font-normal text-slate-500 ml-1"><%= @log.phenomenon_text %></span>
       </h3>
     <% elsif @log.is_a?(UnitLog) %>
-      <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tight"><%= @log.phenomenon_text %></h3>
+      <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tight">
+        <%= @log.phenomenon_text.presence || @log.text %>
+      </h3>
     <% end %>
   </div>
 </div>
