@@ -33,10 +33,10 @@ one:
   person: one
   log_type: 1
   unit: one
-  status: 1
+  phenomenon: 1
 
 two:
   person: two
   log_type: 1
   unit: two
-  status: 1
+  phenomenon: 1
