@@ -1,0 +1,72 @@
+<%= form_with(model: [:admin, unit], class: "space-y-6") do |form| %>
+  <% if unit.errors.any? %>
+    <div class="bg-red-50 p-4 rounded text-red-700">
+      <h2><%= pluralize(unit.errors.count, "error") %> prohibited this unit from being saved:</h2>
+      <ul class="list-disc list-inside">
+        <% unit.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :name, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= form.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+  </div>
+
+  <div>
+    <%= form.label :name_kana, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= form.text_field :name_kana, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+  </div>
+
+  <div>
+    <%= form.label :key, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= form.text_field :key, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+  </div>
+
+  <div>
+    <%= form.label :unit_type, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <div class="mt-2 space-x-4">
+      <% Unit.unit_types.keys.each do |type| %>
+        <label class="inline-flex items-center">
+          <%= form.radio_button :unit_type, type, class: "form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
+          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300"><%= type.humanize %></span>
+        </label>
+      <% end %>
+    </div>
+  </div>
+
+  <div>
+    <%= form.label :status, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <div class="mt-2 flex flex-wrap gap-4">
+      <% Unit.statuses.keys.each do |status| %>
+        <label class="inline-flex items-center">
+          <%= form.radio_button :status, status, class: "form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
+          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300"><%= Unit::STATUS_TRANSLATIONS[status] %></span>
+        </label>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-x-4">
+    <%= link_to "Cancel", admin_units_path, class: "px-4 py-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" %>
+    <%= form.submit class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+  </div>
+
+  <% if unit.persisted? %>
+    <div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Career Logs</h3>
+        <%= link_to "Manage Logs (#{unit.unit_logs.count})", admin_unit_unit_logs_path(unit), class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800" %>
+      </div>
+    </div>
+  <% else %>
+    <div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Career Logs</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Save this unit to manage logs.</p>
+      </div>
+    </div>
+  <% end %>
+<% end %>

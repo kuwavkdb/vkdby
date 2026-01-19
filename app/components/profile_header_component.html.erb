@@ -6,9 +6,15 @@
   <% if name_kana.present? %>
     <p class="text-sm md:text-base opacity-90 font-medium"><%= name_kana %></p>
   <% end %>
-  <% if helpers.respond_to?(:logged_in?) && helpers.logged_in? && @resource.is_a?(Person) %>
-    <div class="absolute top-4 right-4">
-      <%= link_to "Edit", helpers.edit_admin_person_path(@resource), class: "px-3 py-1 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded backdrop-blur-sm transition" %>
-    </div>
+  <% if helpers.respond_to?(:logged_in?) && helpers.logged_in? %>
+    <% if @resource.is_a?(Person) %>
+      <div class="absolute top-4 right-4">
+        <%= link_to "Edit", helpers.edit_admin_person_path(@resource), class: "px-3 py-1 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded backdrop-blur-sm transition" %>
+      </div>
+    <% elsif @resource.is_a?(Unit) %>
+      <div class="absolute top-4 right-4">
+        <%= link_to "Edit", helpers.edit_admin_unit_path(@resource), class: "px-3 py-1 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded backdrop-blur-sm transition" %>
+      </div>
+    <% end %>
   <% end %>
 </header>
