@@ -12,6 +12,8 @@ class Admin::UnitsController < Admin::BaseController
 
   def edit
     @unit_logs = @unit.unit_logs.order(:log_date)
+    @unit_people = @unit.unit_people.includes(:person).order(:period, :order_in_period)
+    @unit_person = @unit.unit_people.build(period: 1, order_in_period: (@unit_people.last&.order_in_period || 0) + 1)
   end
 
   def create

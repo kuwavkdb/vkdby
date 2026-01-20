@@ -6,10 +6,12 @@
 #  order_in_period :integer          default(1), not null
 #  part            :integer          default("vocal"), not null
 #  period          :integer          default(1), not null
+#  person_key      :string(255)
+#  person_name     :string(255)
 #  status          :integer          default("active"), not null
 #  created_at      :datetime         not null
 #  updated_at      :datetime         not null
-#  person_id       :bigint           not null
+#  person_id       :bigint
 #  unit_id         :bigint           not null
 #
 # Indexes
@@ -25,11 +27,37 @@
 #
 class UnitPerson < ApplicationRecord
   belongs_to :unit
-  belongs_to :person
+  belongs_to :person, optional: true
 
   enum :status, { undefined: 0, active: 1, pending: 2, left: 3, concerned: 4, pre: 5 }
   enum :part, { vocal: 0, guitar: 1, bass: 2, drums: 3, keyboard: 4, dj: 5, unknown: 99 }
 
   validates :status, presence: true
   validates :part, presence: true
+  validate :person_or_name_presence
+
+  before_validation :find_person_by_key, if: -> { person_id.blank? && person_key.present? }
+
+  def name
+    person&.name || person_name
+  end
+
+  def key
+    person&.key || person_key
+  end
+
+  private
+
+  def person_or_name_presence
+    if person_id.blank? && person_name.blank?
+      errors.add(:base, "Person or Person Name must be present")
+    end
+  end
+
+  def find_person_by_key
+    found_person = Person.find_by(key: person_key)
+    if found_person
+      self.person = found_person
+    end
+  end
 end

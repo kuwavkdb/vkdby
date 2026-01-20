@@ -6,10 +6,12 @@
 #  order_in_period :integer          default(1), not null
 #  part            :integer          default("vocal"), not null
 #  period          :integer          default(1), not null
+#  person_key      :string(255)
+#  person_name     :string(255)
 #  status          :integer          default("active"), not null
 #  created_at      :datetime         not null
 #  updated_at      :datetime         not null
-#  person_id       :bigint           not null
+#  person_id       :bigint
 #  unit_id         :bigint           not null
 #
 # Indexes
