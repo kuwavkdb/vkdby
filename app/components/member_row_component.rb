@@ -28,6 +28,8 @@ class MemberRowComponent < ViewComponent::Base
   end
 
   def sorted_person_logs
+    return [] unless @member.person
+
     @member.person.person_logs.sort_by { |l| [ l.log_date.to_s, l.sort_order || 0 ] }
   end
 end

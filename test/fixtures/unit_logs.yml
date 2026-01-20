@@ -4,13 +4,16 @@
 #
 # Table name: unit_logs
 #
-#  id         :bigint           not null, primary key
-#  log_date   :date
-#  phenomenon :integer
-#  text       :text(65535)
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
-#  unit_id    :bigint           not null
+#  id               :bigint           not null, primary key
+#  log_date         :date
+#  phenomenon       :integer
+#  phenomenon_alias :string(255)
+#  quote_text       :text(65535)
+#  source_url       :string(255)
+#  text             :text(65535)
+#  created_at       :datetime         not null
+#  updated_at       :datetime         not null
+#  unit_id          :bigint           not null
 #
 # Indexes
 #

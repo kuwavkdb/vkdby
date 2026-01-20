@@ -32,7 +32,9 @@
                 <% if @resource.is_a?(Person) %>
                   <%= render PersonHistoryItemComponent.with_collection(@logs) %>
                 <% elsif @resource.is_a?(Unit) %>
-                  <%= render UnitHistoryItemComponent.with_collection(@history) %>
+                  <% @history.group_by { |log| log.log_date.to_s.gsub("/", "-") }.each do |date, logs| %>
+                    <%= render UnitHistoryGroupComponent.new(date: date, logs: logs) %>
+                  <% end %>
                 <% end %>
               </div>
             </section>

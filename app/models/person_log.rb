@@ -7,10 +7,10 @@
 #  log_type         :integer
 #  name             :string(255)
 #  part             :integer
-#  sort_order       :integer
 #  phenomenon       :integer          not null
 #  phenomenon_alias :string(255)
 #  quote_text       :text(65535)
+#  sort_order       :integer
 #  source_url       :string(255)
 #  text             :text(65535)
 #  unit_key         :string(255)
@@ -22,8 +22,9 @@
 #
 # Indexes
 #
-#  index_person_logs_on_person_id  (person_id)
-#  index_person_logs_on_unit_id    (unit_id)
+#  index_person_logs_on_person_id                 (person_id)
+#  index_person_logs_on_person_id_and_sort_order  (person_id,sort_order)
+#  index_person_logs_on_unit_id                   (unit_id)
 #
 # Foreign Keys
 #

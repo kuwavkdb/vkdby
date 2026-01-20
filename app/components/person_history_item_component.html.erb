@@ -10,9 +10,15 @@
         <span class="text-xs font-normal text-slate-500 ml-1">に <%= @log.phenomenon_text %></span>
       <% elsif @log.unit %>
         <%= link_to @log.unit.name, profile_path(@log.unit.key), class: "hover:text-person transition-colors" %>
+        <% if @log.name.present? %>
+          <span class="text-xs font-bold text-slate-600 dark:text-slate-300 ml-1">(<%= @log.name %>)</span>
+        <% end %>
         <span class="text-xs font-normal text-slate-500 ml-1"><%= @log.phenomenon_text %></span>
       <% else %>
         <%= @log.unit_name || "Unknown Unit" %>
+        <% if @log.name.present? %>
+          <span class="text-xs font-bold text-slate-600 dark:text-slate-300 ml-1">(<%= @log.name %>)</span>
+        <% end %>
         <span class="text-xs font-normal text-slate-500 ml-1"><%= @log.phenomenon_text %></span>
       <% end %>
     </h3>

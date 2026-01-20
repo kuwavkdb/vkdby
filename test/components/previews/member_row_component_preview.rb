@@ -60,10 +60,11 @@ class MemberRowComponentPreview < ViewComponent::Preview
       person_logs: [ mock_log1, mock_log2 ]
     )
 
-    mock_member = Struct.new(:person, :part, :status, keyword_init: true).new(
+    mock_member = Struct.new(:person, :part, :status, :name, keyword_init: true).new(
       person: mock_person,
       part: "drums",
-      status: "active"
+      status: "active",
+      name: mock_person.name
     )
 
     render(MemberRowComponent.new(member: mock_member))
