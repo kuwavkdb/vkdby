@@ -10,7 +10,11 @@ Rails.application.routes.draw do
     resources :users
     resources :units do
       resources :unit_logs
-      resources :unit_people, only: [ :create, :destroy ]
+      resources :unit_people, only: [ :create, :edit, :update, :destroy ] do
+        collection do
+          patch :reorder
+        end
+      end
     end
     resources :people do
       resources :person_logs do

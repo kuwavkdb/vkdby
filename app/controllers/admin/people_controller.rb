@@ -7,7 +7,11 @@ class Admin::PeopleController < Admin::BaseController
   end
 
   def new
-    @person = Person.new
+    @person = Person.new(
+      key: params[:key],
+      name: params[:name],
+      parts: params[:parts]
+    )
   end
 
   def edit
