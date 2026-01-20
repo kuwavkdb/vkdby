@@ -39,7 +39,7 @@ class UnitPerson < ApplicationRecord
   before_validation :find_person_by_key, if: -> { person_id.blank? && person_key.present? }
 
   def name
-    person&.name || person_name
+    person_name.presence || person&.name
   end
 
   def key

@@ -47,6 +47,9 @@ class Person < ApplicationRecord
 
   before_save :set_dummy_birth_year, if: :birth_year_unknown
 
+  validate :key_immutable, on: :update
+  after_create :auto_link_unit_people
+
   def status_text
     STATUS_TRANSLATIONS[status] || status.humanize
   end
@@ -68,5 +71,17 @@ class Person < ApplicationRecord
 
     # Change year to DUMMY_BIRTH_YEAR while keeping month/day
     self.birthday = birthday.change(year: DUMMY_BIRTH_YEAR)
+  end
+
+  def key_immutable
+    if key_changed? && key_was.present?
+      errors.add(:key, "cannot be changed once set")
+    end
+  end
+
+  def auto_link_unit_people
+    return if key.blank?
+
+    UnitPerson.where(person_key: key, person_id: nil).update_all(person_id: id)
   end
 end

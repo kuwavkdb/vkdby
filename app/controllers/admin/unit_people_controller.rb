@@ -1,5 +1,6 @@
 class Admin::UnitPeopleController < Admin::BaseController
   before_action :set_unit
+  before_action :set_unit_person, only: [ :edit, :update, :destroy ]
 
   def create
     @unit_person = @unit.unit_people.build(unit_person_params)
@@ -11,16 +12,37 @@ class Admin::UnitPeopleController < Admin::BaseController
     end
   end
 
+  def edit
+  end
+
+  def update
+    if @unit_person.update(unit_person_params)
+      redirect_to edit_admin_unit_path(@unit), notice: "Member updated successfully."
+    else
+      render :edit, status: :unprocessable_entity
+    end
+  end
+
   def destroy
-    @unit_person = @unit.unit_people.find(params[:id])
     @unit_person.destroy
     redirect_to edit_admin_unit_path(@unit), notice: "Member removed successfully."
+  end
+
+  def reorder
+    params[:ids].each_with_index do |id, index|
+      @unit.unit_people.find(id).update(order_in_period: index + 1)
+    end
+    head :ok
   end
 
   private
 
   def set_unit
     @unit = Unit.find(params[:unit_id])
+  end
+
+  def set_unit_person
+    @unit_person = @unit.unit_people.find(params[:id])
   end
 
   def unit_person_params

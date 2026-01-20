@@ -57,4 +57,8 @@ class PersonLog < ApplicationRecord
   def phenomenon_text
     phenomenon_alias.presence || PHENOMENON_TRANSLATIONS[phenomenon] || phenomenon&.humanize
   end
+
+  def unit_name
+    super.presence || unit&.name
+  end
 end
