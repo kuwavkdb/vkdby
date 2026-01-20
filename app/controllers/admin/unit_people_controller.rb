@@ -1,6 +1,6 @@
 class Admin::UnitPeopleController < Admin::BaseController
   before_action :set_unit
-  before_action :set_unit_person, only: [:edit, :update, :destroy]
+  before_action :set_unit_person, only: [ :edit, :update, :destroy ]
 
   def create
     @unit_person = @unit.unit_people.build(unit_person_params)
