@@ -41,6 +41,12 @@ class Unit < ApplicationRecord
     STATUS_TRANSLATIONS[status] || status.humanize
   end
 
+  def vkdb_url
+    return nil if old_key.blank?
+    
+    "https://www.vkdb.jp/#{old_key}.html"
+  end
+
   private
 
   after_create :link_related_person_logs_and_members
