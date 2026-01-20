@@ -43,7 +43,7 @@ class Unit < ApplicationRecord
 
   def vkdb_url
     return nil if old_key.blank?
-    
+
     "https://www.vkdb.jp/#{old_key}.html"
   end
 
