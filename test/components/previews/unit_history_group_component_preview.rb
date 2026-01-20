@@ -3,9 +3,9 @@ class UnitHistoryGroupComponentPreview < ViewComponent::Preview
   def default
     mock_unit = Unit.new(id: 1, name: "Unit Name", key: "unit_key")
     mock_person = Person.new(id: 1, name: "Person Name", key: "person_key")
-    
+
     date = "2009-03-14"
-    
+
     logs = [
       UnitLog.new(
         id: 1,
