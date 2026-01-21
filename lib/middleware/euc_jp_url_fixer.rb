@@ -22,11 +22,11 @@ module Middleware
         # 2. Handle Encoded EUC-JP (Valid ASCII PATH_INFO, but decodes to invalid UTF-8)
         # Check for percent-encoded high-bit bytes (0x80-0xFF)
         # These correspond to %80-%FF. Regex: %[89A-F][0-9A-F]
-        if path.match?( /%[89a-fA-F][0-9a-fA-F]/ )
+        if path.match?(/%[89a-fA-F][0-9a-fA-F]/)
            # Double-encode these specific sequences to preserve them as literal "%HH" strings
            # after Rails decoding.
            # e.g. "%B7" -> "%25B7" -> Rails decodes to "%B7"
-           env["PATH_INFO"] = path.gsub( /%(?=[89a-fA-F][0-9a-fA-F])/ , "%25")
+           env["PATH_INFO"] = path.gsub(/%(?=[89a-fA-F][0-9a-fA-F])/, "%25")
         end
       end
 

@@ -6,12 +6,12 @@ class EucJpUrlFixerTest < ActiveSupport::TestCase
     # Create a string with invalid UTF-8 (valid EUC-JP)
     # "\xB7\xDF\xB9\xFC" is EUC-JP bytes
     raw_path = "/\xB7\xDF\xB9\xFC.html".force_encoding("UTF-8")
-    
+
     # Verify it is indeed invalid UTF-8
     assert_not raw_path.valid_encoding?
 
     # Mock app
-    app = ->(env) { [200, {}, [env["PATH_INFO"]]] }
+    app = ->(env) { [ 200, {}, [ env["PATH_INFO"] ] ] }
     middleware = Middleware::EucJpUrlFixer.new(app)
 
     # Call middleware
@@ -26,8 +26,8 @@ class EucJpUrlFixerTest < ActiveSupport::TestCase
   test "should leave valid UTF-8 path unchanged" do
     valid_path = "/valid_path.html"
     env = { "PATH_INFO" => valid_path }
-    
-    app = ->(env) { [200, {}, [env["PATH_INFO"]]] }
+
+    app = ->(env) { [ 200, {}, [ env["PATH_INFO"] ] ] }
     middleware = Middleware::EucJpUrlFixer.new(app)
 
     middleware.call(env)
@@ -36,9 +36,9 @@ class EucJpUrlFixerTest < ActiveSupport::TestCase
 
   test "should double-encode high-bit percent sequences" do
     # This simulates what curl sends: "%B7" as ASCII chars
-    encoded_path = "/%B7%DF.html" 
-    
-    app = ->(env) { [200, {}, [env["PATH_INFO"]]] }
+    encoded_path = "/%B7%DF.html"
+
+    app = ->(env) { [ 200, {}, [ env["PATH_INFO"] ] ] }
     middleware = Middleware::EucJpUrlFixer.new(app)
 
     env = { "PATH_INFO" => encoded_path }

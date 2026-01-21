@@ -42,7 +42,7 @@ class LegacyRedirectsControllerTest < ActionDispatch::IntegrationTest
     # Request with the percent-encoded URL (simulating curl/browser behavior)
     # The middleware should handle double-encoding if necessary
     get "/#{euc_key}.html"
-    
+
     assert_response :moved_permanently
     assert_redirected_to profile_path(unit.key)
   end
@@ -51,6 +51,4 @@ class LegacyRedirectsControllerTest < ActionDispatch::IntegrationTest
     get "/non_existent_key.html"
     assert_response :not_found
   end
-
-
 end
