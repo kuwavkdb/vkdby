@@ -19,6 +19,11 @@ module Vkdby
     # Add app/assets/builds to the asset load path
     config.assets.paths << Rails.root.join("app/assets/builds")
 
+    # Insert middleware to fix EUC-JP URLs before ActionableExceptions
+    # (or any other middleware that might raise BadRequest on invalid encoding)
+    require_relative "../lib/middleware/euc_jp_url_fixer"
+    config.middleware.insert_before ActionDispatch::ActionableExceptions, Middleware::EucJpUrlFixer
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files
