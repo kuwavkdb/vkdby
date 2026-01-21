@@ -42,5 +42,8 @@ Rails.application.routes.draw do
   resources :people, param: :key, only: [ :index, :show ]
   resources :units, param: :key, only: [ :index, :show ]
 
+  # Legacy redirects for .html extensions
+  get "/:old_key.html", to: "legacy_redirects#show", constraints: { old_key: /[^\/]+/ }
+
   get "/:key", to: "profiles#show", as: :profile
 end

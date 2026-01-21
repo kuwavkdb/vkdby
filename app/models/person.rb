@@ -54,6 +54,12 @@ class Person < ApplicationRecord
     STATUS_TRANSLATIONS[status] || status.humanize
   end
 
+  def vkdb_url
+    return nil if old_key.blank?
+
+    "https://www.vkdb.jp/#{old_key}.html"
+  end
+
   def birthday_display
     return nil unless birthday
 
