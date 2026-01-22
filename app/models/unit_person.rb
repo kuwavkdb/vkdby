@@ -3,11 +3,14 @@
 # Table name: unit_people
 #
 #  id              :bigint           not null, primary key
+#  inline_history  :text(65535)
+#  old_person_key  :string(255)
 #  order_in_period :integer          default(1), not null
 #  part            :integer          default("vocal"), not null
 #  period          :integer          default(1), not null
 #  person_key      :string(255)
 #  person_name     :string(255)
+#  sns             :json
 #  status          :integer          default("active"), not null
 #  created_at      :datetime         not null
 #  updated_at      :datetime         not null
