@@ -5,7 +5,8 @@ class MemberRowComponentPreview < ViewComponent::Preview
     member = UnitPerson.new(
       person: person,
       part: "vocal",
-      status: "active"
+      status: "active",
+      sns: ["@vocalist"]
     )
     render(MemberRowComponent.new(member: member))
   end
@@ -15,7 +16,8 @@ class MemberRowComponentPreview < ViewComponent::Preview
     member = UnitPerson.new(
       person: person,
       part: "bass",
-      status: "left"
+      status: "left",
+      sns: nil
     )
     render(MemberRowComponent.new(member: member))
   end
@@ -25,7 +27,8 @@ class MemberRowComponentPreview < ViewComponent::Preview
     member = UnitPerson.new(
       person: person,
       part: "guitar",
-      status: "active"
+      status: "active",
+      sns: ["https://example.com/guitarist"]
     )
     render(MemberRowComponent.new(member: member, hide_active: true))
   end
@@ -60,11 +63,12 @@ class MemberRowComponentPreview < ViewComponent::Preview
       person_logs: [ mock_log1, mock_log2 ]
     )
 
-    mock_member = Struct.new(:person, :part, :status, :name, keyword_init: true).new(
+    mock_member = Struct.new(:person, :part, :status, :name, :sns, keyword_init: true).new(
       person: mock_person,
       part: "drums",
       status: "active",
-      name: mock_person.name
+      name: mock_person.name,
+      sns: ["@example_user", "https://example.com/profile"]
     )
 
     render(MemberRowComponent.new(member: mock_member))
