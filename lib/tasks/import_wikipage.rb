@@ -107,12 +107,12 @@ ActiveRecord::Base.transaction do
     if old_member_key.present?
       old_member_key = old_member_key.strip
       if old_member_key =~ /^\(/ && old_member_key =~ /\)$/
-        old_member_key = [name_str, old_member_key].join
+        old_member_key = [ name_str, old_member_key ].join
       end
     else
       old_member_key = name_str
     end
-    
+
     old_member_key = URI.encode_www_form_component(old_member_key.encode("EUC-JP"))
 
     # Map Part
@@ -156,7 +156,7 @@ ActiveRecord::Base.transaction do
     up.part = part_key
     up.status = :active
     up.old_person_key = old_member_key
-    up.sns = [sns_account.strip] if sns_account.present?
+    up.sns = [ sns_account.strip ] if sns_account.present?
     up.save!
   end
 
