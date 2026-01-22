@@ -14,11 +14,21 @@
       <div class="flex items-center gap-2">
         <% if @member.sns.present? && @member.sns.is_a?(Array) %>
           <% @member.sns.each do |sns_account| %>
-            <% sns_url = sns_account.start_with?('@') ? "https://x.com/#{sns_account.delete_prefix('@')}" : sns_account %>
-            <%= link_to sns_url, target: "_blank", rel: "noopener noreferrer", class: "inline-flex items-center text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors", title: "X (Twitter)" do %>
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-              </svg>
+            <% 
+              is_x_account = sns_account.start_with?('@')
+              sns_url = is_x_account ? "https://x.com/#{sns_account.delete_prefix('@')}" : sns_account
+              icon_title = is_x_account ? "X (Twitter)" : "Link"
+            %>
+            <%= link_to sns_url, target: "_blank", rel: "noopener noreferrer", class: "inline-flex items-center text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors", title: icon_title do %>
+              <% if is_x_account %>
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+              <% else %>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                </svg>
+              <% end %>
             <% end %>
           <% end %>
         <% end %>
