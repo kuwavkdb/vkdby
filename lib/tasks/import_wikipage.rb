@@ -98,10 +98,22 @@ ActiveRecord::Base.transaction do
   puts "Unit saved: #{unit.name} (id: #{unit.id})"
 
   # 3. Parse Members
-  member_regex = /\{\{member2?\s+([^,]+),([^,}\n]+)/
-  wiki_content.scan(member_regex).each do |part_str, name_str|
+  # Format: {{member part,name[,old_member_key][,sns_account]}}
+  # Only part and name are required
+  member_regex = /\{\{member2?\s+([^,]+),([^,}\n]+)(?:,([^,}\n]+))?(?:,([^,}\n]+))?\}\}/
+  wiki_content.scan(member_regex).each do |part_str, name_str, old_member_key, sns_account|
     part_str = part_str.strip
     name_str = name_str.strip
+    if old_member_key.present?
+      old_member_key = old_member_key.strip
+      if old_member_key =~ /^\(/ && old_member_key =~ /\)$/
+        old_member_key = [ name_str, old_member_key ].join
+      end
+    else
+      old_member_key = name_str
+    end
+
+    old_member_key = URI.encode_www_form_component(old_member_key.encode("EUC-JP"))
 
     # Map Part
     part_key = case part_str.downcase
@@ -116,18 +128,35 @@ ActiveRecord::Base.transaction do
 
     # Create Person
     # Use unit_key prefix for uniqueness
-    person_key = "#{unit_key}_#{name_str.downcase.gsub(/\s+/, '-')}"
-    person = Person.find_or_initialize_by(key: person_key)
-    if person.new_record?
-      person.name = name_str
-      person.save!
-      # puts "  Created Person: #{person.name}"
+    # Convert name to romaji for URL-safe key
+    person_name_for_key = if name_str.match?(/^[[:ascii:]\s-]+$/)
+      # Already ASCII
+      name_str
+    else
+      # Try to convert to romaji
+      romaji_attempt = Romaji.kana2romaji(name_str)
+      # If romanization failed (still contains non-ASCII), use old_member_key
+      if romaji_attempt.match?(/[^[:ascii:]]/)
+        # Use the already-encoded old_member_key (without unit prefix)
+        old_member_key.gsub(/\%/, "")
+      else
+        romaji_attempt
+      end
     end
+    person_key = "#{unit_key}_#{person_name_for_key.downcase.gsub(/\s+/, '-')}"
+    person = Person.find_by(key: person_key)
 
     # Create UnitPerson
-    up = UnitPerson.find_or_initialize_by(unit: unit, person: person)
+    up = if person.present?
+           UnitPerson.find_or_initialize_by(unit: unit, person: person)
+    else
+      UnitPerson.find_or_initialize_by(unit: unit, person_name: name_str)
+    end
+    up.person_id = person.id if person.present?
     up.part = part_key
     up.status = :active
+    up.old_person_key = old_member_key
+    up.sns = [ sns_account.strip ] if sns_account.present?
     up.save!
   end
 

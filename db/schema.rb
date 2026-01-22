@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_19_171954) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_22_143605) do
   create_table "links", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.boolean "active", default: true
     t.datetime "created_at", null: false
@@ -78,15 +78,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_171954) do
 
   create_table "unit_people", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.text "inline_history"
+    t.string "old_person_key"
     t.integer "order_in_period", default: 1, null: false
     t.integer "part", default: 0, null: false
     t.integer "period", default: 1, null: false
     t.bigint "person_id"
     t.string "person_key"
     t.string "person_name"
+    t.json "sns"
     t.integer "status", default: 1, null: false
     t.bigint "unit_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["old_person_key"], name: "index_unit_people_on_old_person_key"
     t.index ["person_id"], name: "index_unit_people_on_person_id"
     t.index ["unit_id", "period", "order_in_period"], name: "index_unit_people_on_unit_id_and_period_and_order_in_period"
     t.index ["unit_id"], name: "index_unit_people_on_unit_id"
