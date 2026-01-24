@@ -113,24 +113,24 @@ ActiveRecord::Base.transaction do
   #                  inline history text...
   #                  more history...
   #                }}  <- closing }} must be at the beginning of a line
-  
+
   # Match both single-line and multi-line plugins
   # Single-line: {{member...}} on same line
   # Multi-line: {{member2...\n...\n^}}
   member_regex = /\{\{member2?\s+([^\n}]+)((?:\n(?!^\}\}).*)*)\n?\}\}/m
-  
+
   wiki_content.scan(member_regex).each do |first_line, inline_history_text|
     # Parse first line: part,name[,old_member_key][,sns_account]
-    parts = first_line.split(',').map(&:strip)
+    parts = first_line.split(",").map(&:strip)
     part_str = parts[0]
     name_str = parts[1]
     old_member_key = parts[2]
     sns_account = parts[3]
-    
+
     # Clean inline_history (remove leading/trailing whitespace and newlines)
     inline_history = inline_history_text&.strip
     inline_history = nil if inline_history.blank?
-    
+
     part_str = part_str.strip
     name_str = name_str.strip
     if old_member_key.present?
