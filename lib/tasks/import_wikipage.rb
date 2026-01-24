@@ -304,14 +304,19 @@ ActiveRecord::Base.transaction do
 
   # 4.1. Unlink Plugin (Inactive Links)
   # Format: {{unlink ... }} (multi-line supported)
-  unlink_regex = /\{\{unlink\s+((?:\n(?!^\}\}).*)*)\n?\}\}/m
+  # Match content non-greedily until the closing }}
+  unlink_regex = /\{\{unlink\s+(.*?)\}\}/m
+
+  puts "Scanning for unlink blocks..."
   wiki_content.scan(unlink_regex).each do |match|
+    puts "Found unlink block!"
     unlink_content = match[0]
     parse_unit_links(unit, unlink_content, attributes, active: false)
   end
 
   # 4.2. Active Links (Remove unlink blocks first)
   active_content = wiki_content.gsub(unlink_regex, "")
+  puts "Parsing active links..."
   parse_unit_links(unit, active_content, attributes, active: true)
 end
 
