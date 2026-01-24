@@ -107,13 +107,18 @@ ActiveRecord::Base.transaction do
   puts "Unit saved: #{unit.name} (id: #{unit.id}, type: #{unit_type})"
 
   # 3. Parse Members
-  # Format: {{member part,name[,old_member_key][,sns_account]}}
-  # Format: {{member2 part,name,old_member_key,sns_account
-  #           inline history text...
-  #           more history...
-  #         }}
-  # Can span multiple lines, with inline history after the first line
-  member_regex = /\{\{member2?\s+([^\n}]+)(.*?)\}\}/m
+  # Plugin format:
+  # - Single-line: {{member part,name[,old_member_key][,sns_account]}}
+  # - Multi-line:  {{member2 part,name,old_member_key,sns_account
+  #                  inline history text...
+  #                  more history...
+  #                }}  <- closing }} must be at the beginning of a line
+  
+  # Match both single-line and multi-line plugins
+  # Single-line: {{member...}} on same line
+  # Multi-line: {{member2...\n...\n^}}
+  member_regex = /\{\{member2?\s+([^\n}]+)((?:\n(?!^\}\}).*)*)\n?\}\}/m
+  
   wiki_content.scan(member_regex).each do |first_line, inline_history_text|
     # Parse first line: part,name[,old_member_key][,sns_account]
     parts = first_line.split(',').map(&:strip)
