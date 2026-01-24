@@ -93,6 +93,7 @@ ActiveRecord::Base.transaction do
   unit.name = unit_name
   unit.name_kana = unit_name_kana
   unit.old_key = encoded_old_key # Save ENCODED string
+  unit.old_wiki_text = wiki_content # Save original wiki text
   unit.status = :active
   unit.save!
   puts "Unit saved: #{unit.name} (id: #{unit.id})"
