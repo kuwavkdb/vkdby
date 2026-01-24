@@ -10,8 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_22_143605) do
-  create_table "links", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+ActiveRecord::Schema[8.1].define(version: 2026_01_24_142400) do
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "pg_catalog.plpgsql"
+  enable_extension "pg_trgm"
+
+  create_table "links", force: :cascade do |t|
     t.boolean "active", default: true
     t.datetime "created_at", null: false
     t.bigint "linkable_id", null: false
@@ -23,7 +27,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_22_143605) do
     t.index ["linkable_type", "linkable_id"], name: "index_links_on_linkable"
   end
 
-  create_table "people", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "people", force: :cascade do |t|
     t.boolean "birth_year_unknown"
     t.date "birthday"
     t.string "blood"
@@ -41,7 +45,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_22_143605) do
     t.index ["old_key"], name: "index_people_on_old_key", unique: true
   end
 
-  create_table "person_logs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "person_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "log_date"
     t.integer "log_type"
@@ -63,7 +67,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_22_143605) do
     t.index ["unit_id"], name: "index_person_logs_on_unit_id"
   end
 
-  create_table "unit_logs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "unit_logs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.date "log_date"
     t.integer "phenomenon"
@@ -76,7 +80,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_22_143605) do
     t.index ["unit_id"], name: "index_unit_logs_on_unit_id"
   end
 
-  create_table "unit_people", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "unit_people", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "inline_history"
     t.string "old_person_key"
@@ -96,7 +100,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_22_143605) do
     t.index ["unit_id"], name: "index_unit_people_on_unit_id"
   end
 
-  create_table "units", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "units", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "key"
     t.string "name"
@@ -110,7 +114,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_22_143605) do
     t.index ["old_key"], name: "index_units_on_old_key", unique: true
   end
 
-  create_table "users", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
     t.string "name"
@@ -120,21 +124,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_22_143605) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
-  create_table "wikipages", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "wikipages", force: :cascade do |t|
     t.string "category"
-    t.datetime "created_at", precision: nil
+    t.datetime "created_at", precision: nil, null: false
     t.integer "dw_id"
     t.integer "eplus_id"
     t.string "ip", limit: 64
     t.string "it_id", limit: 12
     t.integer "level", limit: 2, default: 0, null: false
-    t.string "name", default: "", null: false, collation: "utf8mb4_bin"
+    t.string "name", null: false
     t.string "pia_id", limit: 12
     t.string "title", limit: 100
     t.datetime "updated_at", precision: nil, null: false
     t.text "wiki"
-    t.index ["name"], name: "name", unique: true
-    t.index ["wiki"], name: "wiki", type: :fulltext
+    t.index ["name"], name: "index_wikipages_on_name", unique: true
+    t.index ["wiki"], name: "index_wikipages_on_wiki_gin", opclass: :gin_trgm_ops, using: :gin
   end
 
   add_foreign_key "person_logs", "people"
