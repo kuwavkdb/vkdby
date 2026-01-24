@@ -6,7 +6,7 @@ class MemberRowComponentPreview < ViewComponent::Preview
       person: person,
       part: "vocal",
       status: "active",
-      sns: ["@vocalist"]
+      sns: [ "@vocalist" ]
     )
     render(MemberRowComponent.new(member: member))
   end
@@ -28,7 +28,7 @@ class MemberRowComponentPreview < ViewComponent::Preview
       person: person,
       part: "guitar",
       status: "active",
-      sns: ["https://example.com/guitarist"]
+      sns: [ "https://example.com/guitarist" ]
     )
     render(MemberRowComponent.new(member: member, hide_active: true))
   end
@@ -68,7 +68,7 @@ class MemberRowComponentPreview < ViewComponent::Preview
       part: "drums",
       status: "active",
       name: mock_person.name,
-      sns: ["@example_user", "https://example.com/profile"]
+      sns: [ "@example_user", "https://example.com/profile" ]
     )
 
     render(MemberRowComponent.new(member: mock_member))

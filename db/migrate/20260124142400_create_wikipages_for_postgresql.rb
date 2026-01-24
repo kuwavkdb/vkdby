@@ -11,15 +11,15 @@ class CreateWikipagesForPostgresql < ActiveRecord::Migration[8.1]
       t.string :it_id, limit: 12
       t.string :pia_id, limit: 12
       t.integer :eplus_id
-      
+
       t.timestamps precision: nil
     end
-    
+
     add_index :wikipages, :name, unique: true
-    
+
     # Enable pg_trgm extension for full-text search
     execute "CREATE EXTENSION IF NOT EXISTS pg_trgm"
-    
+
     # Add GIN index for full-text search on wiki column
     add_index :wikipages, :wiki, using: :gin, opclass: :gin_trgm_ops, name: "index_wikipages_on_wiki_gin"
   end
