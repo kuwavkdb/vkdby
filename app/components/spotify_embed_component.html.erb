@@ -1,0 +1,19 @@
+<% if render? %>
+  <section class="mb-6">
+    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
+      Spotify
+    </h2>
+    <div class="rounded-xl overflow-hidden shadow-md">
+      <iframe
+        style="border-radius:12px"
+        src="https://open.spotify.com/embed/artist/<%= spotify_artist_id %>?utm_source=generator&theme=0"
+        width="100%"
+        height="352"
+        frameBorder="0"
+        allowfullscreen=""
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+        loading="lazy"
+      ></iframe>
+    </div>
+  </section>
+<% end %>
