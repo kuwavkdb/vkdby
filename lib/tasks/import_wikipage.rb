@@ -28,6 +28,9 @@ unless wiki_content
   exit
 end
 
+# Remove comment lines (lines starting with //)
+wiki_content = wiki_content.lines.reject { |line| line.strip.start_with?("//") }.join
+
 require "romaji"
 
 ActiveRecord::Base.transaction do
