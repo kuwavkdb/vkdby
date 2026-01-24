@@ -39,11 +39,11 @@ Rails.application.routes.draw do
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
-  resources :people, param: :key, only: [ :index, :show ]
-  resources :units, param: :key, only: [ :index, :show ]
+  resources :people, param: :key, only: [ :index, :show ], constraints: { key: /[^\/]+/ }
+  resources :units, param: :key, only: [ :index, :show ], constraints: { key: /[^\/]+/ }
 
   # Legacy redirects for .html extensions
   get "/:old_key.html", to: "legacy_redirects#show", constraints: { old_key: /[^\/]+/ }
 
-  get "/:key", to: "profiles#show", as: :profile
+  get "/:key", to: "profiles#show", as: :profile, constraints: { key: /[^\/]+/ }
 end
