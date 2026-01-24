@@ -14,6 +14,7 @@ class Admin::UnitsController < Admin::BaseController
     @unit_logs = @unit.unit_logs.order(:log_date)
     @unit_people = @unit.unit_people.includes(:person).order(:period, :order_in_period)
     @unit_person = @unit.unit_people.build(period: 1, order_in_period: (@unit_people.last&.order_in_period || 0) + 1)
+    @unit.links.build # Build an empty link for the form
   end
 
   def create
@@ -22,6 +23,7 @@ class Admin::UnitsController < Admin::BaseController
     if @unit.save
       redirect_to admin_units_path, notice: "Unit created successfully."
     else
+      @unit.links.build if @unit.links.none?(&:new_record?)
       render :new, status: :unprocessable_entity
     end
   end
@@ -30,6 +32,10 @@ class Admin::UnitsController < Admin::BaseController
     if @unit.update(unit_params)
       redirect_to admin_units_path, notice: "Unit updated successfully."
     else
+      @unit_logs = @unit.unit_logs.order(:log_date)
+      @unit_people = @unit.unit_people.includes(:person).order(:period, :order_in_period)
+      @unit_person = @unit.unit_people.build(period: 1, order_in_period: (@unit_people.last&.order_in_period || 0) + 1)
+      @unit.links.build if @unit.links.none?(&:new_record?)
       render :edit, status: :unprocessable_entity
     end
   end
@@ -46,6 +52,7 @@ class Admin::UnitsController < Admin::BaseController
   end
 
   def unit_params
-    params.require(:unit).permit(:name, :name_kana, :key, :status, :unit_type)
+    params.require(:unit).permit(:name, :name_kana, :key, :status, :unit_type,
+      links_attributes: [:id, :text, :url, :active, :sort_order, :_destroy])
   end
 end
