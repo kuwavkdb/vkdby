@@ -140,24 +140,15 @@ ActiveRecord::Base.transaction do
   # ... (existing transaction start) ...
   # 2. Derive Unit Data
   # Parse unit name and kana first needed for Logic
-  first_line = wiki_content.lines.first.strip
-  unit_name_kana = nil
-
-  if first_line.start_with?("!!!")
-    # Extract Kana from last parenthesis
-    if first_line =~ /[（\(]([^（\(）\)]+)[）\)]\s*$/
-      unit_name_kana = $1
-    end
-
-    # Remove !!! and everything after first parenthese if present for Name
-    unit_name_raw = first_line.sub(/^!!!/, "")
-    if unit_name_raw =~ /^(.+?)[（\(]/
-      unit_name = $1.strip
-    else
-      unit_name = unit_name_raw.strip
-    end
+  # 2. Derive Unit Data
+  # Parse unit name and kana from Wikipage title
+  # Format: "Name (Kana)" or "Name"
+  if wp.title =~ /^(.+?)\s*[（\(](.+)[）\)]$/
+    unit_name = $1.strip
+    unit_name_kana = $2.strip
   else
-    unit_name = wp.title.gsub(/\(.+\)/, "").strip # fallback
+    unit_name = wp.title.strip
+    unit_name_kana = nil
   end
 
   # Encode old_key to EUC-JP URL (Store encoded string)
@@ -221,12 +212,21 @@ ActiveRecord::Base.transaction do
   #                  more history...
   #                }}  <- closing }} must be at the beginning of a line
 
-  # Match both single-line and multi-line plugins
-  # Single-line: {{member...}} on same line
-  # Multi-line: {{member2...\n...\n^}}
-  member_regex = /\{\{member2?\s+([^\n}]+)((?:\n(?!^\}\}).*)*)\n?\}\}/m
+  # Match both single-line and multi-line plugins non-greedily
+  member_regex = /\{\{member2?\s+(.*?)\}\}/m
 
-  wiki_content.scan(member_regex).each do |first_line, inline_history_text|
+  wiki_content.scan(member_regex).each do |match|
+    content = match[0]
+    
+    # Split content into first line (arguments) and the rest (inline history)
+    # Handle cases where there might not be a newline
+    if content.include?("\n")
+      first_line, inline_history_text = content.split("\n", 2)
+    else
+      first_line = content
+      inline_history_text = nil
+    end
+
     # Parse first line: part,name[,old_member_key][,sns_account]
     parts = first_line.split(",").map(&:strip)
     part_str = parts[0]
