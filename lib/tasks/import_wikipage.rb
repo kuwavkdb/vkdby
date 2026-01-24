@@ -108,8 +108,9 @@ ActiveRecord::Base.transaction do
 
   # 3. Parse Members
   # Format: {{member part,name[,old_member_key][,sns_account]}}
-  # Only part and name are required
-  member_regex = /\{\{member2?\s+([^,]+),([^,}\n]+)(?:,([^,}\n]+))?(?:,([^,}\n]+))?\}\}/
+  # Format: {{member2 part,name,old_member_key,sns_account}}
+  # Can span multiple lines
+  member_regex = /\{\{member2?\s+([^,]+),([^,}]+?)(?:,([^,}]+?))?(?:,([^}]+?))?\}\}/m
   wiki_content.scan(member_regex).each do |part_str, name_str, old_member_key, sns_account|
     part_str = part_str.strip
     name_str = name_str.strip
