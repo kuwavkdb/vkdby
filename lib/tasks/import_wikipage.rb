@@ -107,11 +107,30 @@ ActiveRecord::Base.transaction do
   puts "Unit saved: #{unit.name} (id: #{unit.id}, type: #{unit_type})"
 
   # 3. Parse Members
-  # Format: {{member part,name[,old_member_key][,sns_account]}}
-  # Format: {{member2 part,name,old_member_key,sns_account}}
-  # Can span multiple lines
-  member_regex = /\{\{member2?\s+([^,]+),([^,}]+?)(?:,([^,}]+?))?(?:,([^}]+?))?\}\}/m
-  wiki_content.scan(member_regex).each do |part_str, name_str, old_member_key, sns_account|
+  # Plugin format:
+  # - Single-line: {{member part,name[,old_member_key][,sns_account]}}
+  # - Multi-line:  {{member2 part,name,old_member_key,sns_account
+  #                  inline history text...
+  #                  more history...
+  #                }}  <- closing }} must be at the beginning of a line
+
+  # Match both single-line and multi-line plugins
+  # Single-line: {{member...}} on same line
+  # Multi-line: {{member2...\n...\n^}}
+  member_regex = /\{\{member2?\s+([^\n}]+)((?:\n(?!^\}\}).*)*)\n?\}\}/m
+
+  wiki_content.scan(member_regex).each do |first_line, inline_history_text|
+    # Parse first line: part,name[,old_member_key][,sns_account]
+    parts = first_line.split(",").map(&:strip)
+    part_str = parts[0]
+    name_str = parts[1]
+    old_member_key = parts[2]
+    sns_account = parts[3]
+
+    # Clean inline_history (remove leading/trailing whitespace and newlines)
+    inline_history = inline_history_text&.strip
+    inline_history = nil if inline_history.blank?
+
     part_str = part_str.strip
     name_str = name_str.strip
     if old_member_key.present?
@@ -167,6 +186,7 @@ ActiveRecord::Base.transaction do
     up.part = part_key
     up.status = :active
     up.old_person_key = old_member_key
+    up.inline_history = inline_history # Save inline history text
     up.sns = [ sns_account.strip ] if sns_account.present?
     up.save!
   end

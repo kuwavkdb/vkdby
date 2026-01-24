@@ -37,6 +37,12 @@
     </div>
 
     <div class="col-span-6">
+      <%= form.label :inline_history, "Inline History", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">Member history text from wiki (read-only, imported from member2 tags)</p>
+      <%= form.text_area :inline_history, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-xs bg-gray-50 dark:bg-gray-800", rows: 5, readonly: true %>
+    </div>
+
+    <div class="col-span-6">
       <%= form.label :status, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
       <div class="mt-2 flex flex-wrap gap-4">
         <% UnitPerson.statuses.keys.each do |status| %>
