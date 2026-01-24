@@ -302,8 +302,6 @@ ActiveRecord::Base.transaction do
 
   # 4. Parse Links
 
-  # 4. Parse Links
-
   # 4.1. Unlink Plugin (Inactive Links)
   # Format: {{unlink ... }} (multi-line supported)
   # Match content non-greedily until the closing }}
