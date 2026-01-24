@@ -223,7 +223,7 @@ ActiveRecord::Base.transaction do
   wiki_content.scan(member_regex) do |match|
     match_data = Regexp.last_match
     current_pos = match_data.begin(0)
-    
+
     # Check if this member is after the separator
     member_status = current_pos > separator_index ? :left : :active
 
