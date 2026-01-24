@@ -31,9 +31,113 @@ end
 # Remove comment lines (lines starting with //)
 wiki_content = wiki_content.lines.reject { |line| line.strip.start_with?("//") }.join
 
+# Helper method to parse links
+# Helper method to parse links
+def parse_unit_links(unit, content, attributes, active: true)
+  return unless content
+
+  # 1. [[Service:Account]] Format
+  content.scan(/\[\[([^:]+):([^\]]+)\]\]/).each do |service, account|
+    url = nil
+    text = nil
+    case service.downcase
+    when "twitter", "x"
+      url = "https://twitter.com/#{account}"
+      text = "Twitter"
+    when "youtube channel"
+      url = "https://www.youtube.com/c/#{account}"
+      text = "YouTube Channel"
+    when "spotify"
+      url = "https://open.spotify.com/artist/#{account}"
+      text = "Spotify"
+    when "vkgy"
+      url = "https://vk.gy/artists/#{account}"
+      text = "vk.gy"
+    when "joysound"
+      url = "https://www.joysound.com/web/search/artist/#{account}"
+      text = "JOYSOUND"
+    when "dam"
+      url = "https://www.clubdam.com/app/leaf/artistKaraokeLeaf.html?artistCode=#{account}"
+      text = "DAM"
+    when "カラオケdam"
+      url = "https://www.clubdam.com/karaokesearch/artistleaf.html?artistCode=#{account}"
+      text = "カラオケDAM"
+    when "digitlink"
+      url = "https://www.digitlink.jp/#{account}"
+      text = "digitlink"
+    when "filmarks"
+      url = "https://filmarks.com/users/#{account}"
+      text = "Filmarks"
+    when "ototoy"
+      url = "https://ototoy.jp/_/default/a/#{account}"
+      text = "OTOTOY"
+    when "linkfire"
+      url = "https://smr.lnk.to/#{account}"
+      text = "linkfire"
+    when "tiktok"
+      url = "https://www.tiktok.com/@#{account}"
+      text = "TikTok"
+    when "linktr.ee"
+      url = "https://linktr.ee/#{account}"
+      text = "linktr.ee"
+    when "lnk.to"
+      url = "https://lnk.to/#{account}"
+      text = "lnk.to"
+    end
+
+    if url
+      link = unit.links.find_or_initialize_by(url: url)
+      link.text = text
+      link.active = active
+      link.save!
+    end
+  end
+
+  # 2. [Label|URL] Format
+  content.scan(/\[([^|\]]+)\|([^\]]+)\]/).each do |label, url|
+    next unless url.start_with?("http")
+
+    link = unit.links.find_or_initialize_by(url: url)
+    link.text = label
+    link.active = active
+    link.save!
+  end
+
+  # 3. {{outlink ...}} Format
+  content.scan(/\{\{outlink\s+([^\}]+)\}\}/).each do |match|
+    type = match[0].strip
+    url = nil
+    text = nil
+
+    case type
+    when "dw"
+      if attributes["dw_id"]
+        url = "https://pc.dwango.jp/portals/artist/#{attributes['dw_id']}"
+        text = "ドワンゴジェイピー"
+      end
+    when "it"
+      if attributes["it_id"]
+        url = "https://music.apple.com/jp/artist/#{attributes['it_id']}"
+        text = "Apple Music"
+      end
+    when "tunecore"
+      # Tunecore parsing might be complex, simplified here
+      text = "TuneCore"
+    end
+
+    if url
+      link = unit.links.find_or_initialize_by(url: url)
+      link.text = text
+      link.active = active
+      link.save!
+    end
+  end
+end
+
 require "romaji"
 
 ActiveRecord::Base.transaction do
+  # ... (existing transaction start) ...
   # 2. Derive Unit Data
   # Parse unit name and kana first needed for Logic
   first_line = wiki_content.lines.first.strip
@@ -196,96 +300,26 @@ ActiveRecord::Base.transaction do
 
   # 4. Parse Links
 
-  # 4.1. [[Service:Account]] Format
-  wiki_content.scan(/\[\[([^:]+):([^\]]+)\]\]/).each do |service, account|
-    url = nil
-    text = nil
-    case service.downcase
-    when "twitter", "x"
-      url = "https://twitter.com/#{account}"
-      text = "Twitter"
-    when "youtube channel"
-      url = "https://www.youtube.com/c/#{account}"
-      text = "YouTube Channel"
-    when "spotify"
-      url = "https://open.spotify.com/artist/#{account}"
-      text = "Spotify"
-    when "vkgy"
-      url = "https://vk.gy/artists/#{account}"
-      text = "vk.gy"
-    when "joysound"
-      url = "https://www.joysound.com/web/search/artist/#{account}"
-      text = "JOYSOUND"
-    when "dam"
-      url = "https://www.clubdam.com/app/leaf/artistKaraokeLeaf.html?artistCode=#{account}"
-      text = "DAM"
-    when "カラオケdam"
-      url = "https://www.clubdam.com/karaokesearch/artistleaf.html?artistCode=#{account}"
-      text = "カラオケDAM"
-    when "digitlink"
-      url = "https://www.digitlink.jp/#{account}"
-      text = "digitlink"
-    when "filmarks"
-      url = "https://filmarks.com/users/#{account}"
-      text = "Filmarks"
-    when "ototoy"
-      url = "https://ototoy.jp/_/default/a/#{account}"
-      text = "OTOTOY"
-    when "linkfire"
-      url = "https://smr.lnk.to/#{account}"
-      text = "linkfire"
-    when "tiktok"
-      url = "https://www.tiktok.com/@#{account}"
-      text = "TikTok"
-    when "linktr.ee"
-      url = "https://linktr.ee/#{account}"
-      text = "linktr.ee"
-    when "lnk.to"
-      url = "https://lnk.to/#{account}"
-      text = "lnk.to"
-    end
+  # 4. Parse Links
 
-    if url
-      link = unit.links.find_or_initialize_by(url: url)
-      link.text = text
-      link.save!
-    end
+  # 4. Parse Links
+
+  # 4.1. Unlink Plugin (Inactive Links)
+  # Format: {{unlink ... }} (multi-line supported)
+  # Match content non-greedily until the closing }}
+  unlink_regex = /\{\{unlink\s+(.*?)\}\}/m
+
+  puts "Scanning for unlink blocks..."
+  wiki_content.scan(unlink_regex).each do |match|
+    puts "Found unlink block!"
+    unlink_content = match[0]
+    parse_unit_links(unit, unlink_content, attributes, active: false)
   end
 
-  # 4.2. [Label|URL] Format
-  wiki_content.scan(/\[([^|\]]+)\|([^\]]+)\]/).each do |label, url|
-    next unless url.start_with?("http")
-
-    link = unit.links.find_or_initialize_by(url: url)
-    link.text = label
-    link.save!
-  end
-
-  # 4.3. {{outlink ...}} Format
-  wiki_content.scan(/\{\{outlink\s+([^\}]+)\}\}/).each do |match|
-    type = match[0].strip
-    url = nil
-    text = nil
-
-    case type
-    when "dw"
-      if attributes["dw_id"]
-        url = "https://pc.dwango.jp/portals/artist/#{attributes['dw_id']}"
-        text = "ドワンゴジェイピー"
-      end
-    when "it"
-      if attributes["it_id"]
-        url = "https://music.apple.com/jp/artist/#{attributes['it_id']}"
-        text = "Apple Music"
-      end
-    end
-
-    if url
-      link = unit.links.find_or_initialize_by(url: url)
-      link.text = text
-      link.save!
-    end
-  end
+  # 4.2. Active Links (Remove unlink blocks first)
+  active_content = wiki_content.gsub(unlink_regex, "")
+  puts "Parsing active links..."
+  parse_unit_links(unit, active_content, attributes, active: true)
 end
 
 puts "Done!"
