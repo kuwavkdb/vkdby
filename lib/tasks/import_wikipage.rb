@@ -108,7 +108,7 @@ def parse_unit_links(unit, content, attributes, active: true)
     type = match[0].strip
     url = nil
     text = nil
-    
+
     case type
     when "dw"
       if attributes["dw_id"]
@@ -124,7 +124,7 @@ def parse_unit_links(unit, content, attributes, active: true)
       # Tunecore parsing might be complex, simplified here
       text = "TuneCore"
     end
-    
+
     if url
       link = unit.links.find_or_initialize_by(url: url)
       link.text = text
@@ -301,7 +301,7 @@ ActiveRecord::Base.transaction do
   # 4. Parse Links
 
   # 4. Parse Links
-  
+
   # 4.1. Unlink Plugin (Inactive Links)
   # Format: {{unlink ... }} (multi-line supported)
   unlink_regex = /\{\{unlink\s+((?:\n(?!^\}\}).*)*)\n?\}\}/m
