@@ -66,6 +66,16 @@ type: 簡潔な説明
 ### 3. リモートへのpush
 
 ```bash
+# **重要: push前に必ずRuboCopを実行**
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rubocop
+
+# エラーがある場合は自動修正
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rubocop -A
+
+# 修正があった場合は再度コミット
+git add -A
+git commit -m "style: Fix RuboCop offenses"
+
 # フィーチャーブランチをリモートにpush
 git push origin feat/feature-name
 ```
@@ -137,8 +147,8 @@ git push origin main --force
 push前に以下を確認:
 
 - [ ] **現在のブランチがmainではない**ことを確認（`git branch`）
+- [ ] **RuboCopを実行してエラーがない**（`bin/rubocop`）
 - [ ] ローカルでテストが通る
-- [ ] RuboCopエラーがない（`bin/rubocop`）
 
 ---
 
