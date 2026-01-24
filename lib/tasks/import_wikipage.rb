@@ -217,7 +217,7 @@ ActiveRecord::Base.transaction do
 
   wiki_content.scan(member_regex).each do |match|
     content = match[0]
-    
+
     # Split content into first line (arguments) and the rest (inline history)
     # Handle cases where there might not be a newline
     if content.include?("\n")
