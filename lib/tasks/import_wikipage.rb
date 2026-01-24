@@ -154,6 +154,7 @@ ActiveRecord::Base.transaction do
       UnitPerson.find_or_initialize_by(unit: unit, person_name: name_str)
     end
     up.person_id = person.id if person.present?
+    up.person_key = person_key unless person.present? # Set person_key when person doesn't exist
     up.part = part_key
     up.status = :active
     up.old_person_key = old_member_key
