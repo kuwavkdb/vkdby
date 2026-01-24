@@ -89,14 +89,22 @@ ActiveRecord::Base.transaction do
 
   puts "Target Unit: #{unit_name} (Kana: #{unit_name_kana}, Key: #{unit_key}, Old Key: #{encoded_old_key})"
 
+  # Determine unit_type based on wiki content
+  unit_type = if wiki_content.match?(/category\s+セッションバンド/i)
+    :session
+  else
+    :band
+  end
+
   unit.key = unit_key
   unit.name = unit_name
   unit.name_kana = unit_name_kana
   unit.old_key = encoded_old_key # Save ENCODED string
   unit.old_wiki_text = wiki_content # Save original wiki text
+  unit.unit_type = unit_type # Set unit type based on wiki content
   unit.status = :active
   unit.save!
-  puts "Unit saved: #{unit.name} (id: #{unit.id})"
+  puts "Unit saved: #{unit.name} (id: #{unit.id}, type: #{unit_type})"
 
   # 3. Parse Members
   # Format: {{member part,name[,old_member_key][,sns_account]}}
