@@ -20,12 +20,14 @@ class LegacyRedirectsControllerTest < ActionDispatch::IntegrationTest
     get "/#{@unit.old_key}.html"
     assert_response :moved_permanently
     assert_redirected_to profile_path(@unit.key)
+    assert_match(/<#{Regexp.escape(profile_url(@unit.key))}>; rel="canonical"/, response.headers["Link"])
   end
 
   test "should redirect to person page if old_key matches person" do
     get "/#{@person.old_key}.html"
     assert_response :moved_permanently
     assert_redirected_to profile_path(@person.key)
+    assert_match(/<#{Regexp.escape(profile_url(@person.key))}>; rel="canonical"/, response.headers["Link"])
   end
 
   test "should redirect correctly for EUC-JP percent-encoded key" do
