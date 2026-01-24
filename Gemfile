@@ -4,7 +4,9 @@ source "https://rubygems.org"
 gem "rails", "~> 8.1.2"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
-# Use mysql as the database for Active Record
+# Use pg as the database for Active Record
+gem "pg", "~> 1.5"
+# Temporarily keep mysql2 for data migration from legacy vkdb MySQL database
 gem "mysql2", "~> 0.5"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"

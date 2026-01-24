@@ -37,15 +37,21 @@
             </td>
             <td class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 font-mono">
               <% if member.person %>
-                <div><%= member.key %></div>
+                <div><%= member.person.key %></div>
                 <% if member.old_person_key.present? %>
                   <div class="text-xs">
                     <%= link_to member.old_person_key, "https://www.vkdb.jp/#{member.old_person_key}.html", target: "_blank", class: "text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400", title: "View on vkdb.jp" %>
                   </div>
                 <% end %>
               <% else %>
-                <div><%= link_to member.key, new_admin_person_path(key: member.key, name: member.name, parts: [member.part]), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300", title: "Add new person with this key" %></div>
-                <% if member.old_person_key.present? %>
+                <% if member.person_key.present? %>
+                  <div><%= link_to member.person_key, new_admin_person_path(key: member.person_key, name: member.person_name, parts: [member.part]), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300", title: "Add new person with this key" %></div>
+                <% elsif member.old_person_key.present? %>
+                  <div class="text-gray-400 dark:text-gray-500"><%= member.old_person_key %></div>
+                <% else %>
+                  <div class="text-gray-400 dark:text-gray-500 italic">No key</div>
+                <% end %>
+                <% if member.old_person_key.present? && member.person_key.present? %>
                   <div class="text-xs">
                     <%= link_to member.old_person_key, "https://www.vkdb.jp/#{member.old_person_key}.html", target: "_blank", class: "text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400", title: "View on vkdb.jp" %>
                   </div>

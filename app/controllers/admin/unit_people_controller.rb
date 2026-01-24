@@ -48,13 +48,13 @@ class Admin::UnitPeopleController < Admin::BaseController
   def unit_person_params
     p = params.require(:unit_person).permit(:person_id, :person_name, :person_key, :period, :order_in_period, :part, :status, :sns)
     p[:person_id] = nil if p[:person_id].to_i == 0
-    
+
     # Convert SNS textarea input (newline-separated) to array
     if p[:sns].is_a?(String)
       p[:sns] = p[:sns].split("\n").map(&:strip).reject(&:blank?)
       p[:sns] = nil if p[:sns].empty?
     end
-    
+
     p
   end
 end
