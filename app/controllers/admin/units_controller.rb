@@ -53,6 +53,6 @@ class Admin::UnitsController < Admin::BaseController
 
   def unit_params
     params.require(:unit).permit(:name, :name_kana, :key, :status, :unit_type,
-      links_attributes: [:id, :text, :url, :active, :sort_order, :_destroy])
+      links_attributes: [ :id, :text, :url, :active, :sort_order, :_destroy ])
   end
 end
