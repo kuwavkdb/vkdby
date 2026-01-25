@@ -53,7 +53,8 @@ module Admin
 
     def person_params
       params.require(:person).permit(:name, :name_kana, :birthday, :birth_year, :blood, :hometown, :status, parts: [],
-                                                                                                            links_attributes: %i[id text url active _destroy])
+                                                                                                            links_attributes: %i[id text url active _destroy],
+                                                                                                            name_logs_attributes: %i[name name_kana])
     end
   end
 end

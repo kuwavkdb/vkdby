@@ -107,6 +107,32 @@ class Person < ApplicationRecord
     items
   end
 
+  # Person logs for form (virtual attribute)
+  def name_logs
+    return person_logs.map { |log| OpenStruct.new(log.attributes) } if person_logs.loaded?
+
+    person_log_entries = self[:name_log] || []
+    person_log_entries.map { |entry| OpenStruct.new(entry) }
+  end
+
+  def name_logs_attributes=(attributes)
+    # attributes is a hash like { "0" => { "name" => "...", "name_kana" => "..." }, ... }
+    # specific structure depends on how fields_for sends data
+
+    # Filter out empty entries
+    new_logs = attributes.values.reject do |attrs|
+      attrs['name'].blank?
+    end
+
+    # Convert to array of hashes for JSON storage
+    self.name_log = new_logs.map do |attrs|
+      {
+        name: attrs['name'],
+        name_kana: attrs['name_kana']
+      }
+    end
+  end
+
   private
 
   def normalize_birthday_year

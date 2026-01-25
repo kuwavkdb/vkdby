@@ -151,6 +151,7 @@ ActiveRecord::Base.transaction do
 
   if first_line&.include?('→')
     puts "Found history definition in first line: #{first_line}"
+    parts = first_line.split('→').map(&:strip)
     parsed_names = parts.map do |part|
       if part =~ /^(.+?)\s*[（(](.+)[）)]$/
         { name: Regexp.last_match(1).strip, name_kana: Regexp.last_match(2).strip }
@@ -328,6 +329,16 @@ ActiveRecord::Base.transaction do
     person_key = "#{unit_key}_#{person_name_for_key.downcase.gsub(/\s+/, '-')}"
     person = Person.find_by(key: person_key)
 
+    # Check for name changes and update name_log for person
+    if person.present? && (person.name != name_str)
+      person.name_log ||= []
+      person.name_log << {
+        name: person.name,
+        name_kana: person.name_kana
+      }
+      puts "  Person name changed! Added to log: #{person.name} (#{person.name_kana})"
+    end
+
     # Create UnitPerson
     up = if person.present?
            UnitPerson.find_or_initialize_by(unit: unit, person: person)
@@ -342,6 +353,13 @@ ActiveRecord::Base.transaction do
     up.inline_history = inline_history # Save inline history text
     up.sns = [sns_account.strip] if sns_account.present?
     up.save!
+    puts "UnitPerson saved: #{up.person_name || person.name} (Part: #{part_key})"
+
+    # Update person name after log
+    if person.present?
+      person.name = name_str
+      person.save!
+    end
   end
 
   # 4. Parse Links
