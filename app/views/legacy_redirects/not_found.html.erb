@@ -9,6 +9,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1, width=device-width">
     <meta name="robots" content="noindex, nofollow">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
 
     <style>
 
@@ -107,14 +109,31 @@
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
         opacity: 1;
       }
+      
+      .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1em;
+        justify-content: center;
+        margin-top: 2em;
+      }
+      
+      .create-link {
+        background: #ffffff;
+        color: #4c1d95;
+        border: 2px solid #ffffff;
+      }
+      
+      .create-link:hover {
+        background: #f0f0f0;
+        color: #3b0764;
+      }
 
     </style>
 
   </head>
 
   <body>
-
-    <!-- This file lives in public/404.html -->
 
     <main>
       <div class="error-code">404</div>
@@ -124,8 +143,23 @@
           未作成、または存在しないページです。<br>
           URLが正しいかご確認ください。
         </p>
+        
+        <% if logged_in? && @unit_name.present? %>
+          <div style="margin-top: 2em; padding: 1.5em; background: rgba(0,0,0,0.2); border-radius: 1em; backdrop-filter: blur(5px);">
+            <p class="error-message" style="font-size: 0.9rem; margin-bottom: 1em;">
+              管理者用メニュー: <br>
+              <strong><%= @unit_name %></strong> はまだデータベースに登録されていません。
+            </p>
+            <div class="action-buttons" style="margin-top: 0;">
+              <%= link_to "このユニットを作成する", new_admin_unit_path(name: @unit_name, old_key: @old_key), class: "back-link create-link", style: "margin-top: 0;" %>
+            </div>
+          </div>
+        <% end %>
       </div>
-      <a href="/" class="back-link">トップページへ戻る</a>
+      
+      <div class="action-buttons">
+        <a href="/" class="back-link">トップページへ戻る</a>
+      </div>
     </main>
 
   </body>
