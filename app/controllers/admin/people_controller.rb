@@ -52,7 +52,7 @@ module Admin
     end
 
     def person_params
-      params.require(:person).permit(:name, :name_kana, :birthday, :birth_year, :blood, :hometown, :status, parts: [],
+      params.require(:person).permit(:name, :name_kana, :birthday, :birth_year, :blood, :hometown, :status, :old_history, parts: [],
                                                                                                             links_attributes: %i[id text url active _destroy],
                                                                                                             name_logs_attributes: %i[name name_kana])
     end
