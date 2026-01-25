@@ -18,6 +18,8 @@
 #  index_units_on_name     (name)
 #  index_units_on_old_key  (old_key) UNIQUE
 #
+require "ostruct"
+
 class Unit < ApplicationRecord
   has_many :links, as: :linkable, dependent: :destroy
   accepts_nested_attributes_for :links, allow_destroy: true, reject_if: :all_blank
