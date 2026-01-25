@@ -185,6 +185,17 @@ ActiveRecord::Base.transaction do
 
   puts "Target Unit: #{unit_name} (Kana: #{unit_name_kana}, Key: #{unit_key}, Old Key: #{encoded_old_key})"
 
+  # Check for name changes and update name_log
+  if unit.persisted? && (unit.name != unit_name || unit.name_kana != unit_name_kana)
+    unit.name_log ||= []
+    unit.name_log << {
+      name: unit.name,
+      name_kana: unit.name_kana,
+      date: Time.current.to_date.to_s
+    }
+    puts "  Name changed! Added to log: #{unit.name} (#{unit.name_kana})"
+  end
+
   # Determine unit_type based on wiki content
   unit_type = if wiki_content.match?(/category\s+セッションバンド/i)
     :session
