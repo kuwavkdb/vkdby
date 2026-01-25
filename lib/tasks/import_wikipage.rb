@@ -218,8 +218,7 @@ ActiveRecord::Base.transaction do
     unit.name_log ||= []
     unit.name_log << {
       name: unit.name,
-      name_kana: unit.name_kana,
-      date: Time.current.to_date.to_s
+      name_kana: unit.name_kana
     }
     puts "  Name changed! Added to log: #{unit.name} (#{unit.name_kana})"
   end
