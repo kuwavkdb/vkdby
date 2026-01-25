@@ -4,10 +4,10 @@
 #
 #  id            :bigint           not null, primary key
 #  active        :boolean          default(TRUE)
-#  linkable_type :string(255)      not null
+#  linkable_type :string           not null
 #  sort_order    :integer
-#  text          :string(255)
-#  url           :string(255)      not null
+#  text          :string
+#  url           :string           not null
 #  created_at    :datetime         not null
 #  updated_at    :datetime         not null
 #  linkable_id   :bigint           not null

@@ -5,10 +5,10 @@
 #  id               :bigint           not null, primary key
 #  log_date         :date
 #  phenomenon       :integer
-#  phenomenon_alias :string(255)
-#  quote_text       :text(65535)
-#  source_url       :string(255)
-#  text             :text(65535)
+#  phenomenon_alias :string
+#  quote_text       :text
+#  source_url       :string
+#  text             :text
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
 #  unit_id          :bigint           not null
