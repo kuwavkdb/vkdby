@@ -18,6 +18,10 @@ module Admin
 
     def new
       @person_log = @person.person_logs.build
+      return unless params[:initial_text].present?
+
+      parsed_attributes = PersonLog.parse_wiki_text(params[:initial_text])
+      @person_log.assign_attributes(parsed_attributes)
     end
 
     def edit; end

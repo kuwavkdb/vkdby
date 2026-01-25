@@ -7,3 +7,7 @@ AllCops:
     - 'db/schema.rb'
     - 'vendor/**/*'
     - 'node_modules/**/*'
+
+Metrics/BlockLength:
+  Exclude:
+    - 'lib/tasks/import_wikipage.rb'

@@ -47,6 +47,30 @@ ActiveRecord::Base.transaction do
     person_name_kana = nil
   end
 
+  # Parse history from first line: "OldName(Kana) → NewName(Kana)"
+  first_line = wiki_content.lines.first&.strip&.gsub(/^!+/, '')&.strip
+  name_log_entries = []
+
+  if first_line&.include?('→')
+    puts "Found history definition in first line: #{first_line}"
+    parts = first_line.split('→').map(&:strip)
+    parsed_names = parts.map do |part|
+      if part =~ /^(.+?)\s*[（(](.+)[）)]$/
+        { name: Regexp.last_match(1).strip, name_kana: Regexp.last_match(2).strip }
+      else
+        { name: part, name_kana: nil }
+      end
+    end
+
+    # The last one is the current name (override title parsing if present)
+    current_person_data = parsed_names.last
+    person_name = current_person_data[:name]
+    person_name_kana = current_person_data[:name_kana]
+
+    # Store all names in log including the current one
+    name_log_entries = parsed_names
+  end
+
   # Encode old_key to EUC-JP URL (Store encoded string)
   encoded_old_key = WikipageParser::Utils.encode_euc_jp_url(wikipage_name)
 
@@ -80,6 +104,7 @@ ActiveRecord::Base.transaction do
   person.key = person_key if person.new_record? # Only set key for new records
   person.name = person_name
   person.name_kana = person_name_kana
+  person.name_log = name_log_entries if name_log_entries.present?
   person.old_key = encoded_old_key
   person.old_wiki_text = wiki_content
 
@@ -87,6 +112,9 @@ ActiveRecord::Base.transaction do
   if categories[:is_passed_away]
     person.status = :passed_away
     puts '  Status: Passed Away'
+  elsif categories[:is_unknown]
+    person.status = :unknown
+    puts '  Status: Unknown'
   elsif categories[:is_retired]
     person.status = :retirement
     puts '  Status: Retirement'

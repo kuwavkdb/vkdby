@@ -158,6 +158,7 @@ module WikipageParser
       categories[:is_retired] = content =~ /\{\{category 引退\}\}/
       categories[:is_free] = content =~ %r{\{\{category 個人/フリー\}\}}
       categories[:is_passed_away] = content =~ /\{\{category 死去\}\}/
+      categories[:is_unknown] = content =~ %r{\{\{category 個人/状況不明\}\}}
 
       categories
     end
