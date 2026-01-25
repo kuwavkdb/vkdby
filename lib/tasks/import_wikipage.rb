@@ -150,7 +150,6 @@ ActiveRecord::Base.transaction do
   if first_line&.include?("→")
     puts "Found history definition in first line: #{first_line}"
     parts = first_line.split("→").map(&:strip)
-
     parsed_names = parts.map do |part|
       if part =~ /^(.+?)\s*[（\(](.+)[）\)]$/
         { name: $1.strip, name_kana: $2.strip }
