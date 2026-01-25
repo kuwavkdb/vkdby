@@ -7,6 +7,11 @@ class ProfilesController < ApplicationController
 
     if @resource.is_a?(Person)
       @logs = @resource.person_logs.order(:sort_order, :log_date)
+
+      # person_logsが無く、old_historyがある場合はパースして使用
+      if @logs.empty? && @resource.old_history.present?
+        @old_history_items = @resource.parse_old_history
+      end
     elsif @resource.is_a?(Unit)
       members = @resource.unit_people.includes(person: { person_logs: :unit })
       @active_members = members.select { |m| m.pre? || m.active? }

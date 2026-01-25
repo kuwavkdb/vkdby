@@ -7,7 +7,9 @@ class Admin::UnitsController < Admin::BaseController
   end
 
   def new
-    @unit = Unit.new(params[:unit]&.permit(:name, :key, :name_kana, :status, :unit_type))
+    @unit = Unit.new(params[:unit]&.permit(:name, :key, :name_kana, :status, :unit_type, :old_key))
+    @unit.name ||= params[:name]
+    @unit.old_key ||= params[:old_key]
   end
 
   def edit
@@ -52,7 +54,7 @@ class Admin::UnitsController < Admin::BaseController
   end
 
   def unit_params
-    params.require(:unit).permit(:name, :name_kana, :key, :status, :unit_type,
+    params.require(:unit).permit(:name, :name_kana, :key, :status, :unit_type, :old_key,
       links_attributes: [ :id, :text, :url, :active, :sort_order, :_destroy ])
   end
 end

@@ -18,7 +18,17 @@ class LegacyRedirectsController < ApplicationController
       return
     end
 
-    # If neither found, render 404
-    raise ActiveRecord::RecordNotFound
+    # If neither found, prepare data for 404 page with creation link
+    @old_key = old_key
+    begin
+      # Try to decode old_key (EUC-JP) to UTF-8 unit_name
+      # Unescape first, then force encoding to EUC-JP and transcode to UTF-8
+      decoded_bytes = URI.decode_www_form_component(old_key)
+      @unit_name = decoded_bytes.force_encoding("EUC-JP").encode("UTF-8")
+    rescue StandardError
+      @unit_name = nil
+    end
+
+    render "not_found", status: :not_found, layout: false
   end
 end
