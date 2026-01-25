@@ -11,3 +11,7 @@ AllCops:
 Metrics/BlockLength:
   Exclude:
     - 'lib/tasks/import_wikipage.rb'
+
+Metrics/ClassLength:
+  Exclude:
+    - 'app/models/person.rb'
