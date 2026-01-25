@@ -161,21 +161,32 @@ ActiveRecord::Base.transaction do
   person.save!
   puts "Person saved: #{person.name} (id: #{person.id})"
 
-  # 4. Parse Links
-  # 4.1. Unlink Plugin (Inactive Links)
-  unlink_regex = /\{\{unlink\s+(.*?)\}\}/m
+  # 4. Parse Links (only from !!リンク section)
+  # Extract !!リンク section content
+  link_section_content = if wiki_content =~ /!!リンク\s*\n(.+?)(?=\n!!|\z)/m
+                           Regexp.last_match(1).strip
+                         else
+                           '' # No link section found
+                         end
 
-  puts 'Scanning for unlink blocks...'
-  wiki_content.scan(unlink_regex).each do |match|
-    puts 'Found unlink block!'
-    unlink_content = match[0]
-    WikipageParser::LinkParser.parse_links(person, unlink_content, attributes, active: false)
+  if link_section_content.present?
+    # 4.1. Unlink Plugin (Inactive Links) - only within link section
+    unlink_regex = /\{\{unlink\s+(.*?)\}\}/m
+
+    puts 'Scanning for unlink blocks in link section...'
+    link_section_content.scan(unlink_regex).each do |match|
+      puts 'Found unlink block!'
+      unlink_content = match[0]
+      WikipageParser::LinkParser.parse_links(person, unlink_content, attributes, active: false)
+    end
+
+    # 4.2. Active Links (Remove unlink blocks first) - only within link section
+    active_content = link_section_content.gsub(unlink_regex, '')
+    puts 'Parsing active links from link section...'
+    WikipageParser::LinkParser.parse_links(person, active_content, attributes, active: true)
+  else
+    puts 'No !!リンク section found, skipping link parsing'
   end
-
-  # 4.2. Active Links (Remove unlink blocks first)
-  active_content = wiki_content.gsub(unlink_regex, '')
-  puts 'Parsing active links...'
-  WikipageParser::LinkParser.parse_links(person, active_content, attributes, active: true)
 
   # 5. Parse Career History (経歴)
   # Format: → [[Unit Name]](Part) → [[Another Unit]](Part) →
