@@ -112,6 +112,9 @@ ActiveRecord::Base.transaction do
   if categories[:is_passed_away]
     person.status = :passed_away
     puts '  Status: Passed Away'
+  elsif categories[:is_unknown]
+    person.status = :unknown
+    puts '  Status: Unknown'
   elsif categories[:is_retired]
     person.status = :retirement
     puts '  Status: Retirement'
