@@ -54,6 +54,33 @@
     </div>
   </div>
 
+  <div class="border border-gray-300 rounded-md p-4 dark:border-gray-600">
+    <legend class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name History (Log)</legend>
+    <div class="space-y-4">
+      <%
+        logs_for_form = unit.name_logs
+        logs_for_form << OpenStruct.new(name: "", name_kana: "", date: "")
+      %>
+      <%= form.fields_for :name_logs, logs_for_form do |log_form| %>
+        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end bg-gray-50 dark:bg-gray-800 p-2 rounded">
+          <div class="flex-1 w-full">
+            <%= log_form.label :name, "Name", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
+            <%= log_form.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+          </div>
+          <div class="flex-1 w-full">
+            <%= log_form.label :name_kana, "Kana", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
+            <%= log_form.text_field :name_kana, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+          </div>
+          <div class="w-full sm:w-40">
+            <%= log_form.label :date, "Date", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
+            <%= log_form.date_field :date, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+          </div>
+        </div>
+      <% end %>
+      <div class="text-xs text-gray-500">※名前を空にすると保存時に削除されます</div>
+    </div>
+  </div>
+
 
 
   <div class="flex justify-end gap-x-4">

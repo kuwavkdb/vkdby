@@ -142,14 +142,13 @@ ActiveRecord::Base.transaction do
   # Parse unit name and kana first needed for Logic
   # 2. Derive Unit Data
   # Check first line for history definition: "OldName(Kana) → NewName(Kana)"
-  first_line = wiki_content.lines.first&.strip
+  first_line = wiki_content.lines.first&.strip&.gsub(/^!+/, "")&.strip
   unit_name = nil
   unit_name_kana = nil
   name_log_entries = []
 
   if first_line&.include?("→")
     puts "Found history definition in first line: #{first_line}"
-    parts = first_line.split("→").map(&:strip)
     parsed_names = parts.map do |part|
       if part =~ /^(.+?)\s*[（\(](.+)[）\)]$/
         { name: $1.strip, name_kana: $2.strip }

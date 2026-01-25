@@ -48,6 +48,21 @@ class Unit < ApplicationRecord
     "https://www.vkdb.jp/#{old_key}.html"
   end
 
+  def name_logs
+    (name_log || []).map { |h| OpenStruct.new(h) }
+  end
+
+  def name_logs_attributes=(attributes)
+    self.name_log = attributes.values.map do |attrs|
+      next if attrs["name"].blank?
+      {
+        name: attrs["name"],
+        name_kana: attrs["name_kana"],
+        date: attrs["date"]
+      }
+    end.compact
+  end
+
   private
 
   after_create :link_related_person_logs_and_members
