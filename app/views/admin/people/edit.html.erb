@@ -21,7 +21,10 @@
   <div class="mt-6">
     <div class="sm:flex sm:items-center justify-between mb-4">
       <h2 class="text-xl font-bold dark:text-white">Career Logs</h2>
-      <%= link_to "Add Person Log", new_admin_person_person_log_path(@person), class: "inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto" %>
+      <div class="flex gap-2">
+        <%= link_to "View All Logs", admin_person_person_logs_path(@person), class: "inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600" %>
+        <%= link_to "Add Person Log", new_admin_person_person_log_path(@person), class: "inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto" %>
+      </div>
     </div>
     <%= render "admin/person_logs/list", person: @person, person_logs: @person_logs %>
   </div>
