@@ -125,14 +125,10 @@ class Person < ApplicationRecord
           part_and_name: part_and_name&.strip,
           external_url: url.strip
         }
-      # Pattern 3: Plain text (Part) - No link
-      when /([^(]+)(?:\(([^)]+)\))?/
-        unit_text = ::Regexp.last_match(1)
-        part_and_name = ::Regexp.last_match(2)
-
+      # Pattern 3: Plain text - No link, display as-is (including parentheses)
+      else
         items << {
-          unit_name: unit_text.strip,
-          part_and_name: part_and_name&.strip
+          unit_name: segment.strip
         }
       end
     end
