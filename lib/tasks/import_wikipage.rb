@@ -141,14 +141,44 @@ ActiveRecord::Base.transaction do
   # 2. Derive Unit Data
   # Parse unit name and kana first needed for Logic
   # 2. Derive Unit Data
-  # Parse unit name and kana from Wikipage title
-  # Format: "Name (Kana)" or "Name"
-  if wp.title =~ /^(.+?)\s*[（\(](.+)[）\)]$/
-    unit_name = $1.strip
-    unit_name_kana = $2.strip
-  else
-    unit_name = wp.title.strip
-    unit_name_kana = nil
+  # Check first line for history definition: "OldName(Kana) → NewName(Kana)"
+  first_line = wiki_content.lines.first&.strip
+  unit_name = nil
+  unit_name_kana = nil
+  name_log_entries = []
+
+  if first_line&.include?("→")
+    puts "Found history definition in first line: #{first_line}"
+    parts = first_line.split("→").map(&:strip)
+
+    parsed_names = parts.map do |part|
+      if part =~ /^(.+?)\s*[（\(](.+)[）\)]$/
+        { name: $1.strip, name_kana: $2.strip }
+      else
+        { name: part, name_kana: nil }
+      end
+    end
+
+    # The last one is the current name
+    current_unit_data = parsed_names.last
+    unit_name = current_unit_data[:name]
+    unit_name_kana = current_unit_data[:name_kana]
+
+    # Store all names in log including the current one
+    name_log_entries = parsed_names
+  end
+
+  # Fallback to Wiki Title if not defined in first line
+  if unit_name.nil?
+    # Parse unit name and kana from Wikipage title
+    # Format: "Name (Kana)" or "Name"
+    if wp.title =~ /^(.+?)\s*[（\(](.+)[）\)]$/
+      unit_name = $1.strip
+      unit_name_kana = $2.strip
+    else
+      unit_name = wp.title.strip
+      unit_name_kana = nil
+    end
   end
 
   # Encode old_key to EUC-JP URL (Store encoded string)
@@ -206,6 +236,7 @@ ActiveRecord::Base.transaction do
   unit.key = unit_key
   unit.name = unit_name
   unit.name_kana = unit_name_kana
+  unit.name_log = name_log_entries if name_log_entries.present?
   unit.old_key = encoded_old_key # Save ENCODED string
   unit.old_wiki_text = wiki_content # Save original wiki text
   unit.unit_type = unit_type # Set unit type based on wiki content
