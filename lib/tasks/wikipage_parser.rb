@@ -16,7 +16,7 @@ module WikipageParser
       content.scan(/\[\[([^:]+):([^\]]+)\]\]/).each do |service, account|
         url = nil
         text = nil
-        
+
         case service.downcase
         when "twitter", "x"
           url = "https://twitter.com/#{account}"
@@ -185,7 +185,7 @@ module WikipageParser
     # @return [String] URL-safe person key
     def self.generate_person_key(wikipage_name, person_name, person_name_kana = nil, birthday_month: nil, birthday_day: nil)
       source_for_key = wikipage_name
-      
+
       if wikipage_name.match?(/^[[:ascii:]\s-]+$/)
         # Already ASCII
         source_for_key = wikipage_name
@@ -205,7 +205,7 @@ module WikipageParser
       end
 
       base_key = source_for_key.downcase.gsub(/\s+/, "-")
-      
+
       # Append birthday suffix for uniqueness if available
       if birthday_month && birthday_day
         birthday_suffix = format("%02d%02d", birthday_month, birthday_day)
@@ -221,7 +221,7 @@ module WikipageParser
     # @return [String] URL-safe unit key
     def self.generate_unit_key(wikipage_name, unit_name_kana = nil)
       source_for_key = wikipage_name
-      
+
       if wikipage_name.match?(/^[[:ascii:]\s-]+$/)
         # Ascii only
         source_for_key = wikipage_name

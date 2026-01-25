@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # Usage: ID=15962 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails runner lib/tasks/import_person.rb
 
 require_relative "wikipage_parser"
@@ -60,8 +61,8 @@ ActiveRecord::Base.transaction do
 
   # Generate person_key (URL key for this app) with birthday for uniqueness
   person_key = WikipageParser::Utils.generate_person_key(
-    wikipage_name, 
-    person_name, 
+    wikipage_name,
+    person_name,
     person_name_kana,
     birthday_month: categories[:birthday_month],
     birthday_day: categories[:birthday_day]
@@ -71,8 +72,8 @@ ActiveRecord::Base.transaction do
 
   # Find or create Person
   # Try to find by old_key first (for existing records), then by key
-  person = Person.find_by(old_key: wikipage_name) || 
-           Person.find_by(old_key: encoded_old_key) || 
+  person = Person.find_by(old_key: wikipage_name) ||
+           Person.find_by(old_key: encoded_old_key) ||
            Person.find_or_initialize_by(key: person_key)
 
   # Set basic attributes
@@ -81,7 +82,7 @@ ActiveRecord::Base.transaction do
   person.name_kana = person_name_kana
   person.old_key = encoded_old_key
   person.old_wiki_text = wiki_content
-  
+
   # Set status based on categories (priority order: passed_away > retired > free > active)
   if categories[:is_passed_away]
     person.status = :passed_away
@@ -135,7 +136,7 @@ ActiveRecord::Base.transaction do
   # 4. Parse Links
   # 4.1. Unlink Plugin (Inactive Links)
   unlink_regex = /\{\{unlink\s+(.*?)\}\}/m
-  
+
   puts "Scanning for unlink blocks..."
   wiki_content.scan(unlink_regex).each do |match|
     puts "Found unlink block!"
@@ -152,11 +153,11 @@ ActiveRecord::Base.transaction do
   # Format: → [[Unit Name]](Part) → [[Another Unit]](Part) →
   if wiki_content =~ /!!経歴\s*\n(.+?)(?=\n!!|\z)/m
     career_section = $1.strip
-    
+
     # Save career section to old_history
     person.old_history = career_section
     person.save!
-    
+
     puts "\nParsing career history..."
     puts "Career section: #{career_section[0..200]}..."
 
@@ -169,13 +170,13 @@ ActiveRecord::Base.transaction do
 
       # Try to find the unit by name
       unit = Unit.find_by(name: unit_name)
-      
+
       if unit
         puts "    Found unit: #{unit.name} (id: #{unit.id})"
-        
+
         # Check if UnitPerson already exists
         unit_person = UnitPerson.find_or_initialize_by(unit: unit, person: person)
-        
+
         # Parse part
         if part_str
           part_key = case part_str.downcase
@@ -187,10 +188,10 @@ ActiveRecord::Base.transaction do
           when /dj/ then :dj
           else :unknown
           end
-          
+
           unit_person.part = part_key if unit_person.new_record?
         end
-        
+
         unit_person.status = :left # Historical membership
         unit_person.save!
         puts "    UnitPerson created/updated"

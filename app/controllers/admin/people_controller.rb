@@ -49,6 +49,6 @@ class Admin::PeopleController < Admin::BaseController
   end
 
   def person_params
-    params.require(:person).permit(:name, :name_kana, :birthday, :birth_year, :blood, :hometown, :status, parts: [], links_attributes: [:id, :text, :url, :active, :_destroy])
+    params.require(:person).permit(:name, :name_kana, :birthday, :birth_year, :blood, :hometown, :status, parts: [], links_attributes: [ :id, :text, :url, :active, :_destroy ])
   end
 end
