@@ -213,9 +213,20 @@ ActiveRecord::Base.transaction do
   #                }}  <- closing }} must be at the beginning of a line
 
   # Match both single-line and multi-line plugins non-greedily
+  # Find position of "!!関係者" separator
+  # If found, members after this line will be marked as :left
+  separator_index = wiki_content.index(/^!!関係者/) || Float::INFINITY
+
+  # Match both single-line and multi-line plugins non-greedily
   member_regex = /\{\{member2?\s+(.*?)\}\}/m
 
-  wiki_content.scan(member_regex).each do |match|
+  wiki_content.scan(member_regex) do |match|
+    match_data = Regexp.last_match
+    current_pos = match_data.begin(0)
+
+    # Check if this member is after the separator
+    member_status = current_pos > separator_index ? :left : :active
+
     content = match[0]
 
     # Split content into first line (arguments) and the rest (inline history)
@@ -291,7 +302,7 @@ ActiveRecord::Base.transaction do
     up.person_id = person.id if person.present?
     up.person_key = person_key unless person.present? # Set person_key when person doesn't exist
     up.part = part_key
-    up.status = :active
+    up.status = member_status
     up.old_person_key = old_member_key
     up.inline_history = inline_history # Save inline history text
     up.sns = [ sns_account.strip ] if sns_account.present?
