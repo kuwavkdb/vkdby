@@ -86,6 +86,12 @@
     <%= form.text_field :source_url, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
   </div>
 
+  <div>
+    <%= form.label :unit_url, "Unit URL (External Link)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= form.text_field :unit_url, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">URL to external site (e.g., official website, social media) if the unit is not managed in vkdby.</p>
+  </div>
+
   <div class="flex justify-end gap-x-4">
     <%= link_to "Cancel", admin_person_person_logs_path(person), class: "px-4 py-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" %>
     <%= form.submit class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>

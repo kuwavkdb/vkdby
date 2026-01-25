@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_25_135338) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_25_155202) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -64,6 +64,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_25_135338) do
     t.bigint "unit_id"
     t.string "unit_key"
     t.string "unit_name"
+    t.string "unit_url"
     t.datetime "updated_at", null: false
     t.index ["person_id", "sort_order"], name: "index_person_logs_on_person_id_and_sort_order"
     t.index ["person_id"], name: "index_person_logs_on_person_id"
