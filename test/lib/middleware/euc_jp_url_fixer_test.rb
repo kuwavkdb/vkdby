@@ -7,7 +7,7 @@ class EucJpUrlFixerTest < ActiveSupport::TestCase
   test 'should fix path with invalid UTF-8 encoding' do
     # Create a string with invalid UTF-8 (valid EUC-JP)
     # "\xB7\xDF\xB9\xFC" is EUC-JP bytes
-    raw_path = "/\xB7\xDF\xB9\xFC.html".force_encoding('UTF-8')
+    raw_path = "/\xB7\xDF\xB9\xFC.html".dup.force_encoding('UTF-8')
 
     # Verify it is indeed invalid UTF-8
     assert_not raw_path.valid_encoding?
