@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ChangeStatusInUnits < ActiveRecord::Migration[8.1]
   def up
     # 既存の nil を 1 (active) に更新

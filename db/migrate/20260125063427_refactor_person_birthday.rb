@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class RefactorPersonBirthday < ActiveRecord::Migration[8.1]
   def up
     # Add birth_year column
@@ -9,9 +11,7 @@ class RefactorPersonBirthday < ActiveRecord::Migration[8.1]
       next unless person.birthday
 
       # If birth_year_unknown is false, save the year to birth_year
-      unless person.birth_year_unknown
-        person.update_column(:birth_year, person.birthday.year)
-      end
+      person.update_column(:birth_year, person.birthday.year) unless person.birth_year_unknown
 
       # Normalize birthday year to 1904
       normalized_birthday = person.birthday.change(year: 1904)

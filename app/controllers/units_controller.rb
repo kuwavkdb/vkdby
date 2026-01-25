@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class UnitsController < ApplicationController
   def index
     @units = Unit.all.order(updated_at: :desc)
@@ -7,6 +9,6 @@ class UnitsController < ApplicationController
     @unit = Unit.find_by!(key: params[:key])
     render json: @unit
   rescue ActiveRecord::RecordNotFound
-    render json: { error: "Unit not found" }, status: :not_found
+    render json: { error: 'Unit not found' }, status: :not_found
   end
 end

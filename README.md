@@ -37,6 +37,9 @@ PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle exec rails generate migration NameO
 # Rails コンソール
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle exec rails console
 
+# RuboCop
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle exec rubocop
+
 # Annotate（モデル定義のコメント更新）
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle exec annotaterb models
 ```
