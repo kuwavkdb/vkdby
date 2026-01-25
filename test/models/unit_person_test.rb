@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: unit_people
@@ -29,7 +31,7 @@
 #  fk_rails_...  (person_id => people.id)
 #  fk_rails_...  (unit_id => units.id)
 #
-require "test_helper"
+require 'test_helper'
 
 class UnitPersonTest < ActiveSupport::TestCase
   # test "the truth" do

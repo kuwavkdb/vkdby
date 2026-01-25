@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: person_logs
@@ -31,7 +33,7 @@
 #  fk_rails_...  (person_id => people.id)
 #  fk_rails_...  (unit_id => units.id)
 #
-require "test_helper"
+require 'test_helper'
 
 class PersonLogTest < ActiveSupport::TestCase
   # test "the truth" do

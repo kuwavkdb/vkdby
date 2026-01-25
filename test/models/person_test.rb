@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: people
@@ -24,7 +26,7 @@
 #  index_people_on_name     (name)
 #  index_people_on_old_key  (old_key) UNIQUE
 #
-require "test_helper"
+require 'test_helper'
 
 class PersonTest < ActiveSupport::TestCase
   # test "the truth" do

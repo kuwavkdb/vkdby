@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: units
@@ -20,7 +22,7 @@
 #  index_units_on_name     (name)
 #  index_units_on_old_key  (old_key) UNIQUE
 #
-require "ostruct"
+require 'ostruct'
 
 class Unit < ApplicationRecord
   has_many :links, as: :linkable, dependent: :destroy
@@ -35,12 +37,12 @@ class Unit < ApplicationRecord
   validates :status, presence: true
 
   STATUS_TRANSLATIONS = {
-    "pre" => "準備中",
-    "active" => "活動中",
-    "freeze" => "活動休止",
-    "disbanded" => "解散",
-    "unknown" => "不明"
-  }
+    'pre' => '準備中',
+    'active' => '活動中',
+    'freeze' => '活動休止',
+    'disbanded' => '解散',
+    'unknown' => '不明'
+  }.freeze
 
   def status_text
     STATUS_TRANSLATIONS[status] || status.humanize
@@ -58,11 +60,12 @@ class Unit < ApplicationRecord
 
   def name_logs_attributes=(attributes)
     self.name_log = attributes.values.map do |attrs|
-      next if attrs["name"].blank?
+      next if attrs['name'].blank?
+
       {
-        name: attrs["name"],
-        name_kana: attrs["name_kana"],
-        date: attrs["date"]
+        name: attrs['name'],
+        name_kana: attrs['name_kana'],
+        date: attrs['date']
       }
     end.compact
   end
@@ -86,9 +89,7 @@ class Unit < ApplicationRecord
 
       # Determine part
       target_part = log.part
-      if UnitPerson.parts.keys.include?(target_part)
-        member.part = target_part
-      end
+      member.part = target_part if UnitPerson.parts.keys.include?(target_part)
 
       # Set default status if new record
       member.status ||= :active

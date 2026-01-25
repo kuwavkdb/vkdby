@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: unit_people
@@ -53,15 +55,15 @@ class UnitPerson < ApplicationRecord
   private
 
   def person_or_name_presence
-    if person_id.blank? && person_name.blank?
-      errors.add(:base, "Person or Person Name must be present")
-    end
+    return unless person_id.blank? && person_name.blank?
+
+    errors.add(:base, 'Person or Person Name must be present')
   end
 
   def find_person_by_key
     found_person = Person.find_by(key: person_key)
-    if found_person
-      self.person = found_person
-    end
+    return unless found_person
+
+    self.person = found_person
   end
 end

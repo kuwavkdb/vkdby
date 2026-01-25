@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: unit_logs
@@ -24,20 +26,21 @@
 class UnitLog < ApplicationRecord
   belongs_to :unit
 
-  enum :phenomenon, { announcement: 1, first_live: 2, finish: 3, pending: 5, rename: 6, pause: 7, etc: 98, unknown: 99 }, prefix: true
+  enum :phenomenon,
+       { announcement: 1, first_live: 2, finish: 3, pending: 5, rename: 6, pause: 7, etc: 98, unknown: 99 }, prefix: true
 
   validates :phenomenon, presence: true
 
   PHENOMENON_TRANSLATIONS = {
-    "announcement" => "結成",
-    "first_live" => "始動",
-    "finish" => "解散",
-    "pending" => "保留",
-    "rename" => "改名",
-    "pause" => "活動休止",
-    "etc" => "その他",
-    "unknown" => "不明"
-  }
+    'announcement' => '結成',
+    'first_live' => '始動',
+    'finish' => '解散',
+    'pending' => '保留',
+    'rename' => '改名',
+    'pause' => '活動休止',
+    'etc' => 'その他',
+    'unknown' => '不明'
+  }.freeze
 
   def phenomenon_text
     phenomenon_alias.presence || PHENOMENON_TRANSLATIONS[phenomenon] || phenomenon&.humanize

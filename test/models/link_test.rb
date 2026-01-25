@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: links
@@ -16,7 +18,7 @@
 #
 #  index_links_on_linkable  (linkable_type,linkable_id)
 #
-require "test_helper"
+require 'test_helper'
 
 class LinkTest < ActiveSupport::TestCase
   # test "the truth" do

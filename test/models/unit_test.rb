@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: units
@@ -20,7 +22,7 @@
 #  index_units_on_name     (name)
 #  index_units_on_old_key  (old_key) UNIQUE
 #
-require "test_helper"
+require 'test_helper'
 
 class UnitTest < ActiveSupport::TestCase
   # test "the truth" do

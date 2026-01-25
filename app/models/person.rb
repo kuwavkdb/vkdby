@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: people
@@ -35,17 +37,17 @@ class Person < ApplicationRecord
   enum :status, { pre: 0, active: 1, free: 2, hiatus: 3, retirement: 90, passed_away: 98, unknown: 99 }
 
   # Valid parts for a person
-  AVAILABLE_PARTS = %w[vocal guitar bass drums keyboard dj dancer manipulator]
+  AVAILABLE_PARTS = %w[vocal guitar bass drums keyboard dj dancer manipulator].freeze
 
   STATUS_TRANSLATIONS = {
-    "pre" => "準備中",
-    "active" => "活動中",
-    "free" => "フリー",
-    "hiatus" => "活動休止",
-    "retirement" => "引退",
-    "passed_away" => "死去",
-    "unknown" => "不明"
-  }
+    'pre' => '準備中',
+    'active' => '活動中',
+    'free' => 'フリー',
+    'hiatus' => '活動休止',
+    'retirement' => '引退',
+    'passed_away' => '死去',
+    'unknown' => '不明'
+  }.freeze
 
   DUMMY_BIRTH_YEAR = 1904 # Leap year for Feb 29 compatibility
 
@@ -69,10 +71,10 @@ class Person < ApplicationRecord
 
     if birth_year.present?
       # Show full date with year
-      Date.new(birth_year, birthday.month, birthday.day).strftime("%Y年%-m月%-d日")
+      Date.new(birth_year, birthday.month, birthday.day).strftime('%Y年%-m月%-d日')
     else
       # Show only month and day
-      birthday.strftime("%-m月%-d日")
+      birthday.strftime('%-m月%-d日')
     end
   end
 
@@ -81,13 +83,13 @@ class Person < ApplicationRecord
   def parse_old_history
     return [] if old_history.blank?
 
-    require_relative "../../lib/tasks/wikipage_parser"
+    require_relative '../../lib/tasks/wikipage_parser'
 
     items = []
     old_history.scan(/→\s*\[\[([^\]]+)\]\](?:\(([^)]+)\))?/).each do |unit_text, part_and_name|
       # [[XXXX|YYYY]] の場合、XXXXが表示名、YYYYがold_key(エンコード前)
-      if unit_text.include?("|")
-        display_name, raw_old_key = unit_text.split("|", 2)
+      if unit_text.include?('|')
+        display_name, raw_old_key = unit_text.split('|', 2)
       else
         display_name = unit_text
         raw_old_key = unit_text
@@ -115,9 +117,9 @@ class Person < ApplicationRecord
   end
 
   def key_immutable
-    if key_changed? && key_was.present?
-      errors.add(:key, "cannot be changed once set")
-    end
+    return unless key_changed? && key_was.present?
+
+    errors.add(:key, 'cannot be changed once set')
   end
 
   def auto_link_unit_people

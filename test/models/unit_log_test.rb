@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: unit_logs
@@ -21,11 +23,11 @@
 #
 #  fk_rails_...  (unit_id => units.id)
 #
-require "test_helper"
+require 'test_helper'
 
 class UnitLogTest < ActiveSupport::TestCase
-  test "should not save unit log without phenomenon" do
+  test 'should not save unit log without phenomenon' do
     unit_log = UnitLog.new(unit: units(:one), log_date: Date.today)
-    assert_not unit_log.save, "Saved the unit log without a phenomenon"
+    assert_not unit_log.save, 'Saved the unit log without a phenomenon'
   end
 end
