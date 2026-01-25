@@ -229,8 +229,8 @@ module WikipageParser
         # Convert Kana to Romaji
         source_for_key = Romaji.kana2romaji(unit_name_kana)
       else
-        # Fallback to original name
-        source_for_key = wikipage_name
+        # Fallback to encoded old_key (without percent signs) to ensure ASCII
+        source_for_key = encode_euc_jp_url(wikipage_name).gsub(/%/, "")
       end
 
       source_for_key.downcase.gsub(/\s+/, "-")
