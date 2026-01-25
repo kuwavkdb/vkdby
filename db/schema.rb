@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_24_145329) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_25_063427) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -28,7 +28,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_24_145329) do
   end
 
   create_table "people", force: :cascade do |t|
-    t.boolean "birth_year_unknown"
+    t.integer "birth_year"
     t.date "birthday"
     t.string "blood"
     t.datetime "created_at", null: false
