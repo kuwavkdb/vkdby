@@ -92,8 +92,14 @@ class Person < ApplicationRecord
       segment = segment.strip
       next if segment.empty?
 
-      # Pattern 1: [[UnitName]](Part) - Internal unit link
-      case segment
+      # Check if the entire segment is wrapped in parentheses
+      wrapped_in_parens = segment.start_with?('(') && segment.end_with?(')')
+
+      # Remove outer parentheses for pattern matching if wrapped
+      content = wrapped_in_parens ? segment[1..-2] : segment
+
+      # Pattern 1: [[UnitName]] or [[UnitName]](Part) - Internal unit link
+      case content
       when /\[\[([^\]]+)\]\](?:\(([^)]+)\))?/
         unit_text = ::Regexp.last_match(1)
         part_and_name = ::Regexp.last_match(2)
@@ -109,19 +115,25 @@ class Person < ApplicationRecord
         # old_key生成用にEUC-JPエンコード
         encoded_unit_name = WikipageParser::Utils.encode_euc_jp_url(raw_old_key.strip)
 
+        # If wrapped in parentheses, add them to display
+        display_unit_name = wrapped_in_parens ? "(#{display_name.strip})" : display_name.strip
+
         items << {
-          unit_name: display_name.strip,
+          unit_name: display_unit_name,
           part_and_name: part_and_name&.strip,
           old_key: encoded_unit_name
         }
-      # Pattern 2: [LinkText|URL](Part) - External link
+      # Pattern 2: [LinkText|URL] or [LinkText|URL](Part) - External link
       when /\[([^\]|]+)\|([^\]]+)\](?:\(([^)]+)\))?/
         link_text = ::Regexp.last_match(1)
         url = ::Regexp.last_match(2)
         part_and_name = ::Regexp.last_match(3)
 
+        # If wrapped in parentheses, add them to display
+        display_link_text = wrapped_in_parens ? "(#{link_text.strip})" : link_text.strip
+
         items << {
-          unit_name: link_text.strip,
+          unit_name: display_link_text,
           part_and_name: part_and_name&.strip,
           external_url: url.strip
         }
