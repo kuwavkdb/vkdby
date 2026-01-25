@@ -56,6 +56,6 @@ class Admin::UnitsController < Admin::BaseController
   def unit_params
     params.require(:unit).permit(:name, :name_kana, :key, :status, :unit_type, :old_key,
       links_attributes: [ :id, :text, :url, :active, :sort_order, :_destroy ],
-      name_logs_attributes: [:name, :name_kana, :date])
+      name_logs_attributes: [ :name, :name_kana, :date ])
   end
 end
