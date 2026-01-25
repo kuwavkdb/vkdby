@@ -109,10 +109,11 @@ class Person < ApplicationRecord
 
   # Person logs for form (virtual attribute)
   def name_logs
-    return person_logs.map { |log| OpenStruct.new(log.attributes) } if person_logs.loaded?
+    require 'ostruct'
+    return person_logs.map { |log| ::OpenStruct.new(log.attributes) } if person_logs.loaded?
 
     person_log_entries = self[:name_log] || []
-    person_log_entries.map { |entry| OpenStruct.new(entry) }
+    person_log_entries.map { |entry| ::OpenStruct.new(entry) }
   end
 
   def name_logs_attributes=(attributes)
