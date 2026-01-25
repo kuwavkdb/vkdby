@@ -1,20 +1,22 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: person_logs
 #
 #  id               :bigint           not null, primary key
-#  log_date         :string(255)
+#  log_date         :string
 #  log_type         :integer
-#  name             :string(255)
+#  name             :string
 #  part             :integer
 #  phenomenon       :integer          not null
-#  phenomenon_alias :string(255)
-#  quote_text       :text(65535)
+#  phenomenon_alias :string
+#  quote_text       :text
 #  sort_order       :integer
-#  source_url       :string(255)
-#  text             :text(65535)
-#  unit_key         :string(255)
-#  unit_name        :string(255)
+#  source_url       :string
+#  text             :text
+#  unit_key         :string
+#  unit_name        :string
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
 #  person_id        :bigint           not null
@@ -31,7 +33,7 @@
 #  fk_rails_...  (person_id => people.id)
 #  fk_rails_...  (unit_id => units.id)
 #
-require "test_helper"
+require 'test_helper'
 
 class PersonLogTest < ActiveSupport::TestCase
   # test "the truth" do

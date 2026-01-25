@@ -1,16 +1,20 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: units
 #
-#  id         :bigint           not null, primary key
-#  key        :string(255)
-#  name       :string(255)
-#  name_kana  :string(255)
-#  old_key    :string(255)
-#  status     :integer          default("active"), not null
-#  unit_type  :integer
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
+#  id            :bigint           not null, primary key
+#  key           :string
+#  name          :string
+#  name_kana     :string
+#  name_log      :jsonb
+#  old_key       :string
+#  old_wiki_text :text
+#  status        :integer          default("active"), not null
+#  unit_type     :integer
+#  created_at    :datetime         not null
+#  updated_at    :datetime         not null
 #
 # Indexes
 #
@@ -18,6 +22,8 @@
 #  index_units_on_name     (name)
 #  index_units_on_old_key  (old_key) UNIQUE
 #
+require 'ostruct'
+
 class Unit < ApplicationRecord
   has_many :links, as: :linkable, dependent: :destroy
   accepts_nested_attributes_for :links, allow_destroy: true, reject_if: :all_blank
@@ -31,12 +37,12 @@ class Unit < ApplicationRecord
   validates :status, presence: true
 
   STATUS_TRANSLATIONS = {
-    "pre" => "準備中",
-    "active" => "活動中",
-    "freeze" => "活動休止",
-    "disbanded" => "解散",
-    "unknown" => "不明"
-  }
+    'pre' => '準備中',
+    'active' => '活動中',
+    'freeze' => '活動休止',
+    'disbanded' => '解散',
+    'unknown' => '不明'
+  }.freeze
 
   def status_text
     STATUS_TRANSLATIONS[status] || status.humanize
@@ -46,6 +52,22 @@ class Unit < ApplicationRecord
     return nil if old_key.blank?
 
     "https://www.vkdb.jp/#{old_key}.html"
+  end
+
+  def name_logs
+    (name_log || []).map { |h| OpenStruct.new(h) }
+  end
+
+  def name_logs_attributes=(attributes)
+    self.name_log = attributes.values.map do |attrs|
+      next if attrs['name'].blank?
+
+      {
+        name: attrs['name'],
+        name_kana: attrs['name_kana'],
+        date: attrs['date']
+      }
+    end.compact
   end
 
   private
@@ -67,9 +89,7 @@ class Unit < ApplicationRecord
 
       # Determine part
       target_part = log.part
-      if UnitPerson.parts.keys.include?(target_part)
-        member.part = target_part
-      end
+      member.part = target_part if UnitPerson.parts.keys.include?(target_part)
 
       # Set default status if new record
       member.status ||= :active

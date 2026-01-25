@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class RenameColumnsInPersonLogs < ActiveRecord::Migration[8.1]
   def change
     rename_column :person_logs, :status, :phenomenon

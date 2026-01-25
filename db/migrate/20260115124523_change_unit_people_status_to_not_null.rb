@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ChangeUnitPeopleStatusToNotNull < ActiveRecord::Migration[8.1]
   def change
     change_column_null :unit_people, :status, false

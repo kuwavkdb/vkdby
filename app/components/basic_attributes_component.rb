@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class BasicAttributesComponent < ViewComponent::Base
   def initialize(resource:)
     @resource = resource

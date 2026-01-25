@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ChangeSnsToJsonInUnitPeople < ActiveRecord::Migration[8.1]
   def up
     # Add temporary json column
@@ -6,9 +8,7 @@ class ChangeSnsToJsonInUnitPeople < ActiveRecord::Migration[8.1]
     # Migrate existing string data to json array format
     UnitPerson.reset_column_information
     UnitPerson.find_each do |up|
-      if up.sns.present?
-        up.update_column(:sns_json, [ up.sns ])
-      end
+      up.update_column(:sns_json, [up.sns]) if up.sns.present?
     end
 
     # Remove old string column and rename json column
@@ -23,9 +23,7 @@ class ChangeSnsToJsonInUnitPeople < ActiveRecord::Migration[8.1]
     # Migrate json data back to string (take first element)
     UnitPerson.reset_column_information
     UnitPerson.find_each do |up|
-      if up.sns.present? && up.sns.is_a?(Array)
-        up.update_column(:sns_string, up.sns.first)
-      end
+      up.update_column(:sns_string, up.sns.first) if up.sns.present? && up.sns.is_a?(Array)
     end
 
     # Remove json column and rename string column

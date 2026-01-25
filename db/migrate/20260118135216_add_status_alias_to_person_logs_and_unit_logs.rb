@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddStatusAliasToPersonLogsAndUnitLogs < ActiveRecord::Migration[8.1]
   def change
     add_column :person_logs, :status_alias, :string

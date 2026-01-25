@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ChangeTextColumnTypeInLogs < ActiveRecord::Migration[8.1]
   def up
     change_column :person_logs, :text, :text

@@ -2,15 +2,15 @@
 
 # Usage: ID=15962 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails runner lib/tasks/import_person.rb
 
-require_relative "wikipage_parser"
+require_relative 'wikipage_parser'
 
 # Define Wikipage model temporarily
 class Wikipage < ActiveRecord::Base
 end
 
-wikipage_id = ENV["ID"]
+wikipage_id = ENV['ID']
 unless wikipage_id
-  puts "Please provide ID environment variable. e.g. ID=15962"
+  puts 'Please provide ID environment variable. e.g. ID=15962'
   exit 1
 end
 
@@ -22,26 +22,26 @@ unless wp
 end
 
 wiki_content = wp.wiki
-attributes = wp.attributes.slice("dw_id", "it_id", "eplus_id")
+attributes = wp.attributes.slice('dw_id', 'it_id', 'eplus_id')
 wikipage_name = wp.name
 
 puts "Fetched Wikipage: #{wikipage_name} (ID: #{wikipage_id}, Content size: #{wiki_content&.size})"
 
 unless wiki_content
-  puts "No valid content."
+  puts 'No valid content.'
   exit
 end
 
 # Remove comment lines (lines starting with //)
-wiki_content = wiki_content.lines.reject { |line| line.strip.start_with?("//") }.join
+wiki_content = wiki_content.lines.reject { |line| line.strip.start_with?('//') }.join
 
 ActiveRecord::Base.transaction do
   # 2. Parse Person Data
   # Parse person name and kana from Wikipage title
   # Format: "Name (Kana)" or "Name"
   if wp.title =~ /^(.+?)[（(](.+?)[）)]/
-    person_name = $1.strip
-    person_name_kana = $2.strip
+    person_name = Regexp.last_match(1).strip
+    person_name_kana = Regexp.last_match(2).strip
   else
     person_name = wp.title.strip
     person_name_kana = nil
@@ -55,7 +55,7 @@ ActiveRecord::Base.transaction do
 
   # Check if this is a person page
   unless categories[:is_person]
-    puts "Skipping: Not a person page (no {{category 個人}} found)"
+    puts 'Skipping: Not a person page (no {{category 個人}} found)'
     exit 0
   end
 
@@ -86,13 +86,13 @@ ActiveRecord::Base.transaction do
   # Set status based on categories (priority order: passed_away > retired > free > active)
   if categories[:is_passed_away]
     person.status = :passed_away
-    puts "  Status: Passed Away"
+    puts '  Status: Passed Away'
   elsif categories[:is_retired]
     person.status = :retirement
-    puts "  Status: Retirement"
+    puts '  Status: Retirement'
   elsif categories[:is_free]
     person.status = :free
-    puts "  Status: Free"
+    puts '  Status: Free'
   else
     person.status = :active
   end
@@ -109,7 +109,7 @@ ActiveRecord::Base.transaction do
     puts "  Birth Year: #{categories[:birth_year]}"
   elsif categories[:birth_year_unknown]
     person.birth_year = nil
-    puts "  Birth Year: Unknown"
+    puts '  Birth Year: Unknown'
   end
 
   # Set blood type
@@ -137,22 +137,22 @@ ActiveRecord::Base.transaction do
   # 4.1. Unlink Plugin (Inactive Links)
   unlink_regex = /\{\{unlink\s+(.*?)\}\}/m
 
-  puts "Scanning for unlink blocks..."
+  puts 'Scanning for unlink blocks...'
   wiki_content.scan(unlink_regex).each do |match|
-    puts "Found unlink block!"
+    puts 'Found unlink block!'
     unlink_content = match[0]
     WikipageParser::LinkParser.parse_links(person, unlink_content, attributes, active: false)
   end
 
   # 4.2. Active Links (Remove unlink blocks first)
-  active_content = wiki_content.gsub(unlink_regex, "")
-  puts "Parsing active links..."
+  active_content = wiki_content.gsub(unlink_regex, '')
+  puts 'Parsing active links...'
   WikipageParser::LinkParser.parse_links(person, active_content, attributes, active: true)
 
   # 5. Parse Career History (経歴)
   # Format: → [[Unit Name]](Part) → [[Another Unit]](Part) →
   if wiki_content =~ /!!経歴\s*\n(.+?)(?=\n!!|\z)/m
-    career_section = $1.strip
+    career_section = Regexp.last_match(1).strip
 
     # Save career section to old_history
     person.old_history = career_section
@@ -180,21 +180,21 @@ ActiveRecord::Base.transaction do
         # Parse part
         if part_str
           part_key = case part_str.downcase
-          when /vocal/ then :vocal
-          when /guitar/ then :guitar
-          when /bass/ then :bass
-          when /drums/ then :drums
-          when /keyboard/ then :keyboard
-          when /dj/ then :dj
-          else :unknown
-          end
+                     when /vocal/ then :vocal
+                     when /guitar/ then :guitar
+                     when /bass/ then :bass
+                     when /drums/ then :drums
+                     when /keyboard/ then :keyboard
+                     when /dj/ then :dj
+                     else :unknown
+                     end
 
           unit_person.part = part_key if unit_person.new_record?
         end
 
         unit_person.status = :left # Historical membership
         unit_person.save!
-        puts "    UnitPerson created/updated"
+        puts '    UnitPerson created/updated'
       else
         puts "    Unit not found: #{unit_name} (skipping)"
       end

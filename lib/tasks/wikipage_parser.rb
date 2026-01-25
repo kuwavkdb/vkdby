@@ -18,61 +18,61 @@ module WikipageParser
         text = nil
 
         case service.downcase
-        when "twitter", "x"
+        when 'twitter', 'x'
           url = "https://twitter.com/#{account}"
-          text = "Twitter"
-        when "youtube channel"
+          text = 'Twitter'
+        when 'youtube channel'
           url = "https://www.youtube.com/c/#{account}"
-          text = "YouTube Channel"
-        when "spotify"
+          text = 'YouTube Channel'
+        when 'spotify'
           url = "https://open.spotify.com/artist/#{account}"
-          text = "Spotify"
-        when "vkgy"
+          text = 'Spotify'
+        when 'vkgy'
           url = "https://vk.gy/artists/#{account}"
-          text = "vk.gy"
-        when "joysound"
+          text = 'vk.gy'
+        when 'joysound'
           url = "https://www.joysound.com/web/search/artist/#{account}"
-          text = "JOYSOUND"
-        when "dam"
+          text = 'JOYSOUND'
+        when 'dam'
           url = "https://www.clubdam.com/app/leaf/artistKaraokeLeaf.html?artistCode=#{account}"
-          text = "DAM"
-        when "カラオケdam"
+          text = 'DAM'
+        when 'カラオケdam'
           url = "https://www.clubdam.com/karaokesearch/artistleaf.html?artistCode=#{account}"
-          text = "カラオケDAM"
-        when "digitlink"
+          text = 'カラオケDAM'
+        when 'digitlink'
           url = "https://www.digitlink.jp/#{account}"
-          text = "digitlink"
-        when "filmarks"
+          text = 'digitlink'
+        when 'filmarks'
           url = "https://filmarks.com/users/#{account}"
-          text = "Filmarks"
-        when "ototoy"
+          text = 'Filmarks'
+        when 'ototoy'
           url = "https://ototoy.jp/_/default/a/#{account}"
-          text = "OTOTOY"
-        when "linkfire"
+          text = 'OTOTOY'
+        when 'linkfire'
           url = "https://smr.lnk.to/#{account}"
-          text = "linkfire"
-        when "tiktok"
+          text = 'linkfire'
+        when 'tiktok'
           url = "https://www.tiktok.com/@#{account}"
-          text = "TikTok"
-        when "linktr.ee"
+          text = 'TikTok'
+        when 'linktr.ee'
           url = "https://linktr.ee/#{account}"
-          text = "linktr.ee"
-        when "lnk.to"
+          text = 'linktr.ee'
+        when 'lnk.to'
           url = "https://lnk.to/#{account}"
-          text = "lnk.to"
+          text = 'lnk.to'
         end
 
-        if url
-          link = linkable.links.find_or_initialize_by(url: url)
-          link.text = text
-          link.active = active
-          link.save!
-        end
+        next unless url
+
+        link = linkable.links.find_or_initialize_by(url: url)
+        link.text = text
+        link.active = active
+        link.save!
       end
 
       # 2. [Label|URL] Format
       content.scan(/\[([^|\]]+)\|([^\]]+)\]/).each do |label, url|
-        next unless url.start_with?("http")
+        next unless url.start_with?('http')
 
         link = linkable.links.find_or_initialize_by(url: url)
         link.text = label
@@ -81,32 +81,32 @@ module WikipageParser
       end
 
       # 3. {{outlink ...}} Format
-      content.scan(/\{\{outlink\s+([^\}]+)\}\}/).each do |match|
+      content.scan(/\{\{outlink\s+([^}]+)\}\}/).each do |match|
         type = match[0].strip
         url = nil
         text = nil
 
         case type
-        when "dw"
-          if attributes["dw_id"]
+        when 'dw'
+          if attributes['dw_id']
             url = "https://pc.dwango.jp/portals/artist/#{attributes['dw_id']}"
-            text = "ドワンゴジェイピー"
+            text = 'ドワンゴジェイピー'
           end
-        when "it"
-          if attributes["it_id"]
+        when 'it'
+          if attributes['it_id']
             url = "https://music.apple.com/jp/artist/#{attributes['it_id']}"
-            text = "Apple Music"
+            text = 'Apple Music'
           end
-        when "tunecore"
-          text = "TuneCore"
+        when 'tunecore'
+          text = 'TuneCore'
         end
 
-        if url
-          link = linkable.links.find_or_initialize_by(url: url)
-          link.text = text
-          link.active = active
-          link.save!
-        end
+        next unless url
+
+        link = linkable.links.find_or_initialize_by(url: url)
+        link.text = text
+        link.active = active
+        link.save!
       end
     end
   end
@@ -120,37 +120,35 @@ module WikipageParser
       categories = {}
 
       # {{category 誕生日/MM/DD}}
-      if content =~ /\{\{category 誕生日\/(\d+)\/(\d+)\}\}/
-        categories[:birthday_month] = $1.to_i
-        categories[:birthday_day] = $2.to_i
+      if content =~ %r{\{\{category 誕生日/(\d+)/(\d+)\}\}}
+        categories[:birthday_month] = ::Regexp.last_match(1).to_i
+        categories[:birthday_day] = ::Regexp.last_match(2).to_i
       end
 
       # {{category 誕生年/YYYY}} or {{category 誕生年/不明}}
-      if content =~ /\{\{category 誕生年\/(\d+)\}\}/
-        categories[:birth_year] = $1.to_i
-      elsif content =~ /\{\{category 誕生年\/不明\}\}/
+      if content =~ %r{\{\{category 誕生年/(\d+)\}\}}
+        categories[:birth_year] = ::Regexp.last_match(1).to_i
+      elsif content =~ %r{\{\{category 誕生年/不明\}\}}
         categories[:birth_year_unknown] = true
       end
 
       # {{category 血液型/X}}
-      if content =~ /\{\{category 血液型\/([ABABO]+)\}\}/
-        categories[:blood] = $1
-      elsif content =~ /\{\{category 血液型\/不明\}\}/
-        categories[:blood] = "Unknown"
+      if content =~ %r{\{\{category 血液型/([ABABO]+)\}\}}
+        categories[:blood] = ::Regexp.last_match(1)
+      elsif content =~ %r{\{\{category 血液型/不明\}\}}
+        categories[:blood] = 'Unknown'
       end
 
       # {{category 出身地/XXX}}
-      if content =~ /\{\{category 出身地\/(.+?)\}\}/
-        hometown = $1.strip
-        categories[:hometown] = hometown unless hometown == "不明"
+      if content =~ %r{\{\{category 出身地/(.+?)\}\}}
+        hometown = ::Regexp.last_match(1).strip
+        categories[:hometown] = hometown unless hometown == '不明'
       end
 
       # Parts: {{category Bass}}, {{category Vocal}}, etc.
       categories[:parts] = []
       Person::AVAILABLE_PARTS.each do |part|
-        if content =~ /\{\{category #{part}\}\}/i
-          categories[:parts] << part.downcase
-        end
+        categories[:parts] << part.downcase if content =~ /\{\{category #{part}\}\}/i
       end
 
       # Check if this is a person page
@@ -158,7 +156,7 @@ module WikipageParser
 
       # Check for status categories
       categories[:is_retired] = content =~ /\{\{category 引退\}\}/
-      categories[:is_free] = content =~ /\{\{category 個人\/フリー\}\}/
+      categories[:is_free] = content =~ %r{\{\{category 個人/フリー\}\}}
       categories[:is_passed_away] = content =~ /\{\{category 死去\}\}/
 
       categories
@@ -167,13 +165,13 @@ module WikipageParser
 
   # Utils provides utility methods for encoding and key generation
   module Utils
-    require "romaji"
+    require 'romaji'
 
     # Encode string to EUC-JP URL format
     # @param str [String] String to encode
     # @return [String] URL-encoded EUC-JP string
     def self.encode_euc_jp_url(str)
-      URI.encode_www_form_component(str.encode("EUC-JP"))
+      URI.encode_www_form_component(str.encode('EUC-JP'))
     end
 
     # Generate person key from name with optional birthday for uniqueness
@@ -183,7 +181,8 @@ module WikipageParser
     # @param birthday_month [Integer] Birthday month (optional, for uniqueness)
     # @param birthday_day [Integer] Birthday day (optional, for uniqueness)
     # @return [String] URL-safe person key
-    def self.generate_person_key(wikipage_name, person_name, person_name_kana = nil, birthday_month: nil, birthday_day: nil)
+    def self.generate_person_key(wikipage_name, person_name, person_name_kana = nil, birthday_month: nil,
+                                 birthday_day: nil)
       source_for_key = wikipage_name
 
       if wikipage_name.match?(/^[[:ascii:]\s-]+$/)
@@ -196,19 +195,19 @@ module WikipageParser
         # Try to convert name to romaji
         romaji_attempt = Romaji.kana2romaji(person_name)
         # If romanization failed (still contains non-ASCII), use encoded version
-        if romaji_attempt.match?(/[^[:ascii:]]/)
-          # Use encoded old_key (without percent signs for readability)
-          source_for_key = encode_euc_jp_url(wikipage_name).gsub(/%/, "")
-        else
-          source_for_key = romaji_attempt
-        end
+        source_for_key = if romaji_attempt.match?(/[^[:ascii:]]/)
+                           # Use encoded old_key (without percent signs for readability)
+                           encode_euc_jp_url(wikipage_name).gsub(/%/, '')
+                         else
+                           romaji_attempt
+                         end
       end
 
-      base_key = source_for_key.downcase.gsub(/\s+/, "-")
+      base_key = source_for_key.downcase.gsub(/\s+/, '-')
 
       # Append birthday suffix for uniqueness if available
       if birthday_month && birthday_day
-        birthday_suffix = format("%02d%02d", birthday_month, birthday_day)
+        birthday_suffix = format('%02d%02d', birthday_month, birthday_day)
         "#{base_key}-#{birthday_suffix}"
       else
         base_key
@@ -220,20 +219,18 @@ module WikipageParser
     # @param unit_name_kana [String] Unit's name in kana (optional)
     # @return [String] URL-safe unit key
     def self.generate_unit_key(wikipage_name, unit_name_kana = nil)
-      source_for_key = wikipage_name
+      source_for_key = if wikipage_name.match?(/^[[:ascii:]\s-]+$/)
+                         # Ascii only
+                         wikipage_name
+                       elsif unit_name_kana.present?
+                         # Convert Kana to Romaji
+                         Romaji.kana2romaji(unit_name_kana)
+                       else
+                         # Fallback to encoded old_key (without percent signs) to ensure ASCII
+                         encode_euc_jp_url(wikipage_name).gsub(/%/, '')
+                       end
 
-      if wikipage_name.match?(/^[[:ascii:]\s-]+$/)
-        # Ascii only
-        source_for_key = wikipage_name
-      elsif unit_name_kana.present?
-        # Convert Kana to Romaji
-        source_for_key = Romaji.kana2romaji(unit_name_kana)
-      else
-        # Fallback to encoded old_key (without percent signs) to ensure ASCII
-        source_for_key = encode_euc_jp_url(wikipage_name).gsub(/%/, "")
-      end
-
-      source_for_key.downcase.gsub(/\s+/, "-")
+      source_for_key.downcase.gsub(/\s+/, '-')
     end
   end
 end

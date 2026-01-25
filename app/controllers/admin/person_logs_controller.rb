@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Admin
   class PersonLogsController < BaseController
     before_action :set_person
@@ -18,14 +20,13 @@ module Admin
       @person_log = @person.person_logs.build
     end
 
-    def edit
-    end
+    def edit; end
 
     def create
       @person_log = @person.person_logs.build(person_log_params)
 
       if @person_log.save
-        redirect_to admin_person_person_logs_path(@person), notice: "Person log was successfully created."
+        redirect_to admin_person_person_logs_path(@person), notice: 'Person log was successfully created.'
       else
         render :new, status: :unprocessable_entity
       end
@@ -33,7 +34,7 @@ module Admin
 
     def update
       if @person_log.update(person_log_params)
-        redirect_to admin_person_person_logs_path(@person), notice: "Person log was successfully updated."
+        redirect_to admin_person_person_logs_path(@person), notice: 'Person log was successfully updated.'
       else
         render :edit, status: :unprocessable_entity
       end
@@ -41,7 +42,7 @@ module Admin
 
     def destroy
       @person_log.destroy
-      redirect_to admin_person_person_logs_path(@person), notice: "Person log was successfully destroyed."
+      redirect_to admin_person_person_logs_path(@person), notice: 'Person log was successfully destroyed.'
     end
 
     private
@@ -55,7 +56,8 @@ module Admin
     end
 
     def person_log_params
-      params.require(:person_log).permit(:log_date, :phenomenon, :phenomenon_alias, :unit_id, :unit_name, :unit_key, :name, :part, :text, :source_url, :quote_text)
+      params.require(:person_log).permit(:log_date, :phenomenon, :phenomenon_alias, :unit_id, :unit_name, :unit_key,
+                                         :name, :part, :text, :source_url, :quote_text)
     end
   end
 end

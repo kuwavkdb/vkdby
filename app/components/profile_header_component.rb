@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ProfileHeaderComponent < ViewComponent::Base
   def initialize(resource:)
     @resource = resource
@@ -6,14 +8,14 @@ class ProfileHeaderComponent < ViewComponent::Base
   private
 
   def bg_class
-    @resource.is_a?(Unit) ? "bg-unit" : "bg-person"
+    @resource.is_a?(Unit) ? 'bg-unit' : 'bg-person'
   end
 
   def type_label
     if @resource.is_a?(Unit)
-      @resource.unit_type.present? ? @resource.unit_type.upcase : "UNIT"
+      @resource.unit_type.present? ? @resource.unit_type.upcase : 'UNIT'
     else
-      "PERSON"
+      'PERSON'
     end
   end
 

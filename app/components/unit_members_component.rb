@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class UnitMembersComponent < ViewComponent::Base
   def initialize(unit:, active_members:, past_members:)
     @unit = unit

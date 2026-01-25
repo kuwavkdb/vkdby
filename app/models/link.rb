@@ -1,13 +1,15 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: links
 #
 #  id            :bigint           not null, primary key
 #  active        :boolean          default(TRUE)
-#  linkable_type :string(255)      not null
+#  linkable_type :string           not null
 #  sort_order    :integer
-#  text          :string(255)
-#  url           :string(255)      not null
+#  text          :string
+#  url           :string           not null
 #  created_at    :datetime         not null
 #  updated_at    :datetime         not null
 #  linkable_id   :bigint           not null
@@ -23,24 +25,24 @@ class Link < ApplicationRecord
 
   def youtube_video_id
     return nil unless url.present?
+
     # Regular expression to extract YouTube video ID
     # Handles watch?v=, youtu.be/, embed/, etc.
-    if url =~ /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
-      $1
-    end
+    return unless url =~ %r{(?:youtube\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/\s]{11})}
+
+    ::Regexp.last_match(1)
   end
 
   def sns_info
     return nil unless url.present?
+
     case url
-    when /twitter\.com\/([^\/\?]+)/, /x\.com\/([^\/\?]+)/
-      { platform: "Twitter", account: "@#{$1}" }
-    when /instagram\.com\/([^\/\?]+)/
-      { platform: "Instagram", account: $1 }
-    when /youtube\.com\/@([^\/\?]+)/, /youtube\.com\/c\/([^\/\?]+)/
-      { platform: "YouTube", account: $1 }
-    else
-      nil
+    when %r{twitter\.com/([^/?]+)}, %r{x\.com/([^/?]+)}
+      { platform: 'Twitter', account: "@#{::Regexp.last_match(1)}" }
+    when %r{instagram\.com/([^/?]+)}
+      { platform: 'Instagram', account: ::Regexp.last_match(1) }
+    when %r{youtube\.com/@([^/?]+)}, %r{youtube\.com/c/([^/?]+)}
+      { platform: 'YouTube', account: ::Regexp.last_match(1) }
     end
   end
 
