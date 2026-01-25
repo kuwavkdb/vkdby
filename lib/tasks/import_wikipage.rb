@@ -168,11 +168,9 @@ ActiveRecord::Base.transaction do
     # Convert Kana to Romaji
     source_for_key = Romaji.kana2romaji(unit_name_kana)
   else
-    # Fallback: Can't convert safely without kana. Use encoded? Or try to convert name?
-    # Romaji gem might handle Kanji? No, usually expect Kana.
-    # Just use encoded old key as fallback? No readability.
-    # Let's try name as is (Rails param handling might percent encode it)
-    source_for_key = wikipage_name
+    # Fallback: Can't convert safely without kana. Use encoded old_key
+    # Use encoded old_key (without percent signs for readability/safety)
+    source_for_key = encoded_old_key.gsub(/%/, "")
   end
 
   unit_key = source_for_key.downcase.gsub(/\s+/, "-")
