@@ -28,6 +28,8 @@ class Person < ApplicationRecord
   has_many :units, through: :unit_people
   has_many :person_logs
 
+  accepts_nested_attributes_for :links, allow_destroy: true, reject_if: :all_blank
+
   enum :status, { pre: 0, active: 1, free: 2, hiatus: 3, retirement: 90, passed_away: 98, unknown: 99 }
 
   # Valid parts for a person
