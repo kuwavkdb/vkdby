@@ -79,31 +79,64 @@ class Person < ApplicationRecord
   end
 
   # old_historyをパースして履歴アイテムの配列を返す
-  # 戻り値: [{ unit_name: "ユニット名", part_and_name: "Part" or "Part+PersonName" or "PersonName", old_key: "EUC-JPエンコードされたユニット名" }, ...]
+  # 戻り値: [{ unit_name: "ユニット名", part_and_name: "Part" or "Part+PersonName" or "PersonName", old_key: "EUC-JPエンコードされたユニット名", external_url: "外部URL" }, ...]
   def parse_old_history
     return [] if old_history.blank?
 
     require_relative '../../lib/tasks/wikipage_parser'
 
     items = []
-    old_history.scan(/→\s*\[\[([^\]]+)\]\](?:\(([^)]+)\))?/).each do |unit_text, part_and_name|
-      # [[XXXX|YYYY]] の場合、XXXXが表示名、YYYYがold_key(エンコード前)
-      if unit_text.include?('|')
-        display_name, raw_old_key = unit_text.split('|', 2)
-      else
-        display_name = unit_text
-        raw_old_key = unit_text
+
+    # Split by → and process each item
+    old_history.split('→').each do |segment|
+      segment = segment.strip
+      next if segment.empty?
+
+      # Pattern 1: [[UnitName]](Part) - Internal unit link
+      case segment
+      when /\[\[([^\]]+)\]\](?:\(([^)]+)\))?/
+        unit_text = ::Regexp.last_match(1)
+        part_and_name = ::Regexp.last_match(2)
+
+        # [[XXXX|YYYY]] の場合、XXXXが表示名、YYYYがold_key(エンコード前)
+        if unit_text.include?('|')
+          display_name, raw_old_key = unit_text.split('|', 2)
+        else
+          display_name = unit_text
+          raw_old_key = unit_text
+        end
+
+        # old_key生成用にEUC-JPエンコード
+        encoded_unit_name = WikipageParser::Utils.encode_euc_jp_url(raw_old_key.strip)
+
+        items << {
+          unit_name: display_name.strip,
+          part_and_name: part_and_name&.strip,
+          old_key: encoded_unit_name
+        }
+      # Pattern 2: [LinkText|URL](Part) - External link
+      when /\[([^\]|]+)\|([^\]]+)\](?:\(([^)]+)\))?/
+        link_text = ::Regexp.last_match(1)
+        url = ::Regexp.last_match(2)
+        part_and_name = ::Regexp.last_match(3)
+
+        items << {
+          unit_name: link_text.strip,
+          part_and_name: part_and_name&.strip,
+          external_url: url.strip
+        }
+      # Pattern 3: Plain text (Part) - No link
+      when /([^(]+)(?:\(([^)]+)\))?/
+        unit_text = ::Regexp.last_match(1)
+        part_and_name = ::Regexp.last_match(2)
+
+        items << {
+          unit_name: unit_text.strip,
+          part_and_name: part_and_name&.strip
+        }
       end
-
-      # old_key生成用にEUC-JPエンコード
-      encoded_unit_name = WikipageParser::Utils.encode_euc_jp_url(raw_old_key.strip)
-
-      items << {
-        unit_name: display_name.strip,
-        part_and_name: part_and_name&.strip,
-        old_key: encoded_unit_name
-      }
     end
+
     items
   end
 
