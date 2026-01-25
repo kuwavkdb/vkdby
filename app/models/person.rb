@@ -45,7 +45,7 @@ class Person < ApplicationRecord
 
   DUMMY_BIRTH_YEAR = 1904 # Leap year for Feb 29 compatibility
 
-  before_save :set_dummy_birth_year, if: :birth_year_unknown
+  before_save :normalize_birthday_year
 
   validate :key_immutable, on: :update
   after_create :auto_link_unit_people
@@ -63,19 +63,21 @@ class Person < ApplicationRecord
   def birthday_display
     return nil unless birthday
 
-    if birth_year_unknown
-      birthday.strftime("%-m月%-d日")
+    if birth_year.present?
+      # Show full date with year
+      Date.new(birth_year, birthday.month, birthday.day).strftime("%Y年%-m月%-d日")
     else
-      birthday.strftime("%Y年%-m月%-d日")
+      # Show only month and day
+      birthday.strftime("%-m月%-d日")
     end
   end
 
   private
 
-  def set_dummy_birth_year
+  def normalize_birthday_year
     return unless birthday
 
-    # Change year to DUMMY_BIRTH_YEAR while keeping month/day
+    # Always set birthday year to DUMMY_BIRTH_YEAR (1904)
     self.birthday = birthday.change(year: DUMMY_BIRTH_YEAR)
   end
 
