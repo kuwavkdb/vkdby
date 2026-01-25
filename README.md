@@ -42,6 +42,9 @@ PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle exec rubocop
 
 # Annotate（モデル定義のコメント更新）
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle exec annotaterb models
+
+# テストの実行
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails test
 ```
 
 ## 注意事項
