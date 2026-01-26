@@ -364,24 +364,34 @@ ActiveRecord::Base.transaction do
 
   # 4. Parse Links
 
-  # 4. Parse Links
+  # 4. Parse Links (only from !!リンク section)
+  # Extract !!リンク section content
+  link_section_content = if wiki_content =~ /!!リンク\s*\n(.+?)(?=\n!!|\z)/m
+                           Regexp.last_match(1).strip
+                         else
+                           '' # No link section found
+                         end
 
-  # 4.1. Unlink Plugin (Inactive Links)
-  # Format: {{unlink ... }} (multi-line supported)
-  # Match content non-greedily until the closing }}
-  unlink_regex = /\{\{unlink\s+(.*?)\}\}/m
+  if link_section_content.present?
+    # 4.1. Unlink Plugin (Inactive Links) - only within link section
+    # Format: {{unlink ... }} (multi-line supported)
+    # Match content non-greedily until the closing }}
+    unlink_regex = /\{\{unlink\s+(.*?)\}\}/m
 
-  puts 'Scanning for unlink blocks...'
-  wiki_content.scan(unlink_regex).each do |match|
-    puts 'Found unlink block!'
-    unlink_content = match[0]
-    parse_unit_links(unit, unlink_content, attributes, active: false)
+    puts 'Scanning for unlink blocks in link section...'
+    link_section_content.scan(unlink_regex).each do |match|
+      puts 'Found unlink block!'
+      unlink_content = match[0]
+      parse_unit_links(unit, unlink_content, attributes, active: false)
+    end
+
+    # 4.2. Active Links (Remove unlink blocks first) - only within link section
+    active_content = link_section_content.gsub(unlink_regex, '')
+    puts 'Parsing active links from link section...'
+    parse_unit_links(unit, active_content, attributes, active: true)
+  else
+    puts 'No !!リンク section found, skipping link parsing'
   end
-
-  # 4.2. Active Links (Remove unlink blocks first)
-  active_content = wiki_content.gsub(unlink_regex, '')
-  puts 'Parsing active links...'
-  parse_unit_links(unit, active_content, attributes, active: true)
 end
 
 puts 'Done!'
