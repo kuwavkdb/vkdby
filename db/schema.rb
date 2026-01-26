@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_25_155202) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_26_152355) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -37,6 +37,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_25_155202) do
     t.string "name"
     t.string "name_kana"
     t.jsonb "name_log"
+    t.text "note"
     t.text "old_history"
     t.string "old_key"
     t.text "old_wiki_text"
@@ -110,6 +111,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_25_155202) do
     t.string "name"
     t.string "name_kana"
     t.jsonb "name_log"
+    t.text "note"
     t.string "old_key"
     t.text "old_wiki_text"
     t.integer "status", default: 1, null: false

@@ -58,7 +58,7 @@ module Admin
     end
 
     def unit_params
-      params.require(:unit).permit(:name, :name_kana, :key, :status, :unit_type, :old_key,
+      params.require(:unit).permit(:name, :name_kana, :key, :status, :unit_type, :old_key, :note,
                                    links_attributes: %i[id text url active sort_order _destroy],
                                    name_logs_attributes: %i[name name_kana])
     end
