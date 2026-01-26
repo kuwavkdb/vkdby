@@ -375,9 +375,9 @@ ActiveRecord::Base.transaction do
 
   # 3.2. Old Member Format (Issue #50)
   # Format: !Part … [[Name|OldKey]] or !Part … [[Name]]
-  old_member_regex = /^!([^…]+)…\s*\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/
+  old_member_regex = /^!([^…\n]+)…\s*\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/
 
-  wiki_content.scan(old_member_regex) do |match|
+    wiki_content.scan(old_member_regex) do |match|
     match_data = Regexp.last_match
     current_pos = match_data.begin(0)
     member_status = current_pos > separator_index ? :left : :active
