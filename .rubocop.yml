@@ -12,3 +12,7 @@ Metrics/BlockLength:
   Exclude:
     - 'lib/tasks/import_wikipage.rb'
     - 'lib/tasks/import_person.rb'
+
+Metrics/ClassLength:
+  Exclude:
+    - 'app/models/person.rb'

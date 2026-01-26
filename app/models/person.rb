@@ -79,31 +79,72 @@ class Person < ApplicationRecord
   end
 
   # old_historyをパースして履歴アイテムの配列を返す
-  # 戻り値: [{ unit_name: "ユニット名", part_and_name: "Part" or "Part+PersonName" or "PersonName", old_key: "EUC-JPエンコードされたユニット名" }, ...]
+  # 戻り値: [{ unit_name: "ユニット名", part_and_name: "Part" or "Part+PersonName" or "PersonName", old_key: "EUC-JPエンコードされたユニット名", external_url: "外部URL" }, ...]
   def parse_old_history
     return [] if old_history.blank?
 
     require_relative '../../lib/tasks/wikipage_parser'
 
     items = []
-    old_history.scan(/→\s*\[\[([^\]]+)\]\](?:\(([^)]+)\))?/).each do |unit_text, part_and_name|
-      # [[XXXX|YYYY]] の場合、XXXXが表示名、YYYYがold_key(エンコード前)
-      if unit_text.include?('|')
-        display_name, raw_old_key = unit_text.split('|', 2)
+
+    # Split by → and process each item
+    old_history.split('→').each do |segment|
+      segment = segment.strip
+      next if segment.empty?
+
+      # Check if the entire segment is wrapped in parentheses
+      wrapped_in_parens = segment.start_with?('(') && segment.end_with?(')')
+
+      # Remove outer parentheses for pattern matching if wrapped
+      content = wrapped_in_parens ? segment[1..-2] : segment
+
+      # Pattern 1: [[UnitName]] or [[UnitName]](Part) - Internal unit link
+      case content
+      when /\[\[([^\]]+)\]\](?:\(([^)]+)\))?/
+        unit_text = ::Regexp.last_match(1)
+        part_and_name = ::Regexp.last_match(2)
+
+        # [[XXXX|YYYY]] の場合、XXXXが表示名、YYYYがold_key(エンコード前)
+        if unit_text.include?('|')
+          display_name, raw_old_key = unit_text.split('|', 2)
+        else
+          display_name = unit_text
+          raw_old_key = unit_text
+        end
+
+        # old_key生成用にEUC-JPエンコード
+        encoded_unit_name = WikipageParser::Utils.encode_euc_jp_url(raw_old_key.strip)
+
+        # If wrapped in parentheses, add them to display
+        display_unit_name = wrapped_in_parens ? "(#{display_name.strip})" : display_name.strip
+
+        items << {
+          unit_name: display_unit_name,
+          part_and_name: part_and_name&.strip,
+          old_key: encoded_unit_name
+        }
+      # Pattern 2: [LinkText|URL] or [LinkText|URL](Part) - External link
+      when /\[([^\]|]+)\|([^\]]+)\](?:\(([^)]+)\))?/
+        link_text = ::Regexp.last_match(1)
+        url = ::Regexp.last_match(2)
+        part_and_name = ::Regexp.last_match(3)
+
+        # If wrapped in parentheses, add them to display
+        display_link_text = wrapped_in_parens ? "(#{link_text.strip})" : link_text.strip
+
+        items << {
+          unit_name: display_link_text,
+          part_and_name: part_and_name&.strip,
+          external_url: url.strip
+        }
+      # Pattern 3: Plain text - No link, display as-is (including parentheses)
       else
-        display_name = unit_text
-        raw_old_key = unit_text
+        items << {
+          unit_name: segment.strip
+        }
       end
-
-      # old_key生成用にEUC-JPエンコード
-      encoded_unit_name = WikipageParser::Utils.encode_euc_jp_url(raw_old_key.strip)
-
-      items << {
-        unit_name: display_name.strip,
-        part_and_name: part_and_name&.strip,
-        old_key: encoded_unit_name
-      }
     end
+
     items
   end
 
