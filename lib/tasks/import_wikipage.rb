@@ -138,6 +138,78 @@ end
 
 require 'romaji'
 
+# Helper method to register member
+# rubocop:disable Metrics/PerceivedComplexity, Metrics/ParameterLists
+def register_member(unit, part_str, name_str, old_member_key, sns_account, inline_history, member_status)
+  # Map Part
+  part_key = case part_str.downcase
+             when 'vocal' then :vocal
+             when 'guitar' then :guitar
+             when 'bass' then :bass
+             when 'drums' then :drums
+             when 'keyboard' then :keyboard
+             when 'dj' then :dj
+             else :unknown
+             end
+
+  # Create Person
+  # Use unit_key prefix for uniqueness
+  # Convert name to romaji for URL-safe key
+  person_name_for_key = if name_str.match?(/^[[:ascii:]\s-]+$/)
+                          # Already ASCII
+                          name_str
+                        else
+                          # Try to convert to romaji
+                          romaji_attempt = Romaji.kana2romaji(name_str)
+                          # If romanization failed (still contains non-ASCII), use old_member_key
+                          if romaji_attempt.match?(/[^[:ascii:]]/)
+                            # Use the already-encoded old_member_key (without unit prefix)
+                            old_member_key.gsub(/%/, '')
+                          else
+                            romaji_attempt
+                          end
+                        end
+
+  # Ensure unit.key is present (should be passed or available)
+  unit_key = unit.key
+  person_key = "#{unit_key}_#{person_name_for_key.downcase.gsub(/\s+/, '-')}"
+
+  person = Person.find_by(key: person_key)
+
+  # Check for name changes and update name_log for person
+  if person.present? && (person.name != name_str)
+    person.name_log ||= []
+    person.name_log << {
+      name: person.name,
+      name_kana: person.name_kana
+    }
+    puts "  Person name changed! Added to log: #{person.name} (#{person.name_kana})"
+  end
+
+  # Create UnitPerson
+  up = if person.present?
+         UnitPerson.find_or_initialize_by(unit: unit, person: person)
+       else
+         UnitPerson.find_or_initialize_by(unit: unit, person_name: name_str)
+       end
+  up.person_id = person.id if person.present?
+  up.person_key = person_key unless person.present? # Set person_key when person doesn't exist
+  up.part = part_key
+  up.status = member_status
+  up.old_person_key = old_member_key
+  up.inline_history = inline_history # Save inline history text
+  up.sns = [sns_account.strip] if sns_account.present?
+  up.save!
+  puts "UnitPerson saved: #{up.person_name || person.name} (Part: #{part_key})"
+
+  # Update person name after log
+  return unless person.present?
+
+  person.name = name_str
+  person.save!
+end
+# rubocop:enable Metrics/PerceivedComplexity, Metrics/ParameterLists
+
 ActiveRecord::Base.transaction do
   # ... (existing transaction start) ...
   # 2. Derive Unit Data
@@ -298,68 +370,32 @@ ActiveRecord::Base.transaction do
 
     old_member_key = URI.encode_www_form_component(old_member_key.encode('EUC-JP'))
 
-    # Map Part
-    part_key = case part_str.downcase
-               when 'vocal' then :vocal
-               when 'guitar' then :guitar
-               when 'bass' then :bass
-               when 'drums' then :drums
-               when 'keyboard' then :keyboard
-               when 'dj' then :dj
-               else :unknown
-               end
+    register_member(unit, part_str, name_str, old_member_key, sns_account, inline_history, member_status)
+  end
 
-    # Create Person
-    # Use unit_key prefix for uniqueness
-    # Convert name to romaji for URL-safe key
-    person_name_for_key = if name_str.match?(/^[[:ascii:]\s-]+$/)
-                            # Already ASCII
-                            name_str
-                          else
-                            # Try to convert to romaji
-                            romaji_attempt = Romaji.kana2romaji(name_str)
-                            # If romanization failed (still contains non-ASCII), use old_member_key
-                            if romaji_attempt.match?(/[^[:ascii:]]/)
-                              # Use the already-encoded old_member_key (without unit prefix)
-                              old_member_key.gsub(/%/, '')
-                            else
-                              romaji_attempt
-                            end
-                          end
-    person_key = "#{unit_key}_#{person_name_for_key.downcase.gsub(/\s+/, '-')}"
-    person = Person.find_by(key: person_key)
+  # 3.2. Old Member Format (Issue #50)
+  # Format: !Part … [[Name|OldKey]] or !Part … [[Name]]
+  old_member_regex = /^!([^…]+)…\s*\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/
 
-    # Check for name changes and update name_log for person
-    if person.present? && (person.name != name_str)
-      person.name_log ||= []
-      person.name_log << {
-        name: person.name,
-        name_kana: person.name_kana
-      }
-      puts "  Person name changed! Added to log: #{person.name} (#{person.name_kana})"
+  wiki_content.scan(old_member_regex) do |match|
+    match_data = Regexp.last_match
+    current_pos = match_data.begin(0)
+    member_status = current_pos > separator_index ? :left : :active
+
+    part_str = match[0].strip
+    name_str = match[1].strip
+    old_member_key = match[2]&.strip
+
+    if old_member_key.present?
+      old_member_key = old_member_key.strip
+      old_member_key = [name_str, old_member_key].join if old_member_key =~ /^\(/ && old_member_key =~ /\)$/
+    else
+      old_member_key = name_str
     end
 
-    # Create UnitPerson
-    up = if person.present?
-           UnitPerson.find_or_initialize_by(unit: unit, person: person)
-         else
-           UnitPerson.find_or_initialize_by(unit: unit, person_name: name_str)
-         end
-    up.person_id = person.id if person.present?
-    up.person_key = person_key unless person.present? # Set person_key when person doesn't exist
-    up.part = part_key
-    up.status = member_status
-    up.old_person_key = old_member_key
-    up.inline_history = inline_history # Save inline history text
-    up.sns = [sns_account.strip] if sns_account.present?
-    up.save!
-    puts "UnitPerson saved: #{up.person_name || person.name} (Part: #{part_key})"
+    old_member_key = URI.encode_www_form_component(old_member_key.encode('EUC-JP'))
 
-    # Update person name after log
-    if person.present?
-      person.name = name_str
-      person.save!
-    end
+    register_member(unit, part_str, name_str, old_member_key, nil, nil, member_status)
   end
 
   # 4. Parse Links
