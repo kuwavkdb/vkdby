@@ -29,27 +29,29 @@
                   <%= link_to "Edit", admin_unit_unit_logs_path(@resource), class: "text-xs font-medium text-slate-400 hover:text-indigo-500 transition-colors" %>
                 <% end %>
               </div>
-              <div class="grid gap-6 relative before:absolute before:left-3 before:top-0 before:bottom-0 before:w-0.5 before:bg-slate-200 dark:before:bg-slate-700">
+              <div class="grid gap-4 relative before:absolute before:left-3 before:top-0 before:bottom-0 before:w-0.5 before:bg-slate-200 dark:before:bg-slate-700">
                 <% if @resource.is_a?(Person) %>
                   <% if @logs.present? %>
                     <%= render PersonHistoryItemComponent.with_collection(@logs) %>
                   <% elsif @old_history_items.present? %>
-                    <% @old_history_items.each do |item| %>
+                    <% @old_history_items.each do |concurrent_items| %>
                       <div class="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-5 pl-10 relative border border-slate-100 dark:border-slate-700">
                         <div class="absolute left-[0.45rem] top-6 w-2.5 h-2.5 bg-person border-2 border-white dark:border-slate-800 rounded-full z-10 shadow-[0_0_0_2px_rgba(226,232,240,1)] dark:shadow-[0_0_0_2px_rgba(51,65,85,1)]"></div>
-                        <div>
-                          <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">
-                            <% if item[:external_url].present? %>
-                              <%= link_to item[:unit_name], item[:external_url], target: '_blank', rel: 'noopener noreferrer', class: "hover:text-unit transition-colors" %>
-                            <% elsif item[:old_key].present? %>
-                              <%= link_to item[:unit_name], "/#{item[:old_key]}.html", class: "hover:text-unit transition-colors" %>
-                            <% else %>
-                              <%= item[:unit_name] %>
-                            <% end %>
-                            <% if item[:part_and_name].present? %>
-                              <span class="text-xs font-bold text-slate-600 dark:text-slate-300 ml-1">(<%= item[:part_and_name] %>)</span>
-                            <% end %>
-                          </h3>
+                        <div class="space-y-2">
+                          <% concurrent_items.each do |item| %>
+                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">
+                              <% if item[:external_url].present? %>
+                                <%= link_to item[:unit_name], item[:external_url], target: '_blank', rel: 'noopener noreferrer', class: "hover:text-unit transition-colors" %>
+                              <% elsif item[:old_key].present? %>
+                                <%= link_to item[:unit_name], "/#{item[:old_key]}.html", class: "hover:text-unit transition-colors" %>
+                              <% else %>
+                                <%= item[:unit_name] %>
+                              <% end %>
+                              <% if item[:part_and_name].present? %>
+                                <span class="text-xs font-bold text-slate-600 dark:text-slate-300 ml-1">(<%= item[:part_and_name] %>)</span>
+                              <% end %>
+                            </h3>
+                          <% end %>
                         </div>
                       </div>
                     <% end %>
