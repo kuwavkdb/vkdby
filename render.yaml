@@ -2,8 +2,8 @@ databases:
   - name: vkdby-db
     databaseName: vkdby_production
     user: vkdby
-    plan: starter # Note: Render Managed MySQL does not have a free tier. Starts at ~$7/mo.
-    region: singapore # Adjust as needed (e.g., oregon, frankfurt)
+    plan: free # Note: The free database plan expires after 90 days.
+    region: singapore
 
 services:
   - type: web
