@@ -86,7 +86,7 @@ class Person < ApplicationRecord
   #   ],
   #   ...
   # ]
-  def parse_old_history
+  def parse_old_history # rubocop:disable Metrics/PerceivedComplexity
     return [] if old_history.blank?
 
     require_relative '../../lib/tasks/wikipage_parser'
