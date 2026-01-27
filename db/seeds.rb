@@ -57,3 +57,14 @@ if unit
 end
 
 puts 'Done seeding links and logs.'
+
+if ENV['ADMIN_EMAIL'].present? && ENV['ADMIN_PASSWORD'].present?
+  puts "Creating admin user: #{ENV['ADMIN_EMAIL']}"
+  User.find_or_create_by!(email: ENV['ADMIN_EMAIL']) do |u|
+    u.name = 'Admin User'
+    u.password = ENV['ADMIN_PASSWORD']
+    u.password_confirmation = ENV['ADMIN_PASSWORD']
+    u.role = :admin
+  end
+  puts 'Admin user created (or already exists).'
+end
