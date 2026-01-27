@@ -24,7 +24,7 @@ module Vkdby
     # Insert middleware to fix EUC-JP URLs before ActionableExceptions
     # (or any other middleware that might raise BadRequest on invalid encoding)
     require_relative '../lib/middleware/euc_jp_url_fixer'
-    config.middleware.insert_before ActionDispatch::ActionableExceptions, Middleware::EucJpUrlFixer
+    config.middleware.insert_before 0, Middleware::EucJpUrlFixer
 
     # Configuration for the application, engines, and railties goes here.
     #
