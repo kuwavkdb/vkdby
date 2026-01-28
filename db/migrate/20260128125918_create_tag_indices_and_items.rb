@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateTagIndicesAndItems < ActiveRecord::Migration[8.1]
   def change
     create_table :tag_indices do |t|
@@ -8,7 +10,7 @@ class CreateTagIndicesAndItems < ActiveRecord::Migration[8.1]
       t.timestamps
     end
     add_index :tag_indices, :name, unique: true
-    add_index :tag_indices, [:index_group, :order_in_group]
+    add_index :tag_indices, %i[index_group order_in_group]
 
     create_table :tag_index_items do |t|
       t.references :tag_index, null: false, foreign_key: true
@@ -16,7 +18,7 @@ class CreateTagIndicesAndItems < ActiveRecord::Migration[8.1]
 
       t.timestamps
     end
-    add_index :tag_index_items, [:tag_index_id, :indexable_type]
+    add_index :tag_index_items, %i[tag_index_id indexable_type]
 
     # Drop old tables
     drop_table :kana_index_items
