@@ -113,7 +113,11 @@ class PersonImporter
 
     # Attributes from categories
     if categories_data[:birthday_month] && categories_data[:birthday_day]
-      person.birthday = Date.new(1904, categories_data[:birthday_month], categories_data[:birthday_day])
+      if Date.valid_date?(1904, categories_data[:birthday_month], categories_data[:birthday_day])
+        person.birthday = Date.new(1904, categories_data[:birthday_month], categories_data[:birthday_day])
+      else
+        puts "Warning: Invalid birthday for #{person_name} (ID: #{@wikipage.id}): #{categories_data[:birthday_month]}/#{categories_data[:birthday_day]}"
+      end
     end
 
     if categories_data[:birth_year]
