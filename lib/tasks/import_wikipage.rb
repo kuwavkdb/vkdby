@@ -314,6 +314,43 @@ ActiveRecord::Base.transaction do
   unit.save!
   puts "Unit saved: #{unit.name} (id: #{unit.id}, type: #{unit_type})"
 
+  # 2.1 Parse Categories (Kana Index)
+  # Format: {{category category_name1, category_name2}}
+  # Example: {{category ア行}}, {{category 個人/ア行, 個人/カ行}}
+  category_regex = /\{\{category\s+(.*?)\}\}/i
+  # Collect all categories from all tags
+  categories = []
+  wiki_content.scan(category_regex) do |match|
+    content = match[0]
+    # Split by comma
+    content.split(',').each do |cat|
+      categories << cat.strip
+    end
+  end
+
+  if categories.any?
+    puts "  Categories found: #{categories.join(', ')}"
+    # Reset existing indices
+    unit.kana_index_items.destroy_all
+
+    categories.each do |cat_raw|
+      # Remove prefixes like "個人/" or "ユニット/"
+      # We want to enable index for "ア行", "カ行" etc.
+      # Strategy: Take the last part after '/'
+      index_name = cat_raw.split('/').last.strip
+
+      # Create or Find KanaIndex
+      kana_index = KanaIndex.find_or_create_by(name: index_name)
+
+      # Link to Unit
+      KanaIndexItem.create!(
+        kana_index: kana_index,
+        indexable: unit
+      )
+      puts "    Linked to KanaIndex: #{index_name}"
+    end
+  end
+
   # 3. Parse Members
   # Plugin format:
   # - Single-line: {{member part,name[,old_member_key][,sns_account]}}

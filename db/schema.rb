@@ -10,10 +10,28 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_26_152355) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_28_124520) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
+
+  create_table "kana_index_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "indexable_id", null: false
+    t.string "indexable_type", null: false
+    t.bigint "kana_index_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["indexable_type", "indexable_id"], name: "index_kana_index_items_on_indexable"
+    t.index ["kana_index_id", "indexable_type"], name: "index_kana_index_items_on_kana_index_id_and_indexable_type"
+    t.index ["kana_index_id"], name: "index_kana_index_items_on_kana_index_id"
+  end
+
+  create_table "kana_indices", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_kana_indices_on_name", unique: true
+  end
 
   create_table "links", force: :cascade do |t|
     t.boolean "active", default: true
@@ -46,6 +64,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_26_152355) do
     t.datetime "updated_at", null: false
     t.index ["key"], name: "index_people_on_key", unique: true
     t.index ["name"], name: "index_people_on_name"
+    t.index ["name_kana"], name: "index_people_on_name_kana"
     t.index ["old_key"], name: "index_people_on_old_key", unique: true
   end
 
@@ -119,6 +138,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_26_152355) do
     t.datetime "updated_at", null: false
     t.index ["key"], name: "index_units_on_key", unique: true
     t.index ["name"], name: "index_units_on_name"
+    t.index ["name_kana"], name: "index_units_on_name_kana"
     t.index ["old_key"], name: "index_units_on_old_key", unique: true
   end
 
@@ -149,6 +169,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_26_152355) do
     t.index ["wiki"], name: "index_wikipages_on_wiki_gin", opclass: :gin_trgm_ops, using: :gin
   end
 
+  add_foreign_key "kana_index_items", "kana_indices"
   add_foreign_key "person_logs", "people"
   add_foreign_key "person_logs", "units"
   add_foreign_key "unit_logs", "units"
