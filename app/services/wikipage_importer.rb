@@ -2,6 +2,7 @@
 
 require 'romaji'
 
+# rubocop:disable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity
 class WikipageImporter
   def self.import(wikipage)
     new(wikipage).import
@@ -184,6 +185,7 @@ class WikipageImporter
       name_str = name_str&.strip
 
       next if name_str.blank?
+
       if old_member_key.present?
         old_member_key = old_member_key.strip
         old_member_key = [name_str, old_member_key].join if old_member_key =~ /^\(/ && old_member_key =~ /\)$/
@@ -220,7 +222,9 @@ class WikipageImporter
     end
   end
 
+  # rubocop:disable Metrics/ParameterLists
   def register_member(unit, part_str, name_str, old_member_key, sns_account, inline_history, member_status)
+    # rubocop:enable Metrics/ParameterLists
     part_key = case part_str.downcase
                when 'vocal' then :vocal
                when 'guitar' then :guitar
@@ -367,15 +371,12 @@ class WikipageImporter
   def map_outlink(type)
     case type
     when 'dw'
-      if @attributes['dw_id']
-        ["https://pc.dwango.jp/portals/artist/#{@attributes['dw_id']}", 'ドワンゴジェイピー']
-      end
+      ["https://pc.dwango.jp/portals/artist/#{@attributes['dw_id']}", 'ドワンゴジェイピー'] if @attributes['dw_id']
     when 'it'
-      if @attributes['it_id']
-        ["https://music.apple.com/jp/artist/#{@attributes['it_id']}", 'Apple Music']
-      end
+      ["https://music.apple.com/jp/artist/#{@attributes['it_id']}", 'Apple Music'] if @attributes['it_id']
     when 'tunecore'
       [nil, 'TuneCore'] # Simplified
     end
   end
+  # rubocop:enable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity
 end
