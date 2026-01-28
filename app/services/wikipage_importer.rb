@@ -96,7 +96,8 @@ class WikipageImporter
                        encoded_old_key.gsub(/%/, '')
                      end
 
-    unit_key = source_for_key.downcase.gsub(/\s+/, '-')
+    # Replace any non-alphanumeric character (except -) with -
+    unit_key = source_for_key.downcase.gsub(/[^a-z0-9\-]+/, '-').gsub(/-+/, '-')
 
     unit = Unit.find_by(old_key: @wikipage_name) || Unit.find_by(old_key: encoded_old_key) || Unit.find_or_initialize_by(key: unit_key)
 
