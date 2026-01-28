@@ -42,6 +42,7 @@ gem 'bootsnap', require: false
 gem 'kamal', require: false
 
 # Add HTTP asset caching/compression and X-Sendfile acceleration to Puma [https://github.com/basecamp/thruster/]
+gem 'tailwindcss-rails'
 gem 'thruster', require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
@@ -65,7 +66,6 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem 'annotaterb'
-  gem 'tailwindcss-rails'
   gem 'web-console'
 
   gem 'lookbook'
