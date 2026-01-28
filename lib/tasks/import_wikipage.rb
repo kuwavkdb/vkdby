@@ -314,7 +314,7 @@ ActiveRecord::Base.transaction do
   unit.save!
   puts "Unit saved: #{unit.name} (id: #{unit.id}, type: #{unit_type})"
 
-  # 2.1 Parse Categories (Kana Index)
+  # 2.1 Parse Categories (TagIndex)
   # Format: {{category category_name1, category_name2}}
   # Example: {{category ア行}}, {{category 個人/ア行, 個人/カ行}}
   category_regex = /\{\{category\s+(.*?)\}\}/i
@@ -331,7 +331,7 @@ ActiveRecord::Base.transaction do
   if categories.any?
     puts "  Categories found: #{categories.join(', ')}"
     # Reset existing indices
-    unit.kana_index_items.destroy_all
+    unit.tag_index_items.destroy_all
 
     categories.each do |cat_raw|
       # Remove prefixes like "個人/" or "ユニット/"
@@ -339,15 +339,15 @@ ActiveRecord::Base.transaction do
       # Strategy: Take the last part after '/'
       index_name = cat_raw.split('/').last.strip
 
-      # Create or Find KanaIndex
-      kana_index = KanaIndex.find_or_create_by(name: index_name)
+      # Create or Find TagIndex
+      tag_index = TagIndex.find_or_create_by(name: index_name)
 
       # Link to Unit
-      KanaIndexItem.create!(
-        kana_index: kana_index,
+      TagIndexItem.create!(
+        tag_index: tag_index,
         indexable: unit
       )
-      puts "    Linked to KanaIndex: #{index_name}"
+      puts "    Linked to TagIndex: #{index_name}"
     end
   end
 
