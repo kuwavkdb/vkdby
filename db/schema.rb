@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_26_152355) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_28_125918) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -46,6 +46,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_26_152355) do
     t.datetime "updated_at", null: false
     t.index ["key"], name: "index_people_on_key", unique: true
     t.index ["name"], name: "index_people_on_name"
+    t.index ["name_kana"], name: "index_people_on_name_kana"
     t.index ["old_key"], name: "index_people_on_old_key", unique: true
   end
 
@@ -70,6 +71,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_26_152355) do
     t.index ["person_id", "sort_order"], name: "index_person_logs_on_person_id_and_sort_order"
     t.index ["person_id"], name: "index_person_logs_on_person_id"
     t.index ["unit_id"], name: "index_person_logs_on_unit_id"
+  end
+
+  create_table "tag_index_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "indexable_id", null: false
+    t.string "indexable_type", null: false
+    t.bigint "tag_index_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["indexable_type", "indexable_id"], name: "index_tag_index_items_on_indexable"
+    t.index ["tag_index_id", "indexable_type"], name: "index_tag_index_items_on_tag_index_id_and_indexable_type"
+    t.index ["tag_index_id"], name: "index_tag_index_items_on_tag_index_id"
+  end
+
+  create_table "tag_indices", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "index_group"
+    t.string "name", null: false
+    t.integer "order_in_group"
+    t.datetime "updated_at", null: false
+    t.index ["index_group", "order_in_group"], name: "index_tag_indices_on_index_group_and_order_in_group"
+    t.index ["name"], name: "index_tag_indices_on_name", unique: true
   end
 
   create_table "unit_logs", force: :cascade do |t|
@@ -119,6 +141,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_26_152355) do
     t.datetime "updated_at", null: false
     t.index ["key"], name: "index_units_on_key", unique: true
     t.index ["name"], name: "index_units_on_name"
+    t.index ["name_kana"], name: "index_units_on_name_kana"
     t.index ["old_key"], name: "index_units_on_old_key", unique: true
   end
 
@@ -151,6 +174,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_26_152355) do
 
   add_foreign_key "person_logs", "people"
   add_foreign_key "person_logs", "units"
+  add_foreign_key "tag_index_items", "tag_indices"
   add_foreign_key "unit_logs", "units"
   add_foreign_key "unit_people", "people"
   add_foreign_key "unit_people", "units"

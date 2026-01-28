@@ -31,6 +31,8 @@ class Unit < ApplicationRecord
   has_many :people, through: :unit_people
   has_many :unit_logs, dependent: :destroy
   has_many :person_logs, dependent: :destroy
+  has_many :tag_index_items, as: :indexable, dependent: :destroy
+  has_many :tag_indices, through: :tag_index_items
   enum :unit_type, { band: 0, unit: 1, session: 2, solo: 3, limited: 4, other: 99 }
   enum :status, { pre: 0, active: 1, freeze: 2, disbanded: 3, unknown: 99 }
 
