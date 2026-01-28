@@ -1,0 +1,37 @@
+# frozen_string_literal: true
+
+namespace :import do
+  desc "Import units from Wikipages"
+  task units: :environment do
+    puts "Starting unit import from Wikipages..."
+    count = 0
+    skipped = 0
+
+    query = Wikipage.all
+    if ENV['ID']
+      query = query.where(id: ENV['ID'])
+      puts "Targeting single ID: #{ENV['ID']}"
+    elsif ENV['START']
+      query = query.where("id >= ?", ENV['START'])
+      puts "Starting from ID: #{ENV['START']}"
+    end
+
+    limit = ENV['LIMIT']&.to_i
+    puts "Limit: #{limit}" if limit
+
+    query.find_each.with_index do |wp, index|
+      break if limit && count >= limit
+
+      if WikipageImporter.valid_unit?(wp)
+        WikipageImporter.import(wp)
+        count += 1
+      else
+        skipped += 1
+      end
+    end
+
+    puts "Import complete!"
+    puts "  Imported: #{count} units"
+    puts "  Skipped:  #{skipped} pages"
+  end
+end

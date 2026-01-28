@@ -36,20 +36,34 @@ ID=15962 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails runner lib/tasks/import
 - ふりがな + 誕生日（MMDD形式）
 - 例: `tomoya-1028`（トモヤ、10月28日生まれ）
 
-### 2. import_wikipage.rb - ユニットページインポート
+### 2. import:units - ユニットデータ一括インポート
 
-Wikipageからユニット（Unit）データをインポートします。
+Wikipageからユニット（Unit）データを一括でインポートします。
+`app/services/wikipage_importer.rb` を使用して処理されます。
 
 **使用方法**:
 ```bash
-ID=30 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails runner lib/tasks/import_wikipage.rb
+# 全件インポート
+bin/rails import:units
+
+# パラメータ指定
+ID=6555 bin/rails import:units       # 特定IDのみ
+START=5000 bin/rails import:units    # ID 5000以降
+LIMIT=10 bin/rails import:units      # 最大10件まで
 ```
+
+**特徴**:
+- `wikipages` テーブルの全レコード（または指定範囲）を走査します。
+- メンバー情報（`{{member...}}` または `!Part...`）が含まれるページのみをインポート対象とします。
+- 進捗状況とスキップ数を標準出力に表示します。
 
 **インポート対象**:
 - ユニット名・ふりがな
-- メンバー情報
+- メンバー情報（`{{member...}}`）
 - SNSリンク
 - ユニットタイプ（バンド、セッションなど）
+- カテゴリ（TagIndex）
+
 
 ### 3. wikipage_parser.rb - 共通パーサーモジュール
 

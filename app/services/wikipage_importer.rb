@@ -1,0 +1,381 @@
+# frozen_string_literal: true
+
+require 'romaji'
+
+class WikipageImporter
+  def self.import(wikipage)
+    new(wikipage).import
+  end
+
+  def self.valid_unit?(wikipage)
+    return false if wikipage.wiki.blank?
+
+    # Check for member section or specific category that indicates a unit
+    # Simple check: has {{member...}} tag or !Part... line
+    has_member_plugin = wikipage.wiki.match?(/\{\{member2?\s+.*?\}\}/m)
+    has_old_member_format = wikipage.wiki.match?(/^!([^…]+)…\s*\[\[/)
+
+    has_member_plugin || has_old_member_format
+  end
+
+  def initialize(wikipage)
+    @wikipage = wikipage
+    @wiki_content = wikipage.wiki
+    @attributes = wikipage.attributes.slice('dw_id', 'it_id', 'eplus_id')
+    @wikipage_name = wikipage.name
+  end
+
+  def import
+    return unless @wiki_content
+
+    puts "Importing Wikipage: #{@wikipage_name} (ID: #{@wikipage.id})"
+
+    # Remove comment lines
+    @wiki_content = @wiki_content.lines.reject { |line| line.strip.start_with?('//') }.join
+
+    ActiveRecord::Base.transaction do
+      import_unit
+    end
+  rescue StandardError => e
+    puts "Error importing Wikipage #{@wikipage.id}: #{e.message}"
+    puts e.backtrace.join("\n")
+    raise e
+  end
+
+  private
+
+  def import_unit
+    # 2. Derive Unit Data
+    # Check first line for history definition: "OldName(Kana) → NewName(Kana)"
+    first_line = @wiki_content.lines.first&.strip&.gsub(/^!+/, '')&.strip
+    unit_name = nil
+    unit_name_kana = nil
+    name_log_entries = []
+
+    if first_line&.include?('→')
+      parts = first_line.split('→').map(&:strip)
+      parsed_names = parts.map do |part|
+        if part =~ /^(.+?)\s*[（(](.+)[）)]$/
+          { name: Regexp.last_match(1).strip, name_kana: Regexp.last_match(2).strip }
+        else
+          { name: part, name_kana: nil }
+        end
+      end
+
+      current_unit_data = parsed_names.last
+      unit_name = current_unit_data[:name]
+      unit_name_kana = current_unit_data[:name_kana]
+      name_log_entries = parsed_names
+    end
+
+    # Fallback to Wiki Title
+    if unit_name.nil?
+      title = @wikipage.title.to_s.strip
+      if title =~ /^(.+?)\s*[（(](.+)[）)]$/
+        unit_name = Regexp.last_match(1).strip
+        unit_name_kana = Regexp.last_match(2).strip
+      else
+        unit_name = title
+        unit_name_kana = nil
+      end
+    end
+
+    if unit_name.blank?
+      puts "Skipping Wikipage #{@wikipage.id}: No unit name found"
+      return
+    end
+
+    encoded_old_key = URI.encode_www_form_component(@wikipage_name.encode('EUC-JP'))
+
+    source_for_key = if @wikipage_name.match?(/^[[:ascii:]\s-]+$/)
+                       @wikipage_name
+                     elsif unit_name_kana.present?
+                       Romaji.kana2romaji(unit_name_kana)
+                     else
+                       encoded_old_key.gsub(/%/, '')
+                     end
+
+    unit_key = source_for_key.downcase.gsub(/\s+/, '-')
+
+    unit = Unit.find_by(old_key: @wikipage_name) || Unit.find_by(old_key: encoded_old_key) || Unit.find_or_initialize_by(key: unit_key)
+
+    # Check for name changes and update name_log
+    if unit.persisted? && (unit.name != unit_name || unit.name_kana != unit_name_kana)
+      unit.name_log ||= []
+      unit.name_log << {
+        name: unit.name,
+        name_kana: unit.name_kana
+      }
+    end
+
+    unit_type = if @wiki_content.match?(/category\s+セッションバンド/i)
+                  :session
+                else
+                  :band
+                end
+
+    unit.key = unit_key
+    unit.name = unit_name
+    unit.name_kana = unit_name_kana
+    unit.name_log = name_log_entries if name_log_entries.present?
+    unit.old_key = encoded_old_key
+    unit.old_wiki_text = @wiki_content
+    unit.unit_type = unit_type
+    unit.status = :active
+    unit.save!
+
+    parse_categories(unit)
+    parse_members(unit)
+    parse_footer_links(unit)
+  end
+
+  def parse_categories(unit)
+    category_regex = /\{\{category\s+(.*?)\}\}/i
+    categories = []
+    @wiki_content.scan(category_regex) do |match|
+      content = match[0]
+      content.split(',').each do |cat|
+        categories << cat.strip
+      end
+    end
+
+    return unless categories.any?
+
+    unit.tag_index_items.destroy_all
+
+    categories.each do |cat_raw|
+      index_name = cat_raw.split('/').last.strip
+      tag_index = TagIndex.find_or_create_by(name: index_name)
+      TagIndexItem.create!(
+        tag_index: tag_index,
+        indexable: unit
+      )
+    end
+  end
+
+  def parse_members(unit)
+    separator_index = @wiki_content.index(/^!!関係者/) || Float::INFINITY
+
+    # Plugin format
+    member_regex = /\{\{member2?\s+(.*?)\}\}/m
+    @wiki_content.scan(member_regex) do |match|
+      match_data = Regexp.last_match
+      current_pos = match_data.begin(0)
+      member_status = current_pos > separator_index ? :left : :active
+      content = match[0]
+
+      if content.include?("\n")
+        first_line, inline_history_text = content.split("\n", 2)
+      else
+        first_line = content
+        inline_history_text = nil
+      end
+
+      parts = first_line.split(',').map(&:strip)
+      part_str = parts[0]
+      name_str = parts[1]
+      old_member_key = parts[2]
+      sns_account = parts[3]
+
+      inline_history = inline_history_text&.strip
+      inline_history = nil if inline_history.blank?
+
+      part_str = part_str&.strip
+      name_str = name_str&.strip
+
+      next if name_str.blank?
+      if old_member_key.present?
+        old_member_key = old_member_key.strip
+        old_member_key = [name_str, old_member_key].join if old_member_key =~ /^\(/ && old_member_key =~ /\)$/
+      else
+        old_member_key = name_str
+      end
+
+      old_member_key = URI.encode_www_form_component(old_member_key.encode('EUC-JP'))
+
+      register_member(unit, part_str, name_str, old_member_key, sns_account, inline_history, member_status)
+    end
+
+    # Old Member Format
+    old_member_regex = /^!([^…\n]+)…\s*\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/
+    @wiki_content.scan(old_member_regex) do |match|
+      match_data = Regexp.last_match
+      current_pos = match_data.begin(0)
+      member_status = current_pos > separator_index ? :left : :active
+
+      part_str = match[0].strip
+      name_str = match[1].strip
+      old_member_key = match[2]&.strip
+
+      if old_member_key.present?
+        old_member_key = old_member_key.strip
+        old_member_key = [name_str, old_member_key].join if old_member_key =~ /^\(/ && old_member_key =~ /\)$/
+      else
+        old_member_key = name_str
+      end
+
+      old_member_key = URI.encode_www_form_component(old_member_key.encode('EUC-JP'))
+
+      register_member(unit, part_str, name_str, old_member_key, nil, nil, member_status)
+    end
+  end
+
+  def register_member(unit, part_str, name_str, old_member_key, sns_account, inline_history, member_status)
+    part_key = case part_str.downcase
+               when 'vocal' then :vocal
+               when 'guitar' then :guitar
+               when 'bass' then :bass
+               when 'drums' then :drums
+               when 'keyboard' then :keyboard
+               when 'dj' then :dj
+               else :unknown
+               end
+
+    person_name_for_key = if name_str.match?(/^[[:ascii:]\s-]+$/)
+                            name_str
+                          else
+                            romaji_attempt = Romaji.kana2romaji(name_str)
+                            if romaji_attempt.match?(/[^[:ascii:]]/)
+                              old_member_key.gsub(/%/, '')
+                            else
+                              romaji_attempt
+                            end
+                          end
+
+    unit_key = unit.key
+    person_key = "#{unit_key}_#{person_name_for_key.downcase.gsub(/\s+/, '-')}"
+
+    person = Person.find_by(key: person_key)
+
+    if person.present? && (person.name != name_str)
+      person.name_log ||= []
+      person.name_log << {
+        name: person.name,
+        name_kana: person.name_kana
+      }
+    end
+
+    up = if person.present?
+           UnitPerson.find_or_initialize_by(unit: unit, person: person)
+         else
+           UnitPerson.find_or_initialize_by(unit: unit, person_name: name_str)
+         end
+    up.person_id = person.id if person.present?
+    up.person_key = person_key unless person.present?
+    up.part = part_key
+    up.status = member_status
+    up.old_person_key = old_member_key
+    up.inline_history = inline_history
+    up.sns = [sns_account.strip] if sns_account.present?
+    up.save!
+
+    return unless person.present?
+
+    person.name = name_str
+    person.save!
+  end
+
+  def parse_footer_links(unit)
+    link_section_content = if @wiki_content =~ /!!リンク\s*\n(.+?)(?=\n!!|\z)/m
+                             Regexp.last_match(1).strip
+                           else
+                             ''
+                           end
+
+    return unless link_section_content.present?
+
+    unlink_regex = /\{\{unlink\s+(.*?)\}\}/m
+    link_section_content.scan(unlink_regex).each do |match|
+      unlink_content = match[0]
+      parse_unit_links(unit, unlink_content, false)
+    end
+
+    active_content = link_section_content.gsub(unlink_regex, '')
+    parse_unit_links(unit, active_content, true)
+  end
+
+  def parse_unit_links(unit, content, active)
+    return unless content
+
+    # [[Service:Account]] Format
+    content.scan(/\[\[([^:]+):([^\]]+)\]\]/).each do |service, account|
+      url, text = map_service_link(service, account)
+      next unless url
+
+      link = unit.links.find_or_initialize_by(url: url)
+      link.text = text
+      link.active = active
+      link.save!
+    end
+
+    # [Label|URL] Format
+    content.scan(/\[([^|\]]+)\|([^\]]+)\]/).each do |label, url|
+      next unless url.start_with?('http')
+
+      link = unit.links.find_or_initialize_by(url: url)
+      link.text = label
+      link.active = active
+      link.save!
+    end
+
+    # {{outlink ...}} Format
+    content.scan(/\{\{outlink\s+([^}]+)\}\}/).each do |match|
+      type = match[0].strip
+      url, text = map_outlink(type)
+      next unless url
+
+      link = unit.links.find_or_initialize_by(url: url)
+      link.text = text
+      link.active = active
+      link.save!
+    end
+  end
+
+  def map_service_link(service, account)
+    case service.downcase
+    when 'twitter', 'x'
+      ["https://twitter.com/#{account}", 'Twitter']
+    when 'youtube channel'
+      ["https://www.youtube.com/c/#{account}", 'YouTube Channel']
+    when 'spotify'
+      ["https://open.spotify.com/artist/#{account}", 'Spotify']
+    when 'vkgy'
+      ["https://vk.gy/artists/#{account}", 'vk.gy']
+    when 'joysound'
+      ["https://www.joysound.com/web/search/artist/#{account}", 'JOYSOUND']
+    when 'dam'
+      ["https://www.clubdam.com/app/leaf/artistKaraokeLeaf.html?artistCode=#{account}", 'DAM']
+    when 'カラオケdam'
+      ["https://www.clubdam.com/karaokesearch/artistleaf.html?artistCode=#{account}", 'カラオケDAM']
+    when 'digitlink'
+      ["https://www.digitlink.jp/#{account}", 'digitlink']
+    when 'filmarks'
+      ["https://filmarks.com/users/#{account}", 'Filmarks']
+    when 'ototoy'
+      ["https://ototoy.jp/_/default/a/#{account}", 'OTOTOY']
+    when 'linkfire'
+      ["https://smr.lnk.to/#{account}", 'linkfire']
+    when 'tiktok'
+      ["https://www.tiktok.com/@#{account}", 'TikTok']
+    when 'linktr.ee'
+      ["https://linktr.ee/#{account}", 'linktr.ee']
+    when 'lnk.to'
+      ["https://lnk.to/#{account}", 'lnk.to']
+    end
+  end
+
+  def map_outlink(type)
+    case type
+    when 'dw'
+      if @attributes['dw_id']
+        ["https://pc.dwango.jp/portals/artist/#{@attributes['dw_id']}", 'ドワンゴジェイピー']
+      end
+    when 'it'
+      if @attributes['it_id']
+        ["https://music.apple.com/jp/artist/#{@attributes['it_id']}", 'Apple Music']
+      end
+    when 'tunecore'
+      [nil, 'TuneCore'] # Simplified
+    end
+  end
+end
