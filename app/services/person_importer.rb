@@ -229,7 +229,7 @@ class PersonImporter
     end
 
     # Replace any non-alphanumeric character (except -) with -
-    base_key = source_for_key.downcase.gsub(/[^a-z0-9\-]+/, '-').gsub(/-+/, '-')
+    base_key = source_for_key.downcase.gsub(/[^a-z0-9-]+/, '-').gsub(/-+/, '-')
 
     if birthday_month && birthday_day
       birthday_suffix = format('%02d%02d', birthday_month, birthday_day)
