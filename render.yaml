@@ -10,7 +10,7 @@ services:
     name: vkdby
     runtime: ruby
     buildCommand: "./bin/render-build.sh"
-    startCommand: "bundle exec rails db:migrate && bundle exec rails db:seed && bundle exec rails server"
+    startCommand: "echo 'RAILS_ENV='$RAILS_ENV && if [ -z '$DATABASE_URL' ]; then echo 'DATABASE_URL is missing!'; else echo 'DATABASE_URL is present'; fi && bundle exec rails db:migrate && bundle exec rails db:seed && bundle exec rails server"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -18,5 +18,7 @@ services:
           property: connectionString
       - key: RAILS_MASTER_KEY
         sync: false
+      - key: RAILS_ENV
+        value: production
     region: singapore
     plan: free # Web service has a free tier.
