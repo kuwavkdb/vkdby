@@ -30,8 +30,43 @@ namespace :import do
       end
     end
 
+
     puts 'Import complete!'
     puts "  Imported: #{count} units"
+    puts "  Skipped:  #{skipped} pages"
+  end
+
+  desc 'Import people from Wikipages'
+  task people: :environment do
+    puts 'Starting person import from Wikipages...'
+    count = 0
+    skipped = 0
+
+    query = Wikipage.all
+    if ENV['ID']
+      query = query.where(id: ENV['ID'])
+      puts "Targeting single ID: #{ENV['ID']}"
+    elsif ENV['START']
+      query = query.where('id >= ?', ENV['START'])
+      puts "Starting from ID: #{ENV['START']}"
+    end
+
+    limit = ENV['LIMIT']&.to_i
+    puts "Limit: #{limit}" if limit
+
+    query.find_each.with_index do |wp, _index|
+      break if limit && count >= limit
+
+      if PersonImporter.valid_person?(wp)
+        PersonImporter.import(wp)
+        count += 1
+      else
+        skipped += 1
+      end
+    end
+
+    puts 'Import complete!'
+    puts "  Imported: #{count} people"
     puts "  Skipped:  #{skipped} pages"
   end
 end

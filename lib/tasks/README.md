@@ -4,13 +4,20 @@
 
 ## スクリプト一覧
 
-### 1. import_person.rb - 個人ページインポート
+### 1. import:people - 個人データ一括インポート
 
-Wikipageから個人（Person）データをインポートします。
+Wikipageから個人（Person）データを一括でインポートします。
+`app/services/person_importer.rb` を使用して処理されます。
 
 **使用方法**:
 ```bash
-ID=15962 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails runner lib/tasks/import_person.rb
+# 全件インポート
+bin/rails import:people
+
+# パラメータ指定
+ID=15962 bin/rails import:people     # 特定IDのみ
+START=10000 bin/rails import:people  # ID 10000以降
+LIMIT=10 bin/rails import:people     # 最大10件まで
 ```
 
 **インポート対象**:
@@ -21,6 +28,7 @@ ID=15962 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails runner lib/tasks/import
 - ステータス（引退、フリー、死去など）
 - SNSリンク（`[[Twitter:account]]`など）
 - 経歴（`!!経歴`セクション）
+- カテゴリ（TagIndex）
 
 **条件**:
 - `{{category 個人}}`が含まれるページのみインポート
@@ -28,9 +36,10 @@ ID=15962 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails runner lib/tasks/import
 
 **ステータス判定**（優先順位順）:
 1. `{{category 死去}}` → `status: passed_away`
-2. `{{category 引退}}` → `status: retirement`
-3. `{{category 個人/フリー}}` → `status: free`
-4. それ以外 → `status: active`
+2. `{{category 個人/状況不明}}` → `status: unknown`
+3. `{{category 引退}}` → `status: retirement`
+4. `{{category 個人/フリー}}` → `status: free`
+5. それ以外 → `status: active`
 
 **Key生成**:
 - ふりがな + 誕生日（MMDD形式）
@@ -65,15 +74,6 @@ LIMIT=10 bin/rails import:units      # 最大10件まで
 - カテゴリ（TagIndex）
 
 
-### 3. wikipage_parser.rb - 共通パーサーモジュール
-
-両方のインポートスクリプトで使用される共通のパーサーロジック。
-
-**モジュール**:
-- `WikipageParser::LinkParser` - リンク解析
-- `WikipageParser::CategoryParser` - カテゴリ解析
-- `WikipageParser::Utils` - ユーティリティ（エンコーディング、キー生成）
-
 ## 対応リンクサービス
 
 以下のサービスが`[[Service:Account]]`形式でサポートされています：
@@ -94,68 +94,15 @@ LIMIT=10 bin/rails import:units      # 最大10件まで
 
 ## データベーススキーマ
 
-### People
-
-| カラム | 型 | 説明 |
-|--------|-----|------|
-| name | string | 名前 |
-| name_kana | string | ふりがな |
-| key | string | URLキー（変更不可） |
-| old_key | string | 旧vkdb.jpのキー（変更不可） |
-| birthday | date | 誕生日（年は常に1904） |
-| birth_year | integer | 実際の生まれ年 |
-| blood | string | 血液型 |
-| hometown | string | 出身地 |
-| status | enum | ステータス |
-| parts | json | パート（配列） |
-| old_wiki_text | text | 元のwikiテキスト |
-| old_history | text | 経歴セクション |
-
-### Units
-
-| カラム | 型 | 説明 |
-|--------|-----|------|
-| name | string | ユニット名 |
-| name_kana | string | ふりがな |
-| key | string | URLキー |
-| old_key | string | 旧vkdb.jpのキー |
-| unit_type | enum | ユニットタイプ |
-| status | enum | ステータス |
-| old_wiki_text | text | 元のwikiテキスト |
-
-## トラブルシューティング
-
-### 個人ページがスキップされる
-
-`{{category 個人}}`が含まれているか確認してください。
-
-### リンクがインポートされない
-
-- リンク形式が正しいか確認（`[[Service:Account]]`または`[Label|URL]`）
-- `{{unlink}}`ブロック内のリンクは`active: false`になります
-
-### 誕生日が1904年になる
-
-仕様です。`birthday`カラムは月日のみを保存し、年は常に1904年（うるう年）に正規化されます。実際の生まれ年は`birth_year`カラムに保存されます。
+（略）
 
 ## 開発
 
 ### 新しいリンクサービスの追加
 
-`wikipage_parser.rb`の`LinkParser.parse_links`メソッドに追加：
-
-```ruby
-when "newservice"
-  url = "https://newservice.com/#{account}"
-  text = "New Service"
-```
+`app/services/person_importer.rb` および `app/services/wikipage_importer.rb` の `map_service_link` メソッドに追加してください。
 
 ### 新しいカテゴリの追加
 
-`wikipage_parser.rb`の`CategoryParser.parse_categories`メソッドに追加：
+各Importerサービスの `parse_categories` メソッドに追加してください。
 
-```ruby
-if content =~ /\{\{category 新カテゴリ\}\}/
-  categories[:new_category] = true
-end
-```
