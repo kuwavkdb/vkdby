@@ -30,7 +30,6 @@ namespace :import do
       end
     end
 
-
     puts 'Import complete!'
     puts "  Imported: #{count} units"
     puts "  Skipped:  #{skipped} pages"
