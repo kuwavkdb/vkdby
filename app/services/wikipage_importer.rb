@@ -57,9 +57,10 @@ class WikipageImporter
       parts = first_line.split('→').map(&:strip)
       parsed_names = parts.map do |part|
         if part =~ /^(.+?)\s*[（(](.+)[）)]$/
-          { name: Regexp.last_match(1).strip, name_kana: Regexp.last_match(2).strip }
+          raw_name = Regexp.last_match(1).strip
+          { name: extract_name_from_wiki_link(raw_name), name_kana: Regexp.last_match(2).strip }
         else
-          { name: part, name_kana: nil }
+          { name: extract_name_from_wiki_link(part), name_kana: nil }
         end
       end
 
@@ -377,6 +378,35 @@ class WikipageImporter
       ["https://music.apple.com/jp/artist/#{@attributes['it_id']}", 'Apple Music'] if @attributes['it_id']
     when 'tunecore'
       [nil, 'TuneCore'] # Simplified
+    end
+  end
+
+  def extract_name_from_wiki_link(str)
+    # Handle [[Display|Link]] or [[Link]]
+    if str =~ /\[\[(?:([^|\]]+)\|)?([^\]]+)\]\]/
+      # pattern: [[Display|Link]] -> $1=Display, $2=Link
+      # pattern: [[Link]] -> $1=nil, $2=Link
+      # BUT wait, the regex above:
+      # [[A|B]] -> $1=A, $2=B.  We want A.
+      # [[A]] -> $1=nil, $2=A. We want A.
+      
+      # Wait, user said [[xxxx|YYY]] -> XXX.
+      # PukiWiki [[Alias>Page]] -> Alias is display.
+      # MediaWiki [[Page|Alias]] -> Alias is display.
+      
+      # Assuming VKDB/Pukiwiki style might be mixed or standard:
+      # If pipe exists, usually Left is Display (PukiWiki) or Right is Display (Mediawiki)?
+      # Actually in PukiWiki: [[PageName]] or [[Alias>PageName]] or [[Alias:PageName]].
+      # In many custom wikis, [[Name|Key]] often means Name is display, Key is link target.
+      
+      # Let's look at the example user gave: [[xxxx|YYY]] -> XXX.
+      # So Left side of pipe is the Name.
+      
+      str.gsub(/\[\[(?:([^|\]]+)\|)?([^\]]+)\]\]/) do
+        Regexp.last_match(1) || Regexp.last_match(2)
+      end
+    else
+      str
     end
   end
   # rubocop:enable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity
