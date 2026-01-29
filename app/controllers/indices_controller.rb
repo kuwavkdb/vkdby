@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 class IndicesController < ApplicationController
+  def groups
+    @index_groups = IndexGroup.active.ordered
+  end
+
   def index
     @index_group = IndexGroup.find_by(id: params[:index_group])
 

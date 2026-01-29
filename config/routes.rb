@@ -47,6 +47,7 @@ Rails.application.routes.draw do
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
   # Kana Indices
+  get '/index', to: 'indices#groups', as: :indices_groups
   get '/index/:index_group', to: 'indices#index', as: :indices_group
   get '/index/show/:id', to: 'indices#show', as: :index_show
 
