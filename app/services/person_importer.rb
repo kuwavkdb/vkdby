@@ -42,10 +42,11 @@ class PersonImporter
     # 1. Parse Person Data
     title = @wikipage.title.to_s.strip
     if title =~ /^(.+?)[（(](.+?)[）)]/
-      person_name = Regexp.last_match(1).strip
+      raw_name = Regexp.last_match(1).strip
+      person_name = extract_name_from_wiki_link(raw_name)
       person_name_kana = Regexp.last_match(2).strip
     else
-      person_name = title
+      person_name = extract_name_from_wiki_link(title)
       person_name_kana = nil
     end
 
@@ -56,10 +57,14 @@ class PersonImporter
     if first_line&.include?('→')
       parts = first_line.split('→').map(&:strip)
       parsed_names = parts.map do |part|
-        if part =~ /^(.+?)\s*[（(](.+)[）)]$/
-          { name: Regexp.last_match(1).strip, name_kana: Regexp.last_match(2).strip }
+        if part =~ /\{\{rb\s+(.+?),\s*(.+?)\}\}/
+          raw_name = Regexp.last_match(1).strip
+          { name: extract_name_from_wiki_link(raw_name), name_kana: Regexp.last_match(2).strip }
+        elsif part =~ /^(.+?)\s*[（(](.+)[）)]$/
+          raw_name = Regexp.last_match(1).strip
+          { name: extract_name_from_wiki_link(raw_name), name_kana: Regexp.last_match(2).strip }
         else
-          { name: part, name_kana: nil }
+          { name: extract_name_from_wiki_link(part), name_kana: nil }
         end
       end
 
@@ -371,6 +376,17 @@ class PersonImporter
 
       unit_person.status = :left
       unit_person.save!
+    end
+  end
+
+  def extract_name_from_wiki_link(str)
+    # Handle [[Display|Link]] or [[Link]]
+    if str =~ /\[\[(?:([^|\]]+)\|)?([^\]]+)\]\]/
+      str.gsub(/\[\[(?:([^|\]]+)\|)?([^\]]+)\]\]/) do
+        Regexp.last_match(1) || Regexp.last_match(2)
+      end
+    else
+      str
     end
   end
 end
