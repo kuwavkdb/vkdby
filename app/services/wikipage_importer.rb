@@ -123,7 +123,7 @@ class WikipageImporter
                 else
                   :band
                 end
-    
+
     unique_key = resolve_key_collision(unit_key, unit.id)
     unit.key = unique_key
     unit.name = unit_name
@@ -425,6 +425,7 @@ class WikipageImporter
     loop do
       candidate = "#{base_key}-#{suffix}"
       return candidate unless Unit.where(key: candidate).where.not(id: current_id).exists?
+
       suffix += 1
     end
   end
