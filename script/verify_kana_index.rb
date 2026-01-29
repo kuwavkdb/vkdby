@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-puts "--- Verification Script: Kana Index ---"
+puts '--- Verification Script: Kana Index ---'
 
 # 1. Create Test Data
 puts "\n1. Creating Test Data..."
@@ -20,7 +20,7 @@ if person
   TagIndexItem.find_or_create_by!(tag_index_id: index_a.id, indexable: person)
   puts "Linked Person: #{person.name}"
 else
-  puts "No Person found to link."
+  puts 'No Person found to link.'
 end
 
 # Link a Unit
@@ -29,7 +29,7 @@ if unit
   TagIndexItem.find_or_create_by!(tag_index_id: index_a.id, indexable: unit)
   puts "Linked Unit: #{unit.name}"
 else
-  puts "No Unit found to link."
+  puts 'No Unit found to link.'
 end
 
 # 2. Verify Data Associations
@@ -58,7 +58,7 @@ puts "Route Recognized: #{recognized_show.inspect}"
 if recognized[:controller] == 'indices' && recognized[:action] == 'index' &&
    recognized_show[:controller] == 'indices' && recognized_show[:action] == 'show'
   puts "\n✅ Verification Passed: Routes and Data setup are correct."
-  puts "Please visit http://localhost:3000/index/1 in your browser to confirm UI."
+  puts 'Please visit http://localhost:3000/index/1 in your browser to confirm UI.'
 else
   puts "\n❌ Verification Failed: Routes not recognized correctly."
 end
