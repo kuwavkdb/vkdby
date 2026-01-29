@@ -25,6 +25,14 @@ Rails.application.routes.draw do
         end
       end
     end
+
+    resources :index_groups do
+      member do
+        patch :reorder_indices
+        post :move_indices
+        post :detach_indices
+      end
+    end
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   root 'units#index'

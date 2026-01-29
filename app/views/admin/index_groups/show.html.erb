@@ -1,0 +1,67 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="mb-6">
+    <div class="flex items-center text-sm text-gray-500 mb-2">
+      <%= link_to "Index Groups", admin_index_groups_path, class: "hover:text-gray-700" %>
+      <span class="mx-2">/</span>
+      <span class="text-gray-900"><%= @index_group.name %></span>
+    </div>
+    <div class="flex justify-between items-center">
+      <h1 class="text-2xl font-bold"><%= @index_group.name %></h1>
+      <% if @index_group.id != 0 %>
+        <%= link_to "Edit Group", edit_admin_index_group_path(@index_group), class: "px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700" %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="bg-white shadow rounded-lg p-6">
+    <% if @index_group.id == 0 %>
+      <%= form_with url: move_indices_admin_index_group_path(@index_group), method: :post, local: true do |f| %>
+        <div class="flex items-center mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
+          <span class="mr-2 text-sm font-medium text-gray-700">Move selected to:</span>
+          <%= f.collection_select :target_group_id, @groups, :id, :name, { prompt: "Select Group..." }, { class: "mr-2 text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" } %>
+          <%= f.submit "Move", class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 cursor-pointer" %>
+        </div>
+
+        <ul class="space-y-2">
+          <% @indices.each do |index| %>
+            <li class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-md">
+              <div class="flex items-center">
+                <%= check_box_tag "tag_index_ids[]", index.id, false, class: "mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded", id: "tag_index_#{index.id}" %>
+                <label for="tag_index_<%= index.id %>" class="text-gray-900 font-medium cursor-pointer select-none"><%= index.name %></label>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    <% else %>
+      <%= form_with url: detach_indices_admin_index_group_path(@index_group), method: :post, local: true do |f| %>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-medium text-gray-900">Indices (Drag to reorder)</h2>
+          <%= f.submit "Remove from Group", class: "px-4 py-2 bg-white text-red-600 border border-red-600 text-sm font-medium rounded-md hover:bg-red-50 cursor-pointer", data: { confirm: "選択したタグをこのグループから削除しますか？" } %>
+        </div>
+
+        <ul class="space-y-2"
+            data-controller="sortable"
+            data-sortable-url-value="<%= reorder_indices_admin_index_group_path(@index_group) %>">
+          <% @indices.each do |index| %>
+            <li data-id="<%= index.id %>" class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-md">
+              <div class="flex items-center">
+                <span class="drag-handle cursor-move text-gray-400 mr-3">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+                </span>
+                <%= check_box_tag "tag_index_ids[]", index.id, false, class: "mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded", id: "tag_index_#{index.id}" %>
+                <label for="tag_index_<%= index.id %>" class="text-gray-900 font-medium cursor-pointer select-none"><%= index.name %></label>
+              </div>
+              <!-- Order is updated via JS but shown here for reference -->
+              <span class="text-sm text-gray-500">Items: <%= index.items.count %></span>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    <% end %>
+
+    <% if @indices.empty? %>
+      <p class="text-gray-500 mt-4">No indices in this group.</p>
+    <% end %>
+  </div>
+</div>

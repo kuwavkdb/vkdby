@@ -2,16 +2,14 @@
 
 class IndicesController < ApplicationController
   def index
-    @index_group = params[:index_group].to_i
-    # index_group: 1=Kana, etc.
-    @indices = TagIndex.where(index_group: @index_group).order(:order_in_group, :name)
+    @index_group = IndexGroup.find_by(id: params[:index_group])
 
-    # Optional: You might want to map index_group to a name for display
-    @group_name = case @index_group
-                  when 1 then 'カナ索引'
-                  when 2 then '地域索引'
-                  else "グループ #{@index_group}"
-                  end
+    if @index_group
+      @indices = @index_group.tag_indices.ordered
+      @group_name = @index_group.name
+    else
+      redirect_to root_path, alert: 'Index group not found'
+    end
   end
 
   def show

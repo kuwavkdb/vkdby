@@ -207,7 +207,7 @@ class PersonImporter
       # Normalize category name
       index_name = cat_raw.strip
 
-      tag_index = TagIndex.find_or_create_by(name: index_name)
+      tag_index = TagIndex.create_with(index_group_id: 2).find_or_create_by(name: index_name)
       TagIndexItem.create!(
         tag_index: tag_index,
         indexable: person

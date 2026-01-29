@@ -21,5 +21,9 @@ class TagIndex < ApplicationRecord
   has_many :people, through: :items, source: :indexable, source_type: 'Person'
   has_many :units, through: :items, source: :indexable, source_type: 'Unit'
 
+  belongs_to :index_group, optional: true
+
   validates :name, presence: true, uniqueness: true
+
+  scope :ordered, -> { order(order_in_group: :asc) }
 end
