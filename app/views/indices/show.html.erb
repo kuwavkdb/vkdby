@@ -21,6 +21,13 @@
               <% if unit.name_kana.present? %>
                 <span class="text-xs text-gray-400 ml-1">(<%= unit.name_kana %>)</span>
               <% end %>
+              <% aliases = unit.name_logs.map(&:name).uniq.reject { |n| n == unit.name } %>
+              <% if aliases.any? %>
+                <span class="text-sm text-gray-500 ml-2">
+                  <br class="md:hidden">
+                  (旧名: <%= aliases.join(', ') %>)
+                </span>
+              <% end %>
             </li>
           <% end %>
         </ul>
@@ -39,6 +46,13 @@
               <%= link_to person.name, profile_path(person.key), class: "text-lg text-indigo-600 hover:text-indigo-800 hover:underline" %>
               <% if person.name_kana.present? %>
                 <span class="text-xs text-gray-400 ml-1">(<%= person.name_kana %>)</span>
+              <% end %>
+              <% aliases = person.name_logs.map(&:name).uniq.reject { |n| n == person.name } %>
+              <% if aliases.any? %>
+                <span class="text-sm text-gray-500 ml-2">
+                  <br class="md:hidden">
+                  (旧名: <%= aliases.join(', ') %>)
+                </span>
               <% end %>
             </li>
           <% end %>
