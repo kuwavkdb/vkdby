@@ -123,8 +123,9 @@ class WikipageImporter
                 else
                   :band
                 end
-
-    unit.key = unit_key
+    
+    unique_key = resolve_key_collision(unit_key, unit.id)
+    unit.key = unique_key
     unit.name = unit_name
     unit.name_kana = unit_name_kana
     unit.name_log = name_log_entries if name_log_entries.present?
@@ -414,6 +415,17 @@ class WikipageImporter
       end
     else
       str
+    end
+  end
+
+  def resolve_key_collision(base_key, current_id = nil)
+    return base_key unless Unit.where(key: base_key).where.not(id: current_id).exists?
+
+    suffix = 2
+    loop do
+      candidate = "#{base_key}-#{suffix}"
+      return candidate unless Unit.where(key: candidate).where.not(id: current_id).exists?
+      suffix += 1
     end
   end
   # rubocop:enable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity
