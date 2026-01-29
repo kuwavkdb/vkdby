@@ -205,7 +205,7 @@ class PersonImporter
       next if cat_raw.match?(%r{^(誕生日|誕生年)/})
 
       # Normalize category name
-      index_name = cat_raw.split('/').last.strip
+      index_name = cat_raw.strip
 
       tag_index = TagIndex.find_or_create_by(name: index_name)
       TagIndexItem.create!(
