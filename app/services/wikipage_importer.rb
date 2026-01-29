@@ -56,7 +56,10 @@ class WikipageImporter
     if first_line&.include?('→')
       parts = first_line.split('→').map(&:strip)
       parsed_names = parts.map do |part|
-        if part =~ /^(.+?)\s*[（(](.+)[）)]$/
+        if part =~ /\{\{rb\s+(.+?),\s*(.+?)\}\}/
+          raw_name = Regexp.last_match(1).strip
+          { name: extract_name_from_wiki_link(raw_name), name_kana: Regexp.last_match(2).strip }
+        elsif part =~ /^(.+?)\s*[（(](.+)[）)]$/
           raw_name = Regexp.last_match(1).strip
           { name: extract_name_from_wiki_link(raw_name), name_kana: Regexp.last_match(2).strip }
         else
