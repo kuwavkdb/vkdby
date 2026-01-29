@@ -5,7 +5,7 @@ class IndicesController < ApplicationController
     @index_group = params[:index_group].to_i
     # index_group: 1=Kana, etc.
     @indices = TagIndex.where(index_group: @index_group).order(:order_in_group, :name)
-    
+
     # Optional: You might want to map index_group to a name for display
     @group_name = case @index_group
                   when 1 then 'カナ索引'
