@@ -8,9 +8,7 @@ module Admin
     def index
       @q = params[:q]
       scope = Person.all.order(updated_at: :desc)
-      if @q.present?
-        scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q', q: "%#{@q}%")
-      end
+      scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q', q: "%#{@q}%") if @q.present?
       @pagy, @people = pagy(scope)
     end
 
