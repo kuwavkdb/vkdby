@@ -154,7 +154,7 @@ class WikipageImporter
     unit.tag_index_items.destroy_all
 
     categories.each do |cat_raw|
-      index_name = cat_raw.split('/').last.strip
+      index_name = cat_raw.strip
       tag_index = TagIndex.find_or_create_by(name: index_name)
       TagIndexItem.create!(
         tag_index: tag_index,
