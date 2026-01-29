@@ -21,11 +21,15 @@
               <% if unit.name_kana.present? %>
                 <span class="text-xs text-gray-400 ml-1">(<%= unit.name_kana %>)</span>
               <% end %>
-              <% aliases = unit.name_logs.map(&:name).uniq.reject { |n| n == unit.name } %>
+              <% 
+                aliases = unit.name_logs.reject { |l| l.name == unit.name }.map do |l|
+                  l.name_kana.present? ? "#{l.name}（#{l.name_kana}）" : l.name
+                end.uniq
+              %>
               <% if aliases.any? %>
                 <div class="text-sm text-gray-500 ml-4 mt-1">
                   <span class="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded mr-1">旧名</span>
-                  <%= aliases.join(', ') %>
+                  <%= aliases.join('、') %>
                 </div>
               <% end %>
             </li>
@@ -47,11 +51,15 @@
               <% if person.name_kana.present? %>
                 <span class="text-xs text-gray-400 ml-1">(<%= person.name_kana %>)</span>
               <% end %>
-              <% aliases = person.name_logs.map(&:name).uniq.reject { |n| n == person.name } %>
+              <% 
+                aliases = person.name_logs.reject { |l| l.name == person.name }.map do |l|
+                  l.name_kana.present? ? "#{l.name}（#{l.name_kana}）" : l.name
+                end.uniq
+              %>
               <% if aliases.any? %>
                 <div class="text-sm text-gray-500 ml-4 mt-1">
                   <span class="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded mr-1">旧名</span>
-                  <%= aliases.join(', ') %>
+                  <%= aliases.join('、') %>
                 </div>
               <% end %>
             </li>
