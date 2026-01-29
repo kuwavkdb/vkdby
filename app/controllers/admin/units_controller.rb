@@ -6,7 +6,12 @@ module Admin
     before_action :require_super_operator, only: %i[destroy]
 
     def index
-      @units = Unit.all.order(updated_at: :desc)
+      @q = params[:q]
+      scope = Unit.all.order(updated_at: :desc)
+      if @q.present?
+        scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q', q: "%#{@q}%")
+      end
+      @pagy, @units = pagy(scope)
     end
 
     def new

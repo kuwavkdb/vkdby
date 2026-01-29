@@ -91,8 +91,6 @@ class Person < ApplicationRecord
   def parse_old_history # rubocop:disable Metrics/PerceivedComplexity
     return [] if old_history.blank?
 
-    require_relative '../../lib/tasks/wikipage_parser'
-
     timeline = []
 
     # Split by → and process each period
@@ -128,7 +126,7 @@ class Person < ApplicationRecord
           end
 
           # old_key生成用にEUC-JPエンコード
-          encoded_unit_name = WikipageParser::Utils.encode_euc_jp_url(raw_old_key.strip)
+          encoded_unit_name = encode_euc_jp(raw_old_key.strip)
 
           # If wrapped in parentheses, add them to display
           display_unit_name = wrapped_in_parens ? "(#{display_name.strip})" : display_name.strip
@@ -212,5 +210,12 @@ class Person < ApplicationRecord
     return if key.blank?
 
     UnitPerson.where(person_key: key, person_id: nil).update_all(person_id: id)
+  end
+
+  def encode_euc_jp(str)
+    str.encode('EUC-JP').bytes.map { |b| "%#{b.to_s(16).upcase}" }.join
+  rescue Encoding::UndefinedConversionError
+    # Fallback if conversion fails
+    str
   end
 end
