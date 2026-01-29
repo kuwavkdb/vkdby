@@ -378,6 +378,7 @@ class PersonImporter
       unit_person.save!
     end
   end
+
   def extract_name_from_wiki_link(str)
     # Handle [[Display|Link]] or [[Link]]
     if str =~ /\[\[(?:([^|\]]+)\|)?([^\]]+)\]\]/

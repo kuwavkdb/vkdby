@@ -396,19 +396,19 @@ class WikipageImporter
       # BUT wait, the regex above:
       # [[A|B]] -> $1=A, $2=B.  We want A.
       # [[A]] -> $1=nil, $2=A. We want A.
-      
+
       # Wait, user said [[xxxx|YYY]] -> XXX.
       # PukiWiki [[Alias>Page]] -> Alias is display.
       # MediaWiki [[Page|Alias]] -> Alias is display.
-      
+
       # Assuming VKDB/Pukiwiki style might be mixed or standard:
       # If pipe exists, usually Left is Display (PukiWiki) or Right is Display (Mediawiki)?
       # Actually in PukiWiki: [[PageName]] or [[Alias>PageName]] or [[Alias:PageName]].
       # In many custom wikis, [[Name|Key]] often means Name is display, Key is link target.
-      
+
       # Let's look at the example user gave: [[xxxx|YYY]] -> XXX.
       # So Left side of pipe is the Name.
-      
+
       str.gsub(/\[\[(?:([^|\]]+)\|)?([^\]]+)\]\]/) do
         Regexp.last_match(1) || Regexp.last_match(2)
       end
