@@ -23,10 +23,10 @@
               <% end %>
               <% aliases = unit.name_logs.map(&:name).uniq.reject { |n| n == unit.name } %>
               <% if aliases.any? %>
-                <span class="text-sm text-gray-500 ml-2">
-                  <br class="md:hidden">
-                  (旧名: <%= aliases.join(', ') %>)
-                </span>
+                <div class="text-sm text-gray-500 ml-4 mt-1">
+                  <span class="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded mr-1">旧名</span>
+                  <%= aliases.join(', ') %>
+                </div>
               <% end %>
             </li>
           <% end %>
@@ -49,10 +49,10 @@
               <% end %>
               <% aliases = person.name_logs.map(&:name).uniq.reject { |n| n == person.name } %>
               <% if aliases.any? %>
-                <span class="text-sm text-gray-500 ml-2">
-                  <br class="md:hidden">
-                  (旧名: <%= aliases.join(', ') %>)
-                </span>
+                <div class="text-sm text-gray-500 ml-4 mt-1">
+                  <span class="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded mr-1">旧名</span>
+                  <%= aliases.join(', ') %>
+                </div>
               <% end %>
             </li>
           <% end %>
