@@ -10,10 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_28_125918) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_29_131500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
+
+  create_table "index_groups", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "sort_order", default: 0, null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "links", force: :cascade do |t|
     t.boolean "active", default: true
@@ -86,11 +94,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_28_125918) do
 
   create_table "tag_indices", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.integer "index_group"
+    t.integer "index_group_id"
     t.string "name", null: false
     t.integer "order_in_group"
     t.datetime "updated_at", null: false
-    t.index ["index_group", "order_in_group"], name: "index_tag_indices_on_index_group_and_order_in_group"
+    t.index ["index_group_id", "order_in_group"], name: "index_tag_indices_on_index_group_id_and_order_in_group"
+    t.index ["index_group_id"], name: "index_tag_indices_on_index_group_id"
     t.index ["name"], name: "index_tag_indices_on_name", unique: true
   end
 
@@ -175,6 +184,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_28_125918) do
   add_foreign_key "person_logs", "people"
   add_foreign_key "person_logs", "units"
   add_foreign_key "tag_index_items", "tag_indices"
+  add_foreign_key "tag_indices", "index_groups"
   add_foreign_key "unit_logs", "units"
   add_foreign_key "unit_people", "people"
   add_foreign_key "unit_people", "units"

@@ -1,0 +1,46 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-md mx-auto bg-white shadow rounded-lg p-6">
+    <h1 class="text-2xl font-bold mb-6"><%= @index_group.new_record? ? "New Index Group" : "Edit Index Group" %></h1>
+
+    <%= form_with model: [:admin, @index_group], local: true do |f| %>
+      <% if @index_group.errors.any? %>
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+          <div class="flex">
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-red-800">
+                <%= pluralize(@index_group.errors.count, "error") %> prohibited this group from being saved:
+              </h3>
+              <div class="mt-2 text-sm text-red-700">
+                <ul class="list-disc pl-5 space-y-1">
+                  <% @index_group.errors.full_messages.each do |message| %>
+                    <li><%= message %></li>
+                  <% end %>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <div class="mb-4">
+        <%= f.label :name, class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.text_field :name, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+      </div>
+
+      <div class="mb-4">
+        <%= f.label :sort_order, class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.number_field :sort_order, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+      </div>
+
+      <div class="mb-6 flex items-center">
+        <%= f.check_box :active, class: "h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" %>
+        <%= f.label :active, class: "ml-2 block text-sm text-gray-900" %>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <%= link_to "Cancel", admin_index_groups_path, class: "text-gray-500 hover:text-gray-700" %>
+        <%= f.submit class: "px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+</div>
