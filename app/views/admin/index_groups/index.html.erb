@@ -31,6 +31,13 @@
             </td>
           </tr>
         <% end %>
+        <!-- Unassigned Row -->
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><%= link_to "未分類 (Unassigned)", admin_index_group_path(0), class: "text-indigo-600 hover:text-indigo-900" %></td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+          <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"></td>
+        </tr>
       </tbody>
     </table>
   </div>

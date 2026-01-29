@@ -29,6 +29,8 @@ Rails.application.routes.draw do
     resources :index_groups do
       member do
         patch :reorder_indices
+        post :move_indices
+        post :detach_indices
       end
     end
   end

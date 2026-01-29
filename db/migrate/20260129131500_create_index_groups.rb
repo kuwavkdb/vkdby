@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateIndexGroups < ActiveRecord::Migration[8.1]
   def change
     create_table :index_groups do |t|
