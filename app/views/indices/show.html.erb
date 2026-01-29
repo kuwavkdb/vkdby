@@ -17,7 +17,7 @@
         <ul class="space-y-2">
           <% @units.each do |unit| %>
             <li>
-              <%= link_to unit.name, unit, class: "text-lg text-indigo-600 hover:text-indigo-800 hover:underline" %>
+              <%= link_to unit.name, profile_path(unit.key), class: "text-lg text-indigo-600 hover:text-indigo-800 hover:underline" %>
               <% if unit.name_kana.present? %>
                 <span class="text-xs text-gray-400 ml-1">(<%= unit.name_kana %>)</span>
               <% end %>
@@ -36,7 +36,7 @@
         <ul class="space-y-2">
           <% @people.each do |person| %>
             <li>
-              <%= link_to person.name, person, class: "text-lg text-indigo-600 hover:text-indigo-800 hover:underline" %>
+              <%= link_to person.name, profile_path(person.key), class: "text-lg text-indigo-600 hover:text-indigo-800 hover:underline" %>
               <% if person.name_kana.present? %>
                 <span class="text-xs text-gray-400 ml-1">(<%= person.name_kana %>)</span>
               <% end %>
