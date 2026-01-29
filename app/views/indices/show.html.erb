@@ -1,0 +1,52 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="mb-6">
+    <%= link_to "← 索引一覧に戻る", indices_group_path(params[:index_group] || @index.index_group || 1), class: "text-indigo-600 hover:text-indigo-800" %>
+  </div>
+
+  <h1 class="text-3xl font-bold mb-8 flex items-center">
+    <span class="mr-2 px-3 py-1 bg-gray-200 rounded text-xl text-gray-700">索引</span>
+    <%= @index.name %>
+  </h1>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    
+    <%# Units Section %>
+    <div>
+      <h2 class="text-xl font-bold mb-4 pb-2 border-b border-gray-200">ユニット (<%= @units.count %>)</h2>
+      <% if @units.any? %>
+        <ul class="space-y-2">
+          <% @units.each do |unit| %>
+            <li>
+              <%= link_to unit.name, unit, class: "text-lg text-indigo-600 hover:text-indigo-800 hover:underline" %>
+              <% if unit.name_kana.present? %>
+                <span class="text-xs text-gray-400 ml-1">(<%= unit.name_kana %>)</span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="text-gray-500 text-sm">該当するユニットはありません。</p>
+      <% end %>
+    </div>
+
+    <%# People Section %>
+    <div>
+      <h2 class="text-xl font-bold mb-4 pb-2 border-b border-gray-200">個人 (<%= @people.count %>)</h2>
+      <% if @people.any? %>
+        <ul class="space-y-2">
+          <% @people.each do |person| %>
+            <li>
+              <%= link_to person.name, person, class: "text-lg text-indigo-600 hover:text-indigo-800 hover:underline" %>
+              <% if person.name_kana.present? %>
+                <span class="text-xs text-gray-400 ml-1">(<%= person.name_kana %>)</span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="text-gray-500 text-sm">該当する個人はありません。</p>
+      <% end %>
+    </div>
+
+  </div>
+</div>
