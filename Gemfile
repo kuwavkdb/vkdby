@@ -78,3 +78,5 @@ group :test do
 end
 
 gem 'romaji', '~> 0.3.0'
+
+gem 'pagy', '~> 9.3'

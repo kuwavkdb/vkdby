@@ -1,10 +1,20 @@
 <div class="container mx-auto px-4 py-8">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold">Unit Management</h1>
-    <%= link_to "Add Unit", new_admin_unit_path, class: "px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700" %>
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold mb-4 md:mb-0">Unit Management</h1>
+    <div class="flex items-center space-x-4">
+      <%= form_with url: admin_units_path, method: :get, local: true, class: "flex" do |f| %>
+        <%= f.text_field :q, value: params[:q], placeholder: "Search by name or key...", class: "rounded-l-md border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" %>
+        <%= f.submit "Search", class: "px-4 py-2 bg-gray-600 text-white rounded-r-md hover:bg-gray-700 cursor-pointer" %>
+      <% end %>
+      <%= link_to "Add Unit", new_admin_unit_path, class: "px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700" %>
+    </div>
   </div>
 
-  <div class="overflow-x-auto bg-white shadow rounded-lg">
+  <div class="mb-4">
+    <%== render partial: 'pagy/nav', locals: {pagy: @pagy} if @pagy.pages > 1 %>
+  </div>
+
+  <div class="overflow-x-auto bg-white shadow rounded-lg mb-4">
     <table class="min-w-full divide-y divide-gray-200">
       <thead class="bg-gray-50">
         <tr>
@@ -41,5 +51,9 @@
         <% end %>
       </tbody>
     </table>
+  </div>
+
+  <div class="mt-4">
+    <%== render partial: 'pagy/nav', locals: {pagy: @pagy} if @pagy.pages > 1 %>
   </div>
 </div>
