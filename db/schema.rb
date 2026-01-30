@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_30_113311) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_30_130433) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -48,6 +48,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_30_113311) do
     t.text "note"
     t.text "old_history"
     t.string "old_key"
+    t.integer "old_wiki_id"
     t.text "old_wiki_text"
     t.json "parts"
     t.integer "status", default: 1, null: false
@@ -56,6 +57,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_30_113311) do
     t.index ["name"], name: "index_people_on_name"
     t.index ["name_kana"], name: "index_people_on_name_kana"
     t.index ["old_key"], name: "index_people_on_old_key", unique: true
+    t.index ["old_wiki_id"], name: "index_people_on_old_wiki_id"
   end
 
   create_table "person_logs", force: :cascade do |t|
@@ -145,6 +147,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_30_113311) do
     t.jsonb "name_log"
     t.text "note"
     t.string "old_key"
+    t.integer "old_wiki_id"
     t.text "old_wiki_text"
     t.integer "status", default: 1, null: false
     t.integer "unit_type"
@@ -153,6 +156,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_30_113311) do
     t.index ["name"], name: "index_units_on_name"
     t.index ["name_kana"], name: "index_units_on_name_kana"
     t.index ["old_key"], name: "index_units_on_old_key", unique: true
+    t.index ["old_wiki_id"], name: "index_units_on_old_wiki_id"
   end
 
   create_table "users", force: :cascade do |t|
