@@ -72,34 +72,34 @@ namespace :import do
   desc 'Reset all imported data'
   task reset: :environment do
     puts 'Reseting imported data...'
-    
+
     ActiveRecord::Base.transaction do
       puts 'Deleting UnitPeople...'
       UnitPerson.delete_all
-      
+
       puts 'Deleting PersonLogs...'
       PersonLog.delete_all
-      
+
       puts 'Deleting UnitLogs...'
       UnitLog.delete_all
-      
+
       puts 'Deleting TagIndexItems...'
       TagIndexItem.delete_all
-      
+
       puts 'Deleting Links...'
       Link.delete_all
-      
+
       puts 'Deleting People...'
       Person.delete_all
-      
+
       puts 'Deleting Units...'
       Unit.delete_all
-      
+
       puts 'Deleting TagIndices (Group 1 & 2)...'
       # Assuming 1=Unit, 2=Person tags based on import logic
       TagIndex.where(index_group_id: [1, 2]).delete_all
     end
-    
+
     puts 'Reset complete!'
   end
 end
