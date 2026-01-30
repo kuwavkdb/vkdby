@@ -17,7 +17,7 @@ class EucJpUrlFixerTest < ActiveSupport::TestCase
     middleware = Middleware::EucJpUrlFixer.new(app)
 
     # Call middleware
-    env = { 'PATH_INFO' => raw_path }
+    env = { 'PATH_INFO' => raw_path, 'REQUEST_METHOD' => 'GET' }
     middleware.call(env)
 
     # Expect it to clearly encode to %-notation with double encoding
@@ -27,7 +27,7 @@ class EucJpUrlFixerTest < ActiveSupport::TestCase
 
   test 'should leave valid UTF-8 path unchanged' do
     valid_path = '/valid_path.html'
-    env = { 'PATH_INFO' => valid_path }
+    env = { 'PATH_INFO' => valid_path, 'REQUEST_METHOD' => 'GET' }
 
     app = ->(env) { [200, {}, [env['PATH_INFO']]] }
     middleware = Middleware::EucJpUrlFixer.new(app)
@@ -43,11 +43,35 @@ class EucJpUrlFixerTest < ActiveSupport::TestCase
     app = ->(env) { [200, {}, [env['PATH_INFO']]] }
     middleware = Middleware::EucJpUrlFixer.new(app)
 
-    env = { 'PATH_INFO' => encoded_path }
+    env = { 'PATH_INFO' => encoded_path, 'REQUEST_METHOD' => 'GET' }
     middleware.call(env)
 
     # Expect % to be double encoded so Rails sees literal %B7
     expected_path = '/%25B7%25DF.html'
     assert_equal expected_path, env['PATH_INFO']
+  end
+
+  test 'should skip for non-GET requests' do
+    raw_path = "/\xB7\xDF\xB9\xFC.html".dup.force_encoding('UTF-8')
+    app = ->(env) { [200, {}, [env['PATH_INFO']]] }
+    middleware = Middleware::EucJpUrlFixer.new(app)
+
+    # POST request should be ignored
+    env = { 'PATH_INFO' => raw_path, 'REQUEST_METHOD' => 'POST' }
+    middleware.call(env)
+
+    # Path should remain unchanged (even if invalid UTF-8)
+    assert_equal raw_path, env['PATH_INFO']
+  end
+
+  test 'should skip for admin paths' do
+    raw_path = "/admin/some_path"
+    app = ->(env) { [200, {}, [env['PATH_INFO']]] }
+    middleware = Middleware::EucJpUrlFixer.new(app)
+
+    env = { 'PATH_INFO' => raw_path, 'REQUEST_METHOD' => 'GET' }
+    middleware.call(env)
+
+    assert_equal raw_path, env['PATH_INFO']
   end
 end
