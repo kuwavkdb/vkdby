@@ -6,62 +6,138 @@
       <span class="text-gray-900"><%= @index_group.name %></span>
     </div>
     <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold"><%= @index_group.name %></h1>
-      <% if @index_group.id != 0 %>
-        <%= link_to "Edit Group", edit_admin_index_group_path(@index_group), class: "px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700" %>
-      <% end %>
+      <h1 class="text-2xl font-bold flex items-center gap-3">
+        <%= @index_group.name %>
+        <% if @index_group.active? %>
+          <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-green-200 dark:text-green-900">表示中</span>
+        <% else %>
+          <span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">非表示</span>
+        <% end %>
+      </h1>
+      <div class="flex items-center gap-2">
+        <% if @index_group.id != 0 %>
+          <div class="flex rounded-md shadow-sm" role="group">
+            <%= button_to "表示", admin_index_group_path(@index_group, index_group: { active: true }), method: :patch, class: "px-4 py-2 text-sm font-medium border border-gray-200 rounded-l-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-blue-500 dark:focus:text-white #{@index_group.active? ? 'bg-blue-100 text-blue-700 pointer-events-none' : 'bg-white text-gray-900'}" %>
+            <%= button_to "非表示", admin_index_group_path(@index_group, index_group: { active: false }), method: :patch, class: "px-4 py-2 text-sm font-medium border border-gray-200 rounded-r-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-blue-500 dark:focus:text-white #{@index_group.active? ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-500 pointer-events-none'}" %>
+          </div>
+          <%= link_to "Edit Group", edit_admin_index_group_path(@index_group), class: "ml-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium" %>
+        <% end %>
+      </div>
     </div>
   </div>
 
   <div class="bg-white shadow rounded-lg p-6">
     <% if @index_group.id == 0 %>
-      <%= form_with url: move_indices_admin_index_group_path(@index_group), method: :post, local: true do |f| %>
+      <%= form_with url: move_indices_admin_index_group_path(@index_group), method: :post, local: true, html: { id: "move_indices_form" } do |f| %>
         <div class="flex items-center mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
           <span class="mr-2 text-sm font-medium text-gray-700">Move selected to:</span>
           <%= f.collection_select :target_group_id, @groups, :id, :name, { prompt: "Select Group..." }, { class: "mr-2 text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" } %>
           <%= f.submit "Move", class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 cursor-pointer" %>
+          <%= button_tag "選択したタグを表示にする", type: "button", onclick: "submitBulkUpdate(true)", class: "ml-2 px-4 py-2 bg-white text-blue-600 border border-blue-600 text-sm font-medium rounded-md hover:bg-blue-50 cursor-pointer" %>
+          <%= button_tag "選択したタグを非表示にする", type: "button", onclick: "submitBulkUpdate(false)", class: "ml-2 px-4 py-2 bg-white text-gray-600 border border-gray-600 text-sm font-medium rounded-md hover:bg-gray-50 cursor-pointer" %>
         </div>
-
-        <ul class="space-y-2">
-          <% @indices.each do |index| %>
-            <li class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-md">
-              <div class="flex items-center">
-                <%= check_box_tag "tag_index_ids[]", index.id, false, class: "mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded", id: "tag_index_#{index.id}" %>
-                <label for="tag_index_<%= index.id %>" class="text-gray-900 font-medium cursor-pointer select-none"><%= index.name %></label>
-              </div>
-            </li>
-          <% end %>
-        </ul>
       <% end %>
+
+      <ul class="space-y-2">
+        <% @indices.each do |index| %>
+          <li class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-md">
+            <div class="flex items-center">
+              <%= check_box_tag "tag_index_ids[]", index.id, false, class: "mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded", id: "tag_index_#{index.id}", form: "move_indices_form" %>
+              <label for="tag_index_<%= index.id %>" class="text-gray-900 font-medium cursor-pointer select-none mr-2"><%= index.name %></label>
+              <% if index.active? %>
+                <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-green-200 dark:text-green-900">表示中</span>
+              <% else %>
+                <span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">非表示</span>
+              <% end %>
+            </div>
+            <div class="flex items-center gap-4">
+              <span class="text-sm text-gray-500">Items: <%= index.items.count %></span>
+              <%= button_to index.active? ? "非表示" : "表示", admin_tag_index_path(index, tag_index: { active: !index.active? }), method: :patch, class: "text-xs px-2 py-1 rounded border #{index.active? ? 'text-red-600 border-red-200 hover:bg-red-50' : 'text-blue-600 border-blue-200 hover:bg-blue-50'}" %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
     <% else %>
-      <%= form_with url: detach_indices_admin_index_group_path(@index_group), method: :post, local: true do |f| %>
+      <%= form_with url: detach_indices_admin_index_group_path(@index_group), method: :post, local: true, html: { id: "detach_indices_form" } do |f| %>
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-medium text-gray-900">Indices (Drag to reorder)</h2>
           <%= f.submit "Remove from Group", class: "px-4 py-2 bg-white text-red-600 border border-red-600 text-sm font-medium rounded-md hover:bg-red-50 cursor-pointer", data: { confirm: "選択したタグをこのグループから削除しますか？" } %>
+          <%= button_tag "選択したタグを表示にする", type: "button", onclick: "submitBulkUpdate(true)", class: "ml-2 px-4 py-2 bg-white text-blue-600 border border-blue-600 text-sm font-medium rounded-md hover:bg-blue-50 cursor-pointer" %>
+          <%= button_tag "選択したタグを非表示にする", type: "button", onclick: "submitBulkUpdate(false)", class: "ml-2 px-4 py-2 bg-white text-gray-600 border border-gray-600 text-sm font-medium rounded-md hover:bg-gray-50 cursor-pointer" %>
         </div>
-
-        <ul class="space-y-2"
-            data-controller="sortable"
-            data-sortable-url-value="<%= reorder_indices_admin_index_group_path(@index_group) %>">
-          <% @indices.each do |index| %>
-            <li data-id="<%= index.id %>" class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-md">
-              <div class="flex items-center">
-                <span class="drag-handle cursor-move text-gray-400 mr-3">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
-                </span>
-                <%= check_box_tag "tag_index_ids[]", index.id, false, class: "mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded", id: "tag_index_#{index.id}" %>
-                <label for="tag_index_<%= index.id %>" class="text-gray-900 font-medium cursor-pointer select-none"><%= index.name %></label>
-              </div>
-              <!-- Order is updated via JS but shown here for reference -->
-              <span class="text-sm text-gray-500">Items: <%= index.items.count %></span>
-            </li>
-          <% end %>
-        </ul>
       <% end %>
+
+      <ul class="space-y-2"
+          data-controller="sortable"
+          data-sortable-url-value="<%= reorder_indices_admin_index_group_path(@index_group) %>">
+        <% @indices.each do |index| %>
+          <li data-id="<%= index.id %>" class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-md">
+            <div class="flex items-center">
+              <span class="drag-handle cursor-move text-gray-400 mr-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+              </span>
+              <%= check_box_tag "tag_index_ids[]", index.id, false, class: "mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded", id: "tag_index_#{index.id}", form: "detach_indices_form" %>
+              <label for="tag_index_<%= index.id %>" class="text-gray-900 font-medium cursor-pointer select-none mr-2"><%= index.name %></label>
+              <% if index.active? %>
+                <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-green-200 dark:text-green-900">表示中</span>
+              <% else %>
+                <span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">非表示</span>
+              <% end %>
+            </div>
+            <div class="flex items-center gap-4">
+              <span class="text-sm text-gray-500">Items: <%= index.items.count %></span>
+              <%= button_to index.active? ? "非表示" : "表示", admin_tag_index_path(index, tag_index: { active: !index.active? }), method: :patch, class: "text-xs px-2 py-1 rounded border #{index.active? ? 'text-red-600 border-red-200 hover:bg-red-50' : 'text-blue-600 border-blue-200 hover:bg-blue-50'}" %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
     <% end %>
 
     <% if @indices.empty? %>
       <p class="text-gray-500 mt-4">No indices in this group.</p>
     <% end %>
   </div>
+  </div>
 </div>
+
+<script>
+  function submitBulkUpdate(active) {
+    const checkedBoxes = document.querySelectorAll('input[name="tag_index_ids[]"]:checked');
+    if (checkedBoxes.length === 0) {
+      alert("タグが選択されていません");
+      return;
+    }
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '<%= bulk_update_admin_tag_indices_path %>';
+    form.style.display = 'none';
+
+    // Authenticity Token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    const tokenInput = document.createElement('input');
+    tokenInput.type = 'hidden';
+    tokenInput.name = 'authenticity_token';
+    tokenInput.value = csrfToken;
+    form.appendChild(tokenInput);
+
+    // Active Status
+    const activeInput = document.createElement('input');
+    activeInput.type = 'hidden';
+    activeInput.name = 'active';
+    activeInput.value = active;
+    form.appendChild(activeInput);
+
+    // Selected IDs
+    checkedBoxes.forEach(box => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'tag_index_ids[]';
+      input.value = box.value;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+  }
+</script>
