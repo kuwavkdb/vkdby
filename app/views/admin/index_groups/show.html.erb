@@ -73,9 +73,11 @@
         <% @indices.each do |index| %>
           <li data-id="<%= index.id %>" class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-md">
             <div class="flex items-center">
-              <span class="drag-handle cursor-move text-gray-400 mr-3">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
-              </span>
+              <div class="drag-handle cursor-move text-gray-400 mr-3 flex items-center">
+                <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </div>
               <%= check_box_tag "tag_index_ids[]", index.id, false, class: "mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded", id: "tag_index_#{index.id}", form: "detach_indices_form" %>
               <label for="tag_index_<%= index.id %>" class="text-gray-900 font-medium cursor-pointer select-none mr-2"><%= index.name %></label>
               <% if index.active? %>
