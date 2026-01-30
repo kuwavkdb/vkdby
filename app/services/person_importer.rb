@@ -139,6 +139,9 @@ class PersonImporter
     # Save Person
     person.save!
 
+    # 2.5 Link existing UnitPerson records
+    link_existing_unit_people(person)
+
     # 3. Associate TagIndex (Categories)
     update_tag_indices(person, categories_data[:raw_categories])
 
@@ -147,6 +150,12 @@ class PersonImporter
 
     # 5. Parse Career History
     parse_career_history(person)
+  end
+
+  def link_existing_unit_people(person)
+    return if person.old_key.blank?
+
+    UnitPerson.where(old_person_key: person.old_key).update_all(person_id: person.id, person_key: person.key)
   end
 
   def parse_categories_data
