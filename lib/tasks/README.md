@@ -2,6 +2,16 @@
 
 このディレクトリには、Wikipageデータをインポートするためのスクリプトが含まれています。
 
+## クイックスタート (全データ再構築)
+
+データを初期化して全て再インポートする場合のコマンド例です:
+
+```bash
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:reset
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:people
+```
+
 ## スクリプト一覧
 
 ### 1. import:people - 個人データ一括インポート
