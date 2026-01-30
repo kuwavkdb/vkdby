@@ -33,6 +33,12 @@ Rails.application.routes.draw do
         post :detach_indices
       end
     end
+
+    resources :tag_indices, only: %i[update] do
+      collection do
+        post :bulk_update
+      end
+    end
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   root 'units#index'

@@ -26,4 +26,5 @@ class TagIndex < ApplicationRecord
   validates :name, presence: true, uniqueness: true
 
   scope :ordered, -> { order(order_in_group: :asc) }
+  scope :active, -> { where(active: true) }
 end
