@@ -3,7 +3,7 @@
     <h1 class="text-2xl font-bold mb-4 md:mb-0">People Management</h1>
     <div class="flex items-center space-x-4">
       <%= form_with url: admin_people_path, method: :get, local: true, class: "flex" do |f| %>
-        <%= f.text_field :q, value: params[:q], placeholder: "Search by name or key...", class: "rounded-l-md border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" %>
+        <%= f.text_field :q, value: params[:q], placeholder: "Search by name or key...", class: "rounded-l-md border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" %>
         <%= f.submit "Search", class: "px-4 py-2 bg-white text-gray-700 border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-50 cursor-pointer" %>
       <% end %>
       <%= link_to "Add Person", new_admin_person_path, class: "px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700" %>
