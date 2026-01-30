@@ -79,4 +79,4 @@ end
 
 gem 'romaji', '~> 0.3.0'
 
-gem 'pagy', '~> 9.3'
+gem 'pagy', '~> 43.2'
