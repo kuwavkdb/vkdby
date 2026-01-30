@@ -61,6 +61,17 @@ START=5000 bin/rails import:units    # ID 5000以降
 LIMIT=10 bin/rails import:units      # 最大10件まで
 ```
 
+### 3. import:reset - インポートデータの初期化
+
+インポートされたデータを全て削除し、データベースを初期状態（インポート前）に戻します。
+`UnitPerson`, `PersonLog`, `UnitLog`, `TagIndexItem`, `Link`, `Person`, `Unit`, `TagIndex` (一部) が削除されます。
+
+**使用方法**:
+```bash
+bin/rails import:reset
+```
+**注意**: 実行するとデータは復元できません。開発環境でのテストデータのリセット等に使用してください。
+
 **特徴**:
 - `wikipages` テーブルの全レコード（または指定範囲）を走査します。
 - メンバー情報（`{{member...}}` または `!Part...`）が含まれるページのみをインポート対象とします。
