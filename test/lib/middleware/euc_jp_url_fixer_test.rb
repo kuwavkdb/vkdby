@@ -65,7 +65,7 @@ class EucJpUrlFixerTest < ActiveSupport::TestCase
   end
 
   test 'should skip for admin paths' do
-    raw_path = "/admin/some_path"
+    raw_path = '/admin/some_path'
     app = ->(env) { [200, {}, [env['PATH_INFO']]] }
     middleware = Middleware::EucJpUrlFixer.new(app)
 
