@@ -9,6 +9,12 @@ module Middleware
     def call(env)
       path = env['PATH_INFO']
 
+      # 0. Skip for non-GET/HEAD requests to avoid interfering with form submissions (CSRF etc.)
+      return @app.call(env) unless %w[GET HEAD].include?(env['REQUEST_METHOD'])
+
+      # Also skip for admin routes as they don't involve legacy encodings
+      return @app.call(env) if path&.start_with?('/admin')
+
       if path
         # 1. Handle Raw Bytes (Invalid UTF-8 in PATH_INFO itself)
         unless path.valid_encoding?
