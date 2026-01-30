@@ -101,6 +101,7 @@ class PersonImporter
     person.name_kana = person_name_kana
     person.name_log = name_log_entries if name_log_entries.present?
     person.old_key = encoded_old_key
+    person.old_wiki_id = @wikipage.id
     person.old_wiki_text = @wiki_content
 
     # Status

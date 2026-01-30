@@ -130,6 +130,7 @@ class WikipageImporter
     unit.name_kana = unit_name_kana
     unit.name_log = name_log_entries if name_log_entries.present?
     unit.old_key = encoded_old_key
+    unit.old_wiki_id = @wikipage.id
     unit.old_wiki_text = @wiki_content
     unit.unit_type = unit_type
     unit.status = :active
