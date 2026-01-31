@@ -30,7 +30,7 @@ class WikipageImporter
   def import
     return unless @wiki_content
 
-    puts "Importing Wikipage: #{@wikipage_name} (ID: #{@wikipage.id})"
+    # puts "Importing Wikipage: #{@wikipage_name} (ID: #{@wikipage.id})"
 
     # Remove comment lines
     @wiki_content = @wiki_content.lines.reject { |line| line.strip.start_with?('//') }.join
@@ -265,7 +265,9 @@ class WikipageImporter
                when 'drums' then :drums
                when 'keyboard' then :keyboard
                when 'dj' then :dj
-               else :unknown
+               else
+                 puts "[UNKNOWN_PART] '#{part_str}' in Unit: #{unit.name} (WikiID: #{@wikipage.id})"
+                 :unknown
                end
 
     person_name_for_key = if name_str.match?(/^[[:ascii:]\s-]+$/)
