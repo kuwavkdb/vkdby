@@ -14,7 +14,8 @@ class WikipageImporter
     # Check for member section or specific category that indicates a unit
     # Simple check: has {{member...}} tag or !Part... line
     has_member_plugin = wikipage.wiki.match?(/\{\{member2?\s+.*?\}\}/m)
-    has_old_member_format = wikipage.wiki.match?(/^!([^…]+)…\s*\[\[/)
+    # Support both formats: !Part… [[Name]] and ![[Name]]… Part
+    has_old_member_format = wikipage.wiki.match?(/^!([^…]+)…\s*\[\[/) || wikipage.wiki.match?(/^!\[\[.+?\]\]…/)
 
     has_member_plugin || has_old_member_format
   end
@@ -210,8 +211,13 @@ class WikipageImporter
     end
 
     # Old Member Format
-    old_member_regex = /^!([^…\n]+)…\s*\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/
-    @wiki_content.scan(old_member_regex) do |match|
+    # Current supported formats:
+    # 1. !Part… [[Name]]
+    # 2. ![[Name]]… Part
+    old_member_regex1 = /^!([^…\n]+)…\s*\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/
+    old_member_regex2 = /^!\[\[([^|\]\n]+)(?:\|([^\]\n]+))?\]\]…([^…\n]+)/
+
+    @wiki_content.scan(old_member_regex1) do |match|
       match_data = Regexp.last_match
       current_pos = match_data.begin(0)
       member_status = current_pos > separator_index ? :left : :active
@@ -220,17 +226,33 @@ class WikipageImporter
       name_str = match[1].strip
       old_member_key = match[2]&.strip
 
-      if old_member_key.present?
-        old_member_key = old_member_key.strip
-        old_member_key = [name_str, old_member_key].join if old_member_key =~ /^\(/ && old_member_key =~ /\)$/
-      else
-        old_member_key = name_str
-      end
-
-      old_member_key = URI.encode_www_form_component(old_member_key.encode('EUC-JP'))
-
-      register_member(unit, part_str, name_str, old_member_key, nil, nil, member_status)
+      register_old_format_member(unit, part_str, name_str, old_member_key, member_status)
     end
+
+    @wiki_content.scan(old_member_regex2) do |match|
+      match_data = Regexp.last_match
+      current_pos = match_data.begin(0)
+      member_status = current_pos > separator_index ? :left : :active
+
+      name_str = match[0].strip
+      old_member_key = match[1]&.strip
+      part_str = match[2].strip
+
+      register_old_format_member(unit, part_str, name_str, old_member_key, member_status)
+    end
+  end
+
+  def register_old_format_member(unit, part_str, name_str, old_member_key, member_status)
+    if old_member_key.present?
+      old_member_key = old_member_key.strip
+      old_member_key = [name_str, old_member_key].join if old_member_key =~ /^\(/ && old_member_key =~ /\)$/
+    else
+      old_member_key = name_str
+    end
+
+    old_member_key = URI.encode_www_form_component(old_member_key.encode('EUC-JP'))
+
+    register_member(unit, part_str, name_str, old_member_key, nil, nil, member_status)
   end
 
   # rubocop:disable Metrics/ParameterLists
