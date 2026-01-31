@@ -28,6 +28,7 @@ class WikipageImporter
   end
 
   def import
+    return if @wikipage_name.to_s.start_with?('カレンダー/')
     return unless @wiki_content
 
     # puts "Importing Wikipage: #{@wikipage_name} (ID: #{@wikipage.id})"
