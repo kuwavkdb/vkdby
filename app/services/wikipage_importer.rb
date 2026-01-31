@@ -36,8 +36,21 @@ class WikipageImporter
 
     # puts "Importing Wikipage: #{@wikipage_name} (ID: #{@wikipage.id})"
 
-    # Remove comment lines
+    # Extract and preserve {{member...}} blocks before removing comments
+    @member_blocks = []
+    @wiki_content.gsub!(/\{\{member2?\s+.*?\}\}/m) do |block|
+      placeholder = "__MEMBER_BLOCK_#{@member_blocks.length}__"
+      @member_blocks << block
+      placeholder
+    end
+
+    # Remove comment lines (but not from member blocks)
     @wiki_content = @wiki_content.lines.reject { |line| line.strip.start_with?('//') }.join
+
+    # Restore member blocks
+    @member_blocks.each_with_index do |block, index|
+      @wiki_content.gsub!("__MEMBER_BLOCK_#{index}__", block)
+    end
 
     ActiveRecord::Base.transaction do
       import_unit
@@ -170,17 +183,55 @@ class WikipageImporter
     end
   end
 
+  def extract_member_blocks
+    results = []
+    pos = 0
+
+    while (start_pos = @wiki_content.index(/\{\{member2?\s+/, pos))
+      # Find the matching closing }}
+      bracket_count = 0
+      i = start_pos
+      content_start = nil
+
+      while i < @wiki_content.length
+        if @wiki_content[i, 2] == '{{'
+          bracket_count += 1
+          content_start = i + 2 if bracket_count == 1 && @wiki_content[i..] =~ /^\{\{member2?\s+/
+          i += 2
+        elsif @wiki_content[i, 2] == '}}'
+          bracket_count -= 1
+          if bracket_count.zero?
+            # Found the matching closing bracket
+            content = @wiki_content[content_start...i].sub(/^member2?\s+/, '')
+            results << {
+              content: content,
+              begin: start_pos,
+              end: i + 2
+            }
+            pos = i + 2
+            break
+          end
+          i += 2
+        else
+          i += 1
+        end
+      end
+
+      break if bracket_count != 0 # Unmatched brackets, stop
+    end
+
+    results
+  end
+
   def parse_members(unit)
     separator_index = @wiki_content.index(/^!!関係者/) || Float::INFINITY
     current_order = 1
 
-    # Plugin format
-    member_regex = /\{\{member2?\s+(.*?)\}\}/m
-    @wiki_content.scan(member_regex) do |match|
-      match_data = Regexp.last_match
-      current_pos = match_data.begin(0)
+    # Plugin format - use balanced bracket matching
+    extract_member_blocks.each do |block_data|
+      current_pos = block_data[:begin]
       member_status = current_pos > separator_index ? :left : :active
-      content = match[0]
+      content = block_data[:content]
 
       if content.include?("\n")
         first_line, inline_history_text = content.split("\n", 2)
