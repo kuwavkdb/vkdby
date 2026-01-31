@@ -28,6 +28,16 @@
 
   <div class="bg-white shadow rounded-lg p-6">
     <% if @index_group.id == 0 %>
+      <div class="mb-4">
+        <%= form_with url: admin_index_group_path(@index_group), method: :get, local: true, class: "flex gap-2" do |f| %>
+          <%= f.text_field :q, value: params[:q], placeholder: "Search tags...", class: "flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm" %>
+          <%= f.submit "Search", class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 cursor-pointer" %>
+          <% if params[:q].present? %>
+            <%= link_to "Clear", admin_index_group_path(@index_group), class: "px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200" %>
+          <% end %>
+        <% end %>
+      </div>
+
       <%= form_with url: move_indices_admin_index_group_path(@index_group), method: :post, local: true, html: { id: "move_indices_form" } do |f| %>
         <div class="flex items-center mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
           <span class="mr-2 text-sm font-medium text-gray-700">Move selected to:</span>
@@ -58,6 +68,16 @@
         <% end %>
       </ul>
     <% else %>
+      <div class="mb-4">
+        <%= form_with url: admin_index_group_path(@index_group), method: :get, local: true, class: "flex gap-2" do |f| %>
+          <%= f.text_field :q, value: params[:q], placeholder: "Search tags...", class: "flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm" %>
+          <%= f.submit "Search", class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 cursor-pointer" %>
+          <% if params[:q].present? %>
+            <%= link_to "Clear", admin_index_group_path(@index_group), class: "px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200" %>
+          <% end %>
+        <% end %>
+      </div>
+
       <%= form_with url: detach_indices_admin_index_group_path(@index_group), method: :post, local: true, html: { id: "detach_indices_form" } do |f| %>
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-medium text-gray-900">Indices (Drag to reorder)</h2>

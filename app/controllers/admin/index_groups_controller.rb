@@ -23,10 +23,14 @@ module Admin
 
     def show
       if @index_group.id.zero?
-        @indices = TagIndex.where(index_group_id: nil).order(:name)
+        base_scope = TagIndex.where(index_group_id: nil)
+        base_scope = base_scope.where('name LIKE ?', "%#{params[:q]}%") if params[:q].present?
+        @indices = base_scope.order(:name)
         @groups = IndexGroup.ordered
       else
-        @indices = @index_group.tag_indices.ordered
+        indices_scope = @index_group.tag_indices
+        indices_scope = indices_scope.where('name LIKE ?', "%#{params[:q]}%") if params[:q].present?
+        @indices = indices_scope.ordered
       end
     end
 
