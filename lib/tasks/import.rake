@@ -31,7 +31,8 @@ namespace :import do
         count += 1
       else
         skipped += 1
-        puts "[SKIPPED] #{wp.title} (ID: #{wp.id})" if wp.title.present?
+        # 個人候補の場合はログ出力しない
+        puts "[SKIPPED] #{wp.title} (ID: #{wp.id})" if wp.title.present? && !PersonImporter.valid_person?(wp)
       end
     end
 
@@ -70,7 +71,8 @@ namespace :import do
         count += 1
       else
         skipped += 1
-        puts "[SKIPPED] #{wp.title} (ID: #{wp.id})" if wp.title.present?
+        # ユニット候補の場合はログ出力しない
+        puts "[SKIPPED] #{wp.title} (ID: #{wp.id})" if wp.title.present? && !WikipageImporter.valid_unit?(wp)
       end
     end
 
