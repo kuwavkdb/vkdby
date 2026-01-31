@@ -8,12 +8,13 @@ puts '== Starting Ignore Logic Verification =='
 calendar_wp = Wikipage.new(title: 'カレンダー/2026', name: 'カレンダー/2026', wiki: 'dummy')
 official_wp = Wikipage.new(title: 'オフィシャルサイト/XYZ', name: 'オフィシャルサイト/XYZ', wiki: 'dummy')
 indies_wp = Wikipage.new(title: 'インディーズ/Label', name: 'インディーズ/Label', wiki: 'dummy')
+comment_wp = Wikipage.new(title: 'SomePage_comment', name: 'SomePage_comment', wiki: 'dummy')
 normal_wp = Wikipage.new(title: 'SomeBand', name: 'SomeBand', wiki: 'dummy')
 
 # 2. Verify WikipageImporter.ignored?
 puts "\n[Checking WikipageImporter.ignored?]"
 
-[calendar_wp, official_wp, indies_wp].each do |wp|
+[calendar_wp, official_wp, indies_wp, comment_wp].each do |wp|
   if WikipageImporter.ignored?(wp)
     puts "  PASS: '#{wp.title}' is ignored."
   else
