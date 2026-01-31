@@ -40,12 +40,21 @@ class MemberRowComponent < ViewComponent::Base
     text = text.gsub(/\[\[([^\]|]+)\|([^\]]+)\]\]/) do
       link_text = Regexp.last_match(1)
       old_key = Regexp.last_match(2)
-      "<a href=\"/#{old_key}.html\" class=\"hover:text-unit transition-colors\">#{ERB::Util.html_escape(link_text)}</a>"
+      encoded_key = encode_euc_jp(old_key)
+      "<a href=\"/#{encoded_key}.html\" class=\"hover:text-unit transition-colors\">#{ERB::Util.html_escape(link_text)}</a>"
     end
     # Then replace [[XXXX]] pattern (link text same as key)
     text.gsub(/\[\[([^\]]+)\]\]/) do
       old_key = Regexp.last_match(1)
-      "<a href=\"/#{old_key}.html\" class=\"hover:text-unit transition-colors\">#{ERB::Util.html_escape(old_key)}</a>"
+      encoded_key = encode_euc_jp(old_key)
+      "<a href=\"/#{encoded_key}.html\" class=\"hover:text-unit transition-colors\">#{ERB::Util.html_escape(old_key)}</a>"
     end
+  end
+
+  def encode_euc_jp(str)
+    str.encode('EUC-JP').bytes.map { |b| "%#{b.to_s(16).upcase}" }.join
+  rescue Encoding::UndefinedConversionError
+    # Fallback if conversion fails
+    str
   end
 end
