@@ -27,7 +27,7 @@ namespace :import do
         count += 1
       else
         skipped += 1
-        puts "[SKIPPED] #{wp.title} (ID: #{wp.id})"
+        puts "[SKIPPED] #{wp.title} (ID: #{wp.id})" if wp.title.present?
       end
     end
 
@@ -62,7 +62,7 @@ namespace :import do
         count += 1
       else
         skipped += 1
-        puts "[SKIPPED] #{wp.title} (ID: #{wp.id})"
+        puts "[SKIPPED] #{wp.title} (ID: #{wp.id})" if wp.title.present?
       end
     end
 
