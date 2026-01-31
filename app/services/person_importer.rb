@@ -4,11 +4,15 @@ require 'romaji'
 
 # rubocop:disable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity
 class PersonImporter
+  include IgnorableWikipage
+
   def self.import(wikipage)
     new(wikipage).import
   end
 
   def self.valid_person?(wikipage)
+    return false if ignored?(wikipage)
+
     wikipage.wiki&.include?('{{category 個人')
   end
 
@@ -20,6 +24,7 @@ class PersonImporter
   end
 
   def import
+    return if self.class.ignored?(@wikipage)
     return unless @wiki_content
 
     # puts "Importing Person: #{@wikipage_name} (ID: #{@wikipage.id})"

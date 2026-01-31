@@ -61,7 +61,11 @@ namespace :import do
     query.find_each.with_index do |wp, _index|
       break if limit && count >= limit
 
-      if PersonImporter.valid_person?(wp)
+      if PersonImporter.ignored?(wp)
+        skipped += 1
+        # Silent skip for ignored pages
+        next
+      elsif PersonImporter.valid_person?(wp)
         PersonImporter.import(wp)
         count += 1
       else
