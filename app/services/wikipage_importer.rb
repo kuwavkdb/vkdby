@@ -258,7 +258,10 @@ class WikipageImporter
   # rubocop:disable Metrics/ParameterLists
   def register_member(unit, part_str, name_str, old_member_key, sns_account, inline_history, member_status)
     # rubocop:enable Metrics/ParameterLists
-    part_key = case part_str.downcase
+    is_support = part_str.to_s.match?(/support|サポート/i)
+    cleaned_part_str = part_str.to_s.gsub(/support|サポート/i, '').strip
+
+    part_key = case cleaned_part_str.downcase
                when 'vocal' then :vocal
                when 'guitar' then :guitar
                when 'bass' then :bass
@@ -266,7 +269,7 @@ class WikipageImporter
                when 'keyboard' then :keyboard
                when 'dj' then :dj
                else
-                 puts "[UNKNOWN_PART] '#{part_str}' in Unit: #{unit.name} (WikiID: #{@wikipage.id})"
+                 puts "[UNKNOWN_PART] '#{cleaned_part_str}' in Unit: #{unit.name} (WikiID: #{@wikipage.id})" unless cleaned_part_str.blank?
                  :unknown
                end
 
@@ -303,6 +306,7 @@ class WikipageImporter
     up.person_key = person_key unless person.present?
     up.part = part_key
     up.status = member_status
+    up.support = is_support
     up.old_person_key = old_member_key
     up.inline_history = inline_history
     up.sns = [sns_account.strip] if sns_account.present?
