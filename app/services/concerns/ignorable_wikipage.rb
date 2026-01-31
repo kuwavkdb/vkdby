@@ -8,6 +8,10 @@ module IgnorableWikipage
     %r{^オフィシャルサイト/},
     %r{^インディーズ/},
     %r{^発売スケジュール/},
+    %r{^出身地/},
+    %r{^動向/},
+    %r{^血液型/},
+    %r{^同名/},
     /^BBS-/,
     /_comment$/
   ].freeze
