@@ -162,7 +162,7 @@ class WikipageImporter
 
     categories.each do |cat_raw|
       index_name = cat_raw.strip
-      tag_index = TagIndex.create_with(index_group_id: 1).find_or_create_by(name: index_name)
+      tag_index = TagIndex.find_or_create_by(name: index_name)
       TagIndexItem.create!(
         tag_index: tag_index,
         indexable: unit
