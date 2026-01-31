@@ -2,7 +2,9 @@
   <div>
     <div class="flex items-center justify-between gap-3 md:gap-4 mb-2 flex-wrap sm:flex-nowrap">
       <div class="flex items-center gap-3 md:gap-4 flex-1">
-        <span class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest min-w-[4rem]"><%= @member.part %></span>
+        <span class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest min-w-[4rem]" title="<%= (@member.part_alias.present? || @member.support?) ? @member.part.upcase : '' %>">
+          <%= (@member.support? ? "サポート " : "") + (@member.part_alias.presence || @member.part.upcase) %>
+        </span>
         <h3 class="text-base md:text-lg font-black text-slate-800 dark:text-slate-100">
           <% if @member.person %>
             <%= link_to @member.name, profile_path(@member.person.key), class: "hover:text-person transition-colors" %>
