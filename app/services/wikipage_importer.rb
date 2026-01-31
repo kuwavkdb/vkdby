@@ -4,11 +4,22 @@ require 'romaji'
 
 # rubocop:disable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity
 class WikipageImporter
+  IGNORED_TITLE_PATTERNS = [
+    'カレンダー/'
+  ].freeze
+
+  def self.ignored?(wikipage)
+    title = wikipage.title.to_s
+    name = wikipage.name.to_s
+    IGNORED_TITLE_PATTERNS.any? { |pattern| title.start_with?(pattern) || name.start_with?(pattern) }
+  end
+
   def self.import(wikipage)
     new(wikipage).import
   end
 
   def self.valid_unit?(wikipage)
+    return false if ignored?(wikipage)
     return false if wikipage.wiki.blank?
 
     # Check for member section or specific category that indicates a unit
@@ -28,7 +39,7 @@ class WikipageImporter
   end
 
   def import
-    return if @wikipage_name.to_s.start_with?('カレンダー/')
+    return if self.class.ignored?(@wikipage)
     return unless @wiki_content
 
     # puts "Importing Wikipage: #{@wikipage_name} (ID: #{@wikipage.id})"
