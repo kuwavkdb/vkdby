@@ -258,10 +258,22 @@ class WikipageImporter
   # rubocop:disable Metrics/ParameterLists
   def register_member(unit, part_str, name_str, old_member_key, sns_account, inline_history, member_status)
     # rubocop:enable Metrics/ParameterLists
-    # Clean up part string: remove leading '!' and support keywords
+    # Clean up part string: remove leading '!'
     cleaned_part_str = part_str.to_s.sub(/^!/, '')
+
+    # Check for support keywords FIRST (before wiki Parsing eats it if it works on generic text)
+    # Actually, the example is !Support [[Key|Keyboard]].
+    # cleaned_part_str matches /support/i.
     is_support = cleaned_part_str.match?(/support|サポート/i)
+    # Remove support keyword from the full string
     cleaned_part_str = cleaned_part_str.gsub(/support|サポート/i, '').strip
+
+    # Check for wiki alias syntax [[Alias|Part]]
+    part_alias_from_wiki = nil
+    if (match = cleaned_part_str.match(/\[\[(.*?)\|(.*?)\]\]/))
+      part_alias_from_wiki = match[1].strip
+      cleaned_part_str = match[2].strip
+    end
 
     part_key = case cleaned_part_str.downcase
                when 'vocal' then :vocal
@@ -275,7 +287,7 @@ class WikipageImporter
                  :unknown
                end
 
-    part_alias = part_key == :unknown && cleaned_part_str.present? ? cleaned_part_str : nil
+    part_alias = part_alias_from_wiki.presence || (part_key == :unknown && cleaned_part_str.present? ? cleaned_part_str : nil)
 
     person_name_for_key = if name_str.match?(/^[[:ascii:]\s-]+$/)
                             name_str
