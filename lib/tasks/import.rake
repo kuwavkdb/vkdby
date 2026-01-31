@@ -22,7 +22,11 @@ namespace :import do
     query.find_each.with_index do |wp, _index|
       break if limit && count >= limit
 
-      if WikipageImporter.valid_unit?(wp)
+      if WikipageImporter.ignored?(wp)
+        skipped += 1
+        # Silent skip for ignored pages
+        next
+      elsif WikipageImporter.valid_unit?(wp)
         WikipageImporter.import(wp)
         count += 1
       else
