@@ -1,5 +1,36 @@
 # frozen_string_literal: true
 
+# スキップログにカテゴリーを出力する対象
+SKIP_LOG_CATEGORIES = [
+  'ライブハウス・ホール',
+  'オムニバス'
+].freeze
+
+def extract_categories(wikipage)
+  return [] if wikipage.wiki.blank?
+
+  categories = []
+  wikipage.wiki.scan(/\{\{category\s+(.*?)\}\}/i) do |match|
+    match[0].split(',').each do |cat|
+      categories << cat.strip
+    end
+  end
+  categories
+end
+
+def format_skip_log(wikipage)
+  base_log = "[SKIPPED] #{wikipage.title} (ID: #{wikipage.id})"
+
+  categories = extract_categories(wikipage)
+  relevant_cats = categories & SKIP_LOG_CATEGORIES
+
+  if relevant_cats.any?
+    "#{base_log} [Category: #{relevant_cats.join(', ')}]"
+  else
+    base_log
+  end
+end
+
 namespace :import do
   desc 'Import units from Wikipages'
   task units: :environment do
@@ -32,7 +63,7 @@ namespace :import do
       else
         skipped += 1
         # 個人候補の場合はログ出力しない
-        puts "[SKIPPED] #{wp.title} (ID: #{wp.id})" if wp.title.present? && !PersonImporter.valid_person?(wp)
+        puts format_skip_log(wp) if wp.title.present? && !PersonImporter.valid_person?(wp)
       end
     end
 
@@ -72,7 +103,7 @@ namespace :import do
       else
         skipped += 1
         # ユニット候補の場合はログ出力しない
-        puts "[SKIPPED] #{wp.title} (ID: #{wp.id})" if wp.title.present? && !WikipageImporter.valid_unit?(wp)
+        puts format_skip_log(wp) if wp.title.present? && !WikipageImporter.valid_unit?(wp)
       end
     end
 
