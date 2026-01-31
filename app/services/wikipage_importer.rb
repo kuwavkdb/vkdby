@@ -172,6 +172,7 @@ class WikipageImporter
 
   def parse_members(unit)
     separator_index = @wiki_content.index(/^!!関係者/) || Float::INFINITY
+    current_order = 1
 
     # Plugin format
     member_regex = /\{\{member2?\s+(.*?)\}\}/m
@@ -211,7 +212,8 @@ class WikipageImporter
 
       old_member_key = URI.encode_www_form_component(old_member_key.encode('EUC-JP'))
 
-      register_member(unit, part_str, name_str, old_member_key, sns_account, inline_history, member_status)
+      register_member(unit, part_str, name_str, old_member_key, sns_account, inline_history, member_status, current_order)
+      current_order += 1
     end
 
     # Old Member Format
@@ -230,7 +232,8 @@ class WikipageImporter
       name_str = match[1].strip
       old_member_key = match[2]&.strip
 
-      register_old_format_member(unit, part_str, name_str, old_member_key, member_status)
+      register_old_format_member(unit, part_str, name_str, old_member_key, member_status, current_order)
+      current_order += 1
     end
 
     @wiki_content.scan(old_member_regex2) do |match|
@@ -242,11 +245,14 @@ class WikipageImporter
       old_member_key = match[1]&.strip
       part_str = match[2].strip
 
-      register_old_format_member(unit, part_str, name_str, old_member_key, member_status)
+      register_old_format_member(unit, part_str, name_str, old_member_key, member_status, current_order)
+      current_order += 1
     end
   end
 
-  def register_old_format_member(unit, part_str, name_str, old_member_key, member_status)
+  # rubocop:disable Metrics/ParameterLists
+  def register_old_format_member(unit, part_str, name_str, old_member_key, member_status, order_in_period)
+  # rubocop:enable Metrics/ParameterLists
     if old_member_key.present?
       old_member_key = old_member_key.strip
       old_member_key = [name_str, old_member_key].join if old_member_key =~ /^\(/ && old_member_key =~ /\)$/
@@ -256,11 +262,11 @@ class WikipageImporter
 
     old_member_key = URI.encode_www_form_component(old_member_key.encode('EUC-JP'))
 
-    register_member(unit, part_str, name_str, old_member_key, nil, nil, member_status)
+    register_member(unit, part_str, name_str, old_member_key, nil, nil, member_status, order_in_period)
   end
 
   # rubocop:disable Metrics/ParameterLists
-  def register_member(unit, part_str, name_str, old_member_key, sns_account, inline_history, member_status)
+  def register_member(unit, part_str, name_str, old_member_key, sns_account, inline_history, member_status, order_in_period)
     # rubocop:enable Metrics/ParameterLists
     # Clean up part string: remove leading '!'
     cleaned_part_str = part_str.to_s.sub(/^!/, '')
@@ -331,6 +337,7 @@ class WikipageImporter
     up.old_person_key = old_member_key
     up.inline_history = inline_history
     up.sns = [sns_account.strip] if sns_account.present?
+    up.order_in_period = order_in_period
     up.save!
 
     return unless person.present?
