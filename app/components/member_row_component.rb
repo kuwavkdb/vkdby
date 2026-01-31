@@ -34,4 +34,27 @@ class MemberRowComponent < ViewComponent::Base
 
     @member.person.person_logs.sort_by { |l| [l.log_date.to_s, l.sort_order || 0] }
   end
+
+  def parse_wiki_links(text)
+    # First replace [[YYYY|XXXX]] pattern (with custom link text)
+    text = text.gsub(/\[\[([^\]|]+)\|([^\]]+)\]\]/) do
+      link_text = Regexp.last_match(1)
+      old_key = Regexp.last_match(2)
+      encoded_key = encode_euc_jp(old_key)
+      "<a href=\"/#{encoded_key}.html\" class=\"hover:text-unit transition-colors\">#{ERB::Util.html_escape(link_text)}</a>"
+    end
+    # Then replace [[XXXX]] pattern (link text same as key)
+    text.gsub(/\[\[([^\]]+)\]\]/) do
+      old_key = Regexp.last_match(1)
+      encoded_key = encode_euc_jp(old_key)
+      "<a href=\"/#{encoded_key}.html\" class=\"hover:text-unit transition-colors\">#{ERB::Util.html_escape(old_key)}</a>"
+    end
+  end
+
+  def encode_euc_jp(str)
+    str.encode('EUC-JP').bytes.map { |b| "%#{b.to_s(16).upcase}" }.join
+  rescue Encoding::UndefinedConversionError
+    # Fallback if conversion fails
+    str
+  end
 end

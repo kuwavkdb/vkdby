@@ -64,6 +64,14 @@
           </div>
         <% end %>
       </div>
+    <% elsif @member.person_id.nil? && @member.inline_history.present? %>
+      <div class="mt-3 pl-4 border-l-2 border-slate-100 dark:border-slate-800 flex flex-col gap-1">
+        <% @member.inline_history.split('→').map(&:strip).reject(&:empty?).each do |history_item| %>
+          <div class="text-[0.7rem] leading-relaxed text-slate-500 dark:text-slate-400">
+            <span class="font-bold text-slate-600 dark:text-slate-300"><%= parse_wiki_links(history_item).html_safe %></span>
+          </div>
+        <% end %>
+      </div>
     <% end %>
   </div>
 </div>
