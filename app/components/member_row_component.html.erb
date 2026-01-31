@@ -6,9 +6,11 @@
           <%= (@member.support? ? "サポート " : "") + (@member.part_alias.presence || @member.part.upcase) %>
         </span>
         <h3 class="text-base md:text-lg font-black text-slate-800 dark:text-slate-100">
-          <% if @member.person %>
+
+          <% if @member.person && @member.person.key.present? %>
             <%= link_to @member.name, profile_path(@member.person.key), class: "hover:text-person transition-colors" %>
           <% else %>
+
             <%= @member.name %>
           <% end %>
         </h3>
