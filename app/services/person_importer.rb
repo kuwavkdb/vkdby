@@ -22,7 +22,7 @@ class PersonImporter
   def import
     return unless @wiki_content
 
-    puts "Importing Person: #{@wikipage_name} (ID: #{@wikipage.id})"
+    # puts "Importing Person: #{@wikipage_name} (ID: #{@wikipage.id})"
 
     # Remove comment lines
     @wiki_content = @wiki_content.lines.reject { |line| line.strip.start_with?('//') }.join

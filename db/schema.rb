@@ -57,7 +57,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_30_130433) do
     t.index ["name"], name: "index_people_on_name"
     t.index ["name_kana"], name: "index_people_on_name_kana"
     t.index ["old_key"], name: "index_people_on_old_key", unique: true
-    t.index ["old_wiki_id"], name: "index_people_on_old_wiki_id"
   end
 
   create_table "person_logs", force: :cascade do |t|
@@ -156,7 +155,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_30_130433) do
     t.index ["name"], name: "index_units_on_name"
     t.index ["name_kana"], name: "index_units_on_name_kana"
     t.index ["old_key"], name: "index_units_on_old_key", unique: true
-    t.index ["old_wiki_id"], name: "index_units_on_old_wiki_id"
   end
 
   create_table "users", force: :cascade do |t|
