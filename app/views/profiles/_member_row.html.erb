@@ -1,7 +1,9 @@
 <div class="bg-white dark:bg-slate-800 p-5 border-b border-slate-100 dark:border-slate-700 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
   <div>
     <div class="flex items-center gap-3 md:gap-4 mb-2 flex-wrap sm:flex-nowrap">
-      <span class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest min-w-[4rem]"><%= member.part %></span>
+      <span class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest min-w-[4rem]" title="<%= (member.part_alias.present? || member.support?) ? member.part.upcase : '' %>">
+        <%= (member.support? ? "サポート " : "") + (member.part_alias.presence || member.part.upcase) %>
+      </span>
       <h3 class="text-base md:text-lg font-black text-slate-800 dark:text-slate-100 flex-1">
         <%= link_to member.person.name, profile_path(member.person.key), class: "hover:text-person transition-colors" %>
       </h3>
