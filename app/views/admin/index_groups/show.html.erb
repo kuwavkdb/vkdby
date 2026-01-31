@@ -39,12 +39,18 @@
       </div>
 
       <%= form_with url: move_indices_admin_index_group_path(@index_group), method: :post, local: true, html: { id: "move_indices_form" } do |f| %>
-        <div class="flex items-center mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
-          <span class="mr-2 text-sm font-medium text-gray-700">Move selected to:</span>
-          <%= f.collection_select :target_group_id, @groups, :id, :name, { prompt: "Select Group..." }, { class: "mr-2 text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" } %>
-          <%= f.submit "Move", class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 cursor-pointer" %>
-          <%= button_tag "選択したタグを表示にする", type: "button", onclick: "submitBulkUpdate(true)", class: "ml-2 px-4 py-2 bg-white text-blue-600 border border-blue-600 text-sm font-medium rounded-md hover:bg-blue-50 cursor-pointer" %>
-          <%= button_tag "選択したタグを非表示にする", type: "button", onclick: "submitBulkUpdate(false)", class: "ml-2 px-4 py-2 bg-white text-gray-600 border border-gray-600 text-sm font-medium rounded-md hover:bg-gray-50 cursor-pointer" %>
+        <div class="mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
+          <div class="flex items-center mb-3">
+            <span class="mr-2 text-sm font-medium text-gray-700">Move selected to:</span>
+            <%= f.collection_select :target_group_id, @groups, :id, :name, { prompt: "Select Group..." }, { class: "mr-2 text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" } %>
+            <%= f.submit "Move", class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 cursor-pointer" %>
+            <%= button_tag "選択したタグを表示にする", type: "button", onclick: "submitBulkUpdate(true)", class: "ml-2 px-4 py-2 bg-white text-blue-600 border border-blue-600 text-sm font-medium rounded-md hover:bg-blue-50 cursor-pointer" %>
+            <%= button_tag "選択したタグを非表示にする", type: "button", onclick: "submitBulkUpdate(false)", class: "ml-2 px-4 py-2 bg-white text-gray-600 border border-gray-600 text-sm font-medium rounded-md hover:bg-gray-50 cursor-pointer" %>
+          </div>
+          <div class="flex items-center gap-2">
+            <%= button_tag "全チェック", type: "button", onclick: "checkAll(true)", class: "px-3 py-1 bg-white text-gray-600 border border-gray-300 text-xs font-medium rounded hover:bg-gray-50 cursor-pointer" %>
+            <%= button_tag "全チェック解除", type: "button", onclick: "checkAll(false)", class: "px-3 py-1 bg-white text-gray-600 border border-gray-300 text-xs font-medium rounded hover:bg-gray-50 cursor-pointer" %>
+          </div>
         </div>
       <% end %>
 
@@ -79,11 +85,19 @@
       </div>
 
       <%= form_with url: detach_indices_admin_index_group_path(@index_group), method: :post, local: true, html: { id: "detach_indices_form" } do |f| %>
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-medium text-gray-900">Indices (Drag to reorder)</h2>
-          <%= f.submit "Remove from Group", class: "px-4 py-2 bg-white text-red-600 border border-red-600 text-sm font-medium rounded-md hover:bg-red-50 cursor-pointer", data: { confirm: "選択したタグをこのグループから削除しますか？" } %>
-          <%= button_tag "選択したタグを表示にする", type: "button", onclick: "submitBulkUpdate(true)", class: "ml-2 px-4 py-2 bg-white text-blue-600 border border-blue-600 text-sm font-medium rounded-md hover:bg-blue-50 cursor-pointer" %>
-          <%= button_tag "選択したタグを非表示にする", type: "button", onclick: "submitBulkUpdate(false)", class: "ml-2 px-4 py-2 bg-white text-gray-600 border border-gray-600 text-sm font-medium rounded-md hover:bg-gray-50 cursor-pointer" %>
+        <div class="mb-4">
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="text-lg font-medium text-gray-900">Indices (Drag to reorder)</h2>
+            <div>
+              <%= f.submit "Remove from Group", class: "px-4 py-2 bg-white text-red-600 border border-red-600 text-sm font-medium rounded-md hover:bg-red-50 cursor-pointer", data: { confirm: "選択したタグをこのグループから削除しますか？" } %>
+              <%= button_tag "選択したタグを表示にする", type: "button", onclick: "submitBulkUpdate(true)", class: "ml-2 px-4 py-2 bg-white text-blue-600 border border-blue-600 text-sm font-medium rounded-md hover:bg-blue-50 cursor-pointer" %>
+              <%= button_tag "選択したタグを非表示にする", type: "button", onclick: "submitBulkUpdate(false)", class: "ml-2 px-4 py-2 bg-white text-gray-600 border border-gray-600 text-sm font-medium rounded-md hover:bg-gray-50 cursor-pointer" %>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <%= button_tag "全チェック", type: "button", onclick: "checkAll(true)", class: "px-3 py-1 bg-white text-gray-600 border border-gray-300 text-xs font-medium rounded hover:bg-gray-50 cursor-pointer" %>
+            <%= button_tag "全チェック解除", type: "button", onclick: "checkAll(false)", class: "px-3 py-1 bg-white text-gray-600 border border-gray-300 text-xs font-medium rounded hover:bg-gray-50 cursor-pointer" %>
+          </div>
         </div>
       <% end %>
 
@@ -161,5 +175,12 @@
 
     document.body.appendChild(form);
     form.submit();
+  }
+
+  function checkAll(checked) {
+    const checkboxes = document.querySelectorAll('input[name="tag_index_ids[]"]');
+    checkboxes.forEach(box => {
+      box.checked = checked;
+    });
   }
 </script>
