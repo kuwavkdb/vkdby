@@ -7,6 +7,8 @@ module IgnorableWikipage
     %r{^カレンダー/},
     %r{^オフィシャルサイト/},
     %r{^インディーズ/},
+    %r{^発売スケジュール/},
+    /^BBS-/,
     /_comment$/
   ].freeze
 
