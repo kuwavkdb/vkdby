@@ -8,7 +8,7 @@ module IgnorableWikipage
     %r{^オフィシャルサイト/},
     %r{^インディーズ/},
     %r{^発売スケジュール/},
-    %r{^BBS-},
+    /^BBS-/,
     /_comment$/
   ].freeze
 
