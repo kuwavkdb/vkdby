@@ -258,8 +258,10 @@ class WikipageImporter
   # rubocop:disable Metrics/ParameterLists
   def register_member(unit, part_str, name_str, old_member_key, sns_account, inline_history, member_status)
     # rubocop:enable Metrics/ParameterLists
-    is_support = part_str.to_s.match?(/support|サポート/i)
-    cleaned_part_str = part_str.to_s.gsub(/support|サポート/i, '').strip
+    # Clean up part string: remove leading '!' and support keywords
+    cleaned_part_str = part_str.to_s.sub(/^!/, '')
+    is_support = cleaned_part_str.match?(/support|サポート/i)
+    cleaned_part_str = cleaned_part_str.gsub(/support|サポート/i, '').strip
 
     part_key = case cleaned_part_str.downcase
                when 'vocal' then :vocal
@@ -272,6 +274,8 @@ class WikipageImporter
                  puts "[UNKNOWN_PART] '#{cleaned_part_str}' in Unit: #{unit.name} (WikiID: #{@wikipage.id})" unless cleaned_part_str.blank?
                  :unknown
                end
+
+    part_alias = part_key == :unknown && cleaned_part_str.present? ? cleaned_part_str : nil
 
     person_name_for_key = if name_str.match?(/^[[:ascii:]\s-]+$/)
                             name_str
@@ -307,6 +311,7 @@ class WikipageImporter
     up.part = part_key
     up.status = member_status
     up.support = is_support
+    up.part_alias = part_alias if part_alias
     up.old_person_key = old_member_key
     up.inline_history = inline_history
     up.sns = [sns_account.strip] if sns_account.present?
