@@ -5,7 +5,9 @@ require 'romaji'
 # rubocop:disable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity
 class WikipageImporter
   IGNORED_TITLE_PATTERNS = [
-    'カレンダー/'
+    'カレンダー/',
+    'オフィシャルサイト/',
+    'インディーズ/'
   ].freeze
 
   def self.ignored?(wikipage)
