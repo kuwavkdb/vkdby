@@ -20,22 +20,26 @@ puts "\n[Checking WikipageImporter.ignored?]"
   else
     puts "  FAIL: '#{wp.title}' should be ignored."
   end
+
+  # 3. Verify valid_unit? / valid_person? behavior
+  if WikipageImporter.valid_unit?(wp)
+    puts "  FAIL (Unit): '#{wp.title}' is valid unit (should be false)."
+  else
+    puts "  PASS (Unit): '#{wp.title}' is NOT valid unit."
+  end
+
+  if PersonImporter.valid_person?(wp)
+    puts "  FAIL (Person): '#{wp.title}' is valid person (should be false)."
+  else
+    puts "  PASS (Person): '#{wp.title}' is NOT valid person."
+  end
 end
 
+puts "\n[Checking Normal Page]"
 if WikipageImporter.ignored?(normal_wp)
   puts "  FAIL: 'SomeBand' should NOT be ignored."
 else
   puts "  PASS: 'SomeBand' is NOT ignored."
-end
-
-# 3. Verify WikipageImporter.valid_unit? behavior
-# If ignored? is true, valid_unit? should return false (implied via our change)
-puts "\n[Checking WikipageImporter.valid_unit?]"
-
-if WikipageImporter.valid_unit?(calendar_wp)
-  puts "  FAIL: 'カレンダー/2026' is valid unit (should be false because it is ignored)."
-else
-  puts "  PASS: 'カレンダー/2026' is not valid unit."
 end
 
 puts "\nVerification Complete"
