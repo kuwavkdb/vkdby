@@ -37,7 +37,7 @@ def check_member(unit, name, expected_part, expected_alias, expected_support: fa
     puts "FAIL: Member '#{name}' not found"
     return
   end
-  
+
   puts "Checking #{name}:"
   puts "  Part: #{member.part} (Expected: #{expected_part})"
   puts "  Alias: #{member.part_alias.inspect} (Expected: #{expected_alias.inspect})"
@@ -48,9 +48,9 @@ def check_member(unit, name, expected_part, expected_alias, expected_support: fa
   ok_support = member.support == expected_support
 
   if ok_part && ok_alias && ok_support
-    puts "  -> OK"
+    puts '  -> OK'
   else
-    puts "  -> FAIL"
+    puts '  -> FAIL'
   end
 end
 
