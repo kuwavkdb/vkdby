@@ -34,4 +34,18 @@ class MemberRowComponent < ViewComponent::Base
 
     @member.person.person_logs.sort_by { |l| [l.log_date.to_s, l.sort_order || 0] }
   end
+
+  def parse_wiki_links(text)
+    # First replace [[YYYY|XXXX]] pattern (with custom link text)
+    text = text.gsub(/\[\[([^\]|]+)\|([^\]]+)\]\]/) do
+      link_text = Regexp.last_match(1)
+      old_key = Regexp.last_match(2)
+      "<a href=\"/#{old_key}.html\" class=\"hover:text-unit transition-colors\">#{ERB::Util.html_escape(link_text)}</a>"
+    end
+    # Then replace [[XXXX]] pattern (link text same as key)
+    text.gsub(/\[\[([^\]]+)\]\]/) do
+      old_key = Regexp.last_match(1)
+      "<a href=\"/#{old_key}.html\" class=\"hover:text-unit transition-colors\">#{ERB::Util.html_escape(old_key)}</a>"
+    end
+  end
 end
