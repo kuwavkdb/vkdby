@@ -252,7 +252,7 @@ class WikipageImporter
 
   # rubocop:disable Metrics/ParameterLists
   def register_old_format_member(unit, part_str, name_str, old_member_key, member_status, order_in_period)
-  # rubocop:enable Metrics/ParameterLists
+    # rubocop:enable Metrics/ParameterLists
     if old_member_key.present?
       old_member_key = old_member_key.strip
       old_member_key = [name_str, old_member_key].join if old_member_key =~ /^\(/ && old_member_key =~ /\)$/
