@@ -33,8 +33,14 @@ namespace :import do
 
       until scanner.eos?
         if scanner.scan(/'((?:[^']|'')*)'/)
-          # Quoted string: unescape '' to '
-          values << scanner[1].gsub("''", "'")
+          # Quoted string: unescape '' to ' and handle escape sequences
+          unescaped = scanner[1].gsub("''", "'")
+                                .gsub('\\r\\n', "\r\n")
+                                .gsub('\\n', "\n")
+                                .gsub('\\r', "\r")
+                                .gsub('\\t', "\t")
+                                .gsub('\\\\', '\\')
+          values << unescaped
         elsif scanner.scan(/NULL/)
           values << nil
         elsif scanner.scan(/([^,]+)/)
