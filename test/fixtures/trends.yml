@@ -1,0 +1,37 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  date: 2026-02-01
+  units: 
+  people: 
+  content: MyText
+  quote: MyText
+  quote_url: MyString
+  quote_title: MyString
+  via_url: MyString
+  via_name: MyString
+  active: false
+  publish_start_at: 2026-02-01 19:15:46
+  unit_phenomenon: 1
+  person_phenomenon: 1
+  etc_phenomenon: 1
+  old_trend_id: 1
+  old_wiki_id: 1
+
+two:
+  date: 2026-02-01
+  units: 
+  people: 
+  content: MyText
+  quote: MyText
+  quote_url: MyString
+  quote_title: MyString
+  via_url: MyString
+  via_name: MyString
+  active: false
+  publish_start_at: 2026-02-01 19:15:46
+  unit_phenomenon: 1
+  person_phenomenon: 1
+  etc_phenomenon: 1
+  old_trend_id: 1
+  old_wiki_id: 1
