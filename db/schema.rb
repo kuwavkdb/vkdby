@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_01_101546) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_01_103943) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -128,7 +128,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_01_101546) do
     t.text "content"
     t.datetime "created_at", null: false
     t.date "date", null: false
+    t.boolean "day_unknown", default: false, null: false
     t.integer "etc_phenomenon"
+    t.boolean "month_unknown", default: false, null: false
     t.integer "old_trend_id"
     t.integer "old_wiki_id"
     t.jsonb "people"
@@ -137,11 +139,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_01_101546) do
     t.text "quote"
     t.string "quote_title"
     t.string "quote_url"
+    t.string "title"
     t.integer "unit_phenomenon"
     t.jsonb "units"
     t.datetime "updated_at", null: false
     t.string "via_name"
     t.string "via_url"
+    t.index ["date"], name: "index_trends_on_date"
+    t.index ["people"], name: "index_trends_on_people", using: :gin
+    t.index ["units"], name: "index_trends_on_units", using: :gin
   end
 
   create_table "unit_logs", force: :cascade do |t|

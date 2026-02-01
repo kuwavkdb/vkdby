@@ -10,6 +10,8 @@
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:reset
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:people
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:old_trends
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails convert:old_trends
 ```
 
 ## スクリプト一覧
@@ -94,6 +96,29 @@ PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:reset
 - ユニットタイプ（バンド、セッションなど）
 - カテゴリ（TagIndex）
 
+## トレンドデータの移行
+
+### 4. import:old_trends - 旧トレンドデータのインポート
+MySQLのダンプファイル (`trends_all_YYYYMMDD.sql`) から、中間テーブル `old_trends` へデータをインポートします。
+
+```bash
+# プロジェクトルートにSQLファイルを配置した状態で実行
+bin/rails import:old_trends
+```
+
+### 5. convert:old_trends - 新トレンドテーブルへのコンバート
+`old_trends` テーブルのデータを解析・変換し、正規の `trends` テーブルへ移行します。
+この処理では以下が行われます：
+- `wikipage_id` を元にした `Unit` / `Person` との関連付け
+- `content` の解析による `phenomenon` (現象タイプ) の判定
+- 日付文字列のパースと補正 (`day_unknown`, `month_unknown` フラグの設定)
+- `content` の1行目を `title` として抽出
+
+```bash
+bin/rails convert:old_trends
+```
+
+**注意**: このタスクを実行すると、既存の `trends` テーブルのデータは全て削除 (`delete_all`) された上で再作成されます。
 
 ## 対応リンクサービス
 
@@ -126,4 +151,3 @@ PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:reset
 ### 新しいカテゴリの追加
 
 各Importerサービスの `parse_categories` メソッドに追加してください。
-
