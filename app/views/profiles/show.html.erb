@@ -17,6 +17,7 @@
               active_members: @active_members,
               past_members: @past_members
             ) %>
+            <%= render UnitTrendsComponent.new(trends: @trends) if @trends %>
           <% end %>
 
           <% if (@resource.is_a?(Person) && (@logs.present? || @old_history_items.present?)) || (@resource.is_a?(Unit) && @history.present?) %>
