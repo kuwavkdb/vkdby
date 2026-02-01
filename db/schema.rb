@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_01_071545) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_01_101546) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -121,6 +121,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_01_071545) do
     t.index ["index_group_id", "order_in_group"], name: "index_tag_indices_on_index_group_id_and_order_in_group"
     t.index ["index_group_id"], name: "index_tag_indices_on_index_group_id"
     t.index ["name"], name: "index_tag_indices_on_name", unique: true
+  end
+
+  create_table "trends", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.text "content"
+    t.datetime "created_at", null: false
+    t.date "date", null: false
+    t.integer "etc_phenomenon"
+    t.integer "old_trend_id"
+    t.integer "old_wiki_id"
+    t.jsonb "people"
+    t.integer "person_phenomenon"
+    t.datetime "publish_start_at", null: false
+    t.text "quote"
+    t.string "quote_title"
+    t.string "quote_url"
+    t.integer "unit_phenomenon"
+    t.jsonb "units"
+    t.datetime "updated_at", null: false
+    t.string "via_name"
+    t.string "via_url"
   end
 
   create_table "unit_logs", force: :cascade do |t|
