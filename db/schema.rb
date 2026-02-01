@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_31_022340) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_01_071545) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -33,6 +33,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_31_022340) do
     t.datetime "updated_at", null: false
     t.string "url", null: false
     t.index ["linkable_type", "linkable_id"], name: "index_links_on_linkable"
+  end
+
+  create_table "old_trends", force: :cascade do |t|
+    t.text "content"
+    t.datetime "created_at", null: false
+    t.integer "hide_member"
+    t.boolean "publish"
+    t.datetime "publish_plan_date"
+    t.text "quote"
+    t.string "quote_url"
+    t.boolean "rss"
+    t.string "target_date"
+    t.string "target_name"
+    t.integer "trend_class"
+    t.datetime "updated_at", null: false
+    t.string "via"
+    t.string "via_url"
+    t.integer "wikipage_id"
   end
 
   create_table "people", force: :cascade do |t|
