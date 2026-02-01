@@ -1,0 +1,31 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  wikipage_id: 1
+  target_name: MyString
+  target_date: MyString
+  content: MyText
+  quote: MyText
+  quote_url: MyString
+  via: MyString
+  via_url: MyString
+  publish: false
+  publish_plan_date: 2026-02-01 16:15:45
+  rss: false
+  hide_member: 1
+  trend_class: 1
+
+two:
+  wikipage_id: 1
+  target_name: MyString
+  target_date: MyString
+  content: MyText
+  quote: MyText
+  quote_url: MyString
+  via: MyString
+  via_url: MyString
+  publish: false
+  publish_plan_date: 2026-02-01 16:15:45
+  rss: false
+  hide_member: 1
+  trend_class: 1
