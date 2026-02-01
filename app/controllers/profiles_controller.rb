@@ -13,7 +13,7 @@ class ProfilesController < ApplicationController
       # person_logsが無く、old_historyがある場合はパースして使用
       @old_history_items = @resource.parse_old_history if @logs.empty? && @resource.old_history.present?
     elsif @resource.is_a?(Unit)
-      members = @resource.unit_people.includes(person: { person_logs: :unit })
+      members = @resource.unit_people.includes(person: { person_logs: :unit }).order(:order_in_period)
       @active_members = members.select { |m| m.pre? || m.active? }
       @past_members = members.reject { |m| m.pre? || m.active? }
 
