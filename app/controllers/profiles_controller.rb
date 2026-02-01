@@ -21,6 +21,10 @@ class ProfilesController < ApplicationController
       unit_logs = @resource.unit_logs
       person_logs = @resource.person_logs.includes(:person)
       @history = (unit_logs + person_logs).sort_by { |l| [l.log_date.to_s, l.is_a?(PersonLog) ? 1 : 0] }
+
+      @trends = Trend.where('units @> ?', [{ unit_id: @resource.id }].to_json)
+                     .order(date: :desc)
+                     .limit(10)
     end
 
     respond_to do |format|
