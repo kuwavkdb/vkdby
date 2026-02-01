@@ -1,0 +1,29 @@
+<div class="flex justify-center items-center min-h-screen p-0 md:p-8">
+  <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
+    <div class="p-5 md:p-8">
+      <div class="mb-6 pb-6 border-b border-slate-100 dark:border-slate-700">
+        <div class="flex items-center gap-3 text-sm text-slate-400 dark:text-slate-500 font-mono mb-2">
+          <%= @trend.date %>
+        </div>
+        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
+          <% if @related_units %>
+            <% @trend.units.each do |unit_data| %>
+              <% unit = @related_units[unit_data['unit_id']] %>
+              <% next unless unit %>
+              <%= link_to "[#{unit.name}]", profile_path(unit.key), class: "text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors mr-2" %>
+            <% end %>
+          <% end %>
+          <%= format_wiki_title(@trend.title) %>
+        </h1>
+      </div>
+
+      <div class="prose prose-slate dark:prose-invert max-w-none">
+        <%= format_wiki_content(@trend.content) %>
+      </div>
+      
+      <div class="mt-12 pt-8 border-t border-slate-100 dark:border-slate-700">
+        <%= link_to "Back to Trends", trends_path, class: "text-sm font-bold text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors" %>
+      </div>
+    </div>
+  </div>
+</div>
