@@ -59,6 +59,7 @@ Rails.application.routes.draw do
 
   resources :people, param: :key, only: %i[index show], constraints: { key: %r{[^/]+} }
   resources :units, param: :key, only: %i[index show], constraints: { key: %r{[^/]+} }
+  resources :trends, only: %i[index show]
 
   # Legacy redirects for .html extensions
   get '/:old_key.html', to: 'legacy_redirects#show', constraints: { old_key: %r{[^/]+} }
