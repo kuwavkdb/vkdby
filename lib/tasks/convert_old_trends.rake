@@ -71,6 +71,8 @@ namespace :convert do
         trend.units = [{ unit_id: unit.id, unit_name: unit.name }]
       elsif person
         trend.people = [{ person_id: person.id, person_name: person.name }]
+      elsif old.target_name.present?
+        trend.units = [{ name: old.target_name }]
       end
 
       # Map Phenomenon

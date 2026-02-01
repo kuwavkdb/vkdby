@@ -10,14 +10,17 @@
               <%= trend.date %>
             </div>
             <div class="grow">
-              <% if @related_units && trend.units %>
+              <% if trend.units %>
                 <% trend.units.each do |unit_data| %>
-                  <% unit = @related_units[unit_data['unit_id']] %>
-                  <% next unless unit %>
-                  <%= link_to "[#{unit.name}]", profile_path(unit.key), class: "font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors mr-1" %>
+                  <% unit = @related_units&.dig(unit_data['unit_id']) %>
+                  <% if unit %>
+                    <%= link_to "[#{unit.name}]", profile_path(unit.key), class: "font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors mr-1" %>
+                  <% elsif unit_data['name'].present? %>
+                    <span class="font-bold text-slate-500 dark:text-slate-400 mr-1">[<%= unit_data['name'] %>]</span>
+                  <% end %>
                 <% end %>
               <% end %>
-              <%= link_to format_wiki_title(trend.title), trend_path(trend), class: "font-bold text-slate-700 dark:text-slate-200 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors inline" %>
+              <%= link_to format_wiki_title(trend.title, link: false), trend_path(trend), class: "font-bold text-slate-700 dark:text-slate-200 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors inline" %>
             </div>
           </div>
         <% end %>

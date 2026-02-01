@@ -6,11 +6,14 @@
           <%= @trend.date %>
         </div>
         <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
-          <% if @related_units %>
+          <% if @trend.units %>
             <% @trend.units.each do |unit_data| %>
-              <% unit = @related_units[unit_data['unit_id']] %>
-              <% next unless unit %>
-              <%= link_to "[#{unit.name}]", profile_path(unit.key), class: "text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors mr-2" %>
+              <% unit = @related_units&.dig(unit_data['unit_id']) %>
+              <% if unit %>
+                <%= link_to "[#{unit.name}]", profile_path(unit.key), class: "text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors mr-2" %>
+              <% elsif unit_data['name'].present? %>
+                <span class="text-slate-500 dark:text-slate-400 mr-2">[<%= unit_data['name'] %>]</span>
+              <% end %>
             <% end %>
           <% end %>
           <%= format_wiki_title(@trend.title) %>

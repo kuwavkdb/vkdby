@@ -11,36 +11,36 @@ module WikiLinkHelper
     parse_wiki_links(formatted)
   end
 
-  def format_wiki_title(text)
+  def format_wiki_title(text, link: true)
     return '' if text.blank?
 
     # Just escape, no wrapping
     formatted = h(text)
 
-    parse_wiki_links(formatted)
+    parse_wiki_links(formatted, link: link)
   end
 
   private
 
-  def parse_wiki_links(text)
+  def parse_wiki_links(text, link: true)
     # [[Display|Link]] -> Internal EUC-JP link
     formatted = text.gsub(/\[\[(.*?)\|(.*?)\]\]/) do
       display = Regexp.last_match(1)
       target = Regexp.last_match(2)
-      create_internal_link(display, target)
+      link ? create_internal_link(display, target) : display
     end
 
     # [[Link]] -> Internal EUC-JP link (Display == Target)
     formatted = formatted.gsub(/\[\[([^|]+?)\]\]/) do
       target = Regexp.last_match(1)
-      create_internal_link(target, target)
+      link ? create_internal_link(target, target) : target
     end
 
     # [Display|URL] -> External link
     formatted = formatted.gsub(%r{\[(.*?)\|(https?://.*?)\]}) do
       display = Regexp.last_match(1)
       url = Regexp.last_match(2)
-      link_to(display, url, target: '_blank', rel: 'noopener noreferrer')
+      link ? link_to(display, url, target: '_blank', rel: 'noopener noreferrer') : display
     end
 
     sanitize(formatted, tags: %w[a div p br], attributes: %w[href target rel class])
