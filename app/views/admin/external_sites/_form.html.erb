@@ -1,0 +1,37 @@
+<%= form_with(model: [:admin, external_site], class: "space-y-8 divide-y divide-gray-200 dark:divide-gray-700") do |form| %>
+  <div class="space-y-8 divide-y divide-gray-200 dark:divide-gray-700">
+    <div>
+      <div>
+        <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-gray-100">External Site</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Define a new external site link pattern.
+        </p>
+      </div>
+
+      <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+        <div class="sm:col-span-3">
+          <%= form.label :site_key, class: "block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100" %>
+          <div class="mt-2">
+            <%= form.text_field :site_key, class: "block w-full rounded-md border-0 py-1.5 text-gray-900 dark:text-gray-100 dark:bg-gray-800 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-700 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" %>
+          </div>
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Unique key for the site (e.g., 'ameblo', 'twitter')</p>
+        </div>
+
+        <div class="sm:col-span-6">
+          <%= form.label :url_pattern, class: "block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100" %>
+          <div class="mt-2">
+            <%= form.text_field :url_pattern, class: "block w-full rounded-md border-0 py-1.5 text-gray-900 dark:text-gray-100 dark:bg-gray-800 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-700 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" %>
+          </div>
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Use <code>{account}</code> as a placeholder for the account name. Example: <code>https://ameblo.jp/{account}/</code></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pt-5">
+    <div class="flex justify-end gap-x-3">
+      <%= link_to "Cancel", admin_external_sites_path, class: "rounded-md bg-white dark:bg-gray-800 py-2 px-3 text-sm font-semibold text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700" %>
+      <%= form.submit class: "inline-flex justify-center rounded-md bg-indigo-600 py-2 px-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600" %>
+    </div>
+  </div>
+<% end %>

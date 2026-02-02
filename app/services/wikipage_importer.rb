@@ -419,13 +419,37 @@ class WikipageImporter
   def parse_unit_links(unit, content, active)
     return unless content
 
-    # [[Service:Account]] Format
-    content.scan(/\[\[([^:]+):([^\]]+)\]\]/).each do |service, account|
-      url, text = map_service_link(service, account)
+    # [[Text|Service:Account]] or [[Service:Account]] Format
+    # Unified regex to handle both cases
+    content.scan(/\[\[(?:([^|\]]+)\|)?([^:\]]+):([^\]]+)\]\]/).each do |text_part, site_key, account|
+      service_name_down = site_key.downcase
+      url = nil
+      default_text = "#{site_key}:#{account}"
+
+      # 1. Try ExternalSite (Database)
+      external_site = ExternalSite.find_by(site_key: service_name_down)
+      if external_site
+        url = external_site.url_pattern.gsub('{account}', account)
+      else
+        # 2. Fallback to Hardcoded services
+        url, mapped_text = map_service_link(service_name_down, account)
+        default_text = mapped_text if url
+      end
+
       next unless url
 
+      # User requested: "Textが指定されていない場合は {Site}:{Account} をリンクテキストとしてください"
+      # But for legacy hardcoded links (like Twitter), we want to keep "Twitter" as default to avoid data churn?
+      # However, if we follow the request literally for the *format*, we should respect it.
+      # Implementation Plan decision:
+      # - ExternalSite found: default is "#{site_key}:#{account}"
+      # - Hardcoded found: default is mapped_text (legacy behavior) OR "#{site_key}:#{account}" if preferred.
+      # Current logic above preserves legacy behavior for hardcoded ones (mapped_text).
+
+      link_text = text_part.presence || default_text
+
       link = unit.links.find_or_initialize_by(url: url)
-      link.text = text
+      link.text = link_text
       link.active = active
       link.save!
     end
