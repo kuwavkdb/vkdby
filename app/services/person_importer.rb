@@ -3,9 +3,7 @@
 require 'romaji'
 
 # rubocop:disable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity
-class PersonImporter
-  include IgnorableWikipage
-
+class PersonImporter < BaseWikipageImporter
   def self.import(wikipage)
     new(wikipage).import
   end
@@ -16,29 +14,10 @@ class PersonImporter
     wikipage.wiki&.include?('{{category 個人')
   end
 
-  def initialize(wikipage)
-    @wikipage = wikipage
-    @wiki_content = wikipage.wiki
-    @attributes = wikipage.attributes.slice('dw_id', 'it_id', 'eplus_id')
-    @wikipage_name = wikipage.name
-  end
+  protected
 
-  def import
-    return if self.class.ignored?(@wikipage)
-    return unless @wiki_content
-
-    # puts "Importing Person: #{@wikipage_name} (ID: #{@wikipage.id})"
-
-    # Remove comment lines
-    @wiki_content = @wiki_content.lines.reject { |line| line.strip.start_with?('//') }.join
-
-    ActiveRecord::Base.transaction do
-      import_person
-    end
-  rescue StandardError => e
-    puts "Error importing Person #{@wikipage.id}: #{e.message}"
-    puts e.backtrace.join("\n")
-    raise e
+  def process_import
+    import_person
   end
 
   private
@@ -271,93 +250,11 @@ class PersonImporter
     unlink_regex = /\{\{unlink\s+(.*?)\}\}/m
     link_section_content.scan(unlink_regex).each do |match|
       unlink_content = match[0]
-      parse_links(person, unlink_content, false)
+      parse_wiki_links(person, unlink_content, false)
     end
 
     active_content = link_section_content.gsub(unlink_regex, '')
-    parse_links(person, active_content, true)
-  end
-
-  def parse_links(person, content, active)
-    return unless content
-
-    # [[Service:Account]] Format
-    content.scan(/\[\[([^:]+):([^\]]+)\]\]/).each do |service, account|
-      url, text = map_service_link(service, account)
-      next unless url
-
-      link = person.links.find_or_initialize_by(url: url)
-      link.text = text
-      link.active = active
-      link.save!
-    end
-
-    # [Label|URL] Format
-    content.scan(/\[([^|\]]+)\|([^\]]+)\]/).each do |label, url|
-      next unless url.start_with?('http')
-
-      link = person.links.find_or_initialize_by(url: url)
-      link.text = label
-      link.active = active
-      link.save!
-    end
-
-    # {{outlink ...}} Format
-    content.scan(/\{\{outlink\s+([^}]+)\}\}/).each do |match|
-      type = match[0].strip
-      url, text = map_outlink(type)
-      next unless url
-
-      link = person.links.find_or_initialize_by(url: url)
-      link.text = text
-      link.active = active
-      link.save!
-    end
-  end
-
-  # Duplicate of WikipageImporter map methods (could be extracted to concern)
-  def map_service_link(service, account)
-    case service.downcase
-    when 'twitter', 'x'
-      ["https://twitter.com/#{account}", 'Twitter']
-    when 'youtube channel'
-      ["https://www.youtube.com/c/#{account}", 'YouTube Channel']
-    when 'spotify'
-      ["https://open.spotify.com/artist/#{account}", 'Spotify']
-    when 'vkgy'
-      ["https://vk.gy/artists/#{account}", 'vk.gy']
-    when 'joysound'
-      ["https://www.joysound.com/web/search/artist/#{account}", 'JOYSOUND']
-    when 'dam'
-      ["https://www.clubdam.com/app/leaf/artistKaraokeLeaf.html?artistCode=#{account}", 'DAM']
-    when 'カラオケdam'
-      ["https://www.clubdam.com/karaokesearch/artistleaf.html?artistCode=#{account}", 'カラオケDAM']
-    when 'digitlink'
-      ["https://www.digitlink.jp/#{account}", 'digitlink']
-    when 'filmarks'
-      ["https://filmarks.com/users/#{account}", 'Filmarks']
-    when 'ototoy'
-      ["https://ototoy.jp/_/default/a/#{account}", 'OTOTOY']
-    when 'linkfire'
-      ["https://smr.lnk.to/#{account}", 'linkfire']
-    when 'tiktok'
-      ["https://www.tiktok.com/@#{account}", 'TikTok']
-    when 'linktr.ee'
-      ["https://linktr.ee/#{account}", 'linktr.ee']
-    when 'lnk.to'
-      ["https://lnk.to/#{account}", 'lnk.to']
-    end
-  end
-
-  def map_outlink(type)
-    case type
-    when 'dw'
-      ["https://pc.dwango.jp/portals/artist/#{@attributes['dw_id']}", 'ドワンゴジェイピー'] if @attributes['dw_id']
-    when 'it'
-      ["https://music.apple.com/jp/artist/#{@attributes['it_id']}", 'Apple Music'] if @attributes['it_id']
-    when 'tunecore'
-      [nil, 'TuneCore']
-    end
+    parse_wiki_links(person, active_content, true)
   end
 
   def parse_career_history(person)

@@ -3,9 +3,7 @@
 require 'romaji'
 
 # rubocop:disable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity
-class WikipageImporter
-  include IgnorableWikipage
-
+class WikipageImporter < BaseWikipageImporter
   def self.import(wikipage)
     new(wikipage).import
   end
@@ -23,19 +21,10 @@ class WikipageImporter
     has_member_plugin || has_old_member_format
   end
 
-  def initialize(wikipage)
-    @wikipage = wikipage
-    @wiki_content = wikipage.wiki
-    @attributes = wikipage.attributes.slice('dw_id', 'it_id', 'eplus_id')
-    @wikipage_name = wikipage.name
-  end
+  protected
 
-  def import
-    return if self.class.ignored?(@wikipage)
-    return unless @wiki_content
-
-    # puts "Importing Wikipage: #{@wikipage_name} (ID: #{@wikipage.id})"
-
+  # Override to preserve {{member...}} blocks during preprocessing
+  def preprocess_content
     # Extract and preserve {{member...}} blocks before removing comments
     @member_blocks = []
     @wiki_content.gsub!(/\{\{member2?\s+.*?\}\}/m) do |block|
@@ -51,14 +40,10 @@ class WikipageImporter
     @member_blocks.each_with_index do |block, index|
       @wiki_content.gsub!("__MEMBER_BLOCK_#{index}__", block)
     end
+  end
 
-    ActiveRecord::Base.transaction do
-      import_unit
-    end
-  rescue StandardError => e
-    puts "Error importing Wikipage #{@wikipage.id}: #{e.message}"
-    puts e.backtrace.join("\n")
-    raise e
+  def process_import
+    import_unit
   end
 
   private
@@ -409,145 +394,11 @@ class WikipageImporter
     unlink_regex = /\{\{unlink\s+(.*?)\}\}/m
     link_section_content.scan(unlink_regex).each do |match|
       unlink_content = match[0]
-      parse_unit_links(unit, unlink_content, false)
+      parse_wiki_links(unit, unlink_content, false)
     end
 
     active_content = link_section_content.gsub(unlink_regex, '')
-    parse_unit_links(unit, active_content, true)
-  end
-
-  def parse_unit_links(unit, content, active)
-    return unless content
-
-    # [[Text|Service:Account]] or [[Service:Account]] Format
-    # Unified regex to handle both cases
-    content.scan(/\[\[(?:([^|\]]+)\|)?([^:\]]+):([^\]]+)\]\]/).each do |text_part, site_key, account|
-      service_name_down = site_key.downcase
-      url = nil
-      default_text = "#{site_key}:#{account}"
-
-      # 1. Try ExternalSite (Database)
-      external_site = ExternalSite.find_by(site_key: service_name_down)
-      if external_site
-        url = external_site.url_pattern.gsub('{account}', account)
-      else
-        # 2. Fallback to Hardcoded services
-        url, mapped_text = map_service_link(service_name_down, account)
-        default_text = mapped_text if url
-      end
-
-      next unless url
-
-      # User requested: "Textが指定されていない場合は {Site}:{Account} をリンクテキストとしてください"
-      # But for legacy hardcoded links (like Twitter), we want to keep "Twitter" as default to avoid data churn?
-      # However, if we follow the request literally for the *format*, we should respect it.
-      # Implementation Plan decision:
-      # - ExternalSite found: default is "#{site_key}:#{account}"
-      # - Hardcoded found: default is mapped_text (legacy behavior) OR "#{site_key}:#{account}" if preferred.
-      # Current logic above preserves legacy behavior for hardcoded ones (mapped_text).
-
-      link_text = text_part.presence || default_text
-
-      link = unit.links.find_or_initialize_by(url: url)
-      link.text = link_text
-      link.active = active
-      link.save!
-    end
-
-    # [Label|URL] Format
-    content.scan(/\[([^|\]]+)\|([^\]]+)\]/).each do |label, url|
-      next unless url.start_with?('http')
-
-      link = unit.links.find_or_initialize_by(url: url)
-      link.text = label
-      link.active = active
-      link.save!
-    end
-
-    # {{outlink ...}} Format
-    content.scan(/\{\{outlink\s+([^}]+)\}\}/).each do |match|
-      type = match[0].strip
-      url, text = map_outlink(type)
-      next unless url
-
-      link = unit.links.find_or_initialize_by(url: url)
-      link.text = text
-      link.active = active
-      link.save!
-    end
-  end
-
-  def map_service_link(service, account)
-    case service.downcase
-    when 'twitter', 'x'
-      ["https://twitter.com/#{account}", 'Twitter']
-    when 'youtube channel'
-      ["https://www.youtube.com/c/#{account}", 'YouTube Channel']
-    when 'spotify'
-      ["https://open.spotify.com/artist/#{account}", 'Spotify']
-    when 'vkgy'
-      ["https://vk.gy/artists/#{account}", 'vk.gy']
-    when 'joysound'
-      ["https://www.joysound.com/web/search/artist/#{account}", 'JOYSOUND']
-    when 'dam'
-      ["https://www.clubdam.com/app/leaf/artistKaraokeLeaf.html?artistCode=#{account}", 'DAM']
-    when 'カラオケdam'
-      ["https://www.clubdam.com/karaokesearch/artistleaf.html?artistCode=#{account}", 'カラオケDAM']
-    when 'digitlink'
-      ["https://www.digitlink.jp/#{account}", 'digitlink']
-    when 'filmarks'
-      ["https://filmarks.com/users/#{account}", 'Filmarks']
-    when 'ototoy'
-      ["https://ototoy.jp/_/default/a/#{account}", 'OTOTOY']
-    when 'linkfire'
-      ["https://smr.lnk.to/#{account}", 'linkfire']
-    when 'tiktok'
-      ["https://www.tiktok.com/@#{account}", 'TikTok']
-    when 'linktr.ee'
-      ["https://linktr.ee/#{account}", 'linktr.ee']
-    when 'lnk.to'
-      ["https://lnk.to/#{account}", 'lnk.to']
-    end
-  end
-
-  def map_outlink(type)
-    case type
-    when 'dw'
-      ["https://pc.dwango.jp/portals/artist/#{@attributes['dw_id']}", 'ドワンゴジェイピー'] if @attributes['dw_id']
-    when 'it'
-      ["https://music.apple.com/jp/artist/#{@attributes['it_id']}", 'Apple Music'] if @attributes['it_id']
-    when 'tunecore'
-      [nil, 'TuneCore'] # Simplified
-    end
-  end
-
-  def extract_name_from_wiki_link(str)
-    # Handle [[Display|Link]] or [[Link]]
-    if str =~ /\[\[(?:([^|\]]+)\|)?([^\]]+)\]\]/
-      # pattern: [[Display|Link]] -> $1=Display, $2=Link
-      # pattern: [[Link]] -> $1=nil, $2=Link
-      # BUT wait, the regex above:
-      # [[A|B]] -> $1=A, $2=B.  We want A.
-      # [[A]] -> $1=nil, $2=A. We want A.
-
-      # Wait, user said [[xxxx|YYY]] -> XXX.
-      # PukiWiki [[Alias>Page]] -> Alias is display.
-      # MediaWiki [[Page|Alias]] -> Alias is display.
-
-      # Assuming VKDB/Pukiwiki style might be mixed or standard:
-      # If pipe exists, usually Left is Display (PukiWiki) or Right is Display (Mediawiki)?
-      # Actually in PukiWiki: [[PageName]] or [[Alias>PageName]] or [[Alias:PageName]].
-      # In many custom wikis, [[Name|Key]] often means Name is display, Key is link target.
-
-      # Let's look at the example user gave: [[xxxx|YYY]] -> XXX.
-      # So Left side of pipe is the Name.
-
-      str.gsub(/\[\[(?:([^|\]]+)\|)?([^\]]+)\]\]/) do
-        Regexp.last_match(1) || Regexp.last_match(2)
-      end
-    else
-      str
-    end
+    parse_wiki_links(unit, active_content, true)
   end
 
   def resolve_key_collision(base_key, current_id = nil)
