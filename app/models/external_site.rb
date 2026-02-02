@@ -17,5 +17,5 @@
 class ExternalSite < ApplicationRecord
   validates :site_key, presence: true, uniqueness: true
   validates :url_pattern, presence: true
-  validates :url_pattern, format: { with: /\A.*\{account\}.*\z/, message: "must contain {account} placeholder" }
+  validates :url_pattern, format: { with: /\A.*\{account\}.*\z/, message: 'must contain {account} placeholder' }
 end
