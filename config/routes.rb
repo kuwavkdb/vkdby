@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   namespace :admin do
     root to: 'users#index'
     resources :users
+    resources :external_sites
     resources :units do
       resources :unit_logs
       resources :unit_people, only: %i[create edit update destroy] do
