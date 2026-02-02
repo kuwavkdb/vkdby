@@ -37,9 +37,9 @@
                 <cite class="block mt-2 text-sm font-bold text-slate-500 dark:text-slate-400 not-italic">
                   —
                   <% if @trend.quote_url.present? %>
-                    <% safe_url = @trend.quote_url.to_s.start_with?('http://', 'https://') ? @trend.quote_url : nil %>
-                    <% if safe_url %>
-                      <%= link_to @trend.quote_title.presence || safe_url, safe_url, target: '_blank', rel: 'noopener noreferrer', class: "hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" %>
+                    <% sanitized_url = safe_url(@trend.quote_url) %>
+                    <% if sanitized_url %>
+                      <%= link_to @trend.quote_title.presence || sanitized_url, sanitized_url, target: '_blank', rel: 'noopener noreferrer', class: "hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" %>
                     <% else %>
                       <%= @trend.quote_title.presence || @trend.quote_url %>
                     <% end %>

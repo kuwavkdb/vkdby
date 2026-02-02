@@ -14,4 +14,13 @@ module TrendsHelper
     HTML
     html.html_safe
   end
+
+  # Sanitize URL to prevent XSS attacks
+  # Only allow http:// and https:// schemes
+  def safe_url(url)
+    return nil if url.blank?
+
+    url_string = url.to_s
+    url_string.start_with?('http://', 'https://') ? url_string : nil
+  end
 end
