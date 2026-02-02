@@ -21,6 +21,11 @@
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
+    <style>
+      .admin-dropdown:hover .admin-dropdown-menu {
+        display: block;
+      }
+    </style>
   </head>
 
   <body class="bg-gray-100 dark:bg-gray-900 dark:text-gray-100">
