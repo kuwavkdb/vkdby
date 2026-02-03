@@ -14,9 +14,9 @@
                 <% trend.units.each do |unit_data| %>
                   <% unit = @related_units&.dig(unit_data['unit_id']) %>
                   <% if unit %>
-                    <%= link_to unit.name, profile_path(unit.key), class: "inline-block px-2 py-0.5 rounded text-sm font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50 transition-colors mr-1 border border-indigo-200 dark:border-indigo-800" %>
+                    <%= link_to unit.name, profile_path(unit.key), class: "inline-block px-2 py-0.5 rounded text-sm font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800 transition-colors mr-1 border border-indigo-200 dark:border-indigo-700" %>
                   <% elsif unit_data['name'].present? %>
-                     <span class="inline-block px-2 py-0.5 rounded text-sm font-semibold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 mr-1 border border-slate-200 dark:border-slate-700"><%= unit_data['name'] %></span>
+                     <span class="inline-block px-2 py-0.5 rounded text-sm font-semibold bg-gray-50 text-gray-700 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 mr-1"><%= unit_data['name'] %></span>
                   <% end %>
                 <% end %>
               <% end %>
