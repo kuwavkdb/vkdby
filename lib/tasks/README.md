@@ -6,12 +6,18 @@
 
 データを初期化して全て再インポートする場合のコマンド例です:
 
+旧データをそのままインポート
 ```bash
-bin/rails import:reset
-bin/rails import:units
-bin/rails import:people
-#PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:old_trends
-bin/rails convert:old_trends
+import_wikipages_form_mysql.sh
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:old_trends
+```
+
+vkdbyデータをクリアしてから旧データをコンバート
+```bash
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:reset
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:people
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails convert:old_trends
 ```
 
 ## スクリプト一覧
@@ -24,12 +30,12 @@ Wikipageから個人（Person）データを一括でインポートします。
 **使用方法**:
 ```bash
 # 全件インポート
-bin/rails import:people
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:people
 
 # パラメータ指定
-ID=15962 bin/rails import:people     # 特定IDのみ
-START=10000 bin/rails import:people  # ID 10000以降
-LIMIT=10 bin/rails import:people     # 最大10件まで
+ID=15962 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:people     # 特定IDのみ
+START=10000 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:people  # ID 10000以降
+LIMIT=10 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:people     # 最大10件まで
 ```
 
 **インポート対象**:
@@ -65,12 +71,12 @@ Wikipageからユニット（Unit）データを一括でインポートしま�
 **使用方法**:
 ```bash
 # 全件インポート
-bin/rails import:units
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units
 
 # パラメータ指定
-ID=6555 bin/rails import:units       # 特定IDのみ
-START=5000 bin/rails import:units    # ID 5000以降
-LIMIT=10 bin/rails import:units      # 最大10件まで
+ID=6555 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units       # 特定IDのみ
+START=5000 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units    # ID 5000以降
+LIMIT=10 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units      # 最大10件まで
 ```
 
 ### 3. import:reset - インポートデータの初期化
@@ -80,7 +86,7 @@ LIMIT=10 bin/rails import:units      # 最大10件まで
 
 **使用方法**:
 ```bash
-bin/rails import:reset
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:reset
 ```
 **注意**: 実行するとデータは復元できません。開発環境でのテストデータのリセット等に使用してください。
 
