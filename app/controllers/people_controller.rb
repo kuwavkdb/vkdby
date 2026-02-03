@@ -1,11 +1,8 @@
 # frozen_string_literal: true
 
-class PeopleController < ApplicationController
   def index
     @people = Person.where.not(key: [nil, '']).order(updated_at: :desc)
-    if params[:q].present?
-      @people = @people.where('name ILIKE :q OR name_log::text ILIKE :q', q: "%#{params[:q]}%")
-    end
+    @people = @people.where('name ILIKE :q OR name_log::text ILIKE :q', q: "%#{params[:q]}%") if params[:q].present?
   end
 
   def show
