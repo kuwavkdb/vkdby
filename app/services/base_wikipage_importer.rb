@@ -50,7 +50,7 @@ class BaseWikipageImporter
     @wiki_content.scan(/\{\{youtube2\s+([^,|}]+)(?:,[^}]*)?\}\}/i) do |match|
       video_id = match[0].strip
       url = "https://youtu.be/#{video_id}"
-      
+
       link = owner.links.find_or_initialize_by(url: url)
       link.text = 'YouTube Video' if link.text.blank?
       link.active = true
