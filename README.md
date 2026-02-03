@@ -18,7 +18,7 @@ brew services start postgresql@17
 
 まず .zshrc 等に以下のようにPATHを追加してから実行してください。
 ```
-PATH=/opt/homebrew/opt/ruby/bin:$PATH 
+PATH=/opt/homebrew/opt/ruby/bin:/opt/homebrew/opt/ruby/bin:$PATH 
 ```
 
 ```bash
