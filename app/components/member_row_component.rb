@@ -29,10 +29,10 @@ class MemberRowComponent < ViewComponent::Base
     !(@hide_active && @member.status == 'active')
   end
 
-  def sorted_person_logs
-    return [] unless @member.person
+  def person_history_items
+    return [] unless @member.person&.old_history.present?
 
-    @member.person.person_logs.sort_by { |l| [l.log_date.to_s, l.sort_order || 0] }
+    @member.person.parse_old_history
   end
 
   def parse_wiki_links(text)

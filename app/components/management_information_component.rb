@@ -4,4 +4,8 @@ class ManagementInformationComponent < ViewComponent::Base
   def initialize(resource:)
     @resource = resource
   end
+
+  def render?
+    helpers.logged_in?
+  end
 end
