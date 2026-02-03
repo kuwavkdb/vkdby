@@ -16,35 +16,38 @@ brew services start postgresql@17
 
 ## コマンド実行時の基本形式
 
-以下のコマンド例のように、常に `PATH=/opt/homebrew/opt/ruby/bin:$PATH` を冠して実行してください。
+まず .zshrc 等に以下のようにPATHを追加してから実行してください。
+```
+PATH=/opt/homebrew/opt/ruby/bin:$PATH 
+```
 
 ```bash
 # サーバーの起動
-PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails server
+bin/rails server
 
 # Gem のインストール
-PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle install
+bundle install
 
 # データベースのセットアップ
-PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails db:create db:migrate
+bin/rails db:create db:migrate
 
 # マイグレーションの実行
-PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle exec rails db:migrate
+bundle exec rails db:migrate
 
 # マイグレーションファイルの生成
-PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle exec rails generate migration NameOfMigration
+bundle exec rails generate migration NameOfMigration
 
 # Rails コンソール
-PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle exec rails console
+bundle exec rails console
 
 # RuboCop
-PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle exec rubocop
+bundle exec rubocop
 
 # Annotate（モデル定義のコメント更新）
-PATH=/opt/homebrew/opt/ruby/bin:$PATH bundle exec annotaterb models
+bundle exec annotaterb models
 
 # テストの実行
-PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails test
+bin/rails test
 ```
 
 ## 注意事項

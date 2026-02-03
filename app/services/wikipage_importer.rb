@@ -142,6 +142,7 @@ class WikipageImporter < BaseWikipageImporter
     parse_categories(unit)
     parse_members(unit)
     parse_footer_links(unit)
+    parse_youtube_tags(unit)
   end
 
   def parse_categories(unit)

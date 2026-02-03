@@ -6,11 +6,17 @@
 
 データを初期化して全て再インポートする場合のコマンド例です:
 
+旧データをそのままインポート
+```bash
+import_wikipages_form_mysql.sh
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:old_trends
+```
+
+vkdbyデータをクリアしてから旧データをコンバート
 ```bash
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:reset
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:people
-PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:old_trends
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails convert:old_trends
 ```
 

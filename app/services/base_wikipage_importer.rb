@@ -44,6 +44,20 @@ class BaseWikipageImporter
     @wiki_content = @wiki_content.lines.reject { |line| line.strip.start_with?('//') }.join
   end
 
+  def parse_youtube_tags(owner)
+    return unless @wiki_content
+
+    @wiki_content.scan(/\{\{youtube2\s+([^,|}]+)(?:,[^}]*)?\}\}/i) do |match|
+      video_id = match[0].strip
+      url = "https://youtu.be/#{video_id}"
+
+      link = owner.links.find_or_initialize_by(url: url)
+      link.text = 'YouTube Video' if link.text.blank?
+      link.active = true
+      link.save!
+    end
+  end
+
   def handle_error(error)
     puts "Error importing #{self.class.name.gsub('Importer', '')} #{@wikipage.id}: #{error.message}"
     puts error.backtrace.join("\n")
