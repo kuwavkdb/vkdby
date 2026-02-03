@@ -23,7 +23,6 @@ class BaseWikipageImporter
     return unless @wiki_content
 
     preprocess_content
-    convert_wiki_tags
 
     ActiveRecord::Base.transaction do
       process_import
@@ -45,20 +44,17 @@ class BaseWikipageImporter
     @wiki_content = @wiki_content.lines.reject { |line| line.strip.start_with?('//') }.join
   end
 
-  def convert_wiki_tags
-    # Convert {{youtube2 ID, ...}} to responsive iframe
-    @wiki_content.gsub!(/\{\{youtube2\s+([^,|}]+)(?:,[^}]*)?\}\}/i) do
-      video_id = Regexp.last_match(1).strip
-      <<~HTML.chomp
-        <div class="aspect-video w-full my-4">
-          <iframe class="w-full h-full rounded-lg shadow-lg"
-                  src="https://www.youtube.com/embed/#{video_id}"
-                  frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowfullscreen>
-          </iframe>
-        </div>
-      HTML
+  def parse_youtube_tags(owner)
+    return unless @wiki_content
+
+    @wiki_content.scan(/\{\{youtube2\s+([^,|}]+)(?:,[^}]*)?\}\}/i) do |match|
+      video_id = match[0].strip
+      url = "https://youtu.be/#{video_id}"
+      
+      link = owner.links.find_or_initialize_by(url: url)
+      link.text = 'YouTube Video' if link.text.blank?
+      link.active = true
+      link.save!
     end
   end
 

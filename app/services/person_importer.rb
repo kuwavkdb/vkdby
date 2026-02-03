@@ -131,6 +131,7 @@ class PersonImporter < BaseWikipageImporter
 
     # 4. Parse Links
     parse_footer_links(person)
+    parse_youtube_tags(person)
 
     # 5. Parse Career History
     parse_career_history(person)
