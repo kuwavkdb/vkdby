@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@source "../../views";
+
 @theme {
   --color-unit: #6366f1;
   --color-person: #ec4899;
