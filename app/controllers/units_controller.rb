@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+class UnitsController < ApplicationController
   def index
     @units = Unit.all.order(updated_at: :desc)
     @units = @units.where('name ILIKE :q OR name_log::text ILIKE :q', q: "%#{params[:q]}%") if params[:q].present?
