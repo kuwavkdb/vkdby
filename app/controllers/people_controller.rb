@@ -3,6 +3,7 @@
 class PeopleController < ApplicationController
   def index
     @people = Person.where.not(key: [nil, '']).order(updated_at: :desc)
+    @people = @people.where('name ILIKE :q OR name_log::text ILIKE :q', q: "%#{params[:q]}%") if params[:q].present?
   end
 
   def show
