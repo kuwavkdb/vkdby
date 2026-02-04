@@ -41,7 +41,11 @@
                         <div class="space-y-2">
                           <% concurrent_items.each do |item| %>
                             <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">
-                              <% if item[:external_url].present? %>
+                              <% if item[:is_temp] %>
+                                <span class="font-bold text-slate-400 dark:text-slate-500">
+                                  <%= item[:unit_name] %>
+                                </span>
+                              <% elsif item[:external_url].present? %>
                                 <%= link_to item[:unit_name], item[:external_url], target: '_blank', rel: 'noopener noreferrer', class: "hover:text-unit transition-colors" %>
                               <% elsif item[:old_key].present? %>
                                 <%= link_to item[:unit_name], "/#{item[:old_key]}.html", class: "hover:text-unit transition-colors" %>
@@ -50,6 +54,9 @@
                               <% end %>
                               <% if item[:part_and_name].present? %>
                                 <span class="text-xs font-bold text-slate-600 dark:text-slate-300 ml-1">(<%= item[:part_and_name] %>)</span>
+                              <% end %>
+                              <% if item[:note].present? %>
+                                <span class="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded ml-2"><%= item[:note] %></span>
                               <% end %>
                             </h3>
                           <% end %>

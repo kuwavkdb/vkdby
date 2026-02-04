@@ -39,4 +39,6 @@
 *_all_*.sql
 
 .DS_Store
-wikipages_recover_pg.sql
+/*.sql
+
+/.idea/*
