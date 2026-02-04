@@ -8,7 +8,6 @@ class TrendsController < ApplicationController
 
     scope = Trend.all.order(date: :desc)
 
-
     if params[:year].present?
       year = params[:year].to_i
       month = params[:month].presence&.to_i
