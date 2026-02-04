@@ -32,6 +32,7 @@
 #  fk_rails_...  (unit_id => units.id)
 #
 class UnitPerson < ApplicationRecord
+  include WikiParser
   belongs_to :unit
   belongs_to :person, optional: true
 
@@ -50,6 +51,10 @@ class UnitPerson < ApplicationRecord
 
   def key
     person&.key || person_key
+  end
+
+  def parse_inline_history
+    parse_history_string(inline_history)
   end
 
   private

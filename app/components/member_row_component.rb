@@ -30,31 +30,12 @@ class MemberRowComponent < ViewComponent::Base
   end
 
   def person_history_items
-    return [] unless @member.person&.old_history.present?
-
-    @member.person.parse_old_history
-  end
-
-  def parse_wiki_links(text)
-    # First replace [[YYYY|XXXX]] pattern (with custom link text)
-    text = text.gsub(/\[\[([^\]|]+)\|([^\]]+)\]\]/) do
-      link_text = Regexp.last_match(1)
-      old_key = Regexp.last_match(2)
-      encoded_key = encode_euc_jp(old_key)
-      "<a href=\"/#{encoded_key}.html\" class=\"hover:text-unit transition-colors\">#{ERB::Util.html_escape(link_text)}</a>"
+    if @member.person&.old_history.present?
+      @member.person.parse_old_history
+    elsif @member.inline_history.present?
+      @member.parse_inline_history
+    else
+      []
     end
-    # Then replace [[XXXX]] pattern (link text same as key)
-    text.gsub(/\[\[([^\]]+)\]\]/) do
-      old_key = Regexp.last_match(1)
-      encoded_key = encode_euc_jp(old_key)
-      "<a href=\"/#{encoded_key}.html\" class=\"hover:text-unit transition-colors\">#{ERB::Util.html_escape(old_key)}</a>"
-    end
-  end
-
-  def encode_euc_jp(str)
-    str.encode('EUC-JP').bytes.map { |b| "%#{b.to_s(16).upcase}" }.join
-  rescue Encoding::UndefinedConversionError
-    # Fallback if conversion fails
-    str
   end
 end

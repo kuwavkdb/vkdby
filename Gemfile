@@ -64,6 +64,9 @@ group :development, :test do
 end
 
 group :development do
+  gem 'ruby-lsp'
+  gem 'solargraph', '~> 0.58.2'
+
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem 'annotaterb'
   gem 'web-console'
