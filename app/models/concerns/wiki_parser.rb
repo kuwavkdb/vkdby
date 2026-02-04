@@ -29,9 +29,9 @@ module WikiParser
 
       # Split by 、 to handle concurrent activities
       period_segment.split('、').each do |item_segment|
-        metadata = {}
+        metadata = { notes: [] }
         item_segment = process_plugins(item_segment.strip, metadata)
-        next if item_segment.empty?
+        next if item_segment.empty? && metadata[:notes].empty?
 
         # Check if the entire segment is wrapped in parentheses
         wrapped_in_parens = item_segment.start_with?('(') && item_segment.end_with?(')')
@@ -64,7 +64,7 @@ module WikiParser
             unit_name: display_unit_name,
             part_and_name: part_and_name&.strip,
             old_key: encoded_unit_name,
-            note: metadata[:fn]
+            notes: metadata[:notes]
           }
         # Pattern 2: [LinkText|URL] or [LinkText|URL](Part) - External link
         when /\[([^\]|]+)\|([^\]]+)\](?:\(([^)]+)\))?/
@@ -79,13 +79,13 @@ module WikiParser
             unit_name: display_link_text,
             part_and_name: part_and_name&.strip,
             external_url: url.strip,
-            note: metadata[:fn]
+            notes: metadata[:notes]
           }
         # Pattern 3: Plain text - No link, display as-is (including parentheses)
         else
           concurrent_items << {
             unit_name: item_segment.strip,
-            note: metadata[:fn],
+            notes: metadata[:notes],
             is_temp: metadata[:is_temp]
           }
         end
@@ -109,7 +109,10 @@ module WikiParser
       when 'tweet'
         ''
       when 'fn'
-        metadata[:fn] = plugin_value&.strip
+        metadata[:notes] << plugin_value&.strip if plugin_value.present?
+        ''
+      when 'category'
+        metadata[:notes] << plugin_value&.strip if plugin_value.present?
         ''
       when 'temp'
         if plugin_value&.include?(',')
@@ -118,7 +121,7 @@ module WikiParser
           name_part = plugin_value&.strip
           badge_part = nil
         end
-        metadata[:fn] = badge_part
+        metadata[:notes] << badge_part if badge_part.present?
         metadata[:is_temp] = true
         name_part
       else

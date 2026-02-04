@@ -55,8 +55,10 @@
                               <% if item[:part_and_name].present? %>
                                 <span class="text-xs font-bold text-slate-600 dark:text-slate-300 ml-1">(<%= item[:part_and_name] %>)</span>
                               <% end %>
-                              <% if item[:note].present? %>
-                                <span class="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded ml-2"><%= item[:note] %></span>
+                              <% if item[:notes].present? %>
+                                <% item[:notes].each do |note| %>
+                                  <span class="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded ml-2"><%= note %></span>
+                                <% end %>
                               <% end %>
                             </h3>
                           <% end %>
