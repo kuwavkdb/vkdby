@@ -1,10 +1,13 @@
+# frozen_string_literal: true
+
 module WikiParser
   extend ActiveSupport::Concern
 
   # 履歴文字列をパースして構造化データの配列を返す
   # 戻り値: [
   #   [
-  #     { unit_name: "ユニット名", part_and_name: "Part" or "Part+PersonName" or "PersonName", old_key: "EUC-JPエンコードされたユニット名", external_url: "外部URL", note: "備考(日付など)" },
+  #     { unit_name: "ユニット名", part_and_name: "Part" or "Part+PersonName" or "PersonName",
+  #       old_key: "EUC-JPエンコードされたユニット名", external_url: "外部URL", note: "備考(日付など)" },
   #     ... (同時期の活動)
   #   ],
   #   ...
@@ -97,7 +100,7 @@ module WikiParser
   private
 
   def process_plugins(text, metadata = {})
-    text.gsub(/\{\{([^\}]+)\}\}/) do |match|
+    text.gsub(/\{\{([^}]+)\}\}/) do |match|
       content = ::Regexp.last_match(1).strip
       plugin_name, plugin_value = content.split(' ', 2)
       plugin_name = plugin_name&.downcase

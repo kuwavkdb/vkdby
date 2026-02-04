@@ -89,7 +89,7 @@ class Person < ApplicationRecord
   #   ],
   #   ...
   # ]
-  def parse_old_history # rubocop:disable Metrics/PerceivedComplexity
+  def parse_old_history
     parse_history_string(old_history)
   end
 
@@ -138,5 +138,4 @@ class Person < ApplicationRecord
 
     UnitPerson.where(person_key: key, person_id: nil).update_all(person_id: id)
   end
-
 end

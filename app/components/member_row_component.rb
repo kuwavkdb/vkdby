@@ -38,5 +38,4 @@ class MemberRowComponent < ViewComponent::Base
       []
     end
   end
-
 end
