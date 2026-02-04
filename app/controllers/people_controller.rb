@@ -2,8 +2,9 @@
 
 class PeopleController < ApplicationController
   def index
-    @people = Person.where.not(key: [nil, '']).order(updated_at: :desc)
-    @people = @people.where('name ILIKE :q OR name_log::text ILIKE :q', q: "%#{params[:q]}%") if params[:q].present?
+    scope = Person.where.not(key: [nil, '']).order(updated_at: :desc)
+    scope = scope.where('name ILIKE :q OR name_log::text ILIKE :q', q: "%#{params[:q]}%") if params[:q].present?
+    @pagy, @people = pagy(scope, limit: 60)
   end
 
   def show

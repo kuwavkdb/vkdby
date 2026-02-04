@@ -22,7 +22,7 @@ class TrendsController < ApplicationController
       scope = scope.where(date: start_date..end_date)
     end
 
-    @pagy, @trends = pagy(scope)
+    @pagy, @trends = pagy(scope, limit: 20)
 
     all_unit_ids = @trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
     @related_units = Unit.where(id: all_unit_ids).index_by(&:id)
