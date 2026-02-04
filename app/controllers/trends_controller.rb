@@ -2,11 +2,20 @@
 
 class TrendsController < ApplicationController
   def index
+    dates = Trend.pluck(:date)
+    @year_counts = dates.map(&:year).tally
+    @years = @year_counts.keys.sort.reverse
+
     scope = Trend.all.order(date: :desc)
+
 
     if params[:year].present?
       year = params[:year].to_i
       month = params[:month].presence&.to_i
+
+      target_dates = dates.select { |d| d.year == year }
+      @month_counts = target_dates.map(&:month).tally
+      @months = @month_counts.keys.sort.reverse
 
       start_date = Date.new(year, month || 1, 1)
       end_date = month ? start_date.end_of_month : start_date.end_of_year
