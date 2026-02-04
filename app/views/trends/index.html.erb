@@ -1,7 +1,74 @@
-<div class="flex justify-center items-center min-h-screen p-0 md:p-8">
-  <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
+<div class="flex justify-center items-start min-h-screen p-0 md:p-8">
+  <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
     <div class="p-5 md:p-8">
       <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-8">Trends</h1>
+
+      <div class="flex flex-wrap gap-2 mb-6">
+
+        <%
+          base_classes = "px-4 py-2 rounded-full text-sm font-bold transition-colors whitespace-nowrap border cursor-pointer select-none"
+          active_classes = "bg-indigo-600 text-white border-indigo-600 dark:bg-indigo-500 dark:text-white dark:border-indigo-500"
+          inactive_classes = "bg-white text-slate-600 border-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600 dark:hover:bg-slate-700"
+          
+          current_year = params[:year].presence&.to_i
+          
+          years_by_decade = @years.group_by { |y| (y / 10) * 10 }
+        %>
+
+        <%= link_to "NEWEST", trends_path, class: "#{base_classes} #{current_year.nil? ? active_classes : inactive_classes}" %>
+
+        <% years_by_decade.each do |decade, years| %>
+          <% is_active_decade = years.include?(current_year) %>
+          <div class="relative inline-block text-left" 
+               data-controller="dropdown" 
+               data-action="click@window->dropdown#hide"
+               data-dropdown-open-value="false">
+            
+            <button type="button" 
+                    class="<%= base_classes %> <%= is_active_decade ? active_classes : inactive_classes %> flex items-center gap-1"
+                    data-dropdown-target="button"
+                    data-action="click->dropdown#toggle">
+              <%= "#{decade}s" %>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 transition-transform duration-200">
+                <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+              </svg>
+            </button>
+
+            <div class="absolute left-0 top-full mt-1 min-w-full w-max box-border origin-top-left bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden py-1 hidden transition-all duration-200 ease-out transform opacity-0 scale-95"
+                 data-dropdown-target="menu"
+                 data-transition-enter="transition ease-out duration-100"
+                 data-transition-enter-start="transform opacity-0 scale-95"
+                 data-transition-enter-end="transform opacity-100 scale-100"
+                 data-transition-leave="transition ease-in duration-75"
+                 data-transition-leave-start="transform opacity-100 scale-100"
+                 data-transition-leave-end="transform opacity-0 scale-95">
+              <% years.each do |year| %>
+                <%= link_to "#{year} <span class='text-xs opacity-50 ml-1 font-normal'>(#{@year_counts[year]})</span>".html_safe, trends_path(year: year), class: "block px-4 py-2 text-sm whitespace-nowrap text-slate-700 dark:text-slate-300 hover:bg-slate-100 hover:text-indigo-600 dark:hover:bg-slate-700 dark:hover:text-white #{current_year == year ? 'bg-indigo-50 dark:bg-slate-700 font-bold text-indigo-700 dark:text-indigo-300' : ''}" %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <% if @months.present? %>
+        <div class="flex flex-wrap gap-1 mb-6 ml-1">
+            <%
+              month_base_classes = "px-3 py-1.5 rounded-full text-sm font-bold transition-colors whitespace-nowrap border cursor-pointer select-none"
+              month_active_classes = "bg-indigo-600 text-white border-indigo-600 dark:bg-indigo-500 dark:text-white dark:border-indigo-500"
+              month_inactive_classes = "bg-white text-slate-500 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600 dark:hover:bg-slate-700"
+              
+              current_month = params[:month].presence&.to_i
+            %>
+
+            <%= link_to params[:year], trends_path(year: params[:year]), class: "#{month_base_classes} #{current_month.nil? ? month_active_classes : month_inactive_classes}" %>
+
+            <% @months.each do |month| %>
+                <%= link_to "#{month} <span class='opacity-60 ml-0.5 font-normal'>(#{@month_counts[month]})</span>".html_safe, trends_path(year: params[:year], month: month), class: "#{month_base_classes} #{current_month == month ? month_active_classes : month_inactive_classes}" %>
+            <% end %>
+        </div>
+      <% end %>
+
+
 
       <div class="space-y-0">
         <% @trends.each do |trend| %>
