@@ -2,16 +2,22 @@
 
 class ItemsController < ApplicationController
   def index
-    dates = Item.pluck(:release_date)
+    # 基本となるスコープの作成
+    base_scope = Item.all
+    if params[:old_key].present?
+      @artist = Unit.find_by(old_key: params[:old_key]) || Person.find_by(old_key: params[:old_key])
+      base_scope = base_scope.by_artist_old_key(params[:old_key])
+    end
+
+    # 年月タブ用のカウント取得（アーティスト絞り込みがある場合はそれに限定）
+    dates = base_scope.pluck(:release_date)
     @year_counts = dates.map(&:year).tally
     @years = @year_counts.keys.sort.reverse
 
-    scope = Item.all.order(release_date: :desc)
+    # 最終的な表示スコープの構築
+    scope = base_scope.order(release_date: :desc)
 
-    if params[:old_key].present?
-      @artist = Unit.find_by(old_key: params[:old_key]) || Person.find_by(old_key: params[:old_key])
-      scope = scope.by_artist_old_key(params[:old_key])
-    elsif params[:year].present?
+    if params[:year].present?
       year = params[:year].to_i
       month = params[:month].presence&.to_i
 
