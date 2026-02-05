@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateReleaseSchedules < ActiveRecord::Migration[8.0]
   def change
     create_table :release_schedules do |t|
@@ -22,7 +24,7 @@ class CreateReleaseSchedules < ActiveRecord::Migration[8.0]
       t.string :tower_id
 
       t.index :plugin_text, unique: true
-      t.index [:wiki, :release_date]
+      t.index %i[wiki release_date]
       t.index :asin
     end
   end

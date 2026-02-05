@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: release_schedules
@@ -29,7 +31,7 @@
 #  index_release_schedules_on_plugin_text            (plugin_text) UNIQUE
 #  index_release_schedules_on_wiki_and_release_date  (wiki,release_date)
 #
-require "test_helper"
+require 'test_helper'
 
 class ReleaseScheduleTest < ActiveSupport::TestCase
   # test "the truth" do
