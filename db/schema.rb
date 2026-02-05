@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_05_112500) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_05_124747) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -29,6 +29,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_112500) do
     t.string "name", null: false
     t.integer "sort_order", default: 0, null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "items", force: :cascade do |t|
+    t.jsonb "artists", default: [], null: false
+    t.string "asin"
+    t.datetime "created_at", null: false
+    t.string "image_url"
+    t.string "link_url", null: false
+    t.integer "old_item_id"
+    t.date "release_date", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["artists"], name: "index_items_on_artists", using: :gin
+    t.index ["link_url"], name: "index_items_on_link_url", unique: true
+    t.index ["release_date"], name: "index_items_on_release_date"
+    t.index ["title"], name: "index_items_on_title"
   end
 
   create_table "links", force: :cascade do |t|
