@@ -35,8 +35,18 @@
 #  index_release_schedules_on_plugin_text            (plugin_text) UNIQUE
 #  index_release_schedules_on_wiki_and_release_date  (wiki,release_date)
 #
-one: {}
-# column: value
-#
-two: {}
-# column: value
+one:
+  artist: "Artist One"
+  title: "Title One"
+  release_date: 2026-02-01 00:00:00
+  type: "CD"
+  plugin_text: "Artist One,ASIN123"
+  wiki: "Artist One"
+
+two:
+  artist: "Artist Two"
+  title: "Title Two"
+  release_date: 2026-02-02 00:00:00
+  type: "DVD"
+  plugin_text: "Artist Two,ASIN456"
+  wiki: "Artist Two"
