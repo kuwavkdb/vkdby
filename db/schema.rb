@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_02_133713) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_05_112500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -106,6 +106,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_02_133713) do
     t.index ["person_id", "sort_order"], name: "index_person_logs_on_person_id_and_sort_order"
     t.index ["person_id"], name: "index_person_logs_on_person_id"
     t.index ["unit_id"], name: "index_person_logs_on_unit_id"
+  end
+
+  create_table "release_schedules", force: :cascade do |t|
+    t.text "append_after"
+    t.text "append_before"
+    t.string "artist", default: "", null: false
+    t.string "asin"
+    t.datetime "created_at"
+    t.string "img_url"
+    t.string "l_img_url"
+    t.text "plugin_full"
+    t.string "plugin_text", default: "", null: false
+    t.string "product_group"
+    t.string "publisher"
+    t.datetime "release_date"
+    t.string "title"
+    t.string "tower_id"
+    t.text "tracks"
+    t.string "type", default: "", null: false
+    t.datetime "updated_at"
+    t.text "url"
+    t.string "wiki"
+    t.index ["asin"], name: "index_release_schedules_on_asin"
+    t.index ["plugin_text"], name: "index_release_schedules_on_plugin_text", unique: true
+    t.index ["wiki", "release_date"], name: "index_release_schedules_on_wiki_and_release_date"
   end
 
   create_table "tag_index_items", force: :cascade do |t|

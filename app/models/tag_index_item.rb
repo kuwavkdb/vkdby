@@ -13,8 +13,8 @@
 #
 # Indexes
 #
-#  index_tag_index_items_on_indexable                       (indexable_type,indexable_id)
-#  index_tag_index_items_on_tag_index_id                    (tag_index_id)
+#  index_tag_index_items_on_indexable                        (indexable_type,indexable_id)
+#  index_tag_index_items_on_tag_index_id                     (tag_index_id)
 #  index_tag_index_items_on_tag_index_id_and_indexable_type  (tag_index_id,indexable_type)
 #
 # Foreign Keys

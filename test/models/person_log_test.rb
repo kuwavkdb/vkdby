@@ -17,6 +17,7 @@
 #  text             :text
 #  unit_key         :string
 #  unit_name        :string
+#  unit_url         :string
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
 #  person_id        :bigint           not null

@@ -1,0 +1,52 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+# This model initially had no columns defined. If you add columns to the
+# model remove the "{}" from the fixture names and add the columns immediately
+# below each fixture, per the syntax in the comments below
+#
+# == Schema Information
+#
+# Table name: release_schedules
+#
+#  id            :bigint           not null, primary key
+#  append_after  :text
+#  append_before :text
+#  artist        :string           default(""), not null
+#  asin          :string
+#  img_url       :string
+#  l_img_url     :string
+#  plugin_full   :text
+#  plugin_text   :string           default(""), not null
+#  product_group :string
+#  publisher     :string
+#  release_date  :datetime
+#  title         :string
+#  tracks        :text
+#  type          :string           default(""), not null
+#  url           :text
+#  wiki          :string
+#  created_at    :datetime
+#  updated_at    :datetime
+#  tower_id      :string
+#
+# Indexes
+#
+#  index_release_schedules_on_asin                   (asin)
+#  index_release_schedules_on_plugin_text            (plugin_text) UNIQUE
+#  index_release_schedules_on_wiki_and_release_date  (wiki,release_date)
+#
+one:
+  artist: "Artist One"
+  title: "Title One"
+  release_date: 2026-02-01 00:00:00
+  type: "CD"
+  plugin_text: "Artist One,ASIN123"
+  wiki: "Artist One"
+
+two:
+  artist: "Artist Two"
+  title: "Title Two"
+  release_date: 2026-02-02 00:00:00
+  type: "DVD"
+  plugin_text: "Artist Two,ASIN456"
+  wiki: "Artist Two"
