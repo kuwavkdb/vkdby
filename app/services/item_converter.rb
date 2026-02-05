@@ -128,9 +128,14 @@ class ItemConverter
   end
 
   # EUC-JP エンコード処理
+  # ASCII 文字はそのまま、非 ASCII 文字のみ EUC-JP でエンコード
   def encode_euc_jp(text)
     return '' if text.blank?
 
+    # ASCII のみの場合はそのまま返す
+    return text if text.ascii_only?
+
+    # 非 ASCII 文字を含む場合は EUC-JP でエンコード
     text.encode('EUC-JP', invalid: :replace, undef: :replace)
         .bytes
         .map { |b| format('%%%02X', b) }
