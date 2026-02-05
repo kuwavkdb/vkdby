@@ -26,8 +26,14 @@
 #  index_items_on_release_date  (release_date)
 #  index_items_on_title         (title)
 #
-one: {}
-# column: value
-#
-two: {}
-# column: value
+one:
+  title: "Item One"
+  artists: []
+  release_date: 2026-02-05
+  link_url: "http://example.com/item1"
+
+two:
+  title: "Item Two"
+  artists: []
+  release_date: 2026-02-06
+  link_url: "http://example.com/item2"
