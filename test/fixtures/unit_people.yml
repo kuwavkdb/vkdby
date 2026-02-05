@@ -9,11 +9,13 @@
 #  old_person_key  :string
 #  order_in_period :integer          default(1), not null
 #  part            :integer          default("vocal"), not null
+#  part_alias      :string
 #  period          :integer          default(1), not null
 #  person_key      :string
 #  person_name     :string
 #  sns             :json
 #  status          :integer          default("active"), not null
+#  support         :boolean          default(FALSE), not null
 #  created_at      :datetime         not null
 #  updated_at      :datetime         not null
 #  person_id       :bigint

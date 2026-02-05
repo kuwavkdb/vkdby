@@ -9,18 +9,21 @@
 #  name          :string
 #  name_kana     :string
 #  name_log      :jsonb
+#  note          :text
 #  old_key       :string
 #  old_wiki_text :text
 #  status        :integer          default("active"), not null
 #  unit_type     :integer
 #  created_at    :datetime         not null
 #  updated_at    :datetime         not null
+#  old_wiki_id   :integer
 #
 # Indexes
 #
-#  index_units_on_key      (key) UNIQUE
-#  index_units_on_name     (name)
-#  index_units_on_old_key  (old_key) UNIQUE
+#  index_units_on_key        (key) UNIQUE
+#  index_units_on_name       (name)
+#  index_units_on_name_kana  (name_kana)
+#  index_units_on_old_key    (old_key) UNIQUE
 #
 require 'test_helper'
 
