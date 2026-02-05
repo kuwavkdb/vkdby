@@ -27,13 +27,13 @@
 #  index_items_on_title         (title)
 #
 one:
-  title: "Item One"
+  title: 'Item One'
   artists: []
   release_date: 2026-02-05
-  link_url: "http://example.com/item1"
+  link_url: 'http://example.com/item1'
 
 two:
-  title: "Item Two"
+  title: 'Item Two'
   artists: []
   release_date: 2026-02-06
-  link_url: "http://example.com/item2"
+  link_url: 'http://example.com/item2'

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: items
@@ -20,7 +22,7 @@
 #  index_items_on_release_date  (release_date)
 #  index_items_on_title         (title)
 #
-require "test_helper"
+require 'test_helper'
 
 class ItemTest < ActiveSupport::TestCase
   # test "the truth" do
