@@ -83,7 +83,7 @@
             <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Items</h2>
             <%= link_to "View All", items_path(old_key: @resource.old_key), class: "text-xs font-medium text-slate-400 hover:text-indigo-500 transition-colors" %>
           </div>
-          <div class="grid grid-cols-1 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <%= render ItemCardComponent.with_collection(@items) %>
           </div>
         </section>
