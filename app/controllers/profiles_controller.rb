@@ -27,6 +27,14 @@ class ProfilesController < ApplicationController
                      .limit(10)
     end
 
+    # アイテムの取得（最新5件）
+    # old_key が存在する場合のみアイテムを検索
+    if @resource.old_key.present?
+      @items = Item.by_artist_old_key(@resource.old_key)
+                   .order(release_date: :desc)
+                   .limit(5)
+    end
+
     respond_to do |format|
       format.html
       format.json { render json: @resource }

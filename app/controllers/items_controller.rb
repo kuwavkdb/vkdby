@@ -8,7 +8,9 @@ class ItemsController < ApplicationController
 
     scope = Item.all.order(release_date: :desc)
 
-    if params[:year].present?
+    if params[:old_key].present?
+      scope = scope.by_artist_old_key(params[:old_key])
+    elsif params[:year].present?
       year = params[:year].to_i
       month = params[:month].presence&.to_i
 
