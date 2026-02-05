@@ -1,0 +1,40 @@
+<div class="flex bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-lg transition-shadow">
+  <!-- 画像（左側） -->
+  <% if @item.image_url.present? %>
+    <div class="shrink-0 w-40 h-40 flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+      <img src="<%= @item.image_url %>" alt="<%= @item.title %>" class="w-40 h-40 object-cover">
+    </div>
+  <% else %>
+    <div class="shrink-0 w-40 h-40 bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+      <span class="text-slate-400 dark:text-slate-500 text-sm">画像なし</span>
+    </div>
+  <% end %>
+  
+  <!-- 情報（右側） -->
+  <div class="flex-1 p-4 space-y-3 min-w-0">
+    <!-- タイトル -->
+    <div>
+      <%= link_to @item.link_url, target: "_blank", rel: "noopener noreferrer", class: "block" do %>
+        <h3 class="font-bold text-slate-800 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors line-clamp-2"><%= @item.title %></h3>
+      <% end %>
+    </div>
+    
+    <!-- アーティスト -->
+    <% if @item.artists.present? %>
+      <div class="flex flex-wrap gap-1">
+        <% @item.artists.each do |artist_data| %>
+          <% if artist_data['old_key'].present? %>
+            <%= link_to artist_data['name'], "/#{artist_data['old_key']}.html", class: "inline-block px-2 py-0.5 rounded text-sm font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800 transition-colors border border-indigo-200 dark:border-indigo-700" %>
+          <% else %>
+            <span class="inline-block px-2 py-0.5 rounded text-sm font-semibold bg-gray-50 text-gray-700 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600"><%= artist_data['name'] %></span>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+    
+    <!-- 発売日 -->
+    <div class="text-slate-600 dark:text-slate-400 font-mono text-sm font-bold">
+      <%= @item.release_date.strftime('%Y/%m/%d') %>
+    </div>
+  </div>
+</div>
