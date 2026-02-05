@@ -24,7 +24,7 @@
 #
 class Item < ApplicationRecord
   # old_key でアーティストを検索するスコープ
-  scope :by_artist_old_key, ->(old_key) {
-    where("artists @> ?", [{ old_key: old_key }].to_json)
+  scope :by_artist_old_key, lambda { |old_key|
+    where('artists @> ?', [{ old_key: old_key }].to_json)
   }
 end
