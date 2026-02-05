@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 # ReleaseSchedule を Item に変換するサービス
+# rubocop:disable Metrics/ClassLength
 class ItemConverter
   def self.convert(release_schedule)
     new(release_schedule).convert
@@ -110,13 +111,13 @@ class ItemConverter
   # wiki テキストから [[名前]] または [[表示名|名前]] を抽出
   def extract_wiki_links(text)
     artists = []
-    
+
     # [[表示名|名前]] または [[名前]] の形式を抽出
     text.scan(/\[\[(?:([^\]|]+)\|)?([^\]]+)\]\]/) do |display_name, actual_name|
       name = display_name.presence || actual_name
       # (アーティスト) などの接尾辞を削除
       name = name.gsub(/\(.*?\)/, '').strip
-      
+
       artists << {
         'name' => name,
         'old_key' => encode_euc_jp(actual_name)
@@ -153,3 +154,4 @@ class ItemConverter
     parts.last&.strip
   end
 end
+# rubocop:enable Metrics/ClassLength
