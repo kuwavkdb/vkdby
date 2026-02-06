@@ -10,6 +10,7 @@
 ```bash
 import_wikipages_form_mysql.sh
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:old_trends
+sh script/import_release_schedule_from_mysql.sh
 ```
 
 vkdbyデータをクリアしてから旧データをコンバート
@@ -18,6 +19,7 @@ PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:reset
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:people
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails convert:old_trends
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails convert:items
 ```
 
 ## スクリプト一覧
@@ -125,6 +127,35 @@ bin/rails convert:old_trends
 ```
 
 **注意**: このタスクを実行すると、既存の `trends` テーブルのデータは全て削除 (`delete_all`) された上で再作成されます。
+
+## アイテムデータの移行
+
+### 6. import_release_schedule_from_mysql.sh - Amazon商品元データのインポート
+MySQLのダンプファイル (`release_schedule_all_YYYYMMDD.sql`) から、中間テーブル `release_schedules` へデータをインポートします。
+
+```bash
+sh script/import_release_schedule_from_mysql.sh
+```
+
+**仕様**:
+- プロジェクトルートにある最新の `release_schedule_all_*.sql` を自動的に読み込みます。
+- MySQL形式のダンプをPostgreSQL形式に変換しつつインポートします。
+- 実行時に既存の `release_schedules` データは削除されます。
+
+### 7. convert:items - Itemテーブルへのコンバート
+`release_schedules` テーブルのデータを解析・変換し、正規の `items` テーブルへ移行します。
+`app/services/item_converter.rb` を使用して、アーティストの紐付け（`old_key` 形式への変換）などが行われます。
+
+```bash
+# 全件コンバート (既存の items は削除されます)
+bin/rails convert:items
+
+# パラメータ指定
+LIMIT=100 bin/rails convert:items  # 件数制限
+ID=1234  bin/rails convert:items   # 特定IDのみ
+```
+
+**注意**: このタスクを実行すると、既存の `items` テーブルのデータは全て削除 (`delete_all`) された上で再作成されます。
 
 ## 対応リンクサービス
 
