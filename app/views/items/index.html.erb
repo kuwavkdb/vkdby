@@ -3,7 +3,7 @@
     <div class="p-5 md:p-8">
       <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-8">
         <% if @artist %>
-          Items for "<%= @artist.name %>"
+          Items for "<%= link_to @artist.name, profile_path(key: @artist.key), class: "hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors underline decoration-slate-300 dark:decoration-slate-600 underline-offset-4" %>"
         <% else %>
           Items
         <% end %>
@@ -21,7 +21,7 @@
           years_by_decade = @years.group_by { |y| (y / 10) * 10 }
         %>
 
-        <%= link_to "NEWEST", items_path, class: "#{base_classes} #{current_year.nil? ? active_classes : inactive_classes}" %>
+        <%= link_to "NEWEST", items_path(old_key: params[:old_key]), class: "#{base_classes} #{current_year.nil? ? active_classes : inactive_classes}" %>
 
         <% years_by_decade.each do |decade, years| %>
           <% is_active_decade = years.include?(current_year) %>
@@ -49,7 +49,7 @@
                  data-transition-leave-start="transform opacity-100 scale-100"
                  data-transition-leave-end="transform opacity-0 scale-95">
               <% years.each do |year| %>
-                <%= link_to "#{year} <span class='text-xs opacity-50 ml-1 font-normal'>(#{@year_counts[year]})</span>".html_safe, items_path(year: year), class: "block px-4 py-2 text-sm whitespace-nowrap text-slate-700 dark:text-slate-300 hover:bg-slate-100 hover:text-indigo-600 dark:hover:bg-slate-700 dark:hover:text-white #{current_year == year ? 'bg-indigo-50 dark:bg-slate-700 font-bold text-indigo-700 dark:text-indigo-300' : ''}" %>
+                <%= link_to "#{year} <span class='text-xs opacity-50 ml-1 font-normal'>(#{@year_counts[year]})</span>".html_safe, items_path(year: year, old_key: params[:old_key]), class: "block px-4 py-2 text-sm whitespace-nowrap text-slate-700 dark:text-slate-300 hover:bg-slate-100 hover:text-indigo-600 dark:hover:bg-slate-700 dark:hover:text-white #{current_year == year ? 'bg-indigo-50 dark:bg-slate-700 font-bold text-indigo-700 dark:text-indigo-300' : ''}" %>
               <% end %>
             </div>
           </div>
@@ -66,10 +66,10 @@
               current_month = params[:month].presence&.to_i
             %>
 
-            <%= link_to params[:year], items_path(year: params[:year]), class: "#{month_base_classes} #{current_month.nil? ? month_active_classes : month_inactive_classes}" %>
+            <%= link_to params[:year], items_path(year: params[:year], old_key: params[:old_key]), class: "#{month_base_classes} #{current_month.nil? ? month_active_classes : month_inactive_classes}" %>
 
             <% @months.each do |month| %>
-                <%= link_to "#{month} <span class='opacity-60 ml-0.5 font-normal'>(#{@month_counts[month]})</span>".html_safe, items_path(year: params[:year], month: month), class: "#{month_base_classes} #{current_month == month ? month_active_classes : month_inactive_classes}" %>
+                <%= link_to "#{month} <span class='opacity-60 ml-0.5 font-normal'>(#{@month_counts[month]})</span>".html_safe, items_path(year: params[:year], month: month, old_key: params[:old_key]), class: "#{month_base_classes} #{current_month == month ? month_active_classes : month_inactive_classes}" %>
             <% end %>
         </div>
       <% end %>
