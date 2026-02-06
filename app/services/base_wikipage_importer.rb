@@ -7,13 +7,16 @@ require 'romaji'
 class BaseWikipageImporter
   include IgnorableWikipage
 
+  attr_reader :original_content
+
   def self.import(wikipage)
     new(wikipage).import
   end
 
   def initialize(wikipage)
     @wikipage = wikipage
-    @wiki_content = wikipage.wiki
+    @wiki_content = wikipage.wiki&.dup
+    @original_content = @wiki_content&.dup
     @attributes = wikipage.attributes.slice('dw_id', 'it_id', 'eplus_id')
     @wikipage_name = wikipage.name
   end
@@ -40,8 +43,11 @@ class BaseWikipageImporter
 
   # Override in subclasses if custom preprocessing is needed
   def preprocess_content
+    # Remove b_hidden blocks: {{b_hidden ... }} (ends with }} at the beginning of a line)
+    @wiki_content = @wiki_content&.gsub(/\{\{b_hidden.*?(?:^\}\}|\z)/m, '')
+
     # Default: Remove comment lines
-    @wiki_content = @wiki_content.lines.reject { |line| line.strip.start_with?('//') }.join
+    @wiki_content = @wiki_content&.lines&.reject { |line| line.strip.start_with?('//') }&.join
   end
 
   def parse_youtube_tags(owner)

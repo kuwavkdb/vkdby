@@ -25,6 +25,9 @@ class WikipageImporter < BaseWikipageImporter
 
   # Override to preserve {{member...}} blocks during preprocessing
   def preprocess_content
+    # Remove b_hidden blocks first
+    @wiki_content.gsub!(/\{\{b_hidden.*?(?:^\}\}|\z)/m, '')
+
     # Extract and preserve {{member...}} blocks before removing comments
     @member_blocks = []
     @wiki_content.gsub!(/\{\{member2?\s+.*?\}\}/m) do |block|
@@ -134,7 +137,7 @@ class WikipageImporter < BaseWikipageImporter
     unit.name_log = name_log_entries if name_log_entries.present?
     unit.old_key = encoded_old_key
     unit.old_wiki_id = @wikipage.id
-    unit.old_wiki_text = @wiki_content
+    unit.old_wiki_text = @original_content
     unit.unit_type = unit_type
     unit.status = :active
     unit.save!
