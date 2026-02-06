@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_05_124747) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_06_125041) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -147,6 +147,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_05_124747) do
     t.index ["asin"], name: "index_release_schedules_on_asin"
     t.index ["plugin_text"], name: "index_release_schedules_on_plugin_text", unique: true
     t.index ["wiki", "release_date"], name: "index_release_schedules_on_wiki_and_release_date"
+  end
+
+  create_table "sections", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name"
+    t.bigint "sectionable_id", null: false
+    t.string "sectionable_type", null: false
+    t.integer "sort_order"
+    t.datetime "updated_at", null: false
+    t.text "wiki_text"
+    t.index ["sectionable_type", "sectionable_id"], name: "index_sections_on_sectionable"
   end
 
   create_table "tag_index_items", force: :cascade do |t|
