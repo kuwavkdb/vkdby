@@ -38,6 +38,7 @@ class Person < ApplicationRecord
   has_many :person_logs
   has_many :tag_index_items, as: :indexable, dependent: :destroy
   has_many :tag_indices, through: :tag_index_items
+  has_many :sections, as: :sectionable, dependent: :destroy
 
   accepts_nested_attributes_for :links, allow_destroy: true, reject_if: :all_blank
 

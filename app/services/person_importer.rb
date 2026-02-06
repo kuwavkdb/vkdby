@@ -135,6 +135,9 @@ class PersonImporter < BaseWikipageImporter
 
     # 5. Parse Career History
     parse_career_history(person)
+
+    # 6. Parse Sections
+    parse_sections(person)
   end
 
   def link_existing_unit_people(person)

@@ -174,4 +174,65 @@ class BaseWikipageImporter
       str
     end
   end
+
+  # ==========================================
+  # Section Parsing Logic
+  # ==========================================
+
+  # Issue#188: セクションの取り込み
+  # 除外対象: リンク、メンバー*、関係者、個人情報、情報*、ディスコグラフィ*、経歴
+  EXCLUDED_SECTIONS = %w[
+    リンク
+    メンバー
+    関係者
+    個人情報
+    情報
+    ディスコグラフィ
+    経歴
+    動向
+    DVD
+    関連記事
+    関連商品
+  ].freeze
+
+  def parse_sections(owner)
+    return unless @wiki_content
+
+    # セクションを抽出: !!セクション名 から次の !! または文末まで
+    # ^!!(?!!) で「!!」ちょうど2つで始まる行のみにマッチ（!!!以上は除外）
+    sections_data = []
+    @wiki_content.scan(/^!!(?!!)(.*?)\s*\n(.*?)(?=\n!!|\z)/m) do |section_name, section_content|
+      sections_data << {
+        name: section_name.strip,
+        content: section_content.strip
+      }
+    end
+
+    # 既存の Section レコードを削除
+    owner.sections.destroy_all
+
+    # 除外対象以外のセクションを保存
+    sort_order = 1
+    sections_data.each do |section_data|
+      section_name = section_data[:name]
+      section_content = section_data[:content]
+
+      # 除外チェック: 完全一致またはワイルドカード（前方一致）
+      is_excluded = EXCLUDED_SECTIONS.any? do |excluded|
+        section_name == excluded || section_name.start_with?(excluded)
+      end
+
+      next if is_excluded
+
+      # wiki_text が空の場合は除外
+      next if section_content.blank?
+
+      owner.sections.create!(
+        name: section_name,
+        wiki_text: section_content,
+        sort_order: sort_order
+      )
+      sort_order += 1
+    end
+  end
 end
