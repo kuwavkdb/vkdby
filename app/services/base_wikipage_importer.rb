@@ -233,6 +233,9 @@ class BaseWikipageImporter
       # wiki_text が空の場合は除外
       next if section_content.blank?
 
+      # 名前が空の場合は除外 (Fix: Name can't be blank error)
+      next if section_name.blank?
+
       owner.sections.create!(
         name: section_name,
         wiki_text: section_content,
