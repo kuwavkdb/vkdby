@@ -86,7 +86,7 @@ class PersonImporter < BaseWikipageImporter
     person.name_log = name_log_entries if name_log_entries.present?
     person.old_key = encoded_old_key
     person.old_wiki_id = @wikipage.id
-    person.old_wiki_text = @wiki_content
+    person.old_wiki_text = @original_content
 
     # Status
     person.status = if categories_data[:is_passed_away]
