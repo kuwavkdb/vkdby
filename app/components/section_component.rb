@@ -5,6 +5,7 @@ class SectionComponent < ViewComponent::Base
   with_collection_parameter :section
 
   def initialize(section:)
+    super
     @section = section
   end
 end
