@@ -22,9 +22,7 @@
 
 
 
-          <% if @resource.sections.exists? %>
-            <%= render SectionComponent.with_collection(@resource.sections.order(:sort_order)) %>
-          <% end %>
+
 
           <% if (@resource.is_a?(Person) && (@logs.present? || @old_history_items.present?)) || (@resource.is_a?(Unit) && @history.present?) %>
             <section>
@@ -79,6 +77,10 @@
                 <% end %>
               </div>
             </section>
+          <% end %>
+
+          <% if @resource.sections.exists? %>
+            <%= render SectionComponent.with_collection(@resource.sections.order(:sort_order)) %>
           <% end %>
         </div>
       </div>
