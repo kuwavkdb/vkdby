@@ -20,6 +20,12 @@
             <%= render UnitTrendsComponent.new(trends: @trends) if @trends %>
           <% end %>
 
+
+
+          <% if @resource.sections.exists? %>
+            <%= render SectionComponent.with_collection(@resource.sections.order(:sort_order)) %>
+          <% end %>
+
           <% if (@resource.is_a?(Person) && (@logs.present? || @old_history_items.present?)) || (@resource.is_a?(Unit) && @history.present?) %>
             <section>
               <div class="flex items-center justify-between mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
