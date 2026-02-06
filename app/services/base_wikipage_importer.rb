@@ -205,9 +205,15 @@ class BaseWikipageImporter
     return unless @wiki_content
 
     # セクションを抽出: !!セクション名 から次の !! または文末まで
-    # ^!!(?!!) で「!!」ちょうど2つで始まる行のみにマッチ（!!!以上は除外）
+    # ^!!(?!!) で「!!」ちょうど2つで始まる行で分割
+    # splitの結果: [preamble, name1, content1, name2, content2, ...]
+    parts = @wiki_content.split(/^!!(?!!)(.*?)[\r\n]+/)
+    parts.shift # 先頭の要素（最初のセクションより前のテキスト）は無視
+
     sections_data = []
-    @wiki_content.scan(/^!!(?!!)(.*?)\s*\n(.*?)(?=\n!!|\z)/m) do |section_name, section_content|
+    parts.each_slice(2) do |section_name, section_content|
+      next if section_name.nil? || section_content.nil?
+
       sections_data << {
         name: section_name.strip,
         content: section_content.strip
