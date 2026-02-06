@@ -18,6 +18,19 @@
       <% end %>
     </div>
 
+    <% if @tag_indices.present? %>
+      <div class="mb-8 flex flex-wrap gap-2 justify-center">
+        <%= link_to units_path(q: params[:q]), class: "px-3 py-1.5 rounded-lg text-sm font-bold transition-all #{params[:tag_id].blank? ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600'}" do %>
+          すべて
+        <% end %>
+        <% @tag_indices.each do |tag| %>
+          <%= link_to units_path(tag_id: tag.id, q: params[:q]), class: "px-3 py-1.5 rounded-lg text-sm font-bold transition-all #{params[:tag_id].to_s == tag.id.to_s ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600'}" do %>
+            <%= tag.name %>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+
     <% if @units.any? %>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         <% @units.each do |unit| %>
