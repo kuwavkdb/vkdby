@@ -199,6 +199,10 @@ class BaseWikipageImporter
     DVD
     関連記事
     関連商品
+    雑談
+    書籍
+    バンド名の変遷
+    バンド名変遷
   ].freeze
 
   def parse_sections(owner)
