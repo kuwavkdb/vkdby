@@ -4,10 +4,13 @@ export default class extends Controller {
     static targets = ["menu", "iconOpen", "iconClose"]
 
     connect() {
+        console.log("MobileMenuController connected")
         this.close()
     }
 
-    toggle() {
+    toggle(event) {
+        if (event) event.preventDefault()
+        console.log("MobileMenuController toggle clicked")
         if (this.menuTarget.classList.contains("hidden")) {
             this.open()
         } else {
