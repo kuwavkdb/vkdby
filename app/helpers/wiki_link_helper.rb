@@ -41,8 +41,8 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
       if line =~ /^:(.+?):(.*)$/
         term = Regexp.last_match(1)
         desc = Regexp.last_match(2)
-        dt = tag.dt(class: 'font-bold text-slate-700 dark:text-slate-300') { parse_wiki_links(term) }
-        dd = tag.dd(class: 'text-slate-600 dark:text-slate-400 ml-4 mb-2') { parse_wiki_links(desc) }
+        dt = tag.dt(class: 'text-sm font-semibold text-slate-500 dark:text-slate-400 mt-2') { parse_wiki_links(term) }
+        dd = tag.dd(class: 'text-slate-700 dark:text-slate-300 ml-4 mb-2') { parse_wiki_links(desc) }
         dt + dd
       else
         ''
