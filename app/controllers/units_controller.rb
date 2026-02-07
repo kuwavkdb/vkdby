@@ -3,6 +3,9 @@
 class UnitsController < ApplicationController
   def index
     @tag_indices = TagIndex.where(index_group_id: 1).ordered
+    @tag_unit_counts = TagIndexItem.where(tag_index_id: @tag_indices.select(:id), indexable_type: 'Unit')
+                                   .group(:tag_index_id)
+                                   .count
 
     scope = Unit.all.order(updated_at: :desc)
     scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q', q: "%#{params[:q]}%") if params[:q].present?

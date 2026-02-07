@@ -19,13 +19,14 @@
     </div>
 
     <% if @tag_indices.present? %>
-      <div class="mb-8 flex flex-wrap gap-2 justify-center">
-        <%= link_to units_path(q: params[:q]), class: "px-3 py-1.5 rounded-lg text-sm font-bold transition-all #{params[:tag_id].blank? ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600'}" do %>
-          すべて
+      <div class="mb-8 flex flex-wrap gap-1 justify-center">
+        <%= link_to units_path(q: params[:q]), class: "px-2 py-1 rounded-lg text-sm font-bold transition-all #{params[:tag_id].blank? ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600'}" do %>
+          ALL
         <% end %>
         <% @tag_indices.each do |tag| %>
-          <%= link_to units_path(tag_id: tag.id, q: params[:q]), class: "px-3 py-1.5 rounded-lg text-sm font-bold transition-all #{params[:tag_id].to_s == tag.id.to_s ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600'}" do %>
+          <%= link_to units_path(tag_id: tag.id, q: params[:q]), class: "px-2 py-1 rounded-lg text-sm font-bold transition-all #{params[:tag_id].to_s == tag.id.to_s ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600'}" do %>
             <%= tag.name %>
+            <span class="ml-1 opacity-70 text-xs font-normal">(<%= @tag_unit_counts[tag.id] || 0 %>)</span>
           <% end %>
         <% end %>
       </div>
