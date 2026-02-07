@@ -52,6 +52,22 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     tag.dl(class: 'space-y-1 mt-8 mb-4') { content }
   end
 
+  def render_wiki_multi_dl(lines)
+    content = lines.map do |line|
+      if line.match?(/^:::(.*)$/)
+        desc = line.sub(/^:::/, '').strip
+        tag.dd(class: 'text-slate-700 dark:text-slate-300 ml-4 mb-2') { parse_wiki_links(desc) }
+      elsif line.match?(/^::(.*)$/)
+        term = line.sub(/^::/, '').strip
+        tag.dt(class: 'text-sm font-semibold text-slate-500 dark:text-slate-400 mt-2') { parse_wiki_links(term) }
+      else
+        ''
+      end
+    end.join.html_safe
+
+    tag.dl(class: 'space-y-1 mt-8 mb-4') { content }
+  end
+
   def format_wiki_title(text, link: true)
     return '' if text.blank?
 
@@ -98,8 +114,22 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
   def process_line(line, blocks, current_block)
     is_list_item = line.match?(/^\s*\*/)
     is_dl_item = line.match?(/^:(.+?):(.*)$/)
+    is_h3 = line.match?(/^!/)
+    is_multi_dd = line.match?(/^:::/)
+    is_multi_dt = line.match?(/^::/) && !is_multi_dd
 
-    if is_list_item
+    if is_h3
+      blocks << current_block unless current_block[:lines].empty?
+      content = line.sub(/^!\s*/, '').strip
+      yield({ type: :h3, lines: [content] })
+    elsif is_multi_dt || is_multi_dd
+      if current_block[:type] == :multi_dl
+        current_block[:lines] << line
+      else
+        blocks << current_block unless current_block[:lines].empty?
+        yield({ type: :multi_dl, lines: [line] })
+      end
+    elsif is_list_item
       if current_block[:type] == :list
         current_block[:lines] << line
       else
@@ -124,6 +154,11 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
   def render_wiki_blocks(blocks)
     safe_join(blocks.map do |block|
       case block[:type]
+      when :h3
+        content = block[:lines].first
+        tag.h3(class: 'text-lg font-bold mt-6 mb-2 text-slate-800 dark:text-slate-200 border-l-4 border-slate-500 pl-2') do
+          parse_wiki_links(content)
+        end
       when :list
         render_wiki_list(block[:lines])
       when :blockquote
@@ -133,6 +168,8 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
         end
       when :definition_list
         render_wiki_dl(block[:lines])
+      when :multi_dl
+        render_wiki_multi_dl(block[:lines])
       else
         text_content = block[:lines].join
         formatted = simple_format(text_content, {}, wrapper_tag: 'div')
