@@ -91,11 +91,13 @@
             <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Recent Items (Max 10)</h2>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <%= render ItemCardComponent.with_collection(@items) %>
+            <%= render ItemCardComponent.with_collection(@items.first(10)) %>
           </div>
-          <div class="mt-4 flex justify-center">
-            <%= link_to "View all Items for \"#{@resource.name}\" on Items page »", items_path(old_key: @resource.old_key), class: "text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" %>
-          </div>
+          <% if @items.size > 10 %>
+            <div class="mt-4 flex justify-center">
+              <%= link_to "View all Items for \"#{@resource.name}\" on Items page »", items_path(old_key: @resource.old_key), class: "text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" %>
+            </div>
+          <% end %>
         </section>
       <% end %>
 

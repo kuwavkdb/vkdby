@@ -32,7 +32,7 @@ class ProfilesController < ApplicationController
     if @resource.old_key.present?
       @items = Item.by_artist_old_key(@resource.old_key)
                    .order(release_date: :desc)
-                   .limit(10)
+                   .limit(11)
     end
 
     respond_to do |format|

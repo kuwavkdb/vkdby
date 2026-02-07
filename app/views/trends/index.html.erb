@@ -1,7 +1,12 @@
 <div class="flex justify-center items-start min-h-screen p-0 md:p-8">
   <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
     <div class="p-5 md:p-8">
-      <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-8">Trends</h1>
+      <header class="mb-8 text-center flex flex-col items-center">
+        <h1 class="text-3xl font-black text-slate-800 dark:text-slate-100 flex items-center justify-center gap-3">
+          <span class="text-indigo-600 dark:text-indigo-400">TRENDS</span>
+          <span class="text-slate-300 dark:text-slate-600 text-lg font-bold"><%= @pagy.count %> records</span>
+        </h1>
+      </header>
 
       <div class="flex flex-wrap gap-2 mb-6">
 
