@@ -146,7 +146,55 @@ class WikipageImporter < BaseWikipageImporter
     parse_members(unit)
     parse_footer_links(unit)
     parse_youtube_tags(unit)
+    parse_band_name_history(unit, unit_name, unit_name_kana)
     parse_sections(unit)
+  end
+
+  def parse_band_name_history(unit, current_name, current_kana) # rubocop:disable Metrics/PerceivedComplexity
+    return if unit.name_log.present? && unit.name_log.size > 1
+
+    history_section = @wiki_content.match(/^!!バンド名の?変遷.*?\n(.+?)(?=\n!!|\z)/m)&.[](1)
+    return unless history_section
+
+    entries = []
+
+    # Arrow format: → [[Name]] → [[Name]]{{fn Date}}
+    if history_section.include?('→')
+      parts = history_section.split('→').map(&:strip).reject(&:blank?)
+      parts.each_with_index do |part, idx|
+        # Extract date first from {{fn ...}}
+        date_match = part.match(/\{\{fn\s+(.*?)\}\}/)
+        date = date_match ? date_match[1] : nil
+
+        # Remove {{fn ...}} tag before extracting name to avoid it being part of the name if extraction fails or works unexpectedly
+        clean_part = part.gsub(/\{\{fn\s+.*?\}\}/, '').strip
+        name = extract_name_from_wiki_link(clean_part).strip
+
+        entries << { name: name, name_kana: nil, date: date, index: idx + 1 }
+      end
+    else
+      # Line format: Date...Name
+      current_index = 1
+      history_section.lines.each do |line|
+        line = line.strip
+        next if line.blank?
+
+        next unless line =~ /^(.+?)…(.+)$/
+
+        date = Regexp.last_match(1).strip
+        name = Regexp.last_match(2).strip
+        entries << { name: name, name_kana: nil, date: date, index: current_index }
+        current_index += 1
+      end
+    end
+
+    return if entries.empty?
+
+    # If the last entry matches the current unit name, update its kana
+    entries.last[:name_kana] = current_kana if entries.last[:name] == current_name
+
+    unit.name_log = entries
+    unit.save!
   end
 
   def parse_categories(unit)
