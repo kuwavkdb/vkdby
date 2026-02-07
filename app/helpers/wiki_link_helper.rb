@@ -1,49 +1,16 @@
 # frozen_string_literal: true
 
-module WikiLinkHelper
+module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
   def format_wiki_content(text)
     return '' if text.blank?
 
-    blocks = []
-    current_block = { type: :text, lines: [] }
-
-    text.each_line do |line|
-      is_list_item = line.match?(/^\s*\*/)
-
-      if is_list_item
-        if current_block[:type] == :list
-          current_block[:lines] << line
-        else
-          blocks << current_block unless current_block[:lines].empty?
-          current_block = { type: :list, lines: [line] }
-        end
-      elsif current_block[:type] == :text
-        current_block[:lines] << line
-      else
-        blocks << current_block unless current_block[:lines].empty?
-        current_block = { type: :text, lines: [line] }
-      end
-    end
-    blocks << current_block unless current_block[:lines].empty?
-
-    safe_join(blocks.map do |block|
-      if block[:type] == :list
-        render_wiki_list(block[:lines])
-      else
-        text_content = block[:lines].join
-        formatted = simple_format(text_content, {}, wrapper_tag: 'div')
-        parse_wiki_links(formatted)
-      end
-    end)
+    blocks = parse_wiki_lines(text)
+    render_wiki_blocks(blocks)
   end
 
   def render_wiki_list(lines)
     html = ''.html_safe
     current_depth = 0
-
-    # Simple list renderer that handles nesting by opening/closing ULs
-    # Strictly valid HTML (ul inside li) is hard with line-based parsing without recursion/lookahead
-    # This implementation produces <ul><ul>...</ul></ul> for nesting which is widely supported
 
     lines.each do |line|
       depth = line[/\A\s*(\*+)/, 1]&.length || 0
@@ -69,6 +36,22 @@ module WikiLinkHelper
     html
   end
 
+  def render_wiki_dl(lines)
+    content = lines.map do |line|
+      if line =~ /^:(.+?):(.*)$/
+        term = Regexp.last_match(1)
+        desc = Regexp.last_match(2)
+        dt = tag.dt(class: 'font-bold text-slate-700 dark:text-slate-300') { parse_wiki_links(term) }
+        dd = tag.dd(class: 'text-slate-600 dark:text-slate-400 ml-4 mb-2') { parse_wiki_links(desc) }
+        dt + dd
+      else
+        ''
+      end
+    end.join.html_safe
+
+    tag.dl(class: 'space-y-1 mt-8 mb-4') { content }
+  end
+
   def format_wiki_title(text, link: true)
     return '' if text.blank?
 
@@ -79,6 +62,84 @@ module WikiLinkHelper
   end
 
   private
+
+  def parse_wiki_lines(text)
+    blocks = []
+    current_block = { type: :text, lines: [] }
+    in_blockquote = false
+
+    text.each_line do |line|
+      if in_blockquote
+        if line.match?(/^\}\}/)
+          blocks << current_block
+          current_block = { type: :text, lines: [] }
+          in_blockquote = false
+        else
+          current_block[:lines] << line
+        end
+        next
+      end
+
+      if line.match?(/^\{\{bq/)
+        blocks << current_block unless current_block[:lines].empty?
+        current_block = { type: :blockquote, lines: [] }
+        in_blockquote = true
+        next
+      end
+
+      process_line(line, blocks, current_block) do |new_block|
+        current_block = new_block
+      end
+    end
+    blocks << current_block unless current_block[:lines].empty?
+    blocks
+  end
+
+  def process_line(line, blocks, current_block)
+    is_list_item = line.match?(/^\s*\*/)
+    is_dl_item = line.match?(/^:(.+?):(.*)$/)
+
+    if is_list_item
+      if current_block[:type] == :list
+        current_block[:lines] << line
+      else
+        blocks << current_block unless current_block[:lines].empty?
+        yield({ type: :list, lines: [line] })
+      end
+    elsif is_dl_item
+      if current_block[:type] == :definition_list
+        current_block[:lines] << line
+      else
+        blocks << current_block unless current_block[:lines].empty?
+        yield({ type: :definition_list, lines: [line] })
+      end
+    elsif current_block[:type] == :text
+      current_block[:lines] << line
+    else
+      blocks << current_block unless current_block[:lines].empty?
+      yield({ type: :text, lines: [line] })
+    end
+  end
+
+  def render_wiki_blocks(blocks)
+    safe_join(blocks.map do |block|
+      case block[:type]
+      when :list
+        render_wiki_list(block[:lines])
+      when :blockquote
+        content = block[:lines].join
+        tag.blockquote(class: 'border-l-4 border-slate-300 dark:border-slate-600 pl-4 italic text-slate-600 dark:text-slate-400 my-4') do
+          parse_wiki_links(simple_format(content))
+        end
+      when :definition_list
+        render_wiki_dl(block[:lines])
+      else
+        text_content = block[:lines].join
+        formatted = simple_format(text_content, {}, wrapper_tag: 'div')
+        parse_wiki_links(formatted)
+      end
+    end)
+  end
 
   def parse_wiki_links(text, link: true)
     # Placeholder for protected links
@@ -125,7 +186,7 @@ module WikiLinkHelper
       protected_text.gsub!(key, value)
     end
 
-    sanitize(protected_text, tags: %w[a div p br ul li], attributes: %w[href target rel class])
+    sanitize(protected_text, tags: %w[a div p br ul li dt dd dl blockquote], attributes: %w[href target rel class])
   end
 
   def create_internal_link(display, target)
