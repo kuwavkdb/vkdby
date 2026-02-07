@@ -6,6 +6,7 @@
       <div class="grid gap-8 grid-cols-1 md:grid-cols-[350px_1fr] items-start">
         <div>
           <%= render BasicAttributesComponent.new(resource: @resource) %>
+          <%= render NameHistoryComponent.new(resource: @resource) %>
           <%= render LinksComponent.new(links: @links) %>
           <%= render SpotifyEmbedComponent.new(links: @links) %>
         </div>
