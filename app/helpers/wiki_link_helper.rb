@@ -111,39 +111,56 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     blocks
   end
 
-  def process_line(line, blocks, current_block)
-    is_list_item = line.match?(/^\s*\*/)
-    is_dl_item = line.match?(/^:(.+?):(.*)$/)
-    is_h3 = line.match?(/^!/)
-    is_multi_dd = line.match?(/^:::/)
-    is_multi_dt = line.match?(/^::/) && !is_multi_dd
+  def process_line(line, blocks, current_block, &block)
+    case line
+    when /^!/
+      handle_h3(line, blocks, current_block, &block)
+    when /^::/
+      handle_multi_dl(line, blocks, current_block, &block)
+    when /^\s*\*/
+      handle_list(line, blocks, current_block, &block)
+    when /^:(.+?):(.*)$/
+      handle_dl(line, blocks, current_block, &block)
+    else
+      handle_text(line, blocks, current_block, &block)
+    end
+  end
 
-    if is_h3
+  def handle_h3(line, blocks, current_block)
+    blocks << current_block unless current_block[:lines].empty?
+    content = line.sub(/^!\s*/, '').strip
+    yield({ type: :h3, lines: [content] })
+  end
+
+  def handle_multi_dl(line, blocks, current_block)
+    if current_block[:type] == :multi_dl
+      current_block[:lines] << line
+    else
       blocks << current_block unless current_block[:lines].empty?
-      content = line.sub(/^!\s*/, '').strip
-      yield({ type: :h3, lines: [content] })
-    elsif is_multi_dt || is_multi_dd
-      if current_block[:type] == :multi_dl
-        current_block[:lines] << line
-      else
-        blocks << current_block unless current_block[:lines].empty?
-        yield({ type: :multi_dl, lines: [line] })
-      end
-    elsif is_list_item
-      if current_block[:type] == :list
-        current_block[:lines] << line
-      else
-        blocks << current_block unless current_block[:lines].empty?
-        yield({ type: :list, lines: [line] })
-      end
-    elsif is_dl_item
-      if current_block[:type] == :definition_list
-        current_block[:lines] << line
-      else
-        blocks << current_block unless current_block[:lines].empty?
-        yield({ type: :definition_list, lines: [line] })
-      end
-    elsif current_block[:type] == :text
+      yield({ type: :multi_dl, lines: [line] })
+    end
+  end
+
+  def handle_list(line, blocks, current_block)
+    if current_block[:type] == :list
+      current_block[:lines] << line
+    else
+      blocks << current_block unless current_block[:lines].empty?
+      yield({ type: :list, lines: [line] })
+    end
+  end
+
+  def handle_dl(line, blocks, current_block)
+    if current_block[:type] == :definition_list
+      current_block[:lines] << line
+    else
+      blocks << current_block unless current_block[:lines].empty?
+      yield({ type: :definition_list, lines: [line] })
+    end
+  end
+
+  def handle_text(line, blocks, current_block)
+    if current_block[:type] == :text
       current_block[:lines] << line
     else
       blocks << current_block unless current_block[:lines].empty?
