@@ -57,6 +57,18 @@ class PersonImporter < BaseWikipageImporter
       person_name = current_person_data[:name]
       person_name_kana = current_person_data[:name_kana]
       name_log_entries = parsed_names
+    elsif first_line =~ /^\s*\{\{rb\s+(.+?),\s*(.+?)\}\}\s*$/
+      raw_name = Regexp.last_match(1).strip
+      name = extract_name_from_wiki_link(raw_name)
+      name_kana = Regexp.last_match(2).strip
+
+      parsed_names = [{ name: name, name_kana: name_kana }]
+
+      # The last one is the current name
+      current_person_data = parsed_names.last
+      person_name = current_person_data[:name]
+      person_name_kana = current_person_data[:name_kana]
+      name_log_entries = parsed_names
     end
 
     encoded_old_key = URI.encode_www_form_component(@wikipage_name.encode('EUC-JP'))
