@@ -235,18 +235,31 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
       end
     end
 
+    # 4. Parse rb plugin {{rb Text,Ruby}}
+    protected_text = protected_text.gsub(/\{\{rb\s+([^,]+),([^}]+)\}\}/) do
+      text_part = Regexp.last_match(1).strip
+      ruby_part = Regexp.last_match(2).strip
+      "<ruby>#{text_part}<rt>#{ruby_part}</rt></ruby>"
+    end
+
     # 3. Restore protected links
     placeholders.each do |key, value|
       protected_text.gsub!(key, value)
     end
 
-    sanitize(protected_text, tags: %w[a div p br ul li dt dd dl blockquote], attributes: %w[href target rel class])
+    sanitize(protected_text, tags: %w[a div p br ul li dt dd dl blockquote ruby rt], attributes: %w[href target rel class])
+  end
+
+  def sanitize_with_ruby(text)
+    return '' if text.blank?
+
+    sanitize(text, tags: %w[ruby rt span], attributes: %w[class]).html_safe
   end
 
   def create_internal_link(display, target)
     encoded = URI.encode_www_form_component(target.encode('EUC-JP'))
-    link_to(display, "/#{encoded}.html", class: 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline')
+    link_to(display.html_safe, "/#{encoded}.html", class: 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline')
   rescue Encoding::UndefinedConversionError
-    link_to(display, '#', class: 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline')
+    link_to(display.html_safe, '#', class: 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline')
   end
 end
