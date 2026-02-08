@@ -23,41 +23,10 @@ class PersonImporter < BaseWikipageImporter
   private
 
   def import_person
-    # 1. Parse Person Data
-    title = @wikipage.title.to_s.strip
-    if title =~ /^(.+?)[（(](.+?)[）)]/
-      raw_name = Regexp.last_match(1).strip
-      person_name = extract_name_from_wiki_link(raw_name)
-      person_name_kana = Regexp.last_match(2).strip
-    else
-      person_name = extract_name_from_wiki_link(title)
-      person_name_kana = nil
-    end
-
-    # Parse history from first line: "OldName(Kana) → NewName(Kana)"
-    first_line = @wiki_content.lines.first&.strip&.gsub(/^!+/, '')&.strip
-    name_log_entries = []
-
-    if first_line&.include?('→')
-      parts = first_line.split('→').map(&:strip)
-      parsed_names = parts.map do |part|
-        if part =~ /\{\{rb\s+(.+?),\s*(.+?)\}\}/
-          raw_name = Regexp.last_match(1).strip
-          { name: extract_name_from_wiki_link(raw_name), name_kana: Regexp.last_match(2).strip }
-        elsif part =~ /^(.+?)\s*[（(](.+)[）)]$/
-          raw_name = Regexp.last_match(1).strip
-          { name: extract_name_from_wiki_link(raw_name), name_kana: Regexp.last_match(2).strip }
-        else
-          { name: extract_name_from_wiki_link(part), name_kana: nil }
-        end
-      end
-
-      # The last one is the current name
-      current_person_data = parsed_names.last
-      person_name = current_person_data[:name]
-      person_name_kana = current_person_data[:name_kana]
-      name_log_entries = parsed_names
-    end
+    basic_info = extract_person_basic_info
+    person_name = basic_info[:name]
+    person_name_kana = basic_info[:name_kana]
+    name_log_entries = basic_info[:name_log]
 
     encoded_old_key = URI.encode_www_form_component(@wikipage_name.encode('EUC-JP'))
 
@@ -304,6 +273,63 @@ class PersonImporter < BaseWikipageImporter
     else
       str
     end
+  end
+
+  def extract_person_basic_info
+    # 1. Parse Person Data
+    title = @wikipage.title.to_s.strip
+    if title =~ /^(.+?)[（(](.+?)[）)]/
+      raw_name = Regexp.last_match(1).strip
+      person_name = extract_name_from_wiki_link(raw_name)
+      person_name_kana = Regexp.last_match(2).strip
+    else
+      person_name = extract_name_from_wiki_link(title)
+      person_name_kana = nil
+    end
+
+    # Parse history from first line: "OldName(Kana) → NewName(Kana)"
+    first_line = @wiki_content.lines.first&.strip&.gsub(/^!+/, '')&.strip
+    name_log_entries = []
+
+    if first_line&.include?('→')
+      parts = first_line.split('→').map(&:strip)
+      parsed_names = parts.map do |part|
+        if part =~ /\{\{rb\s+(.+?),\s*(.+?)\}\}/
+          raw_name = Regexp.last_match(1).strip
+          { name: extract_name_from_wiki_link(raw_name), name_kana: Regexp.last_match(2).strip }
+        elsif part =~ /^(.+?)\s*[（(](.+)[）)]$/
+          raw_name = Regexp.last_match(1).strip
+          { name: extract_name_from_wiki_link(raw_name), name_kana: Regexp.last_match(2).strip }
+        else
+          { name: extract_name_from_wiki_link(part), name_kana: nil }
+        end
+      end
+
+      # The last one is the current name
+      current_person_data = parsed_names.last
+      person_name = current_person_data[:name]
+      person_name_kana = current_person_data[:name_kana]
+      name_log_entries = parsed_names
+    elsif first_line =~ /^\s*\{\{rb\s+(.+?),\s*(.+?)\}\}(.*)$/
+      raw_name = Regexp.last_match(1).strip
+      suffix = Regexp.last_match(3)
+      name = extract_name_from_wiki_link(raw_name) + suffix
+      name_kana = Regexp.last_match(2).strip
+
+      parsed_names = [{ name: name, name_kana: name_kana }]
+
+      # The last one is the current name
+      current_person_data = parsed_names.last
+      person_name = current_person_data[:name]
+      person_name_kana = current_person_data[:name_kana]
+      name_log_entries = parsed_names
+    end
+
+    {
+      name: person_name,
+      name_kana: person_name_kana,
+      name_log: name_log_entries
+    }
   end
 end
 # rubocop:enable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity
