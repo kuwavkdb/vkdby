@@ -310,9 +310,10 @@ class PersonImporter < BaseWikipageImporter
       person_name = current_person_data[:name]
       person_name_kana = current_person_data[:name_kana]
       name_log_entries = parsed_names
-    elsif first_line =~ /^\s*\{\{rb\s+(.+?),\s*(.+?)\}\}\s*$/
+    elsif first_line =~ /^\s*\{\{rb\s+(.+?),\s*(.+?)\}\}(.*)$/
       raw_name = Regexp.last_match(1).strip
-      name = extract_name_from_wiki_link(raw_name)
+      suffix = Regexp.last_match(3)
+      name = extract_name_from_wiki_link(raw_name) + suffix
       name_kana = Regexp.last_match(2).strip
 
       parsed_names = [{ name: name, name_kana: name_kana }]
