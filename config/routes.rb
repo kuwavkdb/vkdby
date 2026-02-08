@@ -63,6 +63,9 @@ Rails.application.routes.draw do
   resources :trends, only: %i[index show]
   resources :items, only: %i[index]
 
+  # Cross-search
+  get 'search', to: 'search#index'
+
   # Legacy redirects for .html extensions
   get '/:old_key.html', to: 'legacy_redirects#show', constraints: { old_key: %r{[^/]+} }
 
