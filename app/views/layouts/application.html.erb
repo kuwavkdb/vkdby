@@ -66,6 +66,20 @@
 
             </div>
           </div>
+          <div class="flex items-center gap-4">
+            <!-- Search Form (Desktop) -->
+            <div class="hidden sm:block">
+              <%= form_with url: search_path, method: :get, local: true, class: "flex items-center" do |f| %>
+                <div class="relative">
+                  <%= f.text_field :q, placeholder: "Search...", class: "w-64 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 pr-10 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-gray-400" %>
+                  <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                    </svg>
+                  </button>
+                </div>
+              <% end %>
+            </div>
           <div class="flex items-center">
           <div class="hidden sm:ml-6 sm:flex sm:items-center">
             <% if logged_in? %>
@@ -150,6 +164,17 @@
               
               <!-- Common Navigation Menu Panel -->
               <div class="hidden absolute top-16 left-0 right-0 z-50 bg-white dark:bg-gray-800 shadow-lg border-t border-gray-200 dark:border-gray-700" id="common-nav-menu" data-mobile-menu-target="menu">
+                <!-- Search Form (Mobile) -->
+                <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                  <%= form_with url: search_path, method: :get, local: true, class: "flex gap-2" do |f| %>
+                    <%= f.text_field :q, placeholder: "Search...", class: "flex-1 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-gray-400" %>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                      </svg>
+                    </button>
+                  <% end %>
+                </div>
                 <div class="pt-2 pb-3 space-y-1">
                   <%= link_to units_path, class: "border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white block pl-3 pr-4 py-2 border-l-4 text-base font-medium" do %>
                     <div class="flex items-center">
