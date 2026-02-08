@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class MemberRowComponent < ViewComponent::Base
+  include WikiLinkHelper
+
   def initialize(member:, hide_active: false)
     @member = member
     @hide_active = hide_active
