@@ -82,8 +82,13 @@
           <div class="hidden sm:ml-6 sm:flex sm:items-center">
             <% if logged_in? %>
               <div class="ml-3 relative admin-dropdown h-full flex items-center">
-                <div class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium cursor-pointer">
-                  <%= current_user.name %>
+                <div class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium cursor-pointer" title="<%= current_user.name %>">
+                  <!-- User icon (visible on sm-lg, hidden on xl+) -->
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 lg:hidden">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                  </svg>
+                  <!-- User name (hidden on sm-lg, visible on xl+) -->
+                  <span class="hidden lg:inline"><%= current_user.name %></span>
                   <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                   </svg>
