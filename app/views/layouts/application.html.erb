@@ -41,8 +41,8 @@
             <!-- Search Form (Desktop) - Next to logo -->
             <%= form_with url: search_path, method: :get, local: true, class: "hidden sm:flex items-center ml-6" do |f| %>
               <div class="relative">
-                <%= f.text_field :q, placeholder: "Search...", class: "w-64 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 pr-10 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-gray-400" %>
-                <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <%= f.text_field :q, placeholder: "Search...", class: "search-input-responsive bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg pl-10 py-2 pr-2 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-gray-400 placeholder:opacity-0 md:placeholder:opacity-100 focus:placeholder:opacity-100" %>
+                <button type="submit" class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                   </svg>
