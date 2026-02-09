@@ -16,9 +16,7 @@ module Admin
       end
 
       # テキスト検索（title, content）
-      if @q.present?
-        scope = scope.where('title ILIKE :q OR content ILIKE :q', q: "%#{@q}%")
-      end
+      scope = scope.where('title ILIKE :q OR content ILIKE :q', q: "%#{@q}%") if @q.present?
 
       @pagy, @trends = pagy(scope, limit: 20)
 
@@ -39,10 +37,10 @@ module Admin
         @trend.units = [{ 'unit_id' => unit.id, 'name' => unit.name }] if unit
       end
 
-      if params[:person_id].present?
-        person = Person.find_by(id: params[:person_id])
-        @trend.people = [{ 'person_id' => person.id, 'name' => person.name }] if person
-      end
+      return unless params[:person_id].present?
+
+      person = Person.find_by(id: params[:person_id])
+      @trend.people = [{ 'person_id' => person.id, 'name' => person.name }] if person
     end
 
     def edit

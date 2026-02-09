@@ -69,9 +69,7 @@ module Admin
       q = params[:q]
       scope = Person.all
 
-      if q.present?
-        scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q', q: "%#{q}%")
-      end
+      scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q', q: "%#{q}%") if q.present?
 
       @people = scope.limit(10).order(:name)
 
