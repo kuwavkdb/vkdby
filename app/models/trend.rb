@@ -45,7 +45,7 @@ class Trend < ApplicationRecord
     suspend: 7,
     restart: 8,
     limited: 9,
-    etc: 98,
+#    etc: 98,
     unknown: 99,
     other: 100
   }, prefix: true

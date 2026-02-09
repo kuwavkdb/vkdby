@@ -4,6 +4,9 @@
 
 import { application } from "controllers/application"
 
+import AutocompleteController from "controllers/autocomplete_controller"
+application.register("autocomplete", AutocompleteController)
+
 import DatePickerController from "controllers/date_picker_controller"
 application.register("date-picker", DatePickerController)
 

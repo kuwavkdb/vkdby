@@ -12,6 +12,9 @@ Rails.application.routes.draw do
     resources :users
     resources :external_sites
     resources :units do
+      collection do
+        get :search
+      end
       resources :unit_logs
       resources :unit_people, only: %i[create edit update destroy] do
         collection do
@@ -20,12 +23,17 @@ Rails.application.routes.draw do
       end
     end
     resources :people do
+      collection do
+        get :search
+      end
       resources :person_logs do
         collection do
           patch :reorder
         end
       end
     end
+
+    resources :trends
 
     resources :index_groups do
       member do

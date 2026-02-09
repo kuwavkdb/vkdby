@@ -65,5 +65,24 @@ module Admin
                                    links_attributes: %i[id text url active sort_order _destroy],
                                    name_logs_attributes: %i[name name_kana])
     end
+
+    public
+
+    def search
+      q = params[:q]
+      scope = Unit.all
+
+      if q.present?
+        scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q', q: "%#{q}%")
+      end
+
+      @units = scope.limit(10).order(:name)
+
+      respond_to do |format|
+        format.json do
+          render json: @units.map { |u| { id: u.id, name: u.name, name_kana: u.name_kana, key: u.key } }
+        end
+      end
+    end
   end
 end
