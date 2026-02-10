@@ -62,5 +62,22 @@ module Admin
         name_logs_attributes: %i[name name_kana]
       )
     end
+
+    public
+
+    def search
+      q = params[:q]
+      scope = Person.all
+
+      scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q', q: "%#{q}%") if q.present?
+
+      @people = scope.limit(10).order(:name)
+
+      respond_to do |format|
+        format.json do
+          render json: @people.map { |p| { id: p.id, name: p.name, name_kana: p.name_kana, key: p.key } }
+        end
+      end
+    end
   end
 end
