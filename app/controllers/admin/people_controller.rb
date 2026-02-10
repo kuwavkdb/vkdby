@@ -8,7 +8,7 @@ module Admin
     def index
       @q = params[:q]
       scope = Person.all.order(updated_at: :desc)
-      scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q', q: "%#{@q}%") if @q.present?
+      scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q', q: "%#{@q}%") if @q.present?
       @pagy, @people = pagy(scope)
     end
 
@@ -48,6 +48,19 @@ module Admin
       redirect_to admin_people_path, notice: 'Person deleted successfully.'
     end
 
+    def search
+      q = params[:q]
+      scope = Person.all
+
+      scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q', q: "%#{q}%") if q.present?
+
+      @people = scope.limit(10).order(:name)
+
+      render json: @people.map { |p|
+        { id: p.id, name: p.name.presence || p.key, name_kana: p.name_kana, key: p.key }
+      }
+    end
+
     private
 
     def set_person
@@ -61,23 +74,6 @@ module Admin
         links_attributes: %i[id text url active _destroy],
         name_logs_attributes: %i[name name_kana]
       )
-    end
-
-    public
-
-    def search
-      q = params[:q]
-      scope = Person.all
-
-      scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q', q: "%#{q}%") if q.present?
-
-      @people = scope.limit(10).order(:name)
-
-      respond_to do |format|
-        format.json do
-          render json: @people.map { |p| { id: p.id, name: p.name, name_kana: p.name_kana, key: p.key } }
-        end
-      end
     end
   end
 end

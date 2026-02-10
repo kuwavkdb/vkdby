@@ -10,6 +10,19 @@ export default class extends Controller {
   connect() {
     this.selectedItems = this.loadExistingItems()
     this.timeout = null
+    this.activeIndex = -1
+    this.handleClickOutside = this.handleClickOutside.bind(this)
+    document.addEventListener('click', this.handleClickOutside)
+  }
+
+  disconnect() {
+    document.removeEventListener('click', this.handleClickOutside)
+  }
+
+  handleClickOutside(event) {
+    if (!this.element.contains(event.target)) {
+      this.hideResults()
+    }
   }
 
   loadExistingItems() {
@@ -36,6 +49,54 @@ export default class extends Controller {
     }, 300) // Debounce 300ms
   }
 
+  onKeydown(event) {
+    const items = this.resultItems
+
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault()
+        if (this.resultsTarget.classList.contains('hidden')) return
+        this.activeIndex = Math.min(this.activeIndex + 1, items.length - 1)
+        this.highlightItem()
+        break
+      case 'ArrowUp':
+        event.preventDefault()
+        if (this.resultsTarget.classList.contains('hidden')) return
+        this.activeIndex = Math.max(this.activeIndex - 1, 0)
+        this.highlightItem()
+        break
+      case 'Enter':
+        event.preventDefault()
+        if (this.activeIndex >= 0 && items[this.activeIndex]) {
+          items[this.activeIndex].click()
+        }
+        break
+      case 'Escape':
+        this.hideResults()
+        this.inputTarget.blur()
+        break
+    }
+  }
+
+  get resultItems() {
+    return Array.from(this.resultsTarget.querySelectorAll('[data-id]'))
+  }
+
+  highlightItem() {
+    const items = this.resultItems
+    items.forEach((item, index) => {
+      if (index === this.activeIndex) {
+        item.classList.add('bg-gray-100', 'dark:bg-gray-700')
+      } else {
+        item.classList.remove('bg-gray-100', 'dark:bg-gray-700')
+      }
+    })
+
+    if (items[this.activeIndex]) {
+      items[this.activeIndex].scrollIntoView({ block: 'nearest' })
+    }
+  }
+
   async performSearch(query) {
     try {
       const response = await fetch(`${this.urlValue}?q=${encodeURIComponent(query)}`, {
@@ -55,6 +116,8 @@ export default class extends Controller {
   }
 
   displayResults(items) {
+    this.activeIndex = -1
+
     if (items.length === 0) {
       this.hideResults()
       return
@@ -63,8 +126,14 @@ export default class extends Controller {
     const idField = this.fieldNameValue === 'units' ? 'unit_id' : 'person_id'
     const selectedIds = this.selectedItems.map(item => item[idField])
 
-    this.resultsTarget.innerHTML = items
-      .filter(item => !selectedIds.includes(item.id))
+    const filtered = items.filter(item => !selectedIds.includes(item.id))
+
+    if (filtered.length === 0) {
+      this.hideResults()
+      return
+    }
+
+    this.resultsTarget.innerHTML = filtered
       .map(item => `
         <div class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
              data-action="click->autocomplete#selectItem"
@@ -131,6 +200,7 @@ export default class extends Controller {
   }
 
   hideResults() {
+    this.activeIndex = -1
     this.resultsTarget.classList.add('hidden')
   }
 
