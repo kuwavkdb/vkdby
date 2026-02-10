@@ -10,8 +10,8 @@
     </div>
   </div>
 
-  <div class="mb-4">
-    <%== pagy_nav(@pagy) if @pagy.pages > 1 %>
+  <div class="mb-4 flex justify-center">
+    <%== render partial: 'pagy/nav', locals: {pagy: @pagy} if @pagy.pages > 1 %>
   </div>
 
   <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg mb-4">
@@ -82,7 +82,7 @@
     </table>
   </div>
 
-  <div class="mt-4">
-    <%== pagy_nav(@pagy) if @pagy.pages > 1 %>
+  <div class="mt-4 flex justify-center">
+    <%== render partial: 'pagy/nav', locals: {pagy: @pagy} if @pagy.pages > 1 %>
   </div>
 </div>
