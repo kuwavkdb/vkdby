@@ -27,4 +27,7 @@ class Item < ApplicationRecord
   scope :by_artist_old_key, lambda { |old_key|
     where('artists @> ?', [{ old_key: old_key }].to_json)
   }
+
+  # 発売日で検索するスコープ
+  scope :released_on, ->(date) { where(release_date: date) }
 end

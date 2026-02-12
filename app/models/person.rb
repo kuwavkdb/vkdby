@@ -47,6 +47,12 @@ class Person < ApplicationRecord
   # Valid parts for a person
   AVAILABLE_PARTS = %w[vocal guitar bass drums keyboard dj dancer manipulator].freeze
 
+  # Scopes
+  scope :birthday_on, lambda { |date|
+    where('EXTRACT(MONTH FROM birthday) = ? AND EXTRACT(DAY FROM birthday) = ?',
+          date.month, date.day)
+  }
+
   STATUS_TRANSLATIONS = {
     'pre' => '準備中',
     'active' => '活動中',

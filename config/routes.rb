@@ -71,6 +71,10 @@ Rails.application.routes.draw do
   resources :trends, only: %i[index show]
   resources :items, only: %i[index]
 
+  # Daily page
+  get '/date/:year/:month/:day', to: 'daily#show', as: :daily,
+                                 constraints: { year: /\d{4}/, month: /\d{1,2}/, day: /\d{1,2}/ }
+
   # Cross-search
   get 'search', to: 'search#index'
 

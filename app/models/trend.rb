@@ -71,6 +71,9 @@ class Trend < ApplicationRecord
     other: 100
   }, prefix: true
 
+  # Scopes
+  scope :on_date, ->(date) { where(date: date) }
+
   # Validations
   validates :date, presence: true
   validates :active, inclusion: { in: [true, false] }
