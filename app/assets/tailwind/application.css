@@ -12,3 +12,22 @@
     @apply bg-linear-to-br from-slate-50 to-slate-200 dark:from-slate-900 dark:to-slate-800 text-slate-900 dark:text-slate-100 min-h-screen antialiased font-sans;
   }
 }
+
+@layer components {
+  .search-input-responsive {
+    width: 2.5rem; /* 40px */
+    transition: width 300ms ease-in-out, padding 300ms ease-in-out;
+  }
+
+  .search-input-responsive:focus {
+    width: 16rem; /* 256px */
+    padding-left: 1rem; /* 16px */
+  }
+
+  @media (min-width: 768px) {
+    .search-input-responsive {
+      width: 16rem; /* 256px */
+      padding-left: 1rem; /* 16px */
+    }
+  }
+}

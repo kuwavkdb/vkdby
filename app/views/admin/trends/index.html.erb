@@ -1,0 +1,88 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold mb-4 md:mb-0 text-gray-900 dark:text-gray-100">Trend Management</h1>
+    <div class="flex items-center space-x-4">
+      <%= form_with url: admin_trends_path, method: :get, local: true, class: "flex" do |f| %>
+        <%= f.text_field :q, value: params[:q], placeholder: "Search by title or content...", class: "rounded-l-md border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+        <%= f.submit "Search", class: "px-4 py-2 bg-white text-gray-700 border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-50 cursor-pointer dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600" %>
+      <% end %>
+      <%= link_to "Add Trend", new_admin_trend_path, class: "px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700" %>
+    </div>
+  </div>
+
+  <div class="mb-4 flex justify-center">
+    <%== render partial: 'pagy/nav', locals: {pagy: @pagy} if @pagy.pages > 1 %>
+  </div>
+
+  <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg mb-4">
+    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+      <thead class="bg-gray-50 dark:bg-gray-700">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Units</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Phenomenon</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Title</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+        <% @trends.each do |trend| %>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+              <%= trend.date.strftime('%Y/%m/%d') %>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+              <% if trend.units.present? %>
+                <% trend.units.first(2).each do |unit_data| %>
+                  <% unit = @related_units[unit_data['unit_id']] %>
+                  <div><%= unit&.name || unit_data['name'] %></div>
+                <% end %>
+                <% if trend.units.size > 2 %>
+                  <div class="text-xs text-gray-400">+<%= trend.units.size - 2 %> more</div>
+                <% end %>
+              <% else %>
+                <span class="text-gray-400">-</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+              <% if trend.unit_phenomenon.present? %>
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                  <%= trend.unit_phenomenon.humanize %>
+                </span>
+              <% elsif trend.person_phenomenon.present? %>
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                  <%= trend.person_phenomenon.humanize %>
+                </span>
+              <% elsif trend.etc_phenomenon.present? %>
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200">
+                  <%= trend.etc_phenomenon.humanize %>
+                </span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+              <%= link_to trend.title.presence || "(No title)", trend_path(trend), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300", target: "_blank" %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <% if trend.active %>
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Active</span>
+              <% else %>
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200">Inactive</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <%= link_to "Edit", edit_admin_trend_path(trend), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-4" %>
+              <% if current_user.super_operator_or_above? %>
+                <%= link_to "Delete", admin_trend_path(trend), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4 flex justify-center">
+    <%== render partial: 'pagy/nav', locals: {pagy: @pagy} if @pagy.pages > 1 %>
+  </div>
+</div>

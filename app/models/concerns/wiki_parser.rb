@@ -124,6 +124,13 @@ module WikiParser
         metadata[:notes] << badge_part if badge_part.present?
         metadata[:is_temp] = true
         name_part
+      when 'rb'
+        if plugin_value&.include?(',')
+          text_part, ruby_part = plugin_value.split(',', 2).map(&:strip)
+          "<ruby>#{text_part}<rt>#{ruby_part}</rt></ruby>"
+        else
+          plugin_value
+        end
       else
         match
       end

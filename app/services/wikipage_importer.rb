@@ -77,6 +77,11 @@ class WikipageImporter < BaseWikipageImporter
       unit_name = current_unit_data[:name]
       unit_name_kana = current_unit_data[:name_kana]
       name_log_entries = parsed_names
+    elsif first_line =~ /^\s*\{\{rb\s+(.+?),\s*(.+?)\}\}(.*)$/
+      raw_name = Regexp.last_match(1).strip
+      suffix = Regexp.last_match(3)
+      unit_name = extract_name_from_wiki_link(raw_name) + suffix
+      unit_name_kana = Regexp.last_match(2).strip
     elsif first_line =~ /^(.+?)\s*[（(](.+)[）)]$/
       raw_name = Regexp.last_match(1).strip
       unit_name = extract_name_from_wiki_link(raw_name)

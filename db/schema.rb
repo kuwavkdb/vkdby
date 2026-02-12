@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_06_125041) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_11_144725) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -42,6 +42,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_06_125041) do
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["artists"], name: "index_items_on_artists", using: :gin
+    t.index ["asin"], name: "index_items_on_asin", unique: true
     t.index ["link_url"], name: "index_items_on_link_url", unique: true
     t.index ["release_date"], name: "index_items_on_release_date"
     t.index ["title"], name: "index_items_on_title"

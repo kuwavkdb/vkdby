@@ -8,7 +8,7 @@ module Admin
     def index
       @q = params[:q]
       scope = Unit.all.order(updated_at: :desc)
-      scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q', q: "%#{@q}%") if @q.present?
+      scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q', q: "%#{@q}%") if @q.present?
       @pagy, @units = pagy(scope)
     end
 
@@ -52,6 +52,17 @@ module Admin
     def destroy
       @unit.destroy
       redirect_to admin_units_path, notice: 'Unit deleted successfully.'
+    end
+
+    def search
+      q = params[:q]
+      scope = Unit.all
+
+      scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q', q: "%#{q}%") if q.present?
+
+      @units = scope.limit(10).order(:name)
+
+      render json: @units.map { |u| { id: u.id, name: u.name, name_kana: u.name_kana, key: u.key } }
     end
 
     private

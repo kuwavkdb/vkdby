@@ -26,6 +26,9 @@ module Vkdby
     require_relative '../lib/middleware/euc_jp_url_fixer'
     config.middleware.insert_before 0, Middleware::EucJpUrlFixer
 
+    # Set default locale to Japanese
+    config.i18n.default_locale = :ja
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

@@ -12,6 +12,9 @@ Rails.application.routes.draw do
     resources :users
     resources :external_sites
     resources :units do
+      collection do
+        get :search
+      end
       resources :unit_logs
       resources :unit_people, only: %i[create edit update destroy] do
         collection do
@@ -20,12 +23,17 @@ Rails.application.routes.draw do
       end
     end
     resources :people do
+      collection do
+        get :search
+      end
       resources :person_logs do
         collection do
           patch :reorder
         end
       end
     end
+
+    resources :trends
 
     resources :index_groups do
       member do
@@ -62,6 +70,12 @@ Rails.application.routes.draw do
   resources :units, param: :key, only: %i[index show], constraints: { key: %r{[^/]+} }
   resources :trends, only: %i[index show]
   resources :items, only: %i[index]
+
+  # Item詳細ページのルート
+  get '/ITEM_:asin', to: 'items#show', as: :item, constraints: { asin: /[A-Z0-9]+/ }
+
+  # Cross-search
+  get 'search', to: 'search#index'
 
   # Legacy redirects for .html extensions
   get '/:old_key.html', to: 'legacy_redirects#show', constraints: { old_key: %r{[^/]+} }

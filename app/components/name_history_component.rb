@@ -8,7 +8,7 @@ class NameHistoryComponent < ViewComponent::Base
   end
 
   def render?
-    @resource.name_logs.present?
+    name_logs.present? && name_logs.size > 1
   end
 
   def name_logs
