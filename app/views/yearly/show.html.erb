@@ -1,13 +1,13 @@
 <div class="flex justify-center min-h-screen p-0 md:p-8 bg-gray-100 dark:bg-gray-900">
   <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
 
-    <!-- Month Header -->
+    <!-- Year Header -->
     <header class="mb-8 text-center border-b border-slate-200 dark:border-slate-700 pb-6">
       <h1 class="text-3xl font-black text-slate-800 dark:text-slate-100">
-        <%= link_to "#{@date.year}年", yearly_path(year: @date.year), class: "text-indigo-600 dark:text-indigo-400 underline decoration-2 underline-offset-4 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors" %><%= @date.strftime('%-m月') %>
+        <%= @year %>年
       </h1>
       <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
-        Monthly Summary
+        Yearly Summary
       </p>
     </header>
 
@@ -15,55 +15,53 @@
     <div class="space-y-3 mb-8">
       <!-- Year Navigation -->
       <div class="flex justify-between">
-        <% prev_year_date = @date - 1.year %>
-        <%= link_to "← 前年同月", monthly_path(year: prev_year_date.year, month: prev_year_date.month),
-            class: "text-sm font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200" %>
+        <%= link_to "← 前年", yearly_path(year: @year - 1),
+            class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300" %>
         <% today = Date.today %>
-        <%= link_to "当年同月", monthly_path(year: today.year, month: @date.month),
-            class: "text-sm font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200" %>
-        <% next_year_date = @date + 1.year %>
-        <%= link_to "翌年同月 →", monthly_path(year: next_year_date.year, month: next_year_date.month),
-            class: "text-sm font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200" %>
-      </div>
-
-      <!-- Month Navigation -->
-      <div class="flex justify-between">
-        <% prev_month = @date - 1.month %>
-        <%= link_to "← 前月", monthly_path(year: prev_month.year, month: prev_month.month),
+        <%= link_to "今年", yearly_path(year: today.year),
             class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300" %>
-        <%= link_to "今月", monthly_path(year: today.year, month: today.month),
+        <%= link_to "翌年 →", yearly_path(year: @year + 1),
             class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300" %>
-        <% next_month = @date + 1.month %>
-        <%= link_to "翌月 →", monthly_path(year: next_month.year, month: next_month.month),
-            class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300" %>
-      </div>
-
-      <!-- 12 Months Navigation (Same Year) -->
-      <div class="flex flex-wrap gap-1 justify-center">
-        <% (1..12).each do |m| %>
-          <% is_current = m == @date.month %>
-          <%= link_to m, monthly_path(year: @date.year, month: m),
-              class: "px-3 py-1.5 rounded-full text-sm font-bold transition-colors whitespace-nowrap border #{is_current ? 'bg-indigo-600 text-white border-indigo-600 dark:bg-indigo-500 dark:border-indigo-500' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600 dark:hover:bg-slate-700'}" %>
-        <% end %>
       </div>
     </div>
 
-    <!-- Calendar Section -->
+    <!-- 12 Months Section -->
     <section class="mb-12">
       <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 pb-2 mb-4">
-        Calendar
+        Months
       </h2>
-      <%= render MonthlyCalendarComponent.new(date: @date, daily_trend_counts: @daily_trend_counts) %>
+      <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+        <% (1..12).each do |month| %>
+          <% trend_count = @monthly_trend_counts[month] || 0 %>
+          <%= link_to monthly_path(year: @year, month: month),
+              class: "block p-4 rounded-lg border transition-all hover:shadow-lg #{trend_count > 0 ? 'bg-indigo-50 border-indigo-200 dark:bg-indigo-900/30 dark:border-indigo-700 hover:bg-indigo-100 dark:hover:bg-indigo-900/50' : 'bg-slate-50 border-slate-200 dark:bg-slate-900/50 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-900'}" do %>
+            <div class="text-center">
+              <div class="text-lg font-bold text-slate-800 dark:text-slate-200">
+                <%= month %>月
+              </div>
+              <% if trend_count > 0 %>
+                <div class="text-xs text-indigo-600 dark:text-indigo-400 mt-1">
+                  <%= trend_count %> trends
+                </div>
+              <% else %>
+                <div class="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                  -
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
     </section>
 
-    <!-- Day Unknown Trends Section -->
-    <% if @day_unknown_trends.present? %>
+    <!-- Month Unknown Trends Section -->
+    <% if @month_unknown_trends.present? %>
       <section class="mb-12">
         <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 pb-2 mb-4">
-          Trends (日付不明)
+          Trends (月不明)
         </h2>
         <div class="space-y-0">
-          <% @day_unknown_trends.each do |trend| %>
+          <% @month_unknown_trends.each do |trend| %>
             <div class="p-4 border-b border-slate-200 dark:border-slate-700 last:border-0">
               <% if trend.units %>
                 <% trend.units.each do |unit_data| %>
@@ -85,10 +83,10 @@
     <% end %>
 
     <!-- Empty State -->
-    <% if @daily_trend_counts.empty? && @day_unknown_trends.blank? %>
+    <% if @monthly_trend_counts.empty? && @month_unknown_trends.blank? %>
       <div class="py-20 text-center">
         <p class="text-slate-400 dark:text-slate-500 font-bold">
-          この月には記録がありません。
+          この年には記録がありません。
         </p>
       </div>
     <% end %>
