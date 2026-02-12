@@ -71,6 +71,9 @@ Rails.application.routes.draw do
   resources :trends, only: %i[index show]
   resources :items, only: %i[index]
 
+  # Item詳細ページのルート
+  get '/ITEM_:asin', to: 'items#show', as: :item, constraints: { asin: /[A-Z0-9]+/ }
+
   # Cross-search
   get 'search', to: 'search#index'
 

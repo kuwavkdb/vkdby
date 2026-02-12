@@ -1,0 +1,109 @@
+<div class="flex justify-center items-center min-h-screen p-0 md:p-8 bg-gray-100 dark:bg-gray-900">
+  <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
+
+    <!-- タイトル付きヘッダー -->
+    <div class="bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-indigo-700 dark:to-purple-700 p-6 md:p-8">
+      <h1 class="text-2xl md:text-3xl font-bold text-white"><%= @item.title %></h1>
+    </div>
+
+    <div class="p-5 md:p-8">
+      <!-- 2カラムレイアウト: 左に画像、右に情報 -->
+      <div class="grid gap-8 grid-cols-1 md:grid-cols-[350px_1fr] items-start">
+
+        <!-- 左カラム: 大きめの商品画像 -->
+        <div>
+          <% if @item.image_url.present? %>
+            <%= image_tag @item.image_url, alt: @item.title, class: "w-full rounded-lg shadow-lg" %>
+          <% else %>
+            <div class="w-full aspect-square bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center">
+              <span class="text-slate-400 dark:text-slate-500">画像なし</span>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- 右カラム: 商品詳細 -->
+        <div class="space-y-6">
+
+          <!-- アーティスト -->
+          <section>
+            <div class="flex items-baseline gap-2">
+              <span class="text-sm font-bold text-slate-700 dark:text-slate-300">アーティスト:</span>
+              <div class="flex flex-wrap gap-2">
+                <% @item.artists.each do |artist_data| %>
+                  <% artist_path = artist_profile_path(artist_data) %>
+                  <% if artist_path %>
+                    <%= link_to artist_data['name'], artist_path, class: "text-base font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors underline" %>
+                  <% else %>
+                    <span class="text-base font-semibold text-slate-700 dark:text-slate-300"><%= artist_data['name'] %></span>
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+          </section>
+
+          <!-- 発売日 -->
+          <section>
+            <div class="flex items-baseline gap-2">
+              <span class="text-sm font-bold text-slate-700 dark:text-slate-300">発売日:</span>
+              <span class="text-base font-mono font-bold text-slate-800 dark:text-slate-200">
+                <%= @item.release_date.strftime('%Y/%m/%d') %>
+              </span>
+            </div>
+          </section>
+
+          <!-- ショッピングリンク -->
+          <section>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">購入</h2>
+            <div class="space-y-3">
+
+              <!-- Amazonリンク -->
+              <%= link_to @item.link_url, target: "_blank", rel: "noopener noreferrer", class: "flex items-center justify-center gap-2 w-full px-4 py-3 bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold rounded-lg transition-colors shadow-md" do %>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Amazonで購入
+              <% end %>
+
+              <!-- Tower Recordsリンク -->
+              <%= link_to tower_records_search_url(@item), target: "_blank", rel: "noopener noreferrer", class: "flex items-center justify-center gap-2 w-full px-4 py-3 bg-yellow-400 hover:bg-yellow-500 text-red-800 font-bold rounded-lg transition-colors shadow-md" do %>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                TOWER RECORDS ONLINEで検索
+              <% end %>
+
+              <!-- Yahooショッピングリンク -->
+              <%= link_to yahoo_shopping_search_url(@item), target: "_blank", rel: "noopener noreferrer", class: "flex items-center justify-center gap-2 w-full px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-colors shadow-md" do %>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Yahooショッピングで検索
+              <% end %>
+
+            </div>
+          </section>
+
+        </div>
+      </div>
+
+      <!-- 関連アイテムセクション -->
+      <% if @related_items.present? %>
+        <section class="mt-8">
+          <div class="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">関連アイテム</h2>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <%= render ItemCardComponent.with_collection(@related_items) %>
+          </div>
+        </section>
+      <% end %>
+
+      <footer class="mt-12 pt-8 border-t border-slate-100 dark:border-slate-700 text-center">
+        <p class="text-[0.65rem] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-loose">
+          ASIN<br>
+          <span class="text-slate-300 dark:text-slate-600 font-black"><%= @item.asin %></span>
+        </p>
+      </footer>
+    </div>
+  </div>
+</div>
