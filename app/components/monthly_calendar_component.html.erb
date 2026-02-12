@@ -1,0 +1,49 @@
+<div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+  <!-- Calendar Header (Days of Week) -->
+  <div class="grid grid-cols-7 border-b border-slate-200 dark:border-slate-700">
+    <% %w[日 月 火 水 木 金 土].each_with_index do |day_name, index| %>
+      <div class="p-2 text-center text-xs font-bold <%= index == 0 ? 'text-red-600 dark:text-red-400' : index == 6 ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400' %>">
+        <%= day_name %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Calendar Grid -->
+  <% calendar_weeks.each do |week| %>
+    <div class="grid grid-cols-7 border-b border-slate-200 dark:border-slate-700 last:border-0">
+      <% week.each_with_index do |date, wday| %>
+        <% if date %>
+          <% is_current_month = current_month?(date) %>
+          <% is_today = today?(date) %>
+          <% count = trend_count(date) %>
+
+          <div class="relative min-h-[80px] border-r border-slate-200 dark:border-slate-700 last:border-0 p-2 <%= is_current_month ? 'bg-white dark:bg-slate-800' : 'bg-slate-50 dark:bg-slate-900/50' %> <%= is_today ? 'ring-2 ring-inset ring-indigo-500' : '' %>">
+            <!-- Date -->
+            <% if count > 0 %>
+              <%= link_to daily_path(year: date.year, month: date.month, day: date.day),
+                  class: "block text-sm font-bold #{is_current_month ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400 dark:text-slate-600'} #{wday == 0 ? 'text-red-600 dark:text-red-400' : wday == 6 ? 'text-blue-600 dark:text-blue-400' : ''} hover:text-indigo-600 dark:hover:text-indigo-400" do %>
+                <%= date.day %>
+              <% end %>
+            <% else %>
+              <div class="text-sm font-bold <%= is_current_month ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400 dark:text-slate-600' %> <%= wday == 0 ? 'text-red-600 dark:text-red-400' : wday == 6 ? 'text-blue-600 dark:text-blue-400' : '' %>">
+                <%= date.day %>
+              </div>
+            <% end %>
+
+            <!-- Trends Count Badge -->
+            <% if count > 0 %>
+              <div class="mt-1">
+                <%= link_to daily_path(year: date.year, month: date.month, day: date.day),
+                    class: "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800 transition-colors" do %>
+                  <%= count %>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="min-h-[80px] border-r border-slate-200 dark:border-slate-700 last:border-0"></div>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
