@@ -71,6 +71,10 @@ Rails.application.routes.draw do
   resources :trends, only: %i[index show]
   resources :items, only: %i[index]
 
+  # Yearly page (MUST be before monthly and daily routes!)
+  get '/date/:year', to: 'yearly#show', as: :yearly,
+                     constraints: { year: /\d{4}/ }
+
   # Monthly page (MUST be before daily route!)
   get '/date/:year/:month', to: 'monthly#show', as: :monthly,
                             constraints: { year: /\d{4}/, month: /\d{1,2}/ }
