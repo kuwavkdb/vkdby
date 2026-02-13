@@ -241,7 +241,10 @@ class PersonImporter < BaseWikipageImporter
       unit_name = unit_name.strip
       part_str = part_str&.strip
 
-      unit = Unit.find_by(name: unit_name)
+      unit = find_unit_by_name(unit_name)
+      if unit.nil?
+        puts "Warning: Could not find unit '#{unit_name}' for person #{person.name} (ID: #{@wikipage.id})"
+      end
       next unless unit
 
       unit_person = UnitPerson.find_or_initialize_by(unit: unit, person: person)
@@ -262,6 +265,12 @@ class PersonImporter < BaseWikipageImporter
       unit_person.status = :left
       unit_person.save!
     end
+  end
+
+  # ユニットをold_keyで完全一致検索するヘルパーメソッド
+  def find_unit_by_name(unit_name)
+    # old_keyで完全一致検索のみ（誤った紐付けを防ぐため）
+    Unit.find_by(old_key: unit_name)
   end
 
   def extract_name_from_wiki_link(str)
