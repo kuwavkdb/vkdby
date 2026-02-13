@@ -1,6 +1,12 @@
 # frozen_string_literal: true
 
 class YearlyController < ApplicationController
+  def index
+    @start_year = 1970
+    @end_year = Date.today.year
+    @years = (@start_year..@end_year).to_a.reverse
+  end
+
   def show
     @year = parse_year_param
     return redirect_to root_path, alert: '年の形式が正しくありません' unless @year

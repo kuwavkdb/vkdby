@@ -14,12 +14,11 @@
     <!-- Navigation -->
     <div class="space-y-3 mb-8">
       <!-- Year Navigation -->
-      <div class="flex justify-between">
+      <div class="flex justify-between items-center">
         <%= link_to "← 前年", yearly_path(year: @year - 1),
             class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300" %>
-        <% today = Date.today %>
-        <%= link_to "今年", yearly_path(year: today.year),
-            class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300" %>
+        <%= link_to "年一覧", date_index_path,
+            class: "text-sm font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200" %>
         <%= link_to "翌年 →", yearly_path(year: @year + 1),
             class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300" %>
       </div>

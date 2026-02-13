@@ -2,40 +2,32 @@
   <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
 
     <!-- Month Header -->
-    <header class="mb-8 text-center border-b border-slate-200 dark:border-slate-700 pb-6">
-      <h1 class="text-3xl font-black text-slate-800 dark:text-slate-100">
-        <%= link_to "#{@date.year}年", yearly_path(year: @date.year), class: "text-indigo-600 dark:text-indigo-400 underline decoration-2 underline-offset-4 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors" %><%= @date.strftime('%-m月') %>
-      </h1>
-      <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
-        Monthly Summary
-      </p>
-    </header>
-
-    <!-- Navigation -->
-    <div class="space-y-3 mb-8">
-      <!-- Year Navigation -->
-      <div class="flex justify-between">
-        <% prev_year_date = @date - 1.year %>
-        <%= link_to "← 前年同月", monthly_path(year: prev_year_date.year, month: prev_year_date.month),
-            class: "text-sm font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200" %>
-        <% today = Date.today %>
-        <%= link_to "当年同月", monthly_path(year: today.year, month: @date.month),
-            class: "text-sm font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200" %>
-        <% next_year_date = @date + 1.year %>
-        <%= link_to "翌年同月 →", monthly_path(year: next_year_date.year, month: next_year_date.month),
-            class: "text-sm font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200" %>
-      </div>
-
-      <!-- Month Navigation -->
-      <div class="flex justify-between">
-        <% prev_month = @date - 1.month %>
-        <%= link_to "← 前月", monthly_path(year: prev_month.year, month: prev_month.month),
-            class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300" %>
-        <%= link_to "今月", monthly_path(year: today.year, month: today.month),
-            class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300" %>
-        <% next_month = @date + 1.month %>
-        <%= link_to "翌月 →", monthly_path(year: next_month.year, month: next_month.month),
-            class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300" %>
+    <header class="mb-8 border-b border-slate-200 dark:border-slate-700 pb-6">
+      <div class="flex justify-between items-center gap-4 mb-6">
+        <div class="flex gap-2 flex-shrink-0">
+          <% prev_year_date = @date - 1.year %>
+          <%= link_to "← 前年同月", monthly_path(year: prev_year_date.year, month: prev_year_date.month),
+              class: "text-xs font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap" %>
+          <% prev_month = @date - 1.month %>
+          <%= link_to "← 前月", monthly_path(year: prev_month.year, month: prev_month.month),
+              class: "text-xs font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap" %>
+        </div>
+        <div class="text-center flex-grow">
+          <h1 class="text-3xl font-black text-slate-800 dark:text-slate-100">
+            <%= link_to "#{@date.year}年", yearly_path(year: @date.year), class: "text-indigo-600 dark:text-indigo-400 underline decoration-2 underline-offset-4 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors" %><%= @date.strftime('%-m月') %>
+          </h1>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
+            Monthly Summary
+          </p>
+        </div>
+        <div class="flex gap-2 flex-shrink-0">
+          <% next_month = @date + 1.month %>
+          <%= link_to "翌月 →", monthly_path(year: next_month.year, month: next_month.month),
+              class: "text-xs font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap" %>
+          <% next_year_date = @date + 1.year %>
+          <%= link_to "翌年同月 →", monthly_path(year: next_year_date.year, month: next_year_date.month),
+              class: "text-xs font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap" %>
+        </div>
       </div>
 
       <!-- 12 Months Navigation (Same Year) -->
@@ -46,7 +38,7 @@
               class: "px-3 py-1.5 rounded-full text-sm font-bold transition-colors whitespace-nowrap border #{is_current ? 'bg-indigo-600 text-white border-indigo-600 dark:bg-indigo-500 dark:border-indigo-500' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600 dark:hover:bg-slate-700'}" %>
         <% end %>
       </div>
-    </div>
+    </header>
 
     <!-- Calendar Section -->
     <section class="mb-12">
