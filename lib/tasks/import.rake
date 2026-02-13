@@ -146,9 +146,9 @@ namespace :import do
     puts 'Reset complete!'
   end
 
-  desc "Truncate units and people tables"
+  desc 'Truncate units and people tables'
   task truncate_units_and_people: :environment do
-    ActiveRecord::Base.connection.execute("TRUNCATE TABLE units, people RESTART IDENTITY CASCADE")
-    puts "✅ Truncated units and people tables"
+    ActiveRecord::Base.connection.execute('TRUNCATE TABLE units, people RESTART IDENTITY CASCADE')
+    puts '✅ Truncated units and people tables'
   end
 end
