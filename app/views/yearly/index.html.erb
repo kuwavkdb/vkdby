@@ -1,0 +1,31 @@
+<div class="flex justify-center min-h-screen p-0 md:p-8 bg-gray-100 dark:bg-gray-900">
+  <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
+
+    <!-- Header -->
+    <header class="mb-8 text-center border-b border-slate-200 dark:border-slate-700 pb-6">
+      <h1 class="text-3xl font-black text-slate-800 dark:text-slate-100">
+        年別サマリー
+      </h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
+        <%= @start_year %>年 - <%= @end_year %>年
+      </p>
+    </header>
+
+    <!-- Years Grid -->
+    <section>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <% @years.each do |year| %>
+          <%= link_to yearly_path(year: year), class: "block p-6 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors text-center" do %>
+            <div class="text-2xl font-black text-slate-800 dark:text-slate-100">
+              <%= year %>
+            </div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              年
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </section>
+
+  </div>
+</div>

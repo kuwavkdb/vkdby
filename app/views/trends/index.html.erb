@@ -79,7 +79,7 @@
         <% @trends.each do |trend| %>
           <div class="flex items-start gap-4 p-4 border-b border-slate-200 dark:border-slate-700 last:border-0">
             <div class="shrink-0 w-24 text-slate-600 dark:text-slate-400 font-mono text-sm pt-0.5 font-bold">
-              <%= trend.date.strftime('%Y/%m/%d') %>
+              <%= link_to trend.date.strftime('%Y/%m/%d'), daily_path(year: trend.date.year, month: trend.date.month, day: trend.date.day), class: "hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" %>
             </div>
             <div class="grow">
               <% if trend.units %>
