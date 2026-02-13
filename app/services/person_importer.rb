@@ -242,9 +242,7 @@ class PersonImporter < BaseWikipageImporter
       part_str = part_str&.strip
 
       unit = find_unit_by_name(unit_name)
-      if unit.nil?
-        puts "Warning: Could not find unit '#{unit_name}' for person #{person.name} (ID: #{@wikipage.id})"
-      end
+      puts "Warning: Could not find unit '#{unit_name}' for person #{person.name} (ID: #{@wikipage.id})" if unit.nil?
       next unless unit
 
       unit_person = UnitPerson.find_or_initialize_by(unit: unit, person: person)
