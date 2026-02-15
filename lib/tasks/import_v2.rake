@@ -32,7 +32,7 @@ namespace :import do
         count += 1
         
         # 作成されたスナップショット数をカウント
-        unit = Unit.find_by(wikipage_id: wp.id)
+        unit = Unit.find_by(old_wiki_id: wp.id)
         snapshots_created += unit.unit_snapshots.count if unit
       else
         skipped += 1
