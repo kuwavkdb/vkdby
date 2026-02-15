@@ -49,6 +49,12 @@ class WikipageImporterV2 < WikipageImporter
       month = match_data[2].to_i
       day = match_data[3].to_i
       
+      # 日付のバリデーション
+      unless Date.valid_date?(year, month, day)
+        puts "[INVALID_DATE] #{year}/#{month}/#{day} in WikiID: #{@wikipage.id}"
+        next
+      end
+      
       # セクションの内容を抽出（次の !! まで）
       start_pos = match_data.end(0)
       content = extract_section_content(start_pos)
@@ -67,6 +73,12 @@ class WikipageImporterV2 < WikipageImporter
       year = match_data[1].to_i
       month = match_data[2].to_i
       day = match_data[3].to_i
+      
+      # 日付のバリデーション
+      unless Date.valid_date?(year, month, day)
+        puts "[INVALID_DATE] #{year}年#{month}月#{day}日 in WikiID: #{@wikipage.id}"
+        next
+      end
       
       start_pos = match_data.end(0)
       content = extract_section_content(start_pos)
