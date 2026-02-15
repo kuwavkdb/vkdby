@@ -18,6 +18,7 @@
 # Indexes
 #
 #  index_items_on_artists       (artists) USING gin
+#  index_items_on_asin          (asin) UNIQUE
 #  index_items_on_link_url      (link_url) UNIQUE
 #  index_items_on_release_date  (release_date)
 #  index_items_on_title         (title)

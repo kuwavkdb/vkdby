@@ -81,6 +81,36 @@ START=5000 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units    # ID 
 LIMIT=10 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units      # 最大10件まで
 ```
 
+### 2-2. import:units_v2 - ユニットデータ + スナップショット一括インポート (V2)
+
+Wikipageからユニット（Unit）データと、日付付きメンバーセクションからスナップショット（UnitSnapshot）データを一括でインポートします。
+`app/services/wikipage_importer_v2.rb` を使用して処理されます。
+
+**使用方法**:
+```bash
+# 全件インポート
+PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2
+
+# パラメータ指定
+ID=6555 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2       # 特定IDのみ
+START=5000 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2    # ID 5000以降
+LIMIT=10 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2      # 最大10件まで
+```
+
+**インポート対象**:
+- `import:units` と同じユニットデータ
+- 日付付きメンバーセクションから `unit_snapshots` + `snapshot_people` レコード
+
+**対応する日付形式**:
+- `!!メンバー（yyyy/mm/dd）` - 例: `!!メンバー（2023/04/15）`
+- `!!メンバー（yyyy年mm月dd日）` - 例: `!!メンバー（2023年4月15日）`
+- `!!メンバー（ラベル）` - 例: `!!メンバー（結成時）` ※日付なしのため、スナップショットは作成されません
+
+**注意**:
+- 既存のスナップショットがある場合はスキップされます
+- 日付がない（ラベルのみの）セクションはスキップされます
+
+
 ### 3. import:reset - インポートデータの初期化
 
 インポートされたデータを全て削除し、データベースを初期状態（インポート前）に戻します。

@@ -1,0 +1,32 @@
+# == Schema Information
+#
+# Table name: unit_snapshots
+#
+#  id            :bigint           not null, primary key
+#  current       :boolean          default(FALSE), not null
+#  label         :string
+#  snapshot_date :date             not null
+#  created_at    :datetime         not null
+#  updated_at    :datetime         not null
+#  unit_id       :bigint           not null
+#
+# Indexes
+#
+#  index_unit_snapshots_on_unit_id                    (unit_id)
+#  index_unit_snapshots_on_unit_id_and_current        (unit_id,current)
+#  index_unit_snapshots_on_unit_id_and_snapshot_date  (unit_id,snapshot_date) UNIQUE
+#
+# Foreign Keys
+#
+#  fk_rails_...  (unit_id => units.id)
+#
+one:
+  unit: one
+  snapshot_date: '2020-01-15'
+  label: '結成時'
+  current: false
+
+two:
+  unit: one
+  snapshot_date: '2023-06-01'
+  current: true

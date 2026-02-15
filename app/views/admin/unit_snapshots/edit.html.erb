@@ -1,0 +1,21 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-5xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold dark:text-white">Edit Snapshot for <%= @unit.name %></h1>
+      <%= link_to "Back to Snapshots", admin_unit_unit_snapshots_path(@unit), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
+    </div>
+
+    <div class="md:grid md:grid-cols-3 md:gap-8">
+      <div class="md:col-span-1">
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+          <%= render "form", unit: @unit, unit_snapshot: @unit_snapshot %>
+        </div>
+      </div>
+
+      <div class="md:col-span-2">
+        <%= render "snapshot_people_list", unit: @unit, unit_snapshot: @unit_snapshot, snapshot_people: @snapshot_people %>
+        <%= render "add_snapshot_person_form", unit: @unit, unit_snapshot: @unit_snapshot, snapshot_person: @snapshot_person %>
+      </div>
+    </div>
+  </div>
+</div>

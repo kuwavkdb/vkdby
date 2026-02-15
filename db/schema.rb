@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_06_125041) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_15_160901) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -42,6 +42,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_06_125041) do
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["artists"], name: "index_items_on_artists", using: :gin
+    t.index ["asin"], name: "index_items_on_asin", unique: true
     t.index ["link_url"], name: "index_items_on_link_url", unique: true
     t.index ["release_date"], name: "index_items_on_release_date"
     t.index ["title"], name: "index_items_on_title"
@@ -160,6 +161,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_06_125041) do
     t.index ["sectionable_type", "sectionable_id"], name: "index_sections_on_sectionable"
   end
 
+  create_table "snapshot_people", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "inline_history"
+    t.string "old_person_key"
+    t.integer "part", default: 0, null: false
+    t.string "part_alias"
+    t.bigint "person_id"
+    t.string "person_key"
+    t.string "person_name"
+    t.json "sns"
+    t.integer "sort_order", default: 0, null: false
+    t.integer "status", default: 1, null: false
+    t.boolean "support", default: false, null: false
+    t.bigint "unit_snapshot_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["old_person_key"], name: "index_snapshot_people_on_old_person_key"
+    t.index ["person_id"], name: "index_snapshot_people_on_person_id"
+    t.index ["person_key"], name: "index_snapshot_people_on_person_key"
+    t.index ["unit_snapshot_id", "sort_order"], name: "index_snapshot_people_on_unit_snapshot_id_and_sort_order"
+    t.index ["unit_snapshot_id"], name: "index_snapshot_people_on_unit_snapshot_id"
+  end
+
   create_table "tag_index_items", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "indexable_id", null: false
@@ -245,6 +268,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_06_125041) do
     t.index ["unit_id"], name: "index_unit_people_on_unit_id"
   end
 
+  create_table "unit_snapshots", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "current", default: false, null: false
+    t.string "label"
+    t.date "snapshot_date", null: false
+    t.bigint "unit_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["unit_id", "current"], name: "index_unit_snapshots_on_unit_id_and_current"
+    t.index ["unit_id", "snapshot_date"], name: "index_unit_snapshots_on_unit_id_and_snapshot_date", unique: true
+    t.index ["unit_id"], name: "index_unit_snapshots_on_unit_id"
+  end
+
   create_table "units", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "key"
@@ -293,9 +328,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_06_125041) do
 
   add_foreign_key "person_logs", "people"
   add_foreign_key "person_logs", "units"
+  add_foreign_key "snapshot_people", "people"
+  add_foreign_key "snapshot_people", "unit_snapshots"
   add_foreign_key "tag_index_items", "tag_indices"
   add_foreign_key "tag_indices", "index_groups"
   add_foreign_key "unit_logs", "units"
   add_foreign_key "unit_people", "people"
   add_foreign_key "unit_people", "units"
+  add_foreign_key "unit_snapshots", "units"
 end
