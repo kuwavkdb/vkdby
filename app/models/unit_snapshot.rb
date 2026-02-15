@@ -26,13 +26,16 @@ class UnitSnapshot < ApplicationRecord
   belongs_to :unit
   has_many :snapshot_people, dependent: :destroy
 
-  validates :snapshot_date, presence: true
-  validates :snapshot_date, uniqueness: { scope: :unit_id }
+  # snapshot_date は nullable（無効な日付の場合は nil）
+  validates :snapshot_date, uniqueness: { scope: :unit_id }, allow_nil: true
 
   scope :chronological, -> { order(snapshot_date: :asc) }
   scope :reverse_chronological, -> { order(snapshot_date: :desc) }
 
   def display_label
-    label.presence || snapshot_date.strftime('%Y/%m/%d')
+    return label if label.present?
+    return snapshot_date.strftime('%Y/%m/%d') if snapshot_date.present?
+    
+    '日付未設定'
   end
 end

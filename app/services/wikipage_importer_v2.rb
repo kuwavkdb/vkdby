@@ -49,22 +49,28 @@ class WikipageImporterV2 < WikipageImporter
       month = match_data[2].to_i
       day = match_data[3].to_i
       
-      # 日付のバリデーション
-      unless Date.valid_date?(year, month, day)
-        puts "[INVALID_DATE] #{year}/#{month}/#{day} in WikiID: #{@wikipage.id}"
-        next
-      end
-      
       # セクションの内容を抽出（次の !! まで）
       start_pos = match_data.end(0)
       content = extract_section_content(start_pos)
       
-      sections << {
-        date: Date.new(year, month, day),
-        label: "#{year}/#{month}/#{day}",
-        content: content,
-        position: match_data.begin(0)
-      }
+      # 日付のバリデーション
+      if Date.valid_date?(year, month, day)
+        sections << {
+          date: Date.new(year, month, day),
+          label: "#{year}/#{month}/#{day}",
+          content: content,
+          position: match_data.begin(0)
+        }
+      else
+        # 無効な日付の場合も label のみで保存
+        puts "[INVALID_DATE] #{year}/#{month}/#{day} in WikiID: #{@wikipage.id} - saving with label only"
+        sections << {
+          date: nil,
+          label: "#{year}/#{month}/#{day}",
+          content: content,
+          position: match_data.begin(0)
+        }
+      end
     end
 
     # パターン2: !!メンバー（yyyy年mm月dd日）
@@ -74,21 +80,27 @@ class WikipageImporterV2 < WikipageImporter
       month = match_data[2].to_i
       day = match_data[3].to_i
       
-      # 日付のバリデーション
-      unless Date.valid_date?(year, month, day)
-        puts "[INVALID_DATE] #{year}年#{month}月#{day}日 in WikiID: #{@wikipage.id}"
-        next
-      end
-      
       start_pos = match_data.end(0)
       content = extract_section_content(start_pos)
       
-      sections << {
-        date: Date.new(year, month, day),
-        label: "#{year}年#{month}月#{day}日",
-        content: content,
-        position: match_data.begin(0)
-      }
+      # 日付のバリデーション
+      if Date.valid_date?(year, month, day)
+        sections << {
+          date: Date.new(year, month, day),
+          label: "#{year}年#{month}月#{day}日",
+          content: content,
+          position: match_data.begin(0)
+        }
+      else
+        # 無効な日付の場合も label のみで保存
+        puts "[INVALID_DATE] #{year}年#{month}月#{day}日 in WikiID: #{@wikipage.id} - saving with label only"
+        sections << {
+          date: nil,
+          label: "#{year}年#{month}月#{day}日",
+          content: content,
+          position: match_data.begin(0)
+        }
+      end
     end
 
     # パターン3: !!メンバー（ラベルのみ）例: !!メンバー（結成時）
@@ -124,14 +136,13 @@ class WikipageImporterV2 < WikipageImporter
 
   # スナップショットを作成
   def create_snapshot(unit, section_data)
-    # 日付がない場合はスキップ（ラベルのみの場合）
-    return if section_data[:date].nil?
-
     # 既存のスナップショットがあればスキップ
-    existing = unit.unit_snapshots.find_by(snapshot_date: section_data[:date])
-    if existing
-      puts "  [SKIP] Snapshot already exists for #{unit.name} on #{section_data[:date]}"
-      return
+    if section_data[:date].present?
+      existing = unit.unit_snapshots.find_by(snapshot_date: section_data[:date])
+      if existing
+        puts "  [SKIP] Snapshot already exists for #{unit.name} on #{section_data[:date]}"
+        return
+      end
     end
 
     snapshot = unit.unit_snapshots.create!(
@@ -142,7 +153,8 @@ class WikipageImporterV2 < WikipageImporter
     # メンバーをパース
     parse_snapshot_members(snapshot, section_data[:content])
 
-    puts "  [OK] Created snapshot for #{unit.name} on #{section_data[:date]} with #{snapshot.snapshot_people.count} members"
+    date_str = section_data[:date]&.to_s || section_data[:label]
+    puts "  [OK] Created snapshot for #{unit.name} on #{date_str} with #{snapshot.snapshot_people.count} members"
   end
 
   # スナップショットのメンバーをパース
