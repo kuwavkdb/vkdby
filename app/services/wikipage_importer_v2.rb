@@ -106,7 +106,11 @@ class WikipageImporterV2 < WikipageImporter
     # パターン3: !!メンバー（ラベルのみ）例: !!メンバー（結成時）
     @original_content.scan(/^!!メンバー[ー]?(?:（|\\()([^0-9）)]+)(?:）|\\))/m) do
       match_data = Regexp.last_match
-      label = match_data[1].strip
+      label_raw = match_data[1]
+      next if label_raw.nil?
+      
+      label = label_raw.strip
+      next if label.blank?
       
       start_pos = match_data.end(0)
       content = extract_section_content(start_pos)
