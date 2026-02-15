@@ -24,7 +24,7 @@ class WikipageImporterV2 < WikipageImporter
   private
 
   def import_snapshots
-    unit = Unit.find_by(wikipage_id: @wikipage.id)
+    unit = Unit.find_by(old_wiki_id: @wikipage.id)
     return unless unit
 
     # 日付付きメンバーセクションを抽出
@@ -275,22 +275,24 @@ class WikipageImporterV2 < WikipageImporter
     return :unknown if part_str.blank?
 
     part_lower = part_str.downcase
-    case part_lower
-    when /vo|vocal|ボーカル/
-      :vocal
-    when /gt|guitar|ギター/
-      :guitar
-    when /ba|bass|ベース/
-      :bass
-    when /dr|drum|ドラム/
-      :drums
-    when /key|keyboard|キーボード|piano|ピアノ/
-      :keyboard
-    when /dj/
-      :dj
-    else
-      :unknown
-    end
+    result = case part_lower
+             when /vo|vocal|ボーカル/
+               :vocal
+             when /gt|guitar|ギター/
+               :guitar
+             when /ba|bass|ベース/
+               :bass
+             when /dr|drum|ドラム/
+               :drums
+             when /key|keyboard|キーボード|piano|ピアノ/
+               :keyboard
+             when /dj/
+               :dj
+             else
+               puts "[UNKNOWN_PART] '#{part_str}' in WikiID: #{@wikipage.id}"
+               :unknown
+             end
+    result
   end
 
   # SNS文字列をJSONに変換
