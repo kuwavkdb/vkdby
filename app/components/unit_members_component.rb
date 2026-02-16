@@ -1,13 +1,12 @@
 # frozen_string_literal: true
 
 class UnitMembersComponent < ViewComponent::Base
-  def initialize(unit:, active_members:, past_members:)
+  def initialize(unit:, past_members:)
     @unit = unit
-    @active_members = active_members
     @past_members = past_members
   end
 
   def render?
-    @unit.is_a?(Unit) && (@active_members.present? || @past_members.present?)
+    @unit.is_a?(Unit) && @past_members.present?
   end
 end
