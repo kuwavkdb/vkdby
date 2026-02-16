@@ -38,13 +38,13 @@ class SnapshotPersonTest < ActiveSupport::TestCase
   end
 
   test 'requires part' do
-    sp = SnapshotPerson.new(unit_snapshot: unit_snapshots(:one), person: people(:one))
+    sp = SnapshotPerson.new(unit_snapshot: unit_snapshots(:one), person: people(:one), part: nil)
     assert_not sp.valid?
     assert sp.errors[:part].any?
   end
 
   test 'requires person or person_name' do
-    sp = SnapshotPerson.new(unit_snapshot: unit_snapshots(:one), part: 'Vo.')
+    sp = SnapshotPerson.new(unit_snapshot: unit_snapshots(:one), part: :vocal)
     assert_not sp.valid?
     assert_includes sp.errors[:base], 'Person or Person Name must be present'
   end

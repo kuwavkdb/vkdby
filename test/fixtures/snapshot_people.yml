@@ -25,17 +25,17 @@
 one:
   unit_snapshot: one
   person: one
-  part: 'Vo.'
+  part: vocal
   sort_order: 1
 
 two:
   unit_snapshot: one
   person: two
-  part: 'Gt.'
+  part: guitar
   sort_order: 2
 
 three:
   unit_snapshot: two
   person_name: 'ゲストメンバー'
-  part: 'Ba.'
+  part: bass
   sort_order: 1

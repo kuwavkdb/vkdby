@@ -2,7 +2,7 @@
 
 class UnitSnapshotsComponent < ViewComponent::Base
   def initialize(snapshots:)
-    super
+    super()
     @snapshots = snapshots
   end
 

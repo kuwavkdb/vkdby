@@ -13,7 +13,7 @@ module Admin
     test 'should create snapshot_person with person' do
       assert_difference('SnapshotPerson.count') do
         post admin_unit_unit_snapshot_snapshot_people_path(@unit, @snapshot), params: {
-          snapshot_person: { person_id: people(:one).id, part: 'Vo.', sort_order: 10 }
+          snapshot_person: { person_id: people(:one).id, part: 'vocal', sort_order: 10 }
         }
       end
       assert_redirected_to edit_admin_unit_unit_snapshot_path(@unit, @snapshot)
@@ -22,7 +22,7 @@ module Admin
     test 'should create snapshot_person with person_name' do
       assert_difference('SnapshotPerson.count') do
         post admin_unit_unit_snapshot_snapshot_people_path(@unit, @snapshot), params: {
-          snapshot_person: { person_name: 'New Member', part: 'Ba.', sort_order: 5 }
+          snapshot_person: { person_name: 'New Member', part: 'bass', sort_order: 5 }
         }
       end
       assert_redirected_to edit_admin_unit_unit_snapshot_path(@unit, @snapshot)
@@ -31,7 +31,7 @@ module Admin
     test 'should not create snapshot_person without part' do
       assert_no_difference('SnapshotPerson.count') do
         post admin_unit_unit_snapshot_snapshot_people_path(@unit, @snapshot), params: {
-          snapshot_person: { person_name: 'Invalid', part: '', sort_order: 1 }
+          snapshot_person: { person_name: 'Invalid', part: nil, sort_order: 1 }
         }
       end
       assert_redirected_to edit_admin_unit_unit_snapshot_path(@unit, @snapshot)

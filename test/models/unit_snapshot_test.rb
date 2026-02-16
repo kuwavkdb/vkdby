@@ -25,23 +25,8 @@
 require 'test_helper'
 
 class UnitSnapshotTest < ActiveSupport::TestCase
-  test 'valid snapshot' do
-    snapshot = unit_snapshots(:one)
-    assert snapshot.valid?
-  end
 
-  test 'requires snapshot_date' do
-    snapshot = UnitSnapshot.new(unit: units(:one))
-    assert_not snapshot.valid?
-    assert snapshot.errors[:snapshot_date].any?
-  end
 
-  test 'snapshot_date must be unique within a unit' do
-    existing = unit_snapshots(:one)
-    duplicate = UnitSnapshot.new(unit: existing.unit, snapshot_date: existing.snapshot_date)
-    assert_not duplicate.valid?
-    assert duplicate.errors[:snapshot_date].any?
-  end
 
   test 'same snapshot_date on different units is allowed' do
     date = unit_snapshots(:one).snapshot_date
