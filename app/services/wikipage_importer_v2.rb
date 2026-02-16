@@ -131,6 +131,26 @@ class WikipageImporterV2 < WikipageImporter
       }
     end
 
+    # パターン4: !!メンバー（ラベルなし）→ 現在のメンバー (current = true)
+    # 他のパターンにマッチしなかった !!メンバー セクションを検出
+    @original_content.scan(/^!!メンバー[ー]?\s*$/m) do
+      match_data = Regexp.last_match
+      start_pos = match_data.end(0)
+      content = extract_section_content(start_pos)
+      
+      # 既に同じ位置のセクションが追加されていないかチェック
+      already_added = sections.any? { |s| s[:position] == match_data.begin(0) }
+      next if already_added
+      
+      sections << {
+        date: nil,
+        label: nil,
+        content: content,
+        position: match_data.begin(0),
+        current: true
+      }
+    end
+
     sections
   end
 
@@ -155,15 +175,22 @@ class WikipageImporterV2 < WikipageImporter
       end
     end
 
+    # current = true の場合、既存の current スナップショットを false に更新
+    is_current = section_data[:current] || false
+    if is_current
+      unit.unit_snapshots.where(current: true).update_all(current: false)
+    end
+
     snapshot = unit.unit_snapshots.create!(
       snapshot_date: section_data[:date],
-      label: section_data[:label]
+      label: section_data[:label],
+      current: is_current
     )
 
     # メンバーをパース
     parse_snapshot_members(snapshot, section_data[:content])
 
-    date_str = section_data[:date]&.to_s || section_data[:label]
+    date_str = section_data[:date]&.to_s || section_data[:label] || '現在のメンバー'
     puts "  [OK] Created snapshot for #{unit.name} on #{date_str} with #{snapshot.snapshot_people.count} members"
   end
 
