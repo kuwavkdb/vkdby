@@ -6,6 +6,7 @@
 # - !!メンバー（yyyy/mm/dd）
 # - !!メンバー（yyyy年mm月dd日）
 # - !!メンバー（結成時）
+# rubocop:disable Metrics/ClassLength
 class WikipageImporterV2 < WikipageImporter
   def self.import(wikipage)
     new(wikipage).import
@@ -27,6 +28,9 @@ class WikipageImporterV2 < WikipageImporter
     unit = Unit.find_by(old_wiki_id: @wikipage.id)
     return unless unit
 
+    # 既存のスナップショットを削除し、再作成する
+    unit.unit_snapshots.destroy_all
+
     # 日付付きメンバーセクションを抽出
     dated_sections = extract_dated_member_sections
 
@@ -42,6 +46,19 @@ class WikipageImporterV2 < WikipageImporter
 
     sections = []
 
+    extract_pattern1(sections)
+    extract_pattern2(sections)
+    extract_year_only_patterns(sections)
+    extract_pattern5(sections)
+
+    sort_sections(sections)
+  end
+
+  def sort_sections(sections)
+    sections.sort_by { |s| s[:date] || Date.new(1900, 1, 1) } # 日付順にソート（日付なしは先頭）
+  end
+
+  def extract_pattern1(sections)
     # パターン1: !!メンバー（yyyy/mm/dd）
     @original_content.scan(%r{^!!メンバーー?(?:（|\()([0-9]{4})/([0-9]{1,2})/([0-9]{1,2})(?:）|\))}m) do
       match_data = Regexp.last_match
@@ -56,26 +73,11 @@ class WikipageImporterV2 < WikipageImporter
       start_pos = match_data.end(0)
       content = extract_section_content(start_pos)
 
-      # 日付のバリデーション
-      if Date.valid_date?(year, month, day)
-        sections << {
-          date: Date.new(year, month, day),
-          label: "#{year}/#{month}/#{day}",
-          content: content,
-          position: match_data.begin(0)
-        }
-      else
-        # 無効な日付の場合も label のみで保存
-        puts "[INVALID_DATE] #{year}/#{month}/#{day} in WikiID: #{@wikipage.id} - saving with label only"
-        sections << {
-          date: nil,
-          label: "#{year}/#{month}/#{day}",
-          content: content,
-          position: match_data.begin(0)
-        }
-      end
+      add_section(sections, date_parts: { year: year, month: month, day: day }, content: content, position: match_data.begin(0))
     end
+  end
 
+  def extract_pattern2(sections)
     # パターン2: !!メンバー（yyyy年mm月dd日）
     @original_content.scan(/^!!メンバーー?(?:（|\()([0-9]{4})年([0-9]{1,2})月([0-9]{1,2})日(?:）|\))/m) do
       match_data = Regexp.last_match
@@ -86,52 +88,52 @@ class WikipageImporterV2 < WikipageImporter
       # 年が 0 の場合はサンプルテンプレートなのでスキップ
       next if year.zero?
 
+      # セクションの内容を抽出（次の !! まで）
       start_pos = match_data.end(0)
       content = extract_section_content(start_pos)
 
-      # 日付のバリデーション
-      if Date.valid_date?(year, month, day)
-        sections << {
-          date: Date.new(year, month, day),
-          label: "#{year}年#{month}月#{day}日",
-          content: content,
-          position: match_data.begin(0)
-        }
-      else
-        # 無効な日付の場合も label のみで保存
-        puts "[INVALID_DATE] #{year}年#{month}月#{day}日 in WikiID: #{@wikipage.id} - saving with label only"
-        sections << {
-          date: nil,
-          label: "#{year}年#{month}月#{day}日",
-          content: content,
-          position: match_data.begin(0)
-        }
-      end
+      add_section(sections, date_parts: { year: year, month: month, day: day }, content: content, position: match_data.begin(0))
     end
+  end
 
-    # パターン3: !!メンバー（ラベルのみ）
-    # 日付形式でないものを抽出するために、数字のみで構成される日付っぽいものは除外したいが
-    # ここでは簡易的に「数字以外で始まる」または「数字を含むが日付形式でない」ものを拾いたい
-    # いったん緩和して (.+?) で拾い、後で検証するアプローチも考えられるが
-    # ここではバックスラッシュの修正と ) のエスケープ修正を行う
+  def extract_year_only_patterns(sections)
+    # パターン3: !!メンバー（yyyy） または !!メンバー（yyyy年）
+    @original_content.scan(/^!!メンバーー?(?:（|\()([0-9]{4})(?:年)?(?:）|\))/m) do
+      match_data = Regexp.last_match
+      year = match_data[1].to_i
+
+      start_pos = match_data.end(0)
+      content = extract_section_content(start_pos)
+
+      # 年のみの場合は1月1日として扱うが、ラベルは年のみ
+      sections << {
+        date: Date.new(year, 1, 1),
+        label: "#{year}年",
+        content: content,
+        position: match_data.begin(0)
+      }
+    end
+  end
+
+  def extract_pattern5(sections)
+    extract_named_pattern(sections, '結成時', '結成時')
+    extract_named_pattern(sections, '現在', 'Current', current: true)
+
+    # パターン4: !!メンバー（その他文字列）
+    # 日付形式でないものをすべて抽出
     @original_content.scan(/^!!メンバーー?(?:（|\()(.+?)(?:）|\))/m) do
       match_data = Regexp.last_match
+      label = match_data[1]
 
-      # 既に同じ位置のセクションが追加されていないかチェック
-      already_added = sections.any? { |s| s[:position] == match_data.begin(0) }
-      next if already_added
-
-      label_raw = match_data[1]
-      next if label_raw.nil?
-
-      label = label_raw.strip
-      next if label.blank?
+      # すでに処理済みのパターンはスキップ
+      next if label =~ %r{^[0-9]{4}/[0-9]{1,2}/[0-9]{1,2}$}
+      next if label =~ /^[0-9]{4}年[0-9]{1,2}月[0-9]{1,2}日$/
+      next if label =~ /^[0-9]{4}年?$/
+      next if %W[\u7D50\u6210\u6642 \u73FE\u5728].include?(label)
 
       start_pos = match_data.end(0)
       content = extract_section_content(start_pos)
 
-      # ラベルのみの場合は、日付を nil にして label だけ設定
-      # 後で手動で日付を設定してもらう
       sections << {
         date: nil,
         label: label,
@@ -140,28 +142,60 @@ class WikipageImporterV2 < WikipageImporter
       }
     end
 
-    # パターン4: !!メンバー（ラベルなし）→ 現在のメンバー (current = true)
-    # 他のパターンにマッチしなかった !!メンバー セクションを検出
-    # 負の先読みで（や(が続かないことを確認
+    # ラベルなしの !!メンバー セクション（現在のメンバーとみなす）
     @original_content.scan(/^!!メンバーー?(?!（)(?!\()\s*$/m) do
       match_data = Regexp.last_match
       start_pos = match_data.end(0)
       content = extract_section_content(start_pos)
 
-      # 既に同じ位置のセクションが追加されていないかチェック
-      already_added = sections.any? { |s| s[:position] == match_data.begin(0) }
-      next if already_added
-
       sections << {
-        date: nil,
-        label: nil,
+        date: Date.today,
+        label: 'Current',
         content: content,
         position: match_data.begin(0),
         current: true
       }
     end
+  end
 
-    sections
+  def extract_named_pattern(sections, pattern_label, display_label, current: false)
+    @original_content.scan(/^!!メンバーー?(?:（|\()#{pattern_label}(?:）|\))/m) do
+      match_data = Regexp.last_match
+      start_pos = match_data.end(0)
+      content = extract_section_content(start_pos)
+
+      sections << {
+        date: nil,
+        label: display_label,
+        content: content,
+        position: match_data.begin(0),
+        current: current
+      }
+    end
+  end
+
+  def add_section(sections, date_parts:, content:, position:)
+    year = date_parts[:year]
+    month = date_parts[:month]
+    day = date_parts[:day]
+    # 日付のバリデーション
+    if Date.valid_date?(year, month, day)
+      sections << {
+        date: Date.new(year, month, day),
+        label: "#{year}/#{month}/#{day}",
+        content: content,
+        position: position
+      }
+    else
+      # 無効な日付の場合も label のみで保存
+      puts "[INVALID_DATE] #{year}/#{month}/#{day} in WikiID: #{@wikipage.id} - saving with label only"
+      sections << {
+        date: nil,
+        label: "#{year}/#{month}/#{day}",
+        content: content,
+        position: position
+      }
+    end
   end
 
   # セクションの内容を抽出（次の !! または文末まで）
@@ -214,6 +248,16 @@ class WikipageImporterV2 < WikipageImporter
     separator_index = @wiki_content.index(/^!!関係者/) || Float::INFINITY
     current_order = 1
 
+    current_order = parse_new_format(snapshot, separator_index, current_order)
+    parse_old_formats(snapshot, separator_index, current_order)
+
+    # @wiki_content を元に戻す
+    @wiki_content = original_wiki_content
+  end
+
+  def parse_new_format(snapshot, separator_index, start_order)
+    current_order = start_order
+
     # Plugin format - use balanced bracket matching
     extract_member_blocks.each do |block_data|
       current_pos = block_data[:begin]
@@ -250,9 +294,24 @@ class WikipageImporterV2 < WikipageImporter
 
       old_member_key = URI.encode_www_form_component(old_member_key.encode('EUC-JP'))
 
-      register_snapshot_member(snapshot, part_str, name_str, old_member_key, sns_account, inline_history, member_status, current_order)
+      register_snapshot_member(
+        snapshot,
+        part_str: part_str,
+        name_str: name_str,
+        old_member_key: old_member_key,
+        sns_account: sns_account,
+        inline_history: inline_history,
+        member_status: member_status,
+        sort_order: current_order
+      )
       current_order += 1
     end
+
+    current_order
+  end
+
+  def parse_old_formats(snapshot, separator_index, start_order)
+    current_order = start_order
 
     # Old Member Format
     old_member_regex1 = /^!([^…\n]+)…\s*\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/
@@ -267,7 +326,14 @@ class WikipageImporterV2 < WikipageImporter
       name_str = match[1].strip
       old_member_key = match[2]&.strip
 
-      register_snapshot_member_old_format(snapshot, part_str, name_str, old_member_key, member_status, current_order)
+      register_snapshot_member_old_format(
+        snapshot,
+        part_str: part_str,
+        name_str: name_str,
+        old_member_key: old_member_key,
+        member_status: member_status,
+        sort_order: current_order
+      )
       current_order += 1
     end
 
@@ -280,17 +346,30 @@ class WikipageImporterV2 < WikipageImporter
       old_member_key = match[1]&.strip
       part_str = match[2].strip
 
-      register_snapshot_member_old_format(snapshot, part_str, name_str, old_member_key, member_status, current_order)
+      register_snapshot_member_old_format(
+        snapshot,
+        part_str: part_str,
+        name_str: name_str,
+        old_member_key: old_member_key,
+        member_status: member_status,
+        sort_order: current_order
+      )
       current_order += 1
     end
 
-    # @wiki_content を元に戻す
-    @wiki_content = original_wiki_content
+    current_order
   end
 
   # スナップショットメンバーを登録（新形式）
-  # rubocop:disable Metrics/ParameterLists
-  def register_snapshot_member(snapshot, part_str, name_str, old_member_key, sns_account, inline_history, member_status, sort_order)
+  def register_snapshot_member(snapshot, options = {})
+    part_str = options[:part_str]
+    name_str = options[:name_str]
+    old_member_key = options[:old_member_key]
+    sns_account = options[:sns_account]
+    inline_history = options[:inline_history]
+    member_status = options[:member_status]
+    sort_order = options[:sort_order]
+
     # パートをパース
     part_enum = parse_part(part_str)
     support = part_str&.include?('サポート') || part_str&.include?('sup') || false
@@ -315,27 +394,26 @@ class WikipageImporterV2 < WikipageImporter
       sort_order: sort_order
     )
   end
-  # rubocop:enable Metrics/ParameterLists
 
   # スナップショットメンバーを登録（旧形式）
-  def register_snapshot_member_old_format(snapshot, part_str, name_str, old_member_key, member_status, sort_order)
+  def register_snapshot_member_old_format(snapshot, options = {})
+    part_str = options[:part_str]
+    name_str = options[:name_str]
+    old_member_key = options[:old_member_key]
+    member_status = options[:member_status]
+    sort_order = options[:sort_order]
+
     old_member_key = name_str if old_member_key.blank?
     old_member_key = URI.encode_www_form_component(old_member_key.encode('EUC-JP'))
 
-    part_enum = parse_part(part_str)
-    support = part_str&.include?('サポート') || part_str&.include?('sup') || false
-
-    person = Person.find_by(old_key: old_member_key)
-
-    snapshot.snapshot_people.create!(
-      person: person,
-      person_name: person ? nil : name_str,
-      person_key: person&.key,
-      old_person_key: old_member_key,
-      part: part_enum,
-      part_alias: part_str,
-      status: member_status,
-      support: support,
+    register_snapshot_member(
+      snapshot,
+      part_str: part_str,
+      name_str: name_str,
+      old_member_key: old_member_key,
+      sns_account: nil,
+      inline_history: nil,
+      member_status: member_status,
       sort_order: sort_order
     )
   end
@@ -382,3 +460,4 @@ class WikipageImporterV2 < WikipageImporter
     sns_data.empty? ? nil : sns_data
   end
 end
+# rubocop:enable Metrics/ClassLength
