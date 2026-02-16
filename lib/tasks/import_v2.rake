@@ -30,7 +30,7 @@ namespace :import do
         # V2 importer を使用
         WikipageImporterV2.import(wp)
         count += 1
-        
+
         # 作成されたスナップショット数をカウント
         unit = Unit.find_by(old_wiki_id: wp.id)
         snapshots_created += unit.unit_snapshots.count if unit

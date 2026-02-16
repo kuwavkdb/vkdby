@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddUnitPersonColumnsToSnapshotPeople < ActiveRecord::Migration[8.1]
   def change
     # 既存の part (string) カラムを削除

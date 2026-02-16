@@ -35,7 +35,7 @@
 #
 class SnapshotPerson < ApplicationRecord
   include WikiParser
-  
+
   belongs_to :unit_snapshot
   belongs_to :person, optional: true
 
