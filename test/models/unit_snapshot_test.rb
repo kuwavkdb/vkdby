@@ -25,9 +25,6 @@
 require 'test_helper'
 
 class UnitSnapshotTest < ActiveSupport::TestCase
-
-
-
   test 'same snapshot_date on different units is allowed' do
     date = unit_snapshots(:one).snapshot_date
     snapshot = UnitSnapshot.new(unit: units(:two), snapshot_date: date)
