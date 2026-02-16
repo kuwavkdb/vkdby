@@ -133,7 +133,8 @@ class WikipageImporterV2 < WikipageImporter
 
     # パターン4: !!メンバー（ラベルなし）→ 現在のメンバー (current = true)
     # 他のパターンにマッチしなかった !!メンバー セクションを検出
-    @original_content.scan(/^!!メンバー[ー]?\s*$/m) do
+    # 負の先読みで（や(が続かないことを確認
+    @original_content.scan(/^!!メンバー[ー]?(?!（)(?!\()\s*$/m) do
       match_data = Regexp.last_match
       start_pos = match_data.end(0)
       content = extract_section_content(start_pos)
