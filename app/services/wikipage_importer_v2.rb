@@ -238,6 +238,7 @@ class WikipageImporterV2 < WikipageImporter
   end
 
   # スナップショットのメンバーをパース
+  # 新旧フォーマットを混在で扱うため、全エントリをテキスト位置付きで収集し、出現順でソートしてから登録する
   def parse_snapshot_members(snapshot, content)
     return unless content
 
@@ -246,19 +247,23 @@ class WikipageImporterV2 < WikipageImporter
     @wiki_content = content
 
     separator_index = @wiki_content.index(/^!!関係者/) || Float::INFINITY
-    current_order = 1
 
-    current_order = parse_new_format(snapshot, separator_index, current_order)
-    parse_old_formats(snapshot, separator_index, current_order)
+    # 全フォーマットのメンバーをテキスト位置付きで収集
+    entries = []
+    collect_new_format_entries(entries, separator_index)
+    collect_old_format_entries(entries, separator_index)
+
+    # テキスト上の出現順でソートし、sort_order を割り当てて登録
+    entries.sort_by! { |e| e[:position] }
+    entries.each_with_index do |entry, index|
+      register_snapshot_member(snapshot, **entry.except(:position), sort_order: index + 1)
+    end
 
     # @wiki_content を元に戻す
     @wiki_content = original_wiki_content
   end
 
-  def parse_new_format(snapshot, separator_index, start_order)
-    current_order = start_order
-
-    # Plugin format - use balanced bracket matching
+  def collect_new_format_entries(entries, separator_index)
     extract_member_blocks.each do |block_data|
       current_pos = block_data[:begin]
       member_status = current_pos > separator_index ? :left : :active
@@ -294,26 +299,19 @@ class WikipageImporterV2 < WikipageImporter
 
       old_member_key = URI.encode_www_form_component(old_member_key.encode('EUC-JP'))
 
-      register_snapshot_member(
-        snapshot,
+      entries << {
+        position: current_pos,
         part_str: part_str,
         name_str: name_str,
         old_member_key: old_member_key,
         sns_account: sns_account,
         inline_history: inline_history,
-        member_status: member_status,
-        sort_order: current_order
-      )
-      current_order += 1
+        member_status: member_status
+      }
     end
-
-    current_order
   end
 
-  def parse_old_formats(snapshot, separator_index, start_order)
-    current_order = start_order
-
-    # Old Member Format
+  def collect_old_format_entries(entries, separator_index)
     old_member_regex1 = /^!([^…\n]+)…\s*\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/
     old_member_regex2 = /^!\[\[([^|\]\n]+)(?:\|([^\]\n]+))?\]\]…([^…\n]+)/
 
@@ -325,16 +323,18 @@ class WikipageImporterV2 < WikipageImporter
       part_str = match[0].strip
       name_str = match[1].strip
       old_member_key = match[2]&.strip
+      old_member_key = name_str if old_member_key.blank?
+      old_member_key = URI.encode_www_form_component(old_member_key.encode('EUC-JP'))
 
-      register_snapshot_member_old_format(
-        snapshot,
+      entries << {
+        position: current_pos,
         part_str: part_str,
         name_str: name_str,
         old_member_key: old_member_key,
-        member_status: member_status,
-        sort_order: current_order
-      )
-      current_order += 1
+        sns_account: nil,
+        inline_history: nil,
+        member_status: member_status
+      }
     end
 
     @wiki_content.scan(old_member_regex2) do |match|
@@ -345,19 +345,19 @@ class WikipageImporterV2 < WikipageImporter
       name_str = match[0].strip
       old_member_key = match[1]&.strip
       part_str = match[2].strip
+      old_member_key = name_str if old_member_key.blank?
+      old_member_key = URI.encode_www_form_component(old_member_key.encode('EUC-JP'))
 
-      register_snapshot_member_old_format(
-        snapshot,
+      entries << {
+        position: current_pos,
         part_str: part_str,
         name_str: name_str,
         old_member_key: old_member_key,
-        member_status: member_status,
-        sort_order: current_order
-      )
-      current_order += 1
+        sns_account: nil,
+        inline_history: nil,
+        member_status: member_status
+      }
     end
-
-    current_order
   end
 
   # スナップショットメンバーを登録（新形式）
@@ -374,8 +374,8 @@ class WikipageImporterV2 < WikipageImporter
     part_enum = parse_part(part_str)
     support = part_str&.include?('サポート') || part_str&.include?('sup') || false
 
-    # SNSをパース
-    sns_data = parse_sns(sns_account)
+    # SNSをパース（V1と同じArray形式で保存）
+    sns_data = sns_account.present? ? [sns_account.strip] : nil
 
     # Person を検索（old_person_key で検索）
     person = Person.find_by(old_key: old_member_key)
@@ -395,28 +395,6 @@ class WikipageImporterV2 < WikipageImporter
     )
   end
 
-  # スナップショットメンバーを登録（旧形式）
-  def register_snapshot_member_old_format(snapshot, options = {})
-    part_str = options[:part_str]
-    name_str = options[:name_str]
-    old_member_key = options[:old_member_key]
-    member_status = options[:member_status]
-    sort_order = options[:sort_order]
-
-    old_member_key = name_str if old_member_key.blank?
-    old_member_key = URI.encode_www_form_component(old_member_key.encode('EUC-JP'))
-
-    register_snapshot_member(
-      snapshot,
-      part_str: part_str,
-      name_str: name_str,
-      old_member_key: old_member_key,
-      sns_account: nil,
-      inline_history: nil,
-      member_status: member_status,
-      sort_order: sort_order
-    )
-  end
 
   # パート文字列を enum に変換
   def parse_part(part_str)
@@ -442,22 +420,5 @@ class WikipageImporterV2 < WikipageImporter
     end
   end
 
-  # SNS文字列をJSONに変換
-  def parse_sns(sns_str)
-    return nil if sns_str.blank?
-
-    # 簡易的なパース（例: "twitter:account" 形式）
-    sns_data = {}
-    sns_str.split(',').each do |item|
-      parts = item.strip.split(':', 2)
-      next if parts.size != 2
-
-      service = parts[0].strip.downcase
-      account = parts[1].strip
-      sns_data[service] = account
-    end
-
-    sns_data.empty? ? nil : sns_data
-  end
 end
 # rubocop:enable Metrics/ClassLength
