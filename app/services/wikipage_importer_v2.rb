@@ -30,8 +30,8 @@ class WikipageImporterV2 < WikipageImporter
     # 日付付きメンバーセクションを抽出
     dated_sections = extract_dated_member_sections
 
-    dated_sections.each do |section_data|
-      create_snapshot(unit, section_data)
+    dated_sections.each_with_index do |section_data, index|
+      create_snapshot(unit, section_data, index)
     end
   end
 
@@ -43,7 +43,7 @@ class WikipageImporterV2 < WikipageImporter
     sections = []
     
     # パターン1: !!メンバー（yyyy/mm/dd）
-    @original_content.scan(/^!!メンバー[ー]?(?:（|\\()([0-9]{4})\/([0-9]{1,2})\/([0-9]{1,2})(?:）|\\))/m) do
+    @original_content.scan(/^!!メンバー[ー]?(?:（|\()([0-9]{4})\/([0-9]{1,2})\/([0-9]{1,2})(?:）|\))/m) do
       match_data = Regexp.last_match
       year = match_data[1].to_i
       month = match_data[2].to_i
@@ -77,7 +77,7 @@ class WikipageImporterV2 < WikipageImporter
     end
 
     # パターン2: !!メンバー（yyyy年mm月dd日）
-    @original_content.scan(/^!!メンバー[ー]?(?:（|\\()([0-9]{4})年([0-9]{1,2})月([0-9]{1,2})日(?:）|\\))/m) do
+    @original_content.scan(/^!!メンバー[ー]?(?:（|\()([0-9]{4})年([0-9]{1,2})月([0-9]{1,2})日(?:）|\))/m) do
       match_data = Regexp.last_match
       year = match_data[1].to_i
       month = match_data[2].to_i
@@ -109,9 +109,18 @@ class WikipageImporterV2 < WikipageImporter
       end
     end
 
-    # パターン3: !!メンバー（ラベルのみ）例: !!メンバー（結成時）
-    @original_content.scan(/^!!メンバー[ー]?(?:（|\\()([^0-9）)]+)(?:）|\\))/m) do
+    # パターン3: !!メンバー（ラベルのみ）
+    # 日付形式でないものを抽出するために、数字のみで構成される日付っぽいものは除外したいが
+    # ここでは簡易的に「数字以外で始まる」または「数字を含むが日付形式でない」ものを拾いたい
+    # いったん緩和して (.+?) で拾い、後で検証するアプローチも考えられるが
+    # ここではバックスラッシュの修正と ) のエスケープ修正を行う
+    @original_content.scan(/^!!メンバー[ー]?(?:（|\()(.+?)(?:）|\))/m) do
       match_data = Regexp.last_match
+      
+      # 既に同じ位置のセクションが追加されていないかチェック
+      already_added = sections.any? { |s| s[:position] == match_data.begin(0) }
+      next if already_added
+      
       label_raw = match_data[1]
       next if label_raw.nil?
       
@@ -166,7 +175,7 @@ class WikipageImporterV2 < WikipageImporter
   end
 
   # スナップショットを作成
-  def create_snapshot(unit, section_data)
+  def create_snapshot(unit, section_data, snapshot_index)
     # 既存のスナップショットがあればスキップ
     if section_data[:date].present?
       existing = unit.unit_snapshots.find_by(snapshot_date: section_data[:date])
@@ -185,7 +194,8 @@ class WikipageImporterV2 < WikipageImporter
     snapshot = unit.unit_snapshots.create!(
       snapshot_date: section_data[:date],
       label: section_data[:label],
-      current: is_current
+      current: is_current,
+      snapshot_index: snapshot_index
     )
 
     # メンバーをパース
