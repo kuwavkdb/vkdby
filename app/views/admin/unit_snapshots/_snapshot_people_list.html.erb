@@ -1,0 +1,46 @@
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100 mb-4">
+    Members (<%= snapshot_people.size %>)
+  </h3>
+
+  <% if snapshot_people.any? %>
+    <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg dark:ring-gray-700">
+      <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
+        <thead class="bg-gray-50 dark:bg-gray-800">
+          <tr>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Order</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Name</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Part</th>
+            <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+              <span class="sr-only">Delete</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 bg-white dark:bg-gray-900 dark:divide-gray-700">
+          <% snapshot_people.each do |sp| %>
+            <tr>
+              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
+                <%= sp.sort_order %>
+              </td>
+              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900 dark:text-gray-200">
+                <% if sp.person %>
+                  <%= link_to sp.person.name, edit_admin_person_path(sp.person), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
+                <% else %>
+                  <%= sp.person_name %>
+                <% end %>
+              </td>
+              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
+                <%= sp.part %>
+              </td>
+              <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                <%= button_to "Remove", admin_unit_unit_snapshot_snapshot_person_path(unit, unit_snapshot, sp), method: :delete, class: "text-red-600 hover:text-red-900 bg-transparent border-0 cursor-pointer p-0 inline dark:text-red-400 dark:hover:text-red-300", form_class: "inline", onclick: "return confirm('Remove this member?')" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="text-sm text-gray-500 dark:text-gray-400">No members added yet.</p>
+  <% end %>
+</div>

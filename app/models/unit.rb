@@ -37,6 +37,7 @@ class Unit < ApplicationRecord
   has_many :tag_index_items, as: :indexable, dependent: :destroy
   has_many :tag_indices, through: :tag_index_items
   has_many :sections, as: :sectionable, dependent: :destroy
+  has_many :unit_snapshots, dependent: :destroy
   enum :unit_type, { band: 0, unit: 1, session: 2, solo: 3, limited: 4, other: 99 }
   enum :status, { pre: 0, active: 1, freeze: 2, disbanded: 3, unknown: 99 }
 

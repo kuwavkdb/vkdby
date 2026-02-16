@@ -21,6 +21,9 @@ Rails.application.routes.draw do
           patch :reorder
         end
       end
+      resources :unit_snapshots, except: %i[show] do
+        resources :snapshot_people, only: %i[create destroy]
+      end
     end
     resources :people do
       collection do

@@ -47,6 +47,10 @@ class ProfilesController < ApplicationController
     @trends = Trend.where('units @> ?', [{ unit_id: @resource.id }].to_json)
                    .order(date: :desc)
                    .limit(10)
+
+    @snapshots = @resource.unit_snapshots
+                          .includes(snapshot_people: :person)
+                          .reverse_chronological
   end
 
   def load_items
