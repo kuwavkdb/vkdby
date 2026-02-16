@@ -49,6 +49,9 @@ class WikipageImporterV2 < WikipageImporter
       month = match_data[2].to_i
       day = match_data[3].to_i
       
+      # 年が 0 の場合はサンプルテンプレートなのでスキップ
+      next if year == 0
+      
       # セクションの内容を抽出（次の !! まで）
       start_pos = match_data.end(0)
       content = extract_section_content(start_pos)
@@ -79,6 +82,9 @@ class WikipageImporterV2 < WikipageImporter
       year = match_data[1].to_i
       month = match_data[2].to_i
       day = match_data[3].to_i
+      
+      # 年が 0 の場合はサンプルテンプレートなのでスキップ
+      next if year == 0
       
       start_pos = match_data.end(0)
       content = extract_section_content(start_pos)
