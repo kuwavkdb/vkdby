@@ -35,7 +35,7 @@ class UnitSnapshot < ApplicationRecord
   def display_label
     return label if label.present?
     return snapshot_date.strftime('%Y/%m/%d') if snapshot_date.present?
-    
-    '日付未設定'
+
+    nil
   end
 end

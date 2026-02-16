@@ -41,21 +41,21 @@ class WikipageImporterV2 < WikipageImporter
     return [] unless @original_content
 
     sections = []
-    
+
     # パターン1: !!メンバー（yyyy/mm/dd）
-    @original_content.scan(/^!!メンバー[ー]?(?:（|\()([0-9]{4})\/([0-9]{1,2})\/([0-9]{1,2})(?:）|\))/m) do
+    @original_content.scan(%r{^!!メンバーー?(?:（|\()([0-9]{4})/([0-9]{1,2})/([0-9]{1,2})(?:）|\))}m) do
       match_data = Regexp.last_match
       year = match_data[1].to_i
       month = match_data[2].to_i
       day = match_data[3].to_i
-      
+
       # 年が 0 の場合はサンプルテンプレートなのでスキップ
-      next if year == 0
-      
+      next if year.zero?
+
       # セクションの内容を抽出（次の !! まで）
       start_pos = match_data.end(0)
       content = extract_section_content(start_pos)
-      
+
       # 日付のバリデーション
       if Date.valid_date?(year, month, day)
         sections << {
@@ -77,18 +77,18 @@ class WikipageImporterV2 < WikipageImporter
     end
 
     # パターン2: !!メンバー（yyyy年mm月dd日）
-    @original_content.scan(/^!!メンバー[ー]?(?:（|\()([0-9]{4})年([0-9]{1,2})月([0-9]{1,2})日(?:）|\))/m) do
+    @original_content.scan(/^!!メンバーー?(?:（|\()([0-9]{4})年([0-9]{1,2})月([0-9]{1,2})日(?:）|\))/m) do
       match_data = Regexp.last_match
       year = match_data[1].to_i
       month = match_data[2].to_i
       day = match_data[3].to_i
-      
+
       # 年が 0 の場合はサンプルテンプレートなのでスキップ
-      next if year == 0
-      
+      next if year.zero?
+
       start_pos = match_data.end(0)
       content = extract_section_content(start_pos)
-      
+
       # 日付のバリデーション
       if Date.valid_date?(year, month, day)
         sections << {
@@ -114,22 +114,22 @@ class WikipageImporterV2 < WikipageImporter
     # ここでは簡易的に「数字以外で始まる」または「数字を含むが日付形式でない」ものを拾いたい
     # いったん緩和して (.+?) で拾い、後で検証するアプローチも考えられるが
     # ここではバックスラッシュの修正と ) のエスケープ修正を行う
-    @original_content.scan(/^!!メンバー[ー]?(?:（|\()(.+?)(?:）|\))/m) do
+    @original_content.scan(/^!!メンバーー?(?:（|\()(.+?)(?:）|\))/m) do
       match_data = Regexp.last_match
-      
+
       # 既に同じ位置のセクションが追加されていないかチェック
       already_added = sections.any? { |s| s[:position] == match_data.begin(0) }
       next if already_added
-      
+
       label_raw = match_data[1]
       next if label_raw.nil?
-      
+
       label = label_raw.strip
       next if label.blank?
-      
+
       start_pos = match_data.end(0)
       content = extract_section_content(start_pos)
-      
+
       # ラベルのみの場合は、日付を nil にして label だけ設定
       # 後で手動で日付を設定してもらう
       sections << {
@@ -143,15 +143,15 @@ class WikipageImporterV2 < WikipageImporter
     # パターン4: !!メンバー（ラベルなし）→ 現在のメンバー (current = true)
     # 他のパターンにマッチしなかった !!メンバー セクションを検出
     # 負の先読みで（や(が続かないことを確認
-    @original_content.scan(/^!!メンバー[ー]?(?!（)(?!\()\s*$/m) do
+    @original_content.scan(/^!!メンバーー?(?!（)(?!\()\s*$/m) do
       match_data = Regexp.last_match
       start_pos = match_data.end(0)
       content = extract_section_content(start_pos)
-      
+
       # 既に同じ位置のセクションが追加されていないかチェック
       already_added = sections.any? { |s| s[:position] == match_data.begin(0) }
       next if already_added
-      
+
       sections << {
         date: nil,
         label: nil,
@@ -187,9 +187,7 @@ class WikipageImporterV2 < WikipageImporter
 
     # current = true の場合、既存の current スナップショットを false に更新
     is_current = section_data[:current] || false
-    if is_current
-      unit.unit_snapshots.where(current: true).update_all(current: false)
-    end
+    unit.unit_snapshots.where(current: true).update_all(current: false) if is_current
 
     snapshot = unit.unit_snapshots.create!(
       snapshot_date: section_data[:date],
@@ -347,24 +345,23 @@ class WikipageImporterV2 < WikipageImporter
     return :unknown if part_str.blank?
 
     part_lower = part_str.downcase
-    result = case part_lower
-             when /vo|vocal|ボーカル/
-               :vocal
-             when /gt|guitar|ギター/
-               :guitar
-             when /ba|bass|ベース/
-               :bass
-             when /dr|drum|ドラム/
-               :drums
-             when /key|keyboard|キーボード|piano|ピアノ/
-               :keyboard
-             when /dj/
-               :dj
-             else
-               puts "[UNKNOWN_PART] '#{part_str}' in WikiID: #{@wikipage.id}"
-               :unknown
-             end
-    result
+    case part_lower
+    when /vo|vocal|ボーカル/
+      :vocal
+    when /gt|guitar|ギター/
+      :guitar
+    when /ba|bass|ベース/
+      :bass
+    when /dr|drum|ドラム/
+      :drums
+    when /key|keyboard|キーボード|piano|ピアノ/
+      :keyboard
+    when /dj/
+      :dj
+    else
+      puts "[UNKNOWN_PART] '#{part_str}' in WikiID: #{@wikipage.id}"
+      :unknown
+    end
   end
 
   # SNS文字列をJSONに変換

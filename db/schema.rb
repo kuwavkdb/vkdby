@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_15_162202) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_16_133107) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -273,9 +273,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_162202) do
     t.boolean "current", default: false, null: false
     t.string "label"
     t.date "snapshot_date"
+    t.integer "snapshot_index", default: 0, null: false
     t.bigint "unit_id", null: false
     t.datetime "updated_at", null: false
-    t.index ["unit_id", "current"], name: "index_unit_snapshots_on_unit_id_and_current"
+    t.index ["unit_id", "current", "snapshot_index"], name: "index_unit_snapshots_on_unit_id_and_current_and_index"
     t.index ["unit_id"], name: "index_unit_snapshots_on_unit_id"
   end
 
