@@ -86,6 +86,9 @@ Rails.application.routes.draw do
   get '/date/:year/:month/:day', to: 'daily#show', as: :daily,
                                  constraints: { year: /\d{4}/, month: /\d{1,2}/, day: /\d{1,2}/ }
 
+  # Item詳細ページのルート
+  get '/ITEM_:asin', to: 'items#show', as: :item, constraints: { asin: /[A-Z0-9]+/ }
+
   # Cross-search
   get 'search', to: 'search#index'
 
