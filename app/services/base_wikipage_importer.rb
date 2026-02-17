@@ -204,6 +204,7 @@ class BaseWikipageImporter
     書籍
     バンド名の変遷
     バンド名変遷
+    カラオケ配信
   ].freeze
 
   def parse_sections(owner)

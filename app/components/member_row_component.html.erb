@@ -1,6 +1,6 @@
 <div class="bg-white dark:bg-slate-800 p-5 border-b border-slate-100 dark:border-slate-700 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
   <div>
-    <div class="flex items-center justify-between gap-3 md:gap-4 mb-2 flex-wrap sm:flex-nowrap">
+    <div class="flex items-center justify-between gap-3 md:gap-4 flex-wrap sm:flex-nowrap">
       <div class="flex items-center gap-3 md:gap-4 flex-1">
         <span class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest min-w-[4rem]" title="<%= (@member.part_alias.present? || @member.support?) ? @member.part.upcase : '' %>">
           <%= (@member.support? ? "サポート " : "") + (@member.part_alias.presence || @member.part.upcase) %>
@@ -44,7 +44,7 @@
       </div>
     </div>
     <% if (p_items = person_history_items).present? %>
-      <div class="mt-3 pl-4 border-l-2 border-slate-100 dark:border-slate-800 flex flex-col gap-1">
+      <div class="mt-3 pl-4 border-l-2 border-slate-100 dark:border-slate-800 flex flex-col gap-1" data-toggle-target="content">
         <% p_items.each do |concurrent_items| %>
           <div class="text-[0.7rem] leading-relaxed text-slate-500 dark:text-slate-400">
             <% concurrent_items.each_with_index do |item, index| %>

@@ -18,3 +18,6 @@ application.register("mobile-menu", MobileMenuController)
 
 import SortableController from "controllers/sortable_controller"
 application.register("sortable", SortableController)
+
+import ToggleController from "controllers/toggle_controller"
+application.register("toggle", ToggleController)
