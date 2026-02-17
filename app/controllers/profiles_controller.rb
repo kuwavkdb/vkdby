@@ -36,7 +36,6 @@ class ProfilesController < ApplicationController
 
   def load_unit_data
     members = @resource.unit_people.includes(person: { person_logs: :unit }).order(:order_in_period)
-    @active_members = members.select { |m| m.pre? || m.active? }
     @past_members = members.reject { |m| m.pre? || m.active? }
 
     # ユニットの履歴を統合 (UnitLog + PersonLog)
@@ -50,7 +49,7 @@ class ProfilesController < ApplicationController
 
     @snapshots = @resource.unit_snapshots
                           .includes(snapshot_people: :person)
-                          .reverse_chronological
+                          .order(current: :desc, snapshot_index: :asc)
   end
 
   def load_items

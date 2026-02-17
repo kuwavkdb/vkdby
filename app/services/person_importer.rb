@@ -113,6 +113,7 @@ class PersonImporter < BaseWikipageImporter
     return if person.old_key.blank?
 
     UnitPerson.where(old_person_key: person.old_key).update_all(person_id: person.id, person_key: person.key)
+    SnapshotPerson.where(old_person_key: person.old_key).update_all(person_id: person.id, person_key: person.key)
   end
 
   def parse_categories_data

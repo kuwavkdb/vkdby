@@ -13,12 +13,11 @@
 
         <div class="column-right">
           <% if @resource.is_a?(Unit) %>
+            <%= render UnitSnapshotsComponent.new(snapshots: @snapshots) %>
             <%= render UnitMembersComponent.new(
               unit: @resource,
-              active_members: @active_members,
               past_members: @past_members
             ) %>
-            <%= render UnitSnapshotsComponent.new(snapshots: @snapshots) %>
             <%= render UnitTrendsComponent.new(trends: @trends) if @trends %>
 
             <% if @resource.is_a?(Unit) && defined?(logged_in?) && logged_in? %>
