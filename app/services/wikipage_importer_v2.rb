@@ -105,9 +105,9 @@ class WikipageImporterV2 < WikipageImporter
       start_pos = match_data.end(0)
       content = extract_section_content(start_pos)
 
-      # 年のみの場合は1月1日として扱うが、ラベルは年のみ
+      # 年のみの場合は日付不定のためnil、ラベルで年を保持
       sections << {
-        date: Date.new(year, 1, 1),
+        date: nil,
         label: "#{year}年",
         content: content,
         position: match_data.begin(0)
@@ -149,7 +149,7 @@ class WikipageImporterV2 < WikipageImporter
       content = extract_section_content(start_pos)
 
       sections << {
-        date: Date.today,
+        date: nil,
         label: 'Current',
         content: content,
         position: match_data.begin(0),
