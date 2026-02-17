@@ -151,4 +151,10 @@ namespace :import do
     ActiveRecord::Base.connection.execute('TRUNCATE TABLE units, people, unit_snapshots, snapshot_people RESTART IDENTITY CASCADE')
     puts '✅ Truncated units and people tables'
   end
+
+  desc 'Truncate trends and items tables'
+  task truncate_trends_and_items: :environment do
+    ActiveRecord::Base.connection.execute('TRUNCATE TABLE trends, items RESTART IDENTITY CASCADE')
+    puts '✅ Truncated trends and tables tables'
+  end
 end
