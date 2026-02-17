@@ -1,0 +1,94 @@
+<div class="flex justify-center min-h-screen p-0 md:p-8 bg-gray-100 dark:bg-gray-900">
+  <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
+
+    <!-- Year Header -->
+    <header class="mb-8 text-center border-b border-slate-200 dark:border-slate-700 pb-6">
+      <h1 class="text-3xl font-black text-slate-800 dark:text-slate-100">
+        <%= @year %>年
+      </h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
+        Yearly Summary
+      </p>
+    </header>
+
+    <!-- Navigation -->
+    <div class="space-y-3 mb-8">
+      <!-- Year Navigation -->
+      <div class="flex justify-between items-center">
+        <%= link_to "← 前年", yearly_path(year: @year - 1),
+            class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300" %>
+        <%= link_to "年一覧", date_index_path,
+            class: "text-sm font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200" %>
+        <%= link_to "翌年 →", yearly_path(year: @year + 1),
+            class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300" %>
+      </div>
+    </div>
+
+    <!-- 12 Months Section -->
+    <section class="mb-12">
+      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 pb-2 mb-4">
+        Months
+      </h2>
+      <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+        <% (1..12).each do |month| %>
+          <% trend_count = @monthly_trend_counts[month] || 0 %>
+          <%= link_to monthly_path(year: @year, month: month),
+              class: "block p-4 rounded-lg border transition-all hover:shadow-lg #{trend_count > 0 ? 'bg-indigo-50 border-indigo-200 dark:bg-indigo-900/30 dark:border-indigo-700 hover:bg-indigo-100 dark:hover:bg-indigo-900/50' : 'bg-slate-50 border-slate-200 dark:bg-slate-900/50 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-900'}" do %>
+            <div class="text-center">
+              <div class="text-lg font-bold text-slate-800 dark:text-slate-200">
+                <%= month %>月
+              </div>
+              <% if trend_count > 0 %>
+                <div class="text-xs text-indigo-600 dark:text-indigo-400 mt-1">
+                  <%= trend_count %> trends
+                </div>
+              <% else %>
+                <div class="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                  -
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </section>
+
+    <!-- Month Unknown Trends Section -->
+    <% if @month_unknown_trends.present? %>
+      <section class="mb-12">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 pb-2 mb-4">
+          Trends (月不明)
+        </h2>
+        <div class="space-y-0">
+          <% @month_unknown_trends.each do |trend| %>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700 last:border-0">
+              <% if trend.units %>
+                <% trend.units.each do |unit_data| %>
+                  <% unit = @related_units&.dig(unit_data['unit_id']) %>
+                  <% if unit %>
+                    <%= link_to unit.name, profile_path(unit.key), class: "inline-block px-2 py-0.5 rounded text-sm font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800 transition-colors mr-1 border border-indigo-200 dark:border-indigo-700" %>
+                  <% elsif unit_data['name'].present? %>
+                    <span class="inline-block px-2 py-0.5 rounded text-sm font-semibold bg-gray-50 text-gray-700 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 mr-1"><%= unit_data['name'] %></span>
+                  <% end %>
+                <% end %>
+              <% end %>
+              <%= link_to trend_path(trend), class: "inline" do %>
+                <span class="font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"><%= format_wiki_title(trend.title, link: false) %></span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+
+    <!-- Empty State -->
+    <% if @monthly_trend_counts.empty? && @month_unknown_trends.blank? %>
+      <div class="py-20 text-center">
+        <p class="text-slate-400 dark:text-slate-500 font-bold">
+          この年には記録がありません。
+        </p>
+      </div>
+    <% end %>
+
+  </div>
+</div>

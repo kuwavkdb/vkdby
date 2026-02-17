@@ -118,7 +118,10 @@ class WikipageImporter < BaseWikipageImporter
     # Replace any non-alphanumeric character (except -) with -
     unit_key = source_for_key.downcase.gsub(/[^a-z0-9-]+/, '-').gsub(/-+/, '-')
 
-    unit = Unit.find_by(old_key: @wikipage_name) || Unit.find_by(old_key: encoded_old_key) || Unit.find_or_initialize_by(key: unit_key)
+    # Find existing unit by old_key only
+    # If not found, create a new unit (collision will be resolved later)
+    unit = Unit.find_by(old_key: @wikipage_name) || Unit.find_by(old_key: encoded_old_key)
+    unit = Unit.new if unit.nil?
 
     # Check for name changes and update name_log
     if unit.persisted? && (unit.name != unit_name || unit.name_kana != unit_name_kana)
