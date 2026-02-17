@@ -395,7 +395,6 @@ class WikipageImporterV2 < WikipageImporter
     )
   end
 
-
   # パート文字列を enum に変換
   def parse_part(part_str)
     return :unknown if part_str.blank?
@@ -419,6 +418,5 @@ class WikipageImporterV2 < WikipageImporter
       :unknown
     end
   end
-
 end
 # rubocop:enable Metrics/ClassLength
