@@ -117,7 +117,7 @@ class WikipageImporterV2 < WikipageImporter
 
   def extract_pattern5(sections)
     extract_named_pattern(sections, '結成時', '結成時')
-    extract_named_pattern(sections, '現在', 'Current', current: true)
+    extract_named_pattern(sections, '現在', nil, current: true)
 
     # パターン4: !!メンバー（その他文字列）
     # 日付形式でないものをすべて抽出
@@ -150,7 +150,7 @@ class WikipageImporterV2 < WikipageImporter
 
       sections << {
         date: nil,
-        label: 'Current',
+        label: nil,
         content: content,
         position: match_data.begin(0),
         current: true
