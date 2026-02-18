@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module WikiParser
+module WikiParser # rubocop:disable Metrics/ModuleLength
   extend ActiveSupport::Concern
 
   # 履歴文字列をパースして構造化データの配列を返す
@@ -148,11 +148,11 @@ module WikiParser
     text.each_char do |char|
       case char
       when '(' then paren_depth += 1
-      when ')' then paren_depth -= 1 if paren_depth > 0
+      when ')' then paren_depth -= 1 if paren_depth.positive?
       when '[' then bracket_depth += 1
-      when ']' then bracket_depth -= 1 if bracket_depth > 0
+      when ']' then bracket_depth -= 1 if bracket_depth.positive?
       when '{' then brace_depth += 1
-      when '}' then brace_depth -= 1 if brace_depth > 0
+      when '}' then brace_depth -= 1 if brace_depth.positive?
       end
 
       if char == delimiter && paren_depth.zero? && bracket_depth.zero? && brace_depth.zero?
