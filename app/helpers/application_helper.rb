@@ -20,7 +20,7 @@ module ApplicationHelper
             end
 
     # Series
-    pagy.series.each do |item|
+    pagy.send(:series).each do |item|
       case item
       when Integer
         html << link_to(item, pagy.page_url(item), class: inactive_class)
