@@ -105,4 +105,40 @@ class PersonTest < ActiveSupport::TestCase
     # So (Solo) should result in unit_name: "(Solo)"
     assert_equal '(Solo)', history[0][0][:unit_name]
   end
+
+  test 'parse_old_history does not split arrow inside parentheses' do
+    # (C.F.Randle→輝喜) は名前変更を意味するため、経歴の区切りではない
+    history_str = '[[feathers-blue]](輝喜) → [[アンティック-珈琲店-]](C.F.Randle→輝喜) → [[NextBand]]'
+    person = Person.new(old_history: history_str)
+    history = person.parse_old_history
+
+    assert_equal 3, history.size
+
+    assert_equal 'feathers-blue', history[0][0][:unit_name]
+    assert_equal '輝喜', history[0][0][:part_and_name]
+
+    assert_equal 'アンティック-珈琲店-', history[1][0][:unit_name]
+    assert_equal 'C.F.Randle→輝喜', history[1][0][:part_and_name]
+
+    assert_equal 'NextBand', history[2][0][:unit_name]
+  end
+
+  test 'parse_old_history does not split comma inside braces (fn plugin)' do
+    # {{fn 2010/06/13、2010/06/18~2011/06/26}} 内の、は区切りではない
+    history_str = '[[アンティック-珈琲店-]]、[[DOGinTheパラレルワールドオーケストラ]](サポート){{fn 2010/06/13、2010/06/18~2011/06/26}}、他サポート多数'
+    person = Person.new(old_history: history_str)
+    history = person.parse_old_history
+
+    assert_equal 1, history.size
+    concurrent = history[0]
+    assert_equal 3, concurrent.size
+
+    assert_equal 'アンティック-珈琲店-', concurrent[0][:unit_name]
+
+    assert_equal 'DOGinTheパラレルワールドオーケストラ', concurrent[1][:unit_name]
+    assert_equal 'サポート', concurrent[1][:part_and_name]
+    assert_equal ['2010/06/13、2010/06/18~2011/06/26'], concurrent[1][:notes]
+
+    assert_equal '他サポート多数', concurrent[2][:unit_name]
+  end
 end

@@ -23,12 +23,12 @@ module WikiParser
 
     timeline = []
 
-    # Split by → and process each period
-    clean_history_text.split('→').each do |period_segment|
+    # Split by → and process each period (括弧内の→は区切りとしない)
+    split_top_level(clean_history_text, '→').each do |period_segment|
       concurrent_items = []
 
-      # Split by 、 to handle concurrent activities
-      period_segment.split('、').each do |item_segment|
+      # Split by 、 to handle concurrent activities (括弧内の、は区切りとしない)
+      split_top_level(period_segment, '、').each do |item_segment|
         metadata = { notes: [] }
         item_segment = process_plugins(item_segment.strip, metadata)
         next if item_segment.empty? && metadata[:notes].empty?
@@ -135,6 +135,35 @@ module WikiParser
         match
       end
     end.strip
+  end
+
+  # 指定の区切り文字で分割するが、括弧()・角括弧[[]]・波括弧{{}}内の区切り文字は無視する
+  def split_top_level(text, delimiter)
+    segments = []
+    current = +''
+    paren_depth = 0
+    bracket_depth = 0
+    brace_depth = 0
+
+    text.each_char do |char|
+      case char
+      when '(' then paren_depth += 1
+      when ')' then paren_depth -= 1 if paren_depth > 0
+      when '[' then bracket_depth += 1
+      when ']' then bracket_depth -= 1 if bracket_depth > 0
+      when '{' then brace_depth += 1
+      when '}' then brace_depth -= 1 if brace_depth > 0
+      end
+
+      if char == delimiter && paren_depth.zero? && bracket_depth.zero? && brace_depth.zero?
+        segments << current
+        current = +''
+      else
+        current << char
+      end
+    end
+    segments << current
+    segments
   end
 
   def encode_euc_jp(str)
