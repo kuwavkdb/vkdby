@@ -5,28 +5,42 @@
     <header class="mb-8 border-b border-slate-200 dark:border-slate-700 pb-6">
       <div class="flex justify-between items-center gap-4">
         <div class="flex gap-2 flex-shrink-0">
-          <% prev_year_date = @date - 1.year %>
-          <%= link_to "← 前年同日", daily_path(year: prev_year_date.year, month: prev_year_date.month, day: prev_year_date.day),
-              class: "text-xs font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap" %>
           <% prev_date = @date - 1.day %>
-          <%= link_to "← 前日", daily_path(year: prev_date.year, month: prev_date.month, day: prev_date.day),
-              class: "text-xs font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap" %>
+          <% if @year_agnostic %>
+            <%= link_to "← 前日", birthday_date_path(month: prev_date.month, day: prev_date.day),
+                class: "text-xs font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap" %>
+          <% else %>
+            <% prev_year_date = @date - 1.year %>
+            <%= link_to "← 前年同日", daily_path(year: prev_year_date.year, month: prev_year_date.month, day: prev_year_date.day),
+                class: "text-xs font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap" %>
+            <%= link_to "← 前日", daily_path(year: prev_date.year, month: prev_date.month, day: prev_date.day),
+                class: "text-xs font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap" %>
+          <% end %>
         </div>
         <div class="text-center flex-grow">
           <h1 class="text-3xl font-black text-slate-800 dark:text-slate-100">
-            <%= link_to "#{@date.year}年#{@date.month}月", monthly_path(year: @date.year, month: @date.month), class: "text-indigo-600 dark:text-indigo-400 underline decoration-2 underline-offset-4 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors" %><%= @date.strftime('%-d日') %>
+            <% if @year_agnostic %>
+              <%= "#{@date.month}月#{@date.day}日" %>
+            <% else %>
+              <%= link_to "#{@date.year}年#{@date.month}月", monthly_path(year: @date.year, month: @date.month), class: "text-indigo-600 dark:text-indigo-400 underline decoration-2 underline-offset-4 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors" %><%= @date.strftime('%-d日') %>
+            <% end %>
           </h1>
           <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
-            Daily Summary
+            <%= @year_agnostic ? "All Years Summary" : "Daily Summary" %>
           </p>
         </div>
         <div class="flex gap-2 flex-shrink-0">
           <% next_date = @date + 1.day %>
-          <%= link_to "翌日 →", daily_path(year: next_date.year, month: next_date.month, day: next_date.day),
-              class: "text-xs font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap" %>
-          <% next_year_date = @date + 1.year %>
-          <%= link_to "翌年同日 →", daily_path(year: next_year_date.year, month: next_year_date.month, day: next_year_date.day),
-              class: "text-xs font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap" %>
+          <% if @year_agnostic %>
+            <%= link_to "翌日 →", birthday_date_path(month: next_date.month, day: next_date.day),
+                class: "text-xs font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap" %>
+          <% else %>
+            <%= link_to "翌日 →", daily_path(year: next_date.year, month: next_date.month, day: next_date.day),
+                class: "text-xs font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap" %>
+            <% next_year_date = @date + 1.year %>
+            <%= link_to "翌年同日 →", daily_path(year: next_year_date.year, month: next_year_date.month, day: next_year_date.day),
+                class: "text-xs font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap" %>
+          <% end %>
         </div>
       </div>
     </header>
@@ -43,6 +57,9 @@
         <div class="space-y-0">
           <% @trends.each do |trend| %>
             <div class="p-4 border-b border-slate-200 dark:border-slate-700 last:border-0">
+              <% if @year_agnostic %>
+                <%= link_to daily_path(year: trend.date.year, month: trend.date.month, day: trend.date.day), class: "inline-block px-2 py-0.5 rounded text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 mr-2" do %><%= trend.date.year %>年<% end %>
+              <% end %>
               <% if trend.units %>
                 <% trend.units.each do |unit_data| %>
                   <% unit = @related_units&.dig(unit_data['unit_id']) %>

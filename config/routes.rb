@@ -85,6 +85,10 @@ Rails.application.routes.draw do
   get '/date/:year/:month', to: 'monthly#show', as: :monthly,
                             constraints: { year: /\d{4}/, month: /\d{1,2}/ }
 
+  # Birthday page (year-agnostic: /date/-/MM/DD)
+  get '/date/-/:month/:day', to: 'daily#show', as: :birthday_date,
+                              constraints: { month: /\d{1,2}/, day: /\d{1,2}/ }
+
   # Daily page
   get '/date/:year/:month/:day', to: 'daily#show', as: :daily,
                                  constraints: { year: /\d{4}/, month: /\d{1,2}/, day: /\d{1,2}/ }

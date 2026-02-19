@@ -31,4 +31,7 @@ class Item < ApplicationRecord
 
   # 発売日で検索するスコープ
   scope :released_on, ->(date) { where(release_date: date) }
+  scope :released_on_month_day, lambda { |month, day|
+    where('EXTRACT(MONTH FROM release_date) = ? AND EXTRACT(DAY FROM release_date) = ?', month, day)
+  }
 end
