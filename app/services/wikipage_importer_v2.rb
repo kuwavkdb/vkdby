@@ -314,6 +314,7 @@ class WikipageImporterV2 < WikipageImporter
   def collect_old_format_entries(entries, separator_index)
     old_member_regex1 = /^!([^…\n]+)…\s*\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/
     old_member_regex2 = /^!\[\[([^|\]\n]+)(?:\|([^\]\n]+))?\]\]…([^…\n]+)/
+    old_member_regex3 = /^!([^…\n]+)…[^\S\n]*([^\[\s\n][^\n]*)/
 
     @wiki_content.scan(old_member_regex1) do |match|
       match_data = Regexp.last_match
@@ -347,6 +348,28 @@ class WikipageImporterV2 < WikipageImporter
       part_str = match[2].strip
       old_member_key = name_str if old_member_key.blank?
       old_member_key = URI.encode_www_form_component(old_member_key.encode('EUC-JP'))
+
+      entries << {
+        position: current_pos,
+        part_str: part_str,
+        name_str: name_str,
+        old_member_key: old_member_key,
+        sns_account: nil,
+        inline_history: nil,
+        member_status: member_status
+      }
+    end
+
+    @wiki_content.scan(old_member_regex3) do |match|
+      match_data = Regexp.last_match
+      current_pos = match_data.begin(0)
+      member_status = current_pos > separator_index ? :left : :active
+
+      part_str = match[0].strip
+      name_str = match[1].strip
+      next if name_str.empty?
+
+      old_member_key = URI.encode_www_form_component(name_str.encode('EUC-JP'))
 
       entries << {
         position: current_pos,
