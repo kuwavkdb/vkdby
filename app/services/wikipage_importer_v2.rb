@@ -409,7 +409,7 @@ class WikipageImporterV2 < WikipageImporter
       person_key: person&.key,
       old_person_key: old_member_key,
       part: part_enum,
-      part_alias: part_str,
+      part_alias: extract_name_from_wiki_link(part_str),
       status: member_status,
       support: support,
       sns: sns_data,
