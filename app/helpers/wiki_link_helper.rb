@@ -170,12 +170,12 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     end
   end
 
-  def handle_youtube2(line, blocks, current_block)
+  def handle_youtube2(line, blocks, current_block, &block)
     video_id = line.match(/\{\{youtube2\s+([^,}\s]+)/i)&.captures&.first&.strip
-    return handle_text(line, blocks, current_block) { |b| yield b } unless video_id
+    return handle_text(line, blocks, current_block, &block) unless video_id
 
     blocks << current_block unless current_block[:lines].empty?
-    yield({ type: :youtube2, video_id: video_id, lines: [line] })
+    block.call({ type: :youtube2, video_id: video_id, lines: [line] })
   end
 
   def render_wiki_blocks(blocks)
