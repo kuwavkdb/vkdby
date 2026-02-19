@@ -3,9 +3,10 @@
 class MemberRowComponent < ViewComponent::Base
   include WikiLinkHelper
 
-  def initialize(member:, hide_active: false)
+  def initialize(member:, hide_active: false, hide_left: false)
     @member = member
     @hide_active = hide_active
+    @hide_left = hide_left
   end
 
   private
@@ -28,7 +29,10 @@ class MemberRowComponent < ViewComponent::Base
   end
 
   def show_status?
-    !(@hide_active && @member.status == 'active')
+    return false if @hide_active && @member.status == 'active'
+    return false if @hide_left && @member.status == 'left'
+
+    true
   end
 
   def person_history_items
