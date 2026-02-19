@@ -201,7 +201,7 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
 
     # 1. Protect wiki links [[...]] and [...]
     # [[Display|Link]]
-    protected_text = text.gsub(/\[\[(.*?)\|(.*?)\]\]/) do
+    protected_text = text.gsub(/\[\[([^\[\]|]+)\|([^\[\]]+)\]\]/) do
       key = "WIKILINKPLACEHOLDER#{placeholders.size}"
       display = Regexp.last_match(1)
       target = Regexp.last_match(2)
@@ -210,7 +210,7 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     end
 
     # [[Link]]
-    protected_text = protected_text.gsub(/\[\[([^|]+?)\]\]/) do
+    protected_text = protected_text.gsub(/\[\[([^\[\]|]+)\]\]/) do
       key = "WIKILINKPLACEHOLDER#{placeholders.size}"
       target = Regexp.last_match(1)
       placeholders[key] = link ? create_internal_link(target, target) : target
