@@ -12,7 +12,9 @@
       <% if @resource.birthday.present? %>
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0">
           <dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">Birthday</dt>
-          <dd class="text-[0.9375rem] font-bold text-slate-800 dark:text-slate-200"><%= @resource.birthday_display %></dd>
+          <dd class="text-[0.9375rem] font-bold text-slate-800 dark:text-slate-200">
+            <%= link_to @resource.birthday_display, "#{birthday_date_path(month: @resource.birthday.month, day: @resource.birthday.day)}#birthdays", class: "hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" %>
+          </dd>
         </div>
       <% end %>
 
