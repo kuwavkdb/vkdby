@@ -126,7 +126,7 @@ class BaseWikipageImporter
     end
 
     # Plain URL Format (e.g. *http://example.com)
-    content.scan(/^\*?(https?:\/\/[^\s\]]+)/).each do |match|
+    content.scan(%r{^\*?(https?://[^\s\]]+)}).each do |match|
       url = match[0].strip
 
       link = owner.links.find_or_initialize_by(url: url)
