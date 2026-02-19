@@ -32,23 +32,6 @@
             <% end %>
           <% end %>
 
-          <% if @resource.is_a?(Person) && @trends.present? %>
-            <%= render UnitTrendsComponent.new(trends: @trends) %>
-
-            <% if defined?(logged_in?) && logged_in? %>
-              <div class="mt-4">
-                <%= link_to new_admin_trend_path(person_id: @resource.id), class: "inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors" do %>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                  </svg>
-                  Add Trend
-                <% end %>
-              </div>
-            <% end %>
-          <% end %>
-
-
-
 
 
           <% if (@resource.is_a?(Person) && (@logs.present? || @old_history_items.present?)) || (@resource.is_a?(Unit) && @history.present?) %>
@@ -104,6 +87,21 @@
                 <% end %>
               </div>
             </section>
+          <% end %>
+
+          <% if @resource.is_a?(Person) && @trends.present? %>
+            <%= render UnitTrendsComponent.new(trends: @trends) %>
+
+            <% if defined?(logged_in?) && logged_in? %>
+              <div class="mt-4">
+                <%= link_to new_admin_trend_path(person_id: @resource.id), class: "inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors" do %>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  Add Trend
+                <% end %>
+              </div>
+            <% end %>
           <% end %>
 
           <% if @resource.sections.exists? %>
