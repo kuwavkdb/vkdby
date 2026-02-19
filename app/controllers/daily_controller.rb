@@ -8,7 +8,8 @@ class DailyController < ApplicationController
     return redirect_to root_path, alert: '日付の形式が正しくありません' unless @date
 
     if @year_agnostic
-      month, day = @date.month, @date.day
+      month = @date.month
+      day = @date.day
       @trends = Trend.on_month_day(month, day).order(date: :asc)
       @birthdays = Person.birthday_on(@date).order(name_kana: :asc)
       @releases = Item.released_on_month_day(month, day).order(release_date: :asc)
