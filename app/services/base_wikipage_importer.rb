@@ -124,6 +124,16 @@ class BaseWikipageImporter
       link.active = active
       link.save!
     end
+
+    # Plain URL Format (e.g. *http://example.com)
+    content.scan(%r{^\*?(https?://[^\s\]]+)}).each do |match|
+      url = match[0].strip
+
+      link = owner.links.find_or_initialize_by(url: url)
+      link.text = url if link.text.blank?
+      link.active = active
+      link.save!
+    end
   end
 
   def map_service_link(service, account)
