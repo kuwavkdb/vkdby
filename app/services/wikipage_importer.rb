@@ -317,8 +317,10 @@ class WikipageImporter < BaseWikipageImporter
     # Current supported formats:
     # 1. !Part… [[Name]]
     # 2. ![[Name]]… Part
+    # 3. !Part… PlainName (no wiki link)
     old_member_regex1 = /^!([^…\n]+)…\s*\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/
     old_member_regex2 = /^!\[\[([^|\]\n]+)(?:\|([^\]\n]+))?\]\]…([^…\n]+)/
+    old_member_regex3 = /^!([^…\n]+)…[^\S\n]*([^\[\s\n][^\n]*)/
 
     @wiki_content.scan(old_member_regex1) do |match|
       match_data = Regexp.last_match
@@ -343,6 +345,19 @@ class WikipageImporter < BaseWikipageImporter
       part_str = match[2].strip
 
       register_old_format_member(unit, part_str, name_str, old_member_key, member_status, current_order)
+      current_order += 1
+    end
+
+    @wiki_content.scan(old_member_regex3) do |match|
+      match_data = Regexp.last_match
+      current_pos = match_data.begin(0)
+      member_status = current_pos > separator_index ? :left : :active
+
+      part_str = match[0].strip
+      name_str = match[1].strip
+      next if name_str.empty?
+
+      register_old_format_member(unit, part_str, name_str, nil, member_status, current_order)
       current_order += 1
     end
   end
