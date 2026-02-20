@@ -275,8 +275,6 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     sanitize(protected_text, tags: %w[a div p br ul li dt dd dl blockquote ruby rt], attributes: %w[href target rel class])
   end
 
-
-
   def create_internal_link(display, target)
     encoded = URI.encode_www_form_component(target.encode('EUC-JP'))
     link_to(display.html_safe, "/#{encoded}.html", class: 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline')
