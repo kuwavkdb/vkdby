@@ -7,43 +7,32 @@
   </h2>
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
     <% @birthdays.each do |person| %>
-      <%= link_to profile_path(person.key), class: "group block p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700 hover:border-person transition-colors relative overflow-hidden" do %>
-        <div class="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-          </svg>
-        </div>
-        <div class="relative z-10">
-        <h3 class="font-bold text-slate-800 dark:text-slate-200 group-hover:text-person transition-colors">
-          <%= person.name %>
-        </h3>
-        <% if person.name_kana.present? %>
-          <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5"><%= person.name_kana %></p>
-        <% end %>
-        <% if person.old_history.present? %>
-          <% recent_histories = person.parse_old_history.last(3) %>
-          <% if recent_histories.present? %>
-            <% recent_histories.each do |recent_history| %>
-              <div class="mt-2 pl-3 text-xs text-slate-500 dark:text-slate-400">
-                <% recent_history.each_with_index do |item, index| %>
-                  <% if index > 0 %>
-                    <span class="mx-1">、</span>
-                  <% end %>
-                  <span class="<%= item[:is_temp] ? 'text-slate-400 dark:text-slate-500' : 'font-semibold' %>"><%= sanitize_with_ruby(item[:unit_name]) %></span>
-                  <% if item[:part_and_name].present? %>
-                    <span class="text-xs opacity-80">(<%= sanitize_with_ruby(item[:part_and_name]) %>)</span>
-                  <% end %>
-                  <% if item[:notes].present? %>
-                    <% item[:notes].each do |note| %>
-                      <span class="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded ml-1"><%= note %></span>
+      <%= render PersonCardComponent.new(person: person) do |c| %>
+        <% c.with_extra do %>
+          <% if person.old_history.present? %>
+            <% recent_histories = person.parse_old_history.last(3) %>
+            <% if recent_histories.present? %>
+              <% recent_histories.each do |recent_history| %>
+                <div class="mt-2 pl-3 text-xs text-slate-500 dark:text-slate-400">
+                  <% recent_history.each_with_index do |item, index| %>
+                    <% if index > 0 %>
+                      <span class="mx-1">、</span>
+                    <% end %>
+                    <span class="<%= item[:is_temp] ? 'text-slate-400 dark:text-slate-500' : 'font-semibold' %>"><%= sanitize_with_ruby(item[:unit_name]) %></span>
+                    <% if item[:part_and_name].present? %>
+                      <span class="text-xs opacity-80">(<%= sanitize_with_ruby(item[:part_and_name]) %>)</span>
+                    <% end %>
+                    <% if item[:notes].present? %>
+                      <% item[:notes].each do |note| %>
+                        <span class="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded ml-1"><%= note %></span>
+                      <% end %>
                     <% end %>
                   <% end %>
-                <% end %>
-              </div>
+                </div>
+              <% end %>
             <% end %>
           <% end %>
         <% end %>
-        </div>
       <% end %>
     <% end %>
   </div>
