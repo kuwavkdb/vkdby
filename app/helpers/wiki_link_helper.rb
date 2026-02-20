@@ -77,6 +77,12 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     parse_wiki_links(formatted, link: link)
   end
 
+  def sanitize_with_ruby(text)
+    return '' if text.blank?
+
+    sanitize(text, tags: %w[ruby rt span], attributes: %w[class]).html_safe
+  end
+
   private
 
   def parse_wiki_lines(text)
@@ -267,12 +273,6 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     end
 
     sanitize(protected_text, tags: %w[a div p br ul li dt dd dl blockquote ruby rt], attributes: %w[href target rel class])
-  end
-
-  def sanitize_with_ruby(text)
-    return '' if text.blank?
-
-    sanitize(text, tags: %w[ruby rt span], attributes: %w[class]).html_safe
   end
 
   def create_internal_link(display, target)

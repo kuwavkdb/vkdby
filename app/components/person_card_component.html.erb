@@ -10,5 +10,36 @@
       <p class="<%= kana_classes %>"><%= @person.name_kana %></p>
     <% end %>
     <%= content %>
+
+    <% if @show_history && @person.old_history.present? %>
+      <% recent_histories = @person.parse_old_history.last(3) %>
+      <% if recent_histories.present? %>
+        <% recent_histories.each do |recent_history| %>
+          <div class="mt-2 pl-3 text-xs text-slate-500 dark:text-slate-400">
+            <% recent_history.each_with_index do |item, index| %>
+              <% if index > 0 %>
+                <span class="mx-1">、</span>
+              <% end %>
+              <span class="<%= item[:is_temp] ? 'text-slate-400 dark:text-slate-500' : 'font-semibold' %>"><%= helpers.sanitize_with_ruby(item[:unit_name]) %></span>
+              <% if item[:part_and_name].present? %>
+                <span class="text-xs opacity-80">(<%= helpers.sanitize_with_ruby(item[:part_and_name]) %>)</span>
+              <% end %>
+              <% if item[:notes].present? %>
+                <% item[:notes].each do |note| %>
+                  <span class="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded ml-1"><%= note %></span>
+                <% end %>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+    <% end %>
+
+    <% if @show_details %>
+      <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center text-[0.65rem] font-bold text-slate-400 dark:text-slate-500">
+        <span class="uppercase tracking-widest">Update</span>
+        <span><%= @person.updated_at.strftime("%Y.%m.%d") %></span>
+      </div>
+    <% end %>
   </div>
 <% end %>
