@@ -11,7 +11,7 @@
   </div>
 
   <div class="mb-4">
-    <%== render partial: 'pagy/nav', locals: {pagy: @pagy} if @pagy.pages > 1 %>
+    <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
   </div>
 
   <div class="overflow-x-auto bg-white shadow rounded-lg mb-4">
@@ -58,6 +58,6 @@
   </div>
 
   <div class="mt-4">
-    <%== render partial: 'pagy/nav', locals: {pagy: @pagy} if @pagy.pages > 1 %>
+    <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
   </div>
 </div>
