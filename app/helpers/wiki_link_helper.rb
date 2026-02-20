@@ -121,6 +121,8 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
       handle_list(line, blocks, current_block, &block)
     when /^:(.+?):(.*)$/
       handle_dl(line, blocks, current_block, &block)
+    when /\{\{youtube2\s+([^,}\s]+)/i
+      handle_youtube2(line, blocks, current_block, &block)
     else
       handle_text(line, blocks, current_block, &block)
     end
@@ -168,6 +170,14 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     end
   end
 
+  def handle_youtube2(line, blocks, current_block, &block)
+    video_id = line.match(/\{\{youtube2\s+([^,}\s]+)/i)&.captures&.first&.strip
+    return handle_text(line, blocks, current_block, &block) unless video_id
+
+    blocks << current_block unless current_block[:lines].empty?
+    block.call({ type: :youtube2, video_id: video_id, lines: [line] })
+  end
+
   def render_wiki_blocks(blocks)
     safe_join(blocks.map do |block|
       case block[:type]
@@ -187,6 +197,15 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
         render_wiki_dl(block[:lines])
       when :multi_dl
         render_wiki_multi_dl(block[:lines])
+      when :youtube2
+        video_id = block[:video_id]
+        tag.div(class: 'relative pb-[56.25%] h-0 overflow-hidden rounded-xl my-4') do
+          tag.iframe(src: "https://www.youtube.com/embed/#{video_id}",
+                     frameborder: '0',
+                     allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
+                     allowfullscreen: true,
+                     class: 'absolute top-0 left-0 w-full h-full border-0')
+        end
       else
         text_content = block[:lines].join
         formatted = simple_format(text_content, {}, wrapper_tag: 'div')
