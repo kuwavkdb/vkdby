@@ -167,7 +167,8 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
   end
 
   def encode_euc_jp(str)
-    str.encode('EUC-JP').bytes.map { |b| "%#{b.to_s(16).upcase}" }.join
+    # スペース（0x20）はDBのold_keyに合わせて+に変換する
+    str.encode('EUC-JP').bytes.map { |b| b == 0x20 ? '+' : "%#{b.to_s(16).upcase}" }.join
   rescue Encoding::UndefinedConversionError
     # Fallback if conversion fails
     str
