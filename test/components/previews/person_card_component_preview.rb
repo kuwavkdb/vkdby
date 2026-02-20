@@ -23,15 +23,11 @@ class PersonCardComponentPreview < ViewComponent::Preview
 
   # /people インデックスと同様のステータス・更新日表示
   def large_with_status
-    render_with_template(locals: {
-      person: Person.new(name: 'HYDE', name_kana: 'はいど', key: 'hyde', status: 'active')
-    })
+    render_with_template(locals: { person: Person.new(name: 'HYDE', name_kana: 'はいど', key: 'hyde', status: 'active') })
   end
 
   # 誕生日セクションと同様の所属履歴表示
   def small_with_history
-    render_with_template(locals: {
-      person: Person.new(name: 'HYDE', name_kana: 'はいど', key: 'hyde')
-    })
+    render_with_template(locals: { person: Person.new(name: 'HYDE', name_kana: 'はいど', key: 'hyde') })
   end
 end
