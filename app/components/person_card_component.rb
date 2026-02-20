@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class PersonCardComponent < ViewComponent::Base
-  renders_one :extra
-
   def initialize(person:, size: :sm)
     super()
     @person = person

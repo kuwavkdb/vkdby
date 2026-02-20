@@ -7,29 +7,27 @@
   </h2>
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
     <% @birthdays.each do |person| %>
-      <%= render PersonCardComponent.new(person: person) do |c| %>
-        <% c.with_extra do %>
-          <% if person.old_history.present? %>
-            <% recent_histories = person.parse_old_history.last(3) %>
-            <% if recent_histories.present? %>
-              <% recent_histories.each do |recent_history| %>
-                <div class="mt-2 pl-3 text-xs text-slate-500 dark:text-slate-400">
-                  <% recent_history.each_with_index do |item, index| %>
-                    <% if index > 0 %>
-                      <span class="mx-1">、</span>
-                    <% end %>
-                    <span class="<%= item[:is_temp] ? 'text-slate-400 dark:text-slate-500' : 'font-semibold' %>"><%= sanitize_with_ruby(item[:unit_name]) %></span>
-                    <% if item[:part_and_name].present? %>
-                      <span class="text-xs opacity-80">(<%= sanitize_with_ruby(item[:part_and_name]) %>)</span>
-                    <% end %>
-                    <% if item[:notes].present? %>
-                      <% item[:notes].each do |note| %>
-                        <span class="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded ml-1"><%= note %></span>
-                      <% end %>
+      <%= render PersonCardComponent.new(person: person) do %>
+        <% if person.old_history.present? %>
+          <% recent_histories = person.parse_old_history.last(3) %>
+          <% if recent_histories.present? %>
+            <% recent_histories.each do |recent_history| %>
+              <div class="mt-2 pl-3 text-xs text-slate-500 dark:text-slate-400">
+                <% recent_history.each_with_index do |item, index| %>
+                  <% if index > 0 %>
+                    <span class="mx-1">、</span>
+                  <% end %>
+                  <span class="<%= item[:is_temp] ? 'text-slate-400 dark:text-slate-500' : 'font-semibold' %>"><%= sanitize_with_ruby(item[:unit_name]) %></span>
+                  <% if item[:part_and_name].present? %>
+                    <span class="text-xs opacity-80">(<%= sanitize_with_ruby(item[:part_and_name]) %>)</span>
+                  <% end %>
+                  <% if item[:notes].present? %>
+                    <% item[:notes].each do |note| %>
+                      <span class="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded ml-1"><%= note %></span>
                     <% end %>
                   <% end %>
-                </div>
-              <% end %>
+                <% end %>
+              </div>
             <% end %>
           <% end %>
         <% end %>

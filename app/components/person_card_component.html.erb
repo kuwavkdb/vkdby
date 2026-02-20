@@ -9,6 +9,6 @@
     <% if @person.name_kana.present? %>
       <p class="<%= kana_classes %>"><%= @person.name_kana %></p>
     <% end %>
-    <%= extra %>
+    <%= content %>
   </div>
 <% end %>
