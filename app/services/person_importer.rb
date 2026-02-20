@@ -285,7 +285,9 @@ class PersonImporter < BaseWikipageImporter
 
   def extract_person_basic_info
     # 1. Parse Person Data
-    title = @wikipage.title.to_s.strip
+    first_line = @wiki_content.lines.first&.strip&.gsub(/^!+/, '')&.strip
+    title = @wikipage.title.presence || first_line
+    title = title.to_s.strip
     if title =~ /^(.+?)[（(](.+?)[）)]/
       raw_name = Regexp.last_match(1).strip
       person_name = extract_name_from_wiki_link(raw_name)
@@ -296,7 +298,6 @@ class PersonImporter < BaseWikipageImporter
     end
 
     # Parse history from first line: "OldName(Kana) → NewName(Kana)"
-    first_line = @wiki_content.lines.first&.strip&.gsub(/^!+/, '')&.strip
     name_log_entries = []
 
     if first_line&.include?('→')
