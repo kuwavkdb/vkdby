@@ -156,6 +156,7 @@ class WikipageImporter < BaseWikipageImporter
     parse_youtube_tags(unit)
     parse_band_name_history(unit, unit_name, unit_name_kana)
     parse_sections(unit)
+    parse_activity_period(unit)
   end
 
   def parse_band_name_history(unit, current_name, current_kana) # rubocop:disable Metrics/PerceivedComplexity
@@ -475,6 +476,19 @@ class WikipageImporter < BaseWikipageImporter
 
     active_content = link_section_content.gsub(unlink_regex, '')
     parse_wiki_links(unit, active_content, true)
+  end
+
+  def parse_activity_period(unit)
+    regex = /^\*活動時期\s*(?:…|\.\.\.)\s*(.+)/
+    entries = []
+
+    @wiki_content.scan(regex) do |match|
+      value = match[0].strip
+      from, to = value.split(/\s*~\s*/, 2)
+      entries << { 'from' => from&.strip.presence, 'to' => to&.strip.presence }
+    end
+
+    unit.update!(activity_period: entries) if entries.present?
   end
 
   def resolve_key_collision(base_key, current_id = nil)
