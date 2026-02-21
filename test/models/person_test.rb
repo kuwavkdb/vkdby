@@ -153,4 +153,18 @@ class PersonTest < ActiveSupport::TestCase
     # スペースは+に変換される（DBのold_keyフォーマットに合わせる）
     assert_equal '%42%55%4C%4C+%5A%45%49%43%48%45%4E+%38%38', item[:old_key]
   end
+
+  test "parse_old_history double-encodes apostrophe in band name for old_key" do
+    # アポストロフィ(')はURI.encode_www_form_componentで%27としてDBに保存される
+    # Railsのルーティングは%27を'にデコードするため、%2527に二重エンコードする必要がある
+    # （%2527 → Railsデコード → %27 → DBのold_keyと一致）
+    person = Person.new(old_history: "[[Develop One's Faculties]]")
+    history = person.parse_old_history
+
+    assert_equal 1, history.size
+    item = history[0][0]
+    assert_equal "Develop One's Faculties", item[:unit_name]
+    # '(0x27)は%2527に二重エンコード
+    assert_equal '%44%65%76%65%6C%6F%70+%4F%6E%65%2527%73+%46%61%63%75%6C%74%69%65%73', item[:old_key]
+  end
 end

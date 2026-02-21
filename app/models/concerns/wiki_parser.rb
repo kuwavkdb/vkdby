@@ -167,8 +167,26 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
   end
 
   def encode_euc_jp(str)
-    # スペース（0x20）はDBのold_keyに合わせて+に変換する
-    str.encode('EUC-JP').bytes.map { |b| b == 0x20 ? '+' : "%#{b.to_s(16).upcase}" }.join
+    # DBのold_key（URI.encode_www_form_component形式）との対応関係：
+    #   space(0x20)              → + （DBの+と一致）
+    #   高ビット(>0x7F, EUC-JP) → %XX （ミドルウェアが%25XXに二重エンコード → Railsデコード後%XX → DBと一致）
+    #   [A-Za-z0-9\-_.*]        → %XX （Railsがデコードした文字 → DBの文字と一致）
+    #   その他ASCII特殊文字      → %25XX （Railsが%25→%にデコード → 結果%XX → DBのリテラル%XXと一致）
+    str.encode('EUC-JP').bytes.map do |b|
+      if b == 0x20
+        '+'
+      elsif b > 0x7F
+        "%#{b.to_s(16).upcase}"
+      elsif (b >= 0x41 && b <= 0x5A) || (b >= 0x61 && b <= 0x7A) ||
+            (b >= 0x30 && b <= 0x39) ||
+            [0x2D, 0x5F, 0x2E, 0x2A].include?(b) # - _ . *
+        "%#{b.to_s(16).upcase}"
+      else
+        # URI.encode_www_form_componentがエンコードする特殊ASCII文字（'など）
+        # %25XX → Railsルーティングで%→ 結果%XX → DBのリテラル%XXと一致
+        "%25#{b.to_s(16).upcase}"
+      end
+    end.join
   rescue Encoding::UndefinedConversionError
     # Fallback if conversion fails
     str
