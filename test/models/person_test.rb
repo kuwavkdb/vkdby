@@ -141,4 +141,16 @@ class PersonTest < ActiveSupport::TestCase
 
     assert_equal '他サポート多数', concurrent[2][:unit_name]
   end
+
+  test 'parse_old_history encodes space in band name as plus sign for old_key' do
+    # DBのold_keyはスペースが+で保存されるため、+でエンコードされることを確認
+    person = Person.new(old_history: '[[BULL ZEICHEN 88]]')
+    history = person.parse_old_history
+
+    assert_equal 1, history.size
+    item = history[0][0]
+    assert_equal 'BULL ZEICHEN 88', item[:unit_name]
+    # スペースは+に変換される（DBのold_keyフォーマットに合わせる）
+    assert_equal '%42%55%4C%4C+%5A%45%49%43%48%45%4E+%38%38', item[:old_key]
+  end
 end
