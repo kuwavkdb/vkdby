@@ -4,6 +4,7 @@ class HistoryRowComponent < ViewComponent::Base
   with_collection_parameter :concurrent_items
 
   def initialize(concurrent_items:)
+    super()
     @concurrent_items = concurrent_items
   end
 end
