@@ -180,11 +180,31 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
   end
 
   def handle_youtube2(line, blocks, current_block, &block)
-    video_id = line.match(/\{\{youtube2\s+([^,}\s]+)/i)&.captures&.first&.strip
+    raw = line.match(/\{\{youtube2\s+([^,}\s]+)/i)&.captures&.first&.strip
+    return handle_text(line, blocks, current_block, &block) unless raw
+
+    video_id = extract_youtube_video_id(raw)
     return handle_text(line, blocks, current_block, &block) unless video_id
 
     blocks << current_block unless current_block[:lines].empty?
     block.call({ type: :youtube2, video_id: video_id, lines: [line] })
+  end
+
+  # YouTube URLまたはIDからビデオIDを抽出する
+  # 対応フォーマット:
+  #   https://www.youtube.com/watch?v=XXXX
+  #   https://youtu.be/XXXX
+  #   XXXX (IDそのまま)
+  def extract_youtube_video_id(raw)
+    case raw
+    when %r{youtu\.be/([^?&\s]+)}
+      Regexp.last_match(1)
+    when /[?&]v=([^&\s]+)/
+      Regexp.last_match(1)
+    else
+      # URLでなければそのままIDとして扱う
+      raw
+    end
   end
 
   def render_wiki_blocks(blocks)

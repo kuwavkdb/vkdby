@@ -50,4 +50,22 @@ class WikiLinkHelperTest < ActionView::TestCase
     assert_match(/twitter-tweet/, result)
     assert_match(%r{platform\.twitter\.com/widgets\.js}, result)
   end
+
+  test 'youtube2プラグインにIDを指定した場合はそのままembedされる' do
+    result = format_wiki_content('{{youtube2 dQw4w9WgXcQ}}')
+
+    assert_match(%r{youtube\.com/embed/dQw4w9WgXcQ}, result)
+  end
+
+  test 'youtube2プラグインにyoutube.com URLを指定した場合はIDを抽出してembedされる' do
+    result = format_wiki_content('{{youtube2 https://www.youtube.com/watch?v=dQw4w9WgXcQ}}')
+
+    assert_match(%r{youtube\.com/embed/dQw4w9WgXcQ}, result)
+  end
+
+  test 'youtube2プラグインにyoutu.be URLを指定した場合はIDを抽出してembedされる' do
+    result = format_wiki_content('{{youtube2 https://youtu.be/dQw4w9WgXcQ}}')
+
+    assert_match(%r{youtube\.com/embed/dQw4w9WgXcQ}, result)
+  end
 end
