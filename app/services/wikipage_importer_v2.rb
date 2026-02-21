@@ -293,14 +293,7 @@ class WikipageImporterV2 < WikipageImporter
 
       next if name_str.blank?
 
-      if old_member_key.present?
-        old_member_key = old_member_key.strip
-        old_member_key = [name_str, old_member_key].join if old_member_key =~ /^\(/ && old_member_key =~ /\)$/
-      else
-        old_member_key = name_str
-      end
-
-      old_member_key = URI.encode_www_form_component(old_member_key.encode('EUC-JP'))
+      old_member_key = resolve_old_member_key(name_str, old_member_key)
 
       entries << {
         position: current_pos,
@@ -312,6 +305,16 @@ class WikipageImporterV2 < WikipageImporter
         member_status: member_status
       }
     end
+  end
+
+  def resolve_old_member_key(name_str, old_member_key)
+    key = if old_member_key.present? && old_member_key != '-'
+            raw = old_member_key.strip
+            raw =~ /^\(/ && raw =~ /\)$/ ? [name_str, raw].join : raw
+          else
+            name_str
+          end
+    URI.encode_www_form_component(key.encode('EUC-JP'))
   end
 
   def collect_old_format_entries(entries, separator_index)

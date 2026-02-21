@@ -300,7 +300,7 @@ class WikipageImporter < BaseWikipageImporter
 
       next if name_str.blank?
 
-      if old_member_key.present?
+      if old_member_key.present? && old_member_key != '-'
         old_member_key = old_member_key.strip
         old_member_key = [name_str, old_member_key].join if old_member_key =~ /^\(/ && old_member_key =~ /\)$/
       else
