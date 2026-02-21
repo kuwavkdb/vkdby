@@ -104,7 +104,10 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
 
       if line.match?(/^\{\{bq/)
         blocks << current_block unless current_block[:lines].empty?
-        current_block = { type: :blockquote, lines: [] }
+        # 先頭行にTwitter URLが含まれる場合はtweet_embedタイプとして扱う
+        tweet_url = line.match(%r{https?://(?:twitter\.com|x\.com)/\S+})&.to_s
+        block_type = tweet_url ? :tweet_embed : :blockquote
+        current_block = { type: block_type, lines: [] }
         in_blockquote = true
         next
       end
@@ -194,6 +197,8 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
         end
       when :list
         render_wiki_list(block[:lines])
+      when :tweet_embed
+        render_tweet_embed(block[:lines].join)
       when :blockquote
         content = block[:lines].join
         tag.blockquote(class: 'border-l-4 border-slate-300 dark:border-slate-600 pl-4 italic text-slate-600 dark:text-slate-400 my-4') do
@@ -280,5 +285,18 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     link_to(display.html_safe, "/#{encoded}.html", class: 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline')
   rescue Encoding::UndefinedConversionError
     link_to(display.html_safe, '#', class: 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline')
+  end
+
+  # Twitter tweet embedを出力する
+  # <blockquote class="twitter-tweet"> をサニタイズしつつそのまま出力し、
+  # Twitter widget scriptを付加する
+  def render_tweet_embed(content)
+    sanitized = sanitize(
+      content,
+      tags: %w[blockquote a p br],
+      attributes: %w[class lang href]
+    )
+    script = tag.script(src: '//platform.twitter.com/widgets.js', async: true, charset: 'utf-8')
+    (sanitized + script).html_safe
   end
 end
