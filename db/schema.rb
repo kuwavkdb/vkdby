@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_16_133107) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_21_144714) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -281,6 +281,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_16_133107) do
   end
 
   create_table "units", force: :cascade do |t|
+    t.jsonb "activity_period"
     t.datetime "created_at", null: false
     t.string "key"
     t.string "name"

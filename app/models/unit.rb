@@ -65,6 +65,10 @@ class Unit < ApplicationRecord
     (name_log || []).map { |h| OpenStruct.new(h) }
   end
 
+  def activity_periods
+    (activity_period || []).map { |h| OpenStruct.new(h) }
+  end
+
   def name_logs_attributes=(attributes)
     self.name_log = attributes.values.map do |attrs|
       next if attrs['name'].blank?

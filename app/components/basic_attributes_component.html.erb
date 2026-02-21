@@ -37,6 +37,17 @@
           <dd class="text-[0.9375rem] font-bold text-slate-800 dark:text-slate-200"><%= @resource.unit_type %></dd>
         </div>
       <% end %>
+
+      <% if @resource.activity_periods.present? %>
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0">
+          <dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">活動時期</dt>
+          <dd class="text-[0.9375rem] font-bold text-slate-800 dark:text-slate-200 text-right">
+            <% @resource.activity_periods.each do |period| %>
+              <div><%= period.from %> 〜 <%= period.to.presence || '現在' %></div>
+            <% end %>
+          </dd>
+        </div>
+      <% end %>
     <% end %>
 
     <% if @resource.status.present? %>
