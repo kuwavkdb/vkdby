@@ -154,7 +154,7 @@ class PersonTest < ActiveSupport::TestCase
     assert_equal '%42%55%4C%4C+%5A%45%49%43%48%45%4E+%38%38', item[:old_key]
   end
 
-  test "parse_old_history double-encodes apostrophe in band name for old_key" do
+  test 'parse_old_history double-encodes apostrophe in band name for old_key' do
     # アポストロフィ(')はURI.encode_www_form_componentで%27としてDBに保存される
     # Railsのルーティングは%27を'にデコードするため、%2527に二重エンコードする必要がある
     # （%2527 → Railsデコード → %27 → DBのold_keyと一致）
