@@ -242,9 +242,12 @@ class WikipageImporterV2 < WikipageImporter
   def parse_snapshot_members(snapshot, content)
     return unless content
 
+    # コメント行（行頭が //）を除外する
+    content_without_comments = content.lines.reject { |line| line.strip.start_with?('//') }.join
+
     # 一時的に @wiki_content を section content に置き換え
     original_wiki_content = @wiki_content
-    @wiki_content = content
+    @wiki_content = content_without_comments
 
     separator_index = @wiki_content.index(/^!!関係者/) || Float::INFINITY
 
