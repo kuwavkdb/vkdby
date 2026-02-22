@@ -27,6 +27,18 @@ namespace :import do
         skipped += 1
         next
       elsif WikipageImporter.valid_unit?(wp)
+        # ID指定時: インポート前に既存の関連レコードを削除
+        if ENV['ID']
+          existing_unit = Unit.find_by(old_wiki_id: wp.id)
+          if existing_unit
+            sections_count = existing_unit.sections.count
+            links_count = existing_unit.links.count
+            existing_unit.sections.destroy_all
+            existing_unit.links.destroy_all
+            puts "  Pre-delete: #{sections_count} sections, #{links_count} links (#{existing_unit.name})"
+          end
+        end
+
         # V2 importer を使用
         WikipageImporterV2.import(wp)
         count += 1

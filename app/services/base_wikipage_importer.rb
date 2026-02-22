@@ -217,6 +217,9 @@ class BaseWikipageImporter
     カラオケ配信
   ].freeze
 
+  # 部分一致で除外するセクション名
+  EXCLUDED_SECTIONS_CONTAINING = ['同名のアーティスト'].freeze
+
   def parse_sections(owner)
     return unless @wiki_content
 
@@ -245,10 +248,10 @@ class BaseWikipageImporter
       section_name = section_data[:name]
       section_content = section_data[:content]
 
-      # 除外チェック: 完全一致またはワイルドカード（前方一致）
+      # 除外チェック: 完全一致またはワイルドカード（前方一致）、または部分一致
       is_excluded = EXCLUDED_SECTIONS.any? do |excluded|
         section_name == excluded || section_name.start_with?(excluded)
-      end
+      end || EXCLUDED_SECTIONS_CONTAINING.any? { |partial| section_name.include?(partial) }
 
       next if is_excluded
 

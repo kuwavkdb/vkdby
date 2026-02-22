@@ -16,7 +16,7 @@ sh script/import_release_schedule_from_mysql.sh
 vkdbyデータをクリアしてから旧データをコンバート
 ```bash
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:truncate_units_and_people
-PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:reset
+#PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:reset
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:people
 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails convert:truncate_trends_and_items
