@@ -7,22 +7,6 @@ class PeopleController < ApplicationController
     @pagy, @people = pagy(scope, limit: 60)
   end
 
-  def search
-    q = params[:q].to_s.strip
-    if q.length < 2
-      render json: []
-      return
-    end
-
-    people = Person.where.not(key: [nil, ''])
-                   .where('name ILIKE :q OR name_kana ILIKE :q', q: "%#{q}%")
-                   .order(name_kana: :asc)
-                   .limit(10)
-                   .pluck(:name, :name_kana, :key)
-                   .map { |name, name_kana, key| { name:, name_kana:, key: } }
-    render json: people
-  end
-
   def show
     @person = Person.find_by!(key: params[:key])
     render json: @person

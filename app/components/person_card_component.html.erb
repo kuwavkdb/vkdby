@@ -5,10 +5,12 @@
     </svg>
   </div>
   <div class="relative z-10">
-    <h3 class="<%= name_classes %>"><%= @person.name %></h3>
-    <% if @person.name_kana.present? %>
-      <p class="<%= kana_classes %>"><%= @person.name_kana %></p>
-    <% end %>
+    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+      <h3 class="<%= name_classes %>"><%= @person.name %></h3>
+      <% if @person.name_kana.present? %>
+        <span class="<%= kana_classes %>"><%= @person.name_kana %></span>
+      <% end %>
+    </div>
     <%= content %>
 
     <% if @show_history && @person.old_history.present? %>

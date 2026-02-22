@@ -11,13 +11,16 @@ export default class extends Controller {
     this.activeIndex = -1
     this.handleClickOutside = this.handleClickOutside.bind(this)
     this.handleReposition = this.reposition.bind(this)
+    this.handleScroll = this.hideSuggestions.bind(this)
     document.addEventListener('click', this.handleClickOutside)
     window.addEventListener('resize', this.handleReposition)
+    window.addEventListener('scroll', this.handleScroll, true)
   }
 
   disconnect() {
     document.removeEventListener('click', this.handleClickOutside)
     window.removeEventListener('resize', this.handleReposition)
+    window.removeEventListener('scroll', this.handleScroll, true)
     clearTimeout(this.timeout)
   }
 
@@ -115,9 +118,9 @@ export default class extends Controller {
     this.suggestionsTarget.innerHTML = items.map(item => `
       <a href="/${this.escapeHtml(item.key)}"
          data-key="${this.escapeHtml(item.key)}"
-         class="block px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-        <div class="font-medium text-slate-800 dark:text-slate-100">${this.escapeHtml(item.name)}</div>
-        ${item.name_kana ? `<div class="text-xs text-slate-400 dark:text-slate-500">${this.escapeHtml(item.name_kana)}</div>` : ''}
+         class="flex items-baseline gap-2 px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+        <span class="font-medium text-slate-800 dark:text-slate-100">${this.escapeHtml(item.name)}</span>
+        ${item.name_kana ? `<span class="text-xs text-slate-400 dark:text-slate-500 truncate">${this.escapeHtml(item.name_kana)}</span>` : ''}
       </a>
     `).join('')
 

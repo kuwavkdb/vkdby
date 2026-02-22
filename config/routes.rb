@@ -69,11 +69,7 @@ Rails.application.routes.draw do
   get '/index/:index_group', to: 'indices#index', as: :indices_group
   get '/index/show/:id', to: 'indices#show', as: :index_show
 
-  resources :people, param: :key, only: %i[index show], constraints: { key: %r{[^/]+} } do
-    collection do
-      get :search
-    end
-  end
+  resources :people, param: :key, only: %i[index show], constraints: { key: %r{[^/]+} }
   resources :units, param: :key, only: %i[index show], constraints: { key: %r{[^/]+} } do
     collection do
       get :search

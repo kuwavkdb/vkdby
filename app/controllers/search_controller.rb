@@ -16,10 +16,10 @@ class SearchController < ApplicationController
       )
       @units = Unit.where('name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q', q: search_pattern)
                    .order(relevance_order, updated_at: :desc)
-                   .limit(10)
+                   .limit(15)
       @people = Person.where('name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q', q: search_pattern)
                       .order(relevance_order, updated_at: :desc)
-                      .limit(10)
+                      .limit(15)
     else
       @units = []
       @people = []
