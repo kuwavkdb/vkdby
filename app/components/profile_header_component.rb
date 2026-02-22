@@ -11,14 +11,6 @@ class ProfileHeaderComponent < ViewComponent::Base
     @resource.is_a?(Unit) ? 'bg-unit' : 'bg-person'
   end
 
-  def type_label
-    if @resource.is_a?(Unit)
-      @resource.unit_type.present? ? @resource.unit_type.upcase : 'UNIT'
-    else
-      'PERSON'
-    end
-  end
-
   def name
     @resource.name
   end
