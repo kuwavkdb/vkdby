@@ -17,6 +17,21 @@ class UnitsController < ApplicationController
     @pagy, @units = pagy(scope, limit: 60)
   end
 
+  def search
+    q = params[:q].to_s.strip
+    if q.length < 2
+      render json: []
+      return
+    end
+
+    units = Unit.where('name ILIKE :q OR name_kana ILIKE :q', q: "%#{q}%")
+                .order(name_kana: :asc)
+                .limit(10)
+                .pluck(:name, :name_kana, :key)
+                .map { |name, name_kana, key| { name:, name_kana:, key: } }
+    render json: units
+  end
+
   def show
     @unit = Unit.find_by!(key: params[:key])
     render json: @unit

@@ -16,6 +16,9 @@ application.register("dropdown", DropdownController)
 import MobileMenuController from "controllers/mobile_menu_controller"
 application.register("mobile-menu", MobileMenuController)
 
+import SearchSuggestController from "controllers/search_suggest_controller"
+application.register("search-suggest", SearchSuggestController)
+
 import SortableController from "controllers/sortable_controller"
 application.register("sortable", SortableController)
 
