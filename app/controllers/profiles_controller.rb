@@ -3,7 +3,7 @@
 class ProfilesController < ApplicationController
   def show
     @resource = Unit.includes(:links, unit_people: :person).find_by(key: params[:key]) ||
-                Person.includes(:person_logs, :links).find_by!(key: params[:key])
+                Person.includes(:links).find_by!(key: params[:key])
 
     @links = @resource.links.where(active: true).order(:sort_order)
 
