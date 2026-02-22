@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_21_144714) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_22_122747) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -97,8 +97,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_21_144714) do
     t.integer "status", default: 1, null: false
     t.datetime "updated_at", null: false
     t.index ["key"], name: "index_people_on_key", unique: true
-    t.index ["name"], name: "index_people_on_name"
-    t.index ["name_kana"], name: "index_people_on_name_kana"
+    t.index ["name"], name: "index_people_on_name", opclass: :gin_trgm_ops, using: :gin
+    t.index ["name_kana"], name: "index_people_on_name_kana", opclass: :gin_trgm_ops, using: :gin
     t.index ["old_key"], name: "index_people_on_old_key", unique: true
   end
 
@@ -295,8 +295,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_21_144714) do
     t.integer "unit_type"
     t.datetime "updated_at", null: false
     t.index ["key"], name: "index_units_on_key", unique: true
-    t.index ["name"], name: "index_units_on_name"
-    t.index ["name_kana"], name: "index_units_on_name_kana"
+    t.index ["name"], name: "index_units_on_name", opclass: :gin_trgm_ops, using: :gin
+    t.index ["name_kana"], name: "index_units_on_name_kana", opclass: :gin_trgm_ops, using: :gin
     t.index ["old_key"], name: "index_units_on_old_key", unique: true
   end
 

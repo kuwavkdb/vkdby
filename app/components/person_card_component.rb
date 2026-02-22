@@ -29,6 +29,6 @@ class PersonCardComponent < ViewComponent::Base
   end
 
   def kana_classes
-    'text-xs text-slate-400 dark:text-slate-500 mt-0.5'
+    'text-xs text-slate-500 dark:text-slate-400'
   end
 end
