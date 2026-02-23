@@ -8,7 +8,12 @@ module Admin
     def index
       @q = params[:q]
       scope = Unit.all.order(updated_at: :desc)
-      scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q', q: "%#{@q}%") if @q.present?
+      if @q.present?
+        scope = scope.where(
+          'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
+          q: "%#{@q}%"
+        )
+      end
       @pagy, @units = pagy(scope)
     end
 
@@ -58,7 +63,12 @@ module Admin
       q = params[:q]
       scope = Unit.all
 
-      scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q', q: "%#{q}%") if q.present?
+      if q.present?
+        scope = scope.where(
+          'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
+          q: "%#{q}%"
+        )
+      end
 
       @units = scope.limit(10).order(:name)
 

@@ -8,7 +8,12 @@ module Admin
     def index
       @q = params[:q]
       scope = Person.all.order(updated_at: :desc)
-      scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q', q: "%#{@q}%") if @q.present?
+      if @q.present?
+        scope = scope.where(
+          'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
+          q: "%#{@q}%"
+        )
+      end
       @pagy, @people = pagy(scope)
     end
 
@@ -52,7 +57,12 @@ module Admin
       q = params[:q]
       scope = Person.all
 
-      scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q', q: "%#{q}%") if q.present?
+      if q.present?
+        scope = scope.where(
+          'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
+          q: "%#{q}%"
+        )
+      end
 
       @people = scope.limit(10).order(:name)
 
