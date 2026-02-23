@@ -30,6 +30,8 @@
 #  index_people_on_name_kana  (name_kana)
 #  index_people_on_old_key    (old_key) UNIQUE
 #
+require 'cgi'
+
 class Person < ApplicationRecord
   include WikiParser
   has_many :links, as: :linkable, dependent: :destroy
@@ -70,6 +72,10 @@ class Person < ApplicationRecord
 
   validate :key_immutable, on: :update
   after_create :auto_link_unit_people
+
+  def name
+    CGI.unescapeHTML(super.to_s).presence
+  end
 
   def status_text
     STATUS_TRANSLATIONS[status] || status.humanize
