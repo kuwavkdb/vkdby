@@ -240,9 +240,9 @@ class PersonImporter < BaseWikipageImporter
     person.old_history = career_section
     person.save!
 
-    career_section.scan(/→\s*\[\[([^\]]+)\]\](?:\(([^)]+)\))?/).each do |unit_name, part_str|
+    career_section.scan(/→\s*\[\[([^\]]+)\]\](?:\(([^)]+)\))?([^→(、\n]*)/).each do |unit_name, part_in_paren, part_trailing|
       unit_name = unit_name.strip
-      part_str = part_str&.strip
+      part_str = (part_in_paren || part_trailing&.strip).presence
 
       unit = find_unit_by_name(unit_name)
       puts "Warning: Could not find unit '#{unit_name}' for person #{person.name} (ID: #{@wikipage.id})" if unit.nil?
@@ -251,7 +251,10 @@ class PersonImporter < BaseWikipageImporter
       unit_person = UnitPerson.find_or_initialize_by(unit: unit, person: person)
 
       if part_str
-        part_key = case part_str.downcase
+        is_support = part_str.match?(/サポート|support/i)
+        cleaned_part = part_str.gsub(/サポート|support/i, '').strip
+
+        part_key = case cleaned_part.downcase
                    when /vocal/ then :vocal
                    when /guitar/ then :guitar
                    when /bass/ then :bass
@@ -261,6 +264,8 @@ class PersonImporter < BaseWikipageImporter
                    else :unknown
                    end
         unit_person.part = part_key if unit_person.new_record?
+        unit_person.support = is_support
+        unit_person.part_alias = cleaned_part.presence if part_key == :unknown && !is_support
       end
 
       unit_person.status = :left
