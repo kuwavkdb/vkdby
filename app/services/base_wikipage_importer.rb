@@ -191,6 +191,25 @@ class BaseWikipageImporter
     end
   end
 
+  # Parse alias strings (e.g. "英語名（えいごな）") into alias hashes
+  def parse_alias_parts(parts)
+    return [] if parts.blank?
+
+    parsed = parts.filter_map do |part|
+      part = part.to_s.strip
+      next if part.blank?
+
+      if (m = part.match(/\A(.+?)（([^）]+)）/))
+        { name: extract_name_from_wiki_link(m[1].strip), kana: m[2].strip }
+      elsif (m = part.match(/\A(.+?)\(([^)]+)\)/))
+        { name: extract_name_from_wiki_link(m[1].strip), kana: m[2].strip }
+      else
+        { name: extract_name_from_wiki_link(part), kana: '' }
+      end
+    end
+    parsed.reject { |a| a[:name].blank? }
+  end
+
   # ==========================================
   # Section Parsing Logic
   # ==========================================

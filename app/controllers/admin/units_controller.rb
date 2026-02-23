@@ -8,7 +8,12 @@ module Admin
     def index
       @q = params[:q]
       scope = Unit.all.order(updated_at: :desc)
-      scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q', q: "%#{@q}%") if @q.present?
+      if @q.present?
+        scope = scope.where(
+          'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
+          q: "%#{@q}%"
+        )
+      end
       @pagy, @units = pagy(scope)
     end
 
@@ -58,7 +63,12 @@ module Admin
       q = params[:q]
       scope = Unit.all
 
-      scope = scope.where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q', q: "%#{q}%") if q.present?
+      if q.present?
+        scope = scope.where(
+          'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
+          q: "%#{q}%"
+        )
+      end
 
       @units = scope.limit(10).order(:name)
 
@@ -74,7 +84,8 @@ module Admin
     def unit_params
       params.require(:unit).permit(:name, :name_kana, :key, :status, :unit_type, :old_key, :note,
                                    links_attributes: %i[id text url active sort_order _destroy],
-                                   name_logs_attributes: %i[name name_kana])
+                                   name_logs_attributes: %i[name name_kana],
+                                   aliases_attributes: %i[name kana])
     end
   end
 end

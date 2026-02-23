@@ -14,10 +14,10 @@ class SearchController < ApplicationController
         "WHEN name_kana ILIKE #{Unit.connection.quote("#{exact_pattern}%")} THEN 1 " \
         'ELSE 2 END'
       )
-      @units = Unit.where('name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q', q: search_pattern)
+      @units = Unit.where('name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q', q: search_pattern)
                    .order(relevance_order, updated_at: :desc)
                    .limit(15)
-      @people = Person.where('name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q', q: search_pattern)
+      @people = Person.where('name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q', q: search_pattern)
                       .order(relevance_order, updated_at: :desc)
                       .limit(15)
     else
