@@ -23,10 +23,11 @@
     <% if @item.artists.present? %>
       <div class="flex flex-wrap gap-1">
         <% @item.artists.each do |artist_data| %>
+          <% artist_label = artist_data['alias'].presence || artist_data['name'] %>
           <% if artist_data['old_key'].present? %>
-            <%= link_to artist_data['name'], "/#{artist_data['old_key']}.html", class: "inline-block px-2 py-0.5 rounded text-sm font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800 transition-colors border border-indigo-200 dark:border-indigo-700" %>
+            <%= link_to artist_label, "/#{artist_data['old_key']}.html", class: "inline-block px-2 py-0.5 rounded text-sm font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800 transition-colors border border-indigo-200 dark:border-indigo-700" %>
           <% else %>
-            <span class="inline-block px-2 py-0.5 rounded text-sm font-semibold bg-gray-50 text-gray-700 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600"><%= artist_data['name'] %></span>
+            <span class="inline-block px-2 py-0.5 rounded text-sm font-semibold bg-gray-50 text-gray-700 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600"><%= artist_label %></span>
           <% end %>
         <% end %>
       </div>
