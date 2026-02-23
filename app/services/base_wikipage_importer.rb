@@ -195,7 +195,7 @@ class BaseWikipageImporter
   def parse_alias_parts(parts)
     return [] if parts.blank?
 
-    parts.filter_map do |part|
+    parsed = parts.filter_map do |part|
       part = part.to_s.strip
       next if part.blank?
 
@@ -204,9 +204,10 @@ class BaseWikipageImporter
       elsif (m = part.match(/\A(.+?)\(([^)]+)\)/))
         { name: extract_name_from_wiki_link(m[1].strip), kana: m[2].strip }
       else
-        { name: extract_name_from_wiki_link(part), kana: "" }
+        { name: extract_name_from_wiki_link(part), kana: '' }
       end
-    end.reject { |a| a[:name].blank? }
+    end
+    parsed.reject { |a| a[:name].blank? }
   end
 
   # ==========================================

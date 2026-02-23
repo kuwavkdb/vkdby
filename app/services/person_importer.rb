@@ -296,10 +296,8 @@ class PersonImporter < BaseWikipageImporter
     first_line = @wiki_content.lines.first&.strip&.gsub(/^!+/, '')&.strip
     title = @wikipage.title.presence || first_line
     title = title.to_s.strip
-    aliases = []
-
     # Extract main name from title as default (may be overridden by "→" history parsing below)
-    title_pieces = title.split("、").map(&:strip)
+    title_pieces = title.split('、').map(&:strip)
     main_title = title_pieces.first.to_s
     if main_title =~ /^(.+?)[（(](.+?)[）)]/
       raw_name = Regexp.last_match(1).strip
@@ -318,7 +316,7 @@ class PersonImporter < BaseWikipageImporter
       arrow_parts = first_line.split('→').map(&:strip)
 
       # Extract aliases from the last arrow part (e.g. "新名（よみ）、英語名（えいごな）")
-      last_pieces = arrow_parts.last.to_s.split("、").map(&:strip)
+      last_pieces = arrow_parts.last.to_s.split('、').map(&:strip)
       aliases = parse_alias_parts(last_pieces[1..])
       arrow_parts[-1] = last_pieces.first.to_s if last_pieces.size > 1
 

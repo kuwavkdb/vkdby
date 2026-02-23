@@ -2,7 +2,7 @@
 
 require 'romaji'
 
-# rubocop:disable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity, Metrics/MethodLength
+# rubocop:disable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity
 class WikipageImporter < BaseWikipageImporter
   def self.import(wikipage)
     new(wikipage).import
@@ -51,71 +51,81 @@ class WikipageImporter < BaseWikipageImporter
 
   private
 
+  def parse_unit_names_from_first_line(first_line)
+    if first_line&.include?('→')
+      parse_unit_names_from_arrow_line(first_line)
+    else
+      parse_unit_names_from_plain_line(first_line)
+    end
+  end
+
+  def parse_unit_names_from_arrow_line(first_line)
+    arrow_parts = first_line.split('→').map(&:strip)
+    last_pieces = arrow_parts.last.to_s.split('、').map(&:strip)
+    aliases = parse_alias_parts(last_pieces[1..])
+    arrow_parts[-1] = last_pieces.first.to_s if last_pieces.size > 1
+
+    parsed_names = arrow_parts.map { |part| parse_name_part(part) }
+    current = parsed_names.last
+    { name: current[:name], name_kana: current[:name_kana], name_log: parsed_names, aliases: }
+  end
+
+  def parse_unit_names_from_plain_line(first_line)
+    pieces = first_line.to_s.split('、').map(&:strip)
+    aliases = parse_alias_parts(pieces[1..])
+    main_part = pieces.first.to_s
+    name, name_kana = extract_name_and_kana_from_part(main_part)
+    { name:, name_kana:, name_log: [], aliases: }
+  end
+
+  def parse_unit_names_from_title
+    title = @wikipage.title.to_s.strip
+    pieces = title.split('、').map(&:strip)
+    main_title = pieces.first.to_s
+    if main_title =~ /^(.+?)\s*[（(](.+)[）)]$/
+      { name: Regexp.last_match(1).strip, name_kana: Regexp.last_match(2).strip, alias_parts: pieces[1..] }
+    else
+      { name: main_title, name_kana: nil, alias_parts: pieces[1..] }
+    end
+  end
+
+  def parse_name_part(part)
+    if part =~ /\{\{rb\s+(.+?),\s*(.+?)\}\}/
+      { name: extract_name_from_wiki_link(Regexp.last_match(1).strip), name_kana: Regexp.last_match(2).strip }
+    elsif part =~ /^(.+?)\s*[（(](.+)[）)]$/
+      { name: extract_name_from_wiki_link(Regexp.last_match(1).strip), name_kana: Regexp.last_match(2).strip }
+    else
+      { name: extract_name_from_wiki_link(part), name_kana: nil }
+    end
+  end
+
+  def extract_name_and_kana_from_part(part)
+    if part =~ /^\s*\{\{rb\s+(.+?),\s*(.+?)\}\}(.*)$/
+      name = extract_name_from_wiki_link(Regexp.last_match(1).strip) + Regexp.last_match(3)
+      [name, Regexp.last_match(2).strip]
+    elsif part =~ /^(.+?)\s*[（(](.+)[）)]$/
+      [extract_name_from_wiki_link(Regexp.last_match(1).strip), Regexp.last_match(2).strip]
+    else
+      [nil, nil]
+    end
+  end
+
   def import_unit
     # 2. Derive Unit Data
     # Check first line for history definition: "OldName(Kana) → NewName(Kana)"
     first_line = @wiki_content.lines.first&.strip&.gsub(/^!+/, '')&.strip
-    unit_name = nil
-    unit_name_kana = nil
-    name_log_entries = []
-    unit_aliases = []
-
-    if first_line&.include?('→')
-      arrow_parts = first_line.split('→').map(&:strip)
-
-      # Extract aliases from the last arrow part (e.g. "新名（よみ）、英語名（えいごな）")
-      last_pieces = arrow_parts.last.to_s.split("、").map(&:strip)
-      unit_aliases = parse_alias_parts(last_pieces[1..])
-      arrow_parts[-1] = last_pieces.first.to_s if last_pieces.size > 1
-
-      parsed_names = arrow_parts.map do |part|
-        if part =~ /\{\{rb\s+(.+?),\s*(.+?)\}\}/
-          raw_name = Regexp.last_match(1).strip
-          { name: extract_name_from_wiki_link(raw_name), name_kana: Regexp.last_match(2).strip }
-        elsif part =~ /^(.+?)\s*[（(](.+)[）)]$/
-          raw_name = Regexp.last_match(1).strip
-          { name: extract_name_from_wiki_link(raw_name), name_kana: Regexp.last_match(2).strip }
-        else
-          { name: extract_name_from_wiki_link(part), name_kana: nil }
-        end
-      end
-
-      current_unit_data = parsed_names.last
-      unit_name = current_unit_data[:name]
-      unit_name_kana = current_unit_data[:name_kana]
-      name_log_entries = parsed_names
-    else
-      # Split by "、" to extract aliases (e.g. "バンド名（よみ）、英語名（えいごな）")
-      first_line_pieces = first_line.to_s.split("、").map(&:strip)
-      unit_aliases = parse_alias_parts(first_line_pieces[1..])
-      main_part = first_line_pieces.first.to_s
-
-      if main_part =~ /^\s*\{\{rb\s+(.+?),\s*(.+?)\}\}(.*)$/
-        raw_name = Regexp.last_match(1).strip
-        suffix = Regexp.last_match(3)
-        unit_name = extract_name_from_wiki_link(raw_name) + suffix
-        unit_name_kana = Regexp.last_match(2).strip
-      elsif main_part =~ /^(.+?)\s*[（(](.+)[）)]$/
-        raw_name = Regexp.last_match(1).strip
-        unit_name = extract_name_from_wiki_link(raw_name)
-        unit_name_kana = Regexp.last_match(2).strip
-      end
-    end
+    parsed = parse_unit_names_from_first_line(first_line)
+    unit_name      = parsed[:name]
+    unit_name_kana = parsed[:name_kana]
+    name_log_entries = parsed[:name_log]
+    unit_aliases     = parsed[:aliases]
 
     # Fallback to Wiki Title
     if unit_name.nil?
-      title = @wikipage.title.to_s.strip
-      title_pieces = title.split("、").map(&:strip)
-      unit_aliases = parse_alias_parts(title_pieces[1..]) if unit_aliases.empty?
-      main_title = title_pieces.first.to_s
-
-      if main_title =~ /^(.+?)\s*[（(](.+)[）)]$/
-        unit_name = Regexp.last_match(1).strip
-        unit_name_kana = Regexp.last_match(2).strip
-      else
-        unit_name = main_title
-        unit_name_kana = nil
-      end
+      parsed = parse_unit_names_from_title
+      unit_aliases = parse_alias_parts(parsed[:alias_parts]) if unit_aliases.empty?
+      unit_name      = parsed[:name]
+      unit_name_kana = parsed[:name_kana]
     end
 
     if unit_name.blank?
@@ -523,5 +533,5 @@ class WikipageImporter < BaseWikipageImporter
       suffix += 1
     end
   end
-  # rubocop:enable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity, Metrics/MethodLength
+  # rubocop:enable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity
 end
