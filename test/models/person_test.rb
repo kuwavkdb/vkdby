@@ -142,6 +142,30 @@ class PersonTest < ActiveSupport::TestCase
     assert_equal '他サポート多数', concurrent[2][:unit_name]
   end
 
+  test 'parse_old_history captures trailing role text after wiki link' do
+    # [[バンド名]]ローディー のように括弧なしで役割テキストが続く場合
+    person = Person.new(old_history: '[[ザアザア]]ローディー → [[OLD CIRCUS]]')
+    history = person.parse_old_history
+
+    assert_equal 2, history.size
+    assert_equal 'ザアザア', history[0][0][:unit_name]
+    assert_equal 'ローディー', history[0][0][:part_and_name]
+    assert_equal 'OLD CIRCUS', history[1][0][:unit_name]
+    assert_nil history[1][0][:part_and_name]
+  end
+
+  test 'parse_old_history captures parenthesized role after wiki link' do
+    # [[バンド名]](サポート) 形式
+    person = Person.new(old_history: '[[バンドA]](サポート) → [[バンドB]]')
+    history = person.parse_old_history
+
+    assert_equal 2, history.size
+    assert_equal 'バンドA', history[0][0][:unit_name]
+    assert_equal 'サポート', history[0][0][:part_and_name]
+    assert_equal 'バンドB', history[1][0][:unit_name]
+    assert_nil history[1][0][:part_and_name]
+  end
+
   test 'parse_old_history encodes space in band name as plus sign for old_key' do
     # DBのold_keyはスペースが+で保存されるため、+でエンコードされることを確認
     person = Person.new(old_history: '[[BULL ZEICHEN 88]]')

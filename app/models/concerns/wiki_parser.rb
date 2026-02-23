@@ -41,10 +41,16 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
         content = wrapped_in_parens ? item_segment[1..-2] : item_segment
 
         case content
-        # Pattern 1: [[UnitName]] or [[UnitName]](Part) - Internal unit link
+        # Pattern 1: [[UnitName]] or [[UnitName]](Part) or [[UnitName]]Role - Internal unit link
         when /\[\[([^\]]+)\]\](?:\(([^)]+)\))?/
           unit_text = ::Regexp.last_match(1)
           part_and_name = ::Regexp.last_match(2)
+
+          # [[バンド名]]ローディー のように括弧なしで役割テキストが続く場合に取り込む
+          unless part_and_name
+            trailing = content[::Regexp.last_match(0).length..].strip
+            part_and_name = trailing.presence
+          end
 
           # [[XXXX|YYYY]] の場合、XXXXが表示名、YYYYがold_key(エンコード前)
           if unit_text.include?('|')
