@@ -4,7 +4,7 @@ export default class extends Controller {
   static targets = ["input", "results", "selected", "hiddenField"]
   static values = {
     url: String,
-    fieldName: String  // "units" or "people"
+    fieldName: String  // "units", "people", or "artists"
   }
 
   connect() {
@@ -123,7 +123,7 @@ export default class extends Controller {
       return
     }
 
-    const idField = this.fieldNameValue === 'units' ? 'unit_id' : 'person_id'
+    const idField = this.fieldNameValue === 'people' ? 'person_id' : 'unit_id'
     const selectedIds = this.selectedItems.map(item => item[idField])
 
     const filtered = items.filter(item => !selectedIds.includes(item.id))
@@ -138,7 +138,8 @@ export default class extends Controller {
         <div class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
              data-action="click->autocomplete#selectItem"
              data-id="${item.id}"
-             data-name="${this.escapeHtml(item.name)}">
+             data-name="${this.escapeHtml(item.name)}"
+             data-key="${this.escapeHtml(item.key || '')}">
           <div class="font-medium text-gray-900 dark:text-gray-100">${this.escapeHtml(item.name)}</div>
           ${item.name_kana ? `<div class="text-xs text-gray-500 dark:text-gray-400">${this.escapeHtml(item.name_kana)}</div>` : ''}
         </div>
@@ -150,13 +151,14 @@ export default class extends Controller {
   selectItem(event) {
     const id = parseInt(event.currentTarget.dataset.id)
     const name = event.currentTarget.dataset.name
+    const key = event.currentTarget.dataset.key || ''
 
-    const idField = this.fieldNameValue === 'units' ? 'unit_id' : 'person_id'
-
-    this.selectedItems.push({
-      [idField]: id,
-      name: name
-    })
+    if (this.fieldNameValue === 'artists') {
+      this.selectedItems.push({ unit_id: id, name, key })
+    } else {
+      const idField = this.fieldNameValue === 'people' ? 'person_id' : 'unit_id'
+      this.selectedItems.push({ [idField]: id, name })
+    }
 
     this.updateHiddenField()
     this.renderSelectedItems()
@@ -166,7 +168,7 @@ export default class extends Controller {
 
   removeItem(event) {
     const id = parseInt(event.currentTarget.dataset.id)
-    const idField = this.fieldNameValue === 'units' ? 'unit_id' : 'person_id'
+    const idField = this.fieldNameValue === 'people' ? 'person_id' : 'unit_id'
 
     this.selectedItems = this.selectedItems.filter(item => item[idField] !== id)
 
@@ -175,10 +177,10 @@ export default class extends Controller {
   }
 
   renderSelectedItems() {
-    const idField = this.fieldNameValue === 'units' ? 'unit_id' : 'person_id'
-    const colorClass = this.fieldNameValue === 'units'
-      ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200'
-      : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+    const idField = this.fieldNameValue === 'people' ? 'person_id' : 'unit_id'
+    const colorClass = this.fieldNameValue === 'people'
+      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+      : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200'
 
     this.selectedTarget.innerHTML = this.selectedItems.map(item => `
       <span class="inline-flex items-center px-3 py-1 rounded-full text-sm ${colorClass}">

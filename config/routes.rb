@@ -46,6 +46,8 @@ Rails.application.routes.draw do
       end
     end
 
+    resources :items
+
     resources :tag_indices, only: %i[update] do
       collection do
         post :bulk_update

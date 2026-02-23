@@ -24,6 +24,18 @@
 #  index_items_on_title         (title)
 #
 class Item < ApplicationRecord
+  validates :title, presence: true
+  validates :release_date, presence: true
+  validates :link_url, presence: true, uniqueness: true
+  validates :asin, uniqueness: true, allow_blank: true
+
+  def artists_for_form
+    require 'ostruct'
+    entries = (self[:artists] || []).map { |a| ::OpenStruct.new(a) }
+    3.times { entries << ::OpenStruct.new(name: '', old_key: '', key: '') }
+    entries
+  end
+
   # old_key でアーティストを検索するスコープ
   scope :by_artist_old_key, lambda { |old_key|
     where('artists @> ?', [{ old_key: old_key }].to_json)
