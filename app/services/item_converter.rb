@@ -114,14 +114,16 @@ class ItemConverter
 
     # [[表示名|名前]] または [[名前]] の形式を抽出
     text.scan(/\[\[(?:([^\]|]+)\|)?([^\]]+)\]\]/) do |display_name, actual_name|
-      name = display_name.presence || actual_name
       # (アーティスト) などの接尾辞を削除
-      name = name.gsub(/\(.*?\)/, '').strip
+      name = actual_name.gsub(/\(.*?\)/, '').strip
 
-      artists << {
+      artist = {
         'name' => name,
         'old_key' => encode_euc_jp(actual_name)
       }
+      artist['alias'] = display_name.gsub(/\(.*?\)/, '').strip if display_name.present?
+
+      artists << artist
     end
 
     artists
