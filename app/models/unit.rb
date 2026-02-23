@@ -86,6 +86,16 @@ class Unit < ApplicationRecord
     end.compact
   end
 
+  def aliases
+    (self[:aliases] || []).map { |a| OpenStruct.new(a) }
+  end
+
+  def aliases_attributes=(attributes)
+    self[:aliases] = attributes.values.reject { |a| a['name'].blank? }.map do |a|
+      { name: CGI.unescapeHTML(a['name'].to_s), kana: a['kana'].to_s }
+    end
+  end
+
   private
 
   after_create :link_related_person_logs_and_members

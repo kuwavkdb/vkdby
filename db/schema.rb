@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_22_122747) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_23_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -79,6 +79,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_122747) do
   end
 
   create_table "people", force: :cascade do |t|
+    t.jsonb "aliases", default: [], null: false
     t.integer "birth_year"
     t.date "birthday"
     t.string "blood"
@@ -96,6 +97,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_122747) do
     t.json "parts"
     t.integer "status", default: 1, null: false
     t.datetime "updated_at", null: false
+    t.index ["aliases"], name: "index_people_on_aliases", using: :gin
     t.index ["key"], name: "index_people_on_key", unique: true
     t.index ["name"], name: "index_people_on_name", opclass: :gin_trgm_ops, using: :gin
     t.index ["name_kana"], name: "index_people_on_name_kana", opclass: :gin_trgm_ops, using: :gin
@@ -282,6 +284,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_122747) do
 
   create_table "units", force: :cascade do |t|
     t.jsonb "activity_period"
+    t.jsonb "aliases", default: [], null: false
     t.datetime "created_at", null: false
     t.string "key"
     t.string "name"
@@ -294,6 +297,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_122747) do
     t.integer "status", default: 1, null: false
     t.integer "unit_type"
     t.datetime "updated_at", null: false
+    t.index ["aliases"], name: "index_units_on_aliases", using: :gin
     t.index ["key"], name: "index_units_on_key", unique: true
     t.index ["name"], name: "index_units_on_name", opclass: :gin_trgm_ops, using: :gin
     t.index ["name_kana"], name: "index_units_on_name_kana", opclass: :gin_trgm_ops, using: :gin

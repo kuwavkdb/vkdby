@@ -135,6 +135,17 @@ class Person < ApplicationRecord
     end
   end
 
+  def aliases
+    require 'ostruct'
+    (self[:aliases] || []).map { |a| ::OpenStruct.new(a) }
+  end
+
+  def aliases_attributes=(attributes)
+    self[:aliases] = attributes.values.reject { |a| a['name'].blank? }.map do |a|
+      { name: CGI.unescapeHTML(a['name'].to_s), kana: a['kana'].to_s }
+    end
+  end
+
   def normalize_birthday_year
     return unless birthday
 

@@ -58,10 +58,17 @@ class WikipageImporter < BaseWikipageImporter
     unit_name = nil
     unit_name_kana = nil
     name_log_entries = []
+    unit_aliases = []
 
     if first_line&.include?('→')
-      parts = first_line.split('→').map(&:strip)
-      parsed_names = parts.map do |part|
+      arrow_parts = first_line.split('→').map(&:strip)
+
+      # Extract aliases from the last arrow part (e.g. "新名（よみ）、英語名（えいごな）")
+      last_pieces = arrow_parts.last.to_s.split("、").map(&:strip)
+      unit_aliases = parse_alias_parts(last_pieces[1..])
+      arrow_parts[-1] = last_pieces.first.to_s if last_pieces.size > 1
+
+      parsed_names = arrow_parts.map do |part|
         if part =~ /\{\{rb\s+(.+?),\s*(.+?)\}\}/
           raw_name = Regexp.last_match(1).strip
           { name: extract_name_from_wiki_link(raw_name), name_kana: Regexp.last_match(2).strip }
@@ -77,25 +84,36 @@ class WikipageImporter < BaseWikipageImporter
       unit_name = current_unit_data[:name]
       unit_name_kana = current_unit_data[:name_kana]
       name_log_entries = parsed_names
-    elsif first_line =~ /^\s*\{\{rb\s+(.+?),\s*(.+?)\}\}(.*)$/
-      raw_name = Regexp.last_match(1).strip
-      suffix = Regexp.last_match(3)
-      unit_name = extract_name_from_wiki_link(raw_name) + suffix
-      unit_name_kana = Regexp.last_match(2).strip
-    elsif first_line =~ /^(.+?)\s*[（(](.+)[）)]$/
-      raw_name = Regexp.last_match(1).strip
-      unit_name = extract_name_from_wiki_link(raw_name)
-      unit_name_kana = Regexp.last_match(2).strip
+    else
+      # Split by "、" to extract aliases (e.g. "バンド名（よみ）、英語名（えいごな）")
+      first_line_pieces = first_line.to_s.split("、").map(&:strip)
+      unit_aliases = parse_alias_parts(first_line_pieces[1..])
+      main_part = first_line_pieces.first.to_s
+
+      if main_part =~ /^\s*\{\{rb\s+(.+?),\s*(.+?)\}\}(.*)$/
+        raw_name = Regexp.last_match(1).strip
+        suffix = Regexp.last_match(3)
+        unit_name = extract_name_from_wiki_link(raw_name) + suffix
+        unit_name_kana = Regexp.last_match(2).strip
+      elsif main_part =~ /^(.+?)\s*[（(](.+)[）)]$/
+        raw_name = Regexp.last_match(1).strip
+        unit_name = extract_name_from_wiki_link(raw_name)
+        unit_name_kana = Regexp.last_match(2).strip
+      end
     end
 
     # Fallback to Wiki Title
     if unit_name.nil?
       title = @wikipage.title.to_s.strip
-      if title =~ /^(.+?)\s*[（(](.+)[）)]$/
+      title_pieces = title.split("、").map(&:strip)
+      unit_aliases = parse_alias_parts(title_pieces[1..]) if unit_aliases.empty?
+      main_title = title_pieces.first.to_s
+
+      if main_title =~ /^(.+?)\s*[（(](.+)[）)]$/
         unit_name = Regexp.last_match(1).strip
         unit_name_kana = Regexp.last_match(2).strip
       else
-        unit_name = title
+        unit_name = main_title
         unit_name_kana = nil
       end
     end
@@ -145,6 +163,7 @@ class WikipageImporter < BaseWikipageImporter
     unit.name = unit_name
     unit.name_kana = unit_name_kana
     unit.name_log = name_log_entries if name_log_entries.present?
+    unit[:aliases] = unit_aliases if unit_aliases.any?
     unit.old_key = encoded_old_key
     unit.old_wiki_id = @wikipage.id
     unit.old_wiki_text = @original_content

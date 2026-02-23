@@ -53,6 +53,7 @@ class PersonImporter < BaseWikipageImporter
     person.name = person_name
     person.name_kana = person_name_kana
     person.name_log = name_log_entries if name_log_entries.present?
+    person[:aliases] = basic_info[:aliases] if basic_info[:aliases].present?
     person.old_key = encoded_old_key
     person.old_wiki_id = @wikipage.id
     person.old_wiki_text = @original_content
@@ -295,21 +296,33 @@ class PersonImporter < BaseWikipageImporter
     first_line = @wiki_content.lines.first&.strip&.gsub(/^!+/, '')&.strip
     title = @wikipage.title.presence || first_line
     title = title.to_s.strip
-    if title =~ /^(.+?)[（(](.+?)[）)]/
+    aliases = []
+
+    # Extract main name from title as default (may be overridden by "→" history parsing below)
+    title_pieces = title.split("、").map(&:strip)
+    main_title = title_pieces.first.to_s
+    if main_title =~ /^(.+?)[（(](.+?)[）)]/
       raw_name = Regexp.last_match(1).strip
       person_name = extract_name_from_wiki_link(raw_name)
       person_name_kana = Regexp.last_match(2).strip
     else
-      person_name = extract_name_from_wiki_link(title)
+      person_name = extract_name_from_wiki_link(main_title)
       person_name_kana = nil
     end
+    aliases = parse_alias_parts(title_pieces[1..])
 
     # Parse history from first line: "OldName(Kana) → NewName(Kana)"
     name_log_entries = []
 
     if first_line&.include?('→')
-      parts = first_line.split('→').map(&:strip)
-      parsed_names = parts.map do |part|
+      arrow_parts = first_line.split('→').map(&:strip)
+
+      # Extract aliases from the last arrow part (e.g. "新名（よみ）、英語名（えいごな）")
+      last_pieces = arrow_parts.last.to_s.split("、").map(&:strip)
+      aliases = parse_alias_parts(last_pieces[1..])
+      arrow_parts[-1] = last_pieces.first.to_s if last_pieces.size > 1
+
+      parsed_names = arrow_parts.map do |part|
         if part =~ /\{\{rb\s+(.+?),\s*(.+?)\}\}/
           raw_name = Regexp.last_match(1).strip
           { name: extract_name_from_wiki_link(raw_name), name_kana: Regexp.last_match(2).strip }
@@ -344,7 +357,8 @@ class PersonImporter < BaseWikipageImporter
     {
       name: person_name,
       name_kana: person_name_kana,
-      name_log: name_log_entries
+      name_log: name_log_entries,
+      aliases: aliases
     }
   end
 end
