@@ -25,6 +25,7 @@
 #  index_units_on_name_kana  (name_kana)
 #  index_units_on_old_key    (old_key) UNIQUE
 #
+require 'cgi'
 require 'ostruct'
 
 class Unit < ApplicationRecord
@@ -50,6 +51,10 @@ class Unit < ApplicationRecord
     'disbanded' => '解散',
     'unknown' => '不明'
   }.freeze
+
+  def name
+    CGI.unescapeHTML(super.to_s).presence
+  end
 
   def status_text
     STATUS_TRANSLATIONS[status] || status.humanize
