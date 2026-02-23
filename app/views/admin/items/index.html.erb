@@ -1,0 +1,58 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold mb-4 md:mb-0">Item Management</h1>
+    <div class="flex items-center space-x-4">
+      <%= form_with url: admin_items_path, method: :get, local: true, class: "flex" do |f| %>
+        <%= f.text_field :q, value: params[:q], placeholder: "Search by title or ASIN...", class: "rounded-l-md border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" %>
+        <%= f.submit "Search", class: "px-4 py-2 bg-white text-gray-700 border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-50 cursor-pointer" %>
+      <% end %>
+      <% if current_user.super_operator_or_above? %>
+        <%= link_to "Add Item", new_admin_item_path, class: "px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700" %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
+  </div>
+
+  <div class="overflow-x-auto bg-white shadow rounded-lg mb-4">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Release Date</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Artists</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ASIN</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% @items.each do |item| %>
+          <tr>
+            <td class="px-6 py-4 text-sm font-medium text-gray-900">
+              <%= link_to item.title, item.link_url, target: "_blank", rel: "noopener noreferrer", class: "text-indigo-600 hover:text-indigo-900" %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.release_date %></td>
+            <td class="px-6 py-4 text-sm text-gray-500">
+              <%= item.artists.map { |a| a['name'] }.join(', ') %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.asin %></td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <% if current_user.super_operator_or_above? %>
+                <%= link_to "Edit", edit_admin_item_path(item), class: "text-indigo-600 hover:text-indigo-900 mr-4" %>
+              <% end %>
+              <% if current_user.admin? %>
+                <%= link_to "Delete", admin_item_path(item), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "text-red-600 hover:text-red-900" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4">
+    <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
+  </div>
+</div>

@@ -4,6 +4,9 @@
 
 import { application } from "controllers/application"
 
+import ArtistRowsController from "controllers/artist_rows_controller"
+application.register("artist-rows", ArtistRowsController)
+
 import AutocompleteController from "controllers/autocomplete_controller"
 application.register("autocomplete", AutocompleteController)
 
