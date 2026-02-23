@@ -109,6 +109,8 @@ class WikipageImporter < BaseWikipageImporter
 
     source_for_key = if @wikipage_name.match?(/^[[:ascii:]\s-]+$/)
                        @wikipage_name
+                     elsif unit_name.match?(/\A[a-zA-Z0-9\s]+\z/)
+                       unit_name
                      elsif unit_name_kana.present?
                        Romaji.kana2romaji(unit_name_kana)
                      else

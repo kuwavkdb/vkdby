@@ -190,6 +190,8 @@ class PersonImporter < BaseWikipageImporter
 
     if wikipage_name.match?(/^[[:ascii:]\s-]+$/)
       source_for_key = wikipage_name
+    elsif person_name.match?(/\A[a-zA-Z0-9\s]+\z/)
+      source_for_key = person_name
     elsif person_name_kana.present?
       source_for_key = Romaji.kana2romaji(person_name_kana)
     else
