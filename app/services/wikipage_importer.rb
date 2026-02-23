@@ -16,7 +16,7 @@ class WikipageImporter < BaseWikipageImporter
     # Simple check: has {{member...}} tag or !Part... line
     has_member_plugin = wikipage.wiki.match?(/\{\{member2?\s+.*?\}\}/m)
     # Support both formats: !Part… [[Name]] and ![[Name]]… Part
-    has_old_member_format = wikipage.wiki.match?(/^!([^…]+)…\s*\[\[/) || wikipage.wiki.match?(/^!\[\[.+?\]\]…/)
+    has_old_member_format = wikipage.wiki.match?(/^!([^…]+)…\s*\[\[/) || wikipage.wiki.match?(/^!\[\[.+?\]\]\s*…/)
 
     has_member_plugin || has_old_member_format
   end
@@ -322,7 +322,7 @@ class WikipageImporter < BaseWikipageImporter
     # 2. ![[Name]]… Part
     # 3. !Part… PlainName (no wiki link)
     old_member_regex1 = /^!([^…\n]+)…\s*\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/
-    old_member_regex2 = /^!\[\[([^|\]\n]+)(?:\|([^\]\n]+))?\]\]…([^…\n]+)/
+    old_member_regex2 = /^!\[\[([^|\]\n]+)(?:\|([^\]\n]+))?\]\]\s*…\s*([^…\n\r]+)/
     old_member_regex3 = /^!([^…\n]+)…[^\S\n]*([^\[\s\n][^\n]*)/
 
     @wiki_content.scan(old_member_regex1) do |match|
