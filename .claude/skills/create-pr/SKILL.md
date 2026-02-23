@@ -15,8 +15,9 @@ ARGUMENTS にブランチ名・issue 番号・コミットメッセージのヒ�
 
 1. **ブランチ作成**
    - ベースブランチは `develop`（現在 develop にいない場合は確認する）
-   - ブランチ名の命名規則: `feat/<内容>-<issue番号>` または `fix/<内容>-<issue番号>`
-   - 例: `feat/import-items-artist-alias-295`
+   - ブランチ名の命名規則: `feat/<内容>-<issue番号>`、`fix/<内容>-<issue番号>`、または `docs/<内容>-<issue番号>`
+   - 変更対象が Markdown ファイル（`.md`）のみの場合は `docs` プレフィックスを使用する
+   - 例: `feat/import-items-artist-alias-295`、`docs/update-readme-301`
 
 2. **ファイルをステージング**
    - 変更・追加されたファイルを `git add` で追加する
