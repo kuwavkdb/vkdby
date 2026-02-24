@@ -1,5 +1,5 @@
 <%= link_to profile_path(@person.key), class: card_classes do %>
-  <div class="absolute top-0 right-0 <%= icon_padding_classes %> opacity-10 group-hover:opacity-20 transition-opacity">
+  <div class="absolute top-0 right-0 <%= icon_padding_classes %> opacity-10 group-hover:opacity-20 group-hover:text-person transition-all">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="<%= icon_size_classes %>">
       <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
     </svg>
@@ -14,8 +14,8 @@
         <% end %>
       </h3>
       <% if @person.aliases.any? %>
-        <span class="text-sm text-slate-400 dark:text-slate-500 opacity-60 mx-1">/</span>
-        <span class="text-sm text-slate-600 dark:text-slate-300">
+        <span class="text-sm text-slate-400 dark:text-slate-500 opacity-60 mx-1 group-hover:text-person dark:group-hover:text-person group-hover:opacity-80 transition-all">/</span>
+        <span class="text-sm text-slate-600 dark:text-slate-300 group-hover:text-person dark:group-hover:text-person group-hover:opacity-80 transition-all">
           <% @person.aliases.each_with_index do |a, i| %>
             <%= " / " if i > 0 %><% if a.kana.present? %><ruby><%= a.name %><rt><%= a.kana %></rt></ruby><% else %><%= a.name %><% end %>
           <% end %>
