@@ -1,6 +1,14 @@
 ja:
+  errors:
+    messages:
+      blank: "を入力してください"
   activerecord:
+    errors:
+      messages:
+        blank: "を入力してください"
     attributes:
+      link:
+        url: "URL"
       trend:
         unit_phenomenon:
           announcement: お知らせ

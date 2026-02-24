@@ -43,7 +43,7 @@ module Admin
 
     def update
       if @unit.update(unit_params)
-        redirect_to admin_units_path, notice: 'Unit updated successfully.'
+        redirect_to edit_admin_unit_path(@unit), notice: 'Unit updated successfully.'
       else
         @unit_logs = @unit.unit_logs.order(:log_date)
         @unit_people = @unit.unit_people.includes(:person).order(:period, :order_in_period)
