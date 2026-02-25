@@ -2,7 +2,7 @@
 
 require 'romaji'
 
-# rubocop:disable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity
+# rubocop:disable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
 class WikipageImporter < BaseWikipageImporter
   def self.import(wikipage)
     new(wikipage).import
@@ -562,5 +562,5 @@ class WikipageImporter < BaseWikipageImporter
       suffix += 1
     end
   end
-  # rubocop:enable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity
+  # rubocop:enable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
 end
