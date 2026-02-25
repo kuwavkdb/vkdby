@@ -6,6 +6,7 @@
 #
 #  id               :bigint           not null, primary key
 #  inline_history   :text
+#  name_alias       :string
 #  old_person_key   :string
 #  part             :integer          default("vocal"), not null
 #  part_alias       :string

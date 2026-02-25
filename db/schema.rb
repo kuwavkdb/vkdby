@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_23_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_25_115015) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -166,6 +166,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_23_100000) do
   create_table "snapshot_people", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "inline_history"
+    t.string "name_alias"
     t.string "old_person_key"
     t.integer "part", default: 0, null: false
     t.string "part_alias"

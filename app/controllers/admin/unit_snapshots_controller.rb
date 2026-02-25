@@ -47,6 +47,13 @@ module Admin
                   notice: 'Snapshot was successfully destroyed.'
     end
 
+    def reorder
+      params[:ids].each_with_index do |id, index|
+        @unit.unit_snapshots.find(id).update(snapshot_index: index + 1)
+      end
+      head :ok
+    end
+
     private
 
     def set_unit

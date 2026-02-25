@@ -22,6 +22,9 @@ application.register("mobile-menu", MobileMenuController)
 import SearchSuggestController from "controllers/search_suggest_controller"
 application.register("search-suggest", SearchSuggestController)
 
+import PersonSelectController from "controllers/person_select_controller"
+application.register("person-select", PersonSelectController)
+
 import SortableController from "controllers/sortable_controller"
 application.register("sortable", SortableController)
 

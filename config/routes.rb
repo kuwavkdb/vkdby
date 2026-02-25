@@ -22,7 +22,14 @@ Rails.application.routes.draw do
         end
       end
       resources :unit_snapshots, except: %i[show] do
-        resources :snapshot_people, only: %i[create destroy]
+        collection do
+          patch :reorder
+        end
+        resources :snapshot_people, only: %i[create destroy edit update] do
+          collection do
+            patch :reorder
+          end
+        end
       end
     end
     resources :people do
