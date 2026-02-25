@@ -4,18 +4,19 @@
 #
 # Table name: unit_snapshots
 #
-#  id            :bigint           not null, primary key
-#  current       :boolean          default(FALSE), not null
-#  label         :string
-#  snapshot_date :date             not null
-#  created_at    :datetime         not null
-#  updated_at    :datetime         not null
-#  unit_id       :bigint           not null
+#  id             :bigint           not null, primary key
+#  current        :boolean          default(FALSE), not null
+#  label          :string
+#  past           :boolean          default(FALSE), not null
+#  snapshot_date  :date             not null
+#  snapshot_index :integer          default(0), not null
+#  created_at     :datetime         not null
+#  updated_at     :datetime         not null
+#  unit_id        :bigint           not null
 #
 # Indexes
 #
 #  index_unit_snapshots_on_unit_id                    (unit_id)
-#  index_unit_snapshots_on_unit_id_and_current        (unit_id,current)
 #  index_unit_snapshots_on_unit_id_and_snapshot_date  (unit_id,snapshot_date) UNIQUE
 #
 # Foreign Keys
@@ -31,6 +32,8 @@ class UnitSnapshot < ApplicationRecord
 
   scope :chronological, -> { order(snapshot_date: :asc) }
   scope :reverse_chronological, -> { order(snapshot_date: :desc) }
+  scope :past, -> { where(past: true) }
+  scope :not_past, -> { where(past: false) }
 
   def display_label
     return label if label.present?

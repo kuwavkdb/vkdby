@@ -301,13 +301,36 @@ class WikipageImporter < BaseWikipageImporter
     results
   end
 
+  def member_section_ranges
+    ranges = []
+    @wiki_content.scan(/^!!(.*?)(?:\n|$)/) do
+      section_name = Regexp.last_match(1).strip
+      next unless section_name.match?(/^(メンバー|関係者)/)
+
+      section_start = Regexp.last_match.begin(0)
+      header_end = Regexp.last_match.end(0)
+      next_section = @wiki_content.index(/^!!/, header_end)
+      section_end = next_section || @wiki_content.length
+      ranges << (section_start...section_end)
+    end
+    ranges
+  end
+
+  def in_member_section?(pos, ranges)
+    ranges.any? { |r| r.cover?(pos) }
+  end
+
   def parse_members(unit)
     separator_index = @wiki_content.index(/^!!関係者/) || Float::INFINITY
+    valid_ranges = member_section_ranges
+    restrict_to_sections = valid_ranges.any?
     current_order = 1
 
     # Plugin format - use balanced bracket matching
     extract_member_blocks.each do |block_data|
       current_pos = block_data[:begin]
+      next if restrict_to_sections && !in_member_section?(current_pos, valid_ranges)
+
       member_status = current_pos > separator_index ? :left : :active
       content = block_data[:content]
 
@@ -357,6 +380,8 @@ class WikipageImporter < BaseWikipageImporter
     @wiki_content.scan(old_member_regex1) do |match|
       match_data = Regexp.last_match
       current_pos = match_data.begin(0)
+      next if restrict_to_sections && !in_member_section?(current_pos, valid_ranges)
+
       member_status = current_pos > separator_index ? :left : :active
 
       part_str = match[0].strip
@@ -370,6 +395,8 @@ class WikipageImporter < BaseWikipageImporter
     @wiki_content.scan(old_member_regex2) do |match|
       match_data = Regexp.last_match
       current_pos = match_data.begin(0)
+      next if restrict_to_sections && !in_member_section?(current_pos, valid_ranges)
+
       member_status = current_pos > separator_index ? :left : :active
 
       name_str = match[0].strip
@@ -383,6 +410,8 @@ class WikipageImporter < BaseWikipageImporter
     @wiki_content.scan(old_member_regex3) do |match|
       match_data = Regexp.last_match
       current_pos = match_data.begin(0)
+      next if restrict_to_sections && !in_member_section?(current_pos, valid_ranges)
+
       member_status = current_pos > separator_index ? :left : :active
 
       part_str = match[0].strip
