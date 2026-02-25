@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_25_115015) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_25_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -275,6 +275,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_115015) do
     t.datetime "created_at", null: false
     t.boolean "current", default: false, null: false
     t.string "label"
+    t.boolean "past", default: false, null: false
     t.date "snapshot_date"
     t.integer "snapshot_index", default: 0, null: false
     t.bigint "unit_id", null: false

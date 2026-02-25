@@ -33,9 +33,14 @@ class WikipageImporterV2 < WikipageImporter
 
     # 日付付きメンバーセクションを抽出
     dated_sections = extract_dated_member_sections
-
     dated_sections.each_with_index do |section_data, index|
       create_snapshot(unit, section_data, index)
+    end
+
+    # 関係者セクションを抽出し past スナップショットとして作成
+    related_sections = extract_dated_related_sections
+    related_sections.each_with_index do |section_data, index|
+      create_snapshot(unit, section_data.merge(past: true), index)
     end
   end
 
@@ -50,6 +55,21 @@ class WikipageImporterV2 < WikipageImporter
     extract_pattern2(sections)
     extract_year_only_patterns(sections)
     extract_pattern5(sections)
+
+    sort_sections(sections)
+  end
+
+  # 関係者セクションを抽出
+  # 例: !!関係者（2023/04/15）、!!関係者（2023年4月15日）、!!関係者（ラベル）、!!関係者
+  def extract_dated_related_sections
+    return [] unless @original_content
+
+    sections = []
+
+    extract_related_pattern1(sections)
+    extract_related_pattern2(sections)
+    extract_related_year_only_patterns(sections)
+    extract_related_pattern_misc(sections)
 
     sort_sections(sections)
   end
@@ -174,6 +194,94 @@ class WikipageImporterV2 < WikipageImporter
     end
   end
 
+  def extract_related_pattern1(sections)
+    # パターン1: !!関係者（yyyy/mm/dd）
+    @original_content.scan(%r{^!!関係者(?:（|\()([0-9]{4})/([0-9]{1,2})/([0-9]{1,2})(?:）|\))}m) do
+      match_data = Regexp.last_match
+      year = match_data[1].to_i
+      month = match_data[2].to_i
+      day = match_data[3].to_i
+
+      next if year.zero?
+
+      start_pos = match_data.end(0)
+      content = extract_section_content(start_pos)
+
+      add_section(sections, date_parts: { year: year, month: month, day: day }, content: content, position: match_data.begin(0))
+    end
+  end
+
+  def extract_related_pattern2(sections)
+    # パターン2: !!関係者（yyyy年mm月dd日）
+    @original_content.scan(/^!!関係者(?:（|\()([0-9]{4})年([0-9]{1,2})月([0-9]{1,2})日(?:）|\))/m) do
+      match_data = Regexp.last_match
+      year = match_data[1].to_i
+      month = match_data[2].to_i
+      day = match_data[3].to_i
+
+      next if year.zero?
+
+      start_pos = match_data.end(0)
+      content = extract_section_content(start_pos)
+
+      add_section(sections, date_parts: { year: year, month: month, day: day }, content: content, position: match_data.begin(0))
+    end
+  end
+
+  def extract_related_year_only_patterns(sections)
+    # パターン3: !!関係者（yyyy） または !!関係者（yyyy年）
+    @original_content.scan(/^!!関係者(?:（|\()([0-9]{4})(?:年)?(?:）|\))/m) do
+      match_data = Regexp.last_match
+      year = match_data[1].to_i
+
+      start_pos = match_data.end(0)
+      content = extract_section_content(start_pos)
+
+      sections << {
+        date: nil,
+        label: "#{year}年",
+        content: content,
+        position: match_data.begin(0)
+      }
+    end
+  end
+
+  def extract_related_pattern_misc(sections)
+    # ラベル付き（日付形式以外）
+    @original_content.scan(/^!!関係者(?:（|\()(.+?)(?:）|\))/m) do
+      match_data = Regexp.last_match
+      label = match_data[1]
+
+      next if label =~ %r{^[0-9]{4}/[0-9]{1,2}/[0-9]{1,2}$}
+      next if label =~ /^[0-9]{4}年[0-9]{1,2}月[0-9]{1,2}日$/
+      next if label =~ /^[0-9]{4}年?$/
+
+      start_pos = match_data.end(0)
+      content = extract_section_content(start_pos)
+
+      sections << {
+        date: nil,
+        label: label,
+        content: content,
+        position: match_data.begin(0)
+      }
+    end
+
+    # ラベルなしの !!関係者 セクション
+    @original_content.scan(/^!!関係者(?!（)(?!\()\s*$/m) do
+      match_data = Regexp.last_match
+      start_pos = match_data.end(0)
+      content = extract_section_content(start_pos)
+
+      sections << {
+        date: nil,
+        label: nil,
+        content: content,
+        position: match_data.begin(0)
+      }
+    end
+  end
+
   def add_section(sections, date_parts:, content:, position:)
     year = date_parts[:year]
     month = date_parts[:month]
@@ -223,23 +331,28 @@ class WikipageImporterV2 < WikipageImporter
     is_current = section_data[:current] || false
     unit.unit_snapshots.where(current: true).update_all(current: false) if is_current
 
+    is_past = section_data[:past] || false
+
     snapshot = unit.unit_snapshots.create!(
       snapshot_date: section_data[:date],
       label: section_data[:label],
       current: is_current,
+      past: is_past,
       snapshot_index: snapshot_index
     )
 
-    # メンバーをパース
-    parse_snapshot_members(snapshot, section_data[:content])
+    # メンバーをパース（past スナップショットは全員 concerned ステータスに強制）
+    force_status = is_past ? :concerned : nil
+    parse_snapshot_members(snapshot, section_data[:content], force_status: force_status)
 
     date_str = section_data[:date]&.to_s || section_data[:label] || '現在のメンバー'
-    puts "  [OK] Created snapshot for #{unit.name} on #{date_str} with #{snapshot.snapshot_people.count} members"
+    puts "  [OK] Created snapshot for #{unit.name} on #{date_str} with #{snapshot.snapshot_people.count} members (past: #{is_past})"
   end
 
   # スナップショットのメンバーをパース
   # 新旧フォーマットを混在で扱うため、全エントリをテキスト位置付きで収集し、出現順でソートしてから登録する
-  def parse_snapshot_members(snapshot, content)
+  # force_status: 全メンバーのステータスを強制する場合に指定（例: :concerned）
+  def parse_snapshot_members(snapshot, content, force_status: nil)
     return unless content
 
     # コメント行（行頭が //）を除外する
@@ -259,7 +372,8 @@ class WikipageImporterV2 < WikipageImporter
     # テキスト上の出現順でソートし、sort_order を割り当てて登録
     entries.sort_by! { |e| e[:position] }
     entries.each_with_index do |entry, index|
-      register_snapshot_member(snapshot, **entry.except(:position), sort_order: index + 1)
+      entry_with_status = force_status ? entry.merge(member_status: force_status) : entry
+      register_snapshot_member(snapshot, **entry_with_status.except(:position), sort_order: index + 1)
     end
 
     # @wiki_content を元に戻す

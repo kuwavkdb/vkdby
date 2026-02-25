@@ -2,7 +2,7 @@
 
 class ProfilesController < ApplicationController
   def show
-    @resource = Unit.includes(:links, unit_people: :person).find_by(key: params[:key]) ||
+    @resource = Unit.includes(:links).find_by(key: params[:key]) ||
                 Person.includes(:links).find_by!(key: params[:key])
 
     @links = @resource.links.where(active: true).order(:sort_order)
@@ -35,9 +35,6 @@ class ProfilesController < ApplicationController
   end
 
   def load_unit_data
-    members = @resource.unit_people.includes(person: { person_logs: :unit }).order(:order_in_period)
-    @past_members = members.reject { |m| m.pre? || m.active? }
-
     # ユニットの履歴を統合 (UnitLog + PersonLog)
     unit_logs = @resource.unit_logs
     person_logs = @resource.person_logs.includes(:person)
@@ -49,7 +46,7 @@ class ProfilesController < ApplicationController
 
     @snapshots = @resource.unit_snapshots
                           .includes(snapshot_people: :person)
-                          .order(current: :desc, snapshot_index: :asc)
+                          .order(past: :asc, current: :desc, snapshot_index: :asc)
   end
 
   def load_items
