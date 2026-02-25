@@ -2,15 +2,20 @@
   <% @snapshots.each do |snapshot| %>
     <section data-controller="toggle" data-toggle-open-value="<%= snapshot.current? %>">
       <div class="flex items-center justify-between mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
-        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          Members
-        </h2>
         <div class="flex items-center gap-2">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Members
+          </h2>
           <% if snapshot.label.present? %>
-            <span class="text-[0.65rem] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"><%= snapshot.label %></span>
+            <span class="text-xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"><%= snapshot.label %></span>
           <% end %>
           <% if snapshot.current? %>
-            <span class="text-[0.65rem] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400">Current</span>
+            <span class="text-xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400">Current</span>
+          <% end %>
+        </div>
+        <div class="flex items-center gap-2">
+          <% if @admin && @unit %>
+            <%= link_to "Edit", edit_admin_unit_unit_snapshot_path(@unit, snapshot), class: "text-xs font-medium text-slate-400 hover:text-indigo-500 transition-colors" %>
           <% end %>
           <button type="button" data-action="click->toggle#toggle" class="inline-flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" title="Toggle history">
             <svg class="w-4 h-4 transition-transform duration-200" data-toggle-target="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
