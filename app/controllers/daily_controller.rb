@@ -11,17 +11,17 @@ class DailyController < ApplicationController
       month = @date.month
       day = @date.day
       @trends = Trend.on_month_day(month, day).order(date: :asc)
-      @birthdays = Person.birthday_on(@date).order(name_kana: :asc)
+      @birthdays = Person.kept.birthday_on(@date).order(name_kana: :asc)
       @releases = Item.released_on_month_day(month, day).order(release_date: :asc)
     else
       @trends = Trend.on_date(@date).order(created_at: :desc)
-      @birthdays = Person.birthday_on(@date).where(status: %i[active hiatus]).order(name_kana: :asc)
+      @birthdays = Person.kept.birthday_on(@date).where(status: %i[active hiatus]).order(name_kana: :asc)
       @releases = Item.released_on(@date).order(created_at: :desc)
     end
 
     # Load related units for trends
     all_unit_ids = @trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
-    @related_units = Unit.where(id: all_unit_ids).index_by(&:id)
+    @related_units = Unit.kept.where(id: all_unit_ids).index_by(&:id)
   end
 
   private

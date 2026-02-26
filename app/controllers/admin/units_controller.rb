@@ -2,19 +2,24 @@
 
 module Admin
   class UnitsController < Admin::BaseController
-    before_action :set_unit, only: %i[show edit update destroy]
+    before_action :set_unit, only: %i[show edit update destroy undiscard]
     before_action :require_super_operator, only: %i[destroy]
 
     def index
       @q = params[:q]
-      scope = Unit.all.order(updated_at: :desc)
+      @show_discarded = params[:discarded]
+      scope = case @show_discarded
+              when 'only' then Unit.discarded
+              when 'all'  then Unit.with_discarded
+              else             Unit.kept
+              end
       if @q.present?
         scope = scope.where(
           'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
           q: "%#{@q}%"
         )
       end
-      @pagy, @units = pagy(scope)
+      @pagy, @units = pagy(scope.order(updated_at: :desc))
     end
 
     def new
@@ -61,13 +66,18 @@ module Admin
     end
 
     def destroy
-      @unit.destroy
+      @unit.discard
       redirect_to admin_units_path, notice: 'Unit deleted successfully.'
+    end
+
+    def undiscard
+      @unit.undiscard
+      redirect_to admin_units_path, notice: 'Unit restored successfully.'
     end
 
     def search
       q = params[:q]
-      scope = Unit.all
+      scope = Unit.kept
 
       if q.present?
         scope = scope.where(
@@ -84,7 +94,7 @@ module Admin
     private
 
     def set_unit
-      @unit = Unit.find(params[:id])
+      @unit = Unit.with_discarded.find(params[:id])
     end
 
     def unit_params

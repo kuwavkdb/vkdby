@@ -2,19 +2,24 @@
 
 module Admin
   class PeopleController < Admin::BaseController
-    before_action :set_person, only: %i[edit update destroy]
+    before_action :set_person, only: %i[edit update destroy undiscard]
     before_action :require_super_operator, only: %i[destroy]
 
     def index
       @q = params[:q]
-      scope = Person.all.order(updated_at: :desc)
+      @show_discarded = params[:discarded]
+      scope = case @show_discarded
+              when 'only' then Person.discarded
+              when 'all'  then Person.with_discarded
+              else             Person.kept
+              end
       if @q.present?
         scope = scope.where(
           'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
           q: "%#{@q}%"
         )
       end
-      @pagy, @people = pagy(scope)
+      @pagy, @people = pagy(scope.order(updated_at: :desc))
     end
 
     def new
@@ -49,13 +54,18 @@ module Admin
     end
 
     def destroy
-      @person.destroy
+      @person.discard
       redirect_to admin_people_path, notice: 'Person deleted successfully.'
+    end
+
+    def undiscard
+      @person.undiscard
+      redirect_to admin_people_path, notice: 'Person restored successfully.'
     end
 
     def search
       q = params[:q]
-      scope = Person.all
+      scope = Person.kept
 
       if q.present?
         scope = scope.where(
@@ -74,7 +84,7 @@ module Admin
     private
 
     def set_person
-      @person = Person.find(params[:id])
+      @person = Person.with_discarded.find(params[:id])
     end
 
     def person_params

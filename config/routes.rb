@@ -15,6 +15,9 @@ Rails.application.routes.draw do
       collection do
         get :search
       end
+      member do
+        patch :undiscard
+      end
       resources :unit_logs
       resources :unit_people, only: %i[create edit update destroy] do
         collection do
@@ -35,6 +38,9 @@ Rails.application.routes.draw do
     resources :people do
       collection do
         get :search
+      end
+      member do
+        patch :undiscard
       end
       resources :person_logs do
         collection do
