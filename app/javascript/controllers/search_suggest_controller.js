@@ -11,7 +11,7 @@ export default class extends Controller {
     this.activeIndex = -1
     this.handleClickOutside = this.handleClickOutside.bind(this)
     this.handleReposition = this.reposition.bind(this)
-    this.handleScroll = this.hideSuggestions.bind(this)
+    this.handleScroll = this._onScroll.bind(this)
     document.addEventListener('click', this.handleClickOutside)
     window.addEventListener('resize', this.handleReposition)
     window.addEventListener('scroll', this.handleScroll, true)
@@ -22,6 +22,11 @@ export default class extends Controller {
     window.removeEventListener('resize', this.handleReposition)
     window.removeEventListener('scroll', this.handleScroll, true)
     clearTimeout(this.timeout)
+  }
+
+  _onScroll(event) {
+    if (this.suggestionsTarget.contains(event.target)) return
+    this.hideSuggestions()
   }
 
   handleClickOutside(event) {
