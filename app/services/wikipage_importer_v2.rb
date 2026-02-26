@@ -516,6 +516,7 @@ class WikipageImporterV2 < WikipageImporter
     # パートをパース
     part_enum = parse_part(part_str)
     support = part_str&.include?('サポート') || part_str&.include?('sup') || false
+    cleaned_part_alias = extract_name_from_wiki_link(part_str)&.gsub(/サポート|sup/i, '')&.strip
 
     # SNSをパース（V1と同じArray形式で保存）
     sns_data = sns_account.present? ? [sns_account.strip] : nil
@@ -529,7 +530,7 @@ class WikipageImporterV2 < WikipageImporter
       person_key: person&.key,
       old_person_key: old_member_key,
       part: part_enum,
-      part_alias: extract_name_from_wiki_link(part_str),
+      part_alias: cleaned_part_alias,
       status: member_status,
       support: support,
       sns: sns_data,
