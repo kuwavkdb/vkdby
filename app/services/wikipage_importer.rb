@@ -2,7 +2,7 @@
 
 require 'romaji'
 
-# rubocop:disable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity
+# rubocop:disable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
 class WikipageImporter < BaseWikipageImporter
   def self.import(wikipage)
     new(wikipage).import
@@ -16,7 +16,7 @@ class WikipageImporter < BaseWikipageImporter
     # Simple check: has {{member...}} tag or !Part... line
     has_member_plugin = wikipage.wiki.match?(/\{\{member2?\s+.*?\}\}/m)
     # Support both formats: !Part… [[Name]] and ![[Name]]… Part
-    has_old_member_format = wikipage.wiki.match?(/^!([^…]+)…\s*\[\[/) || wikipage.wiki.match?(/^!\[\[.+?\]\]…/)
+    has_old_member_format = wikipage.wiki.match?(/^!([^…]+)…\s*\[\[/) || wikipage.wiki.match?(/^!\[\[.+?\]\]\s*…/)
 
     has_member_plugin || has_old_member_format
   end
@@ -51,53 +51,81 @@ class WikipageImporter < BaseWikipageImporter
 
   private
 
+  def parse_unit_names_from_first_line(first_line)
+    if first_line&.include?('→')
+      parse_unit_names_from_arrow_line(first_line)
+    else
+      parse_unit_names_from_plain_line(first_line)
+    end
+  end
+
+  def parse_unit_names_from_arrow_line(first_line)
+    arrow_parts = first_line.split('→').map(&:strip)
+    last_pieces = arrow_parts.last.to_s.split('、').map(&:strip)
+    aliases = parse_alias_parts(last_pieces[1..])
+    arrow_parts[-1] = last_pieces.first.to_s if last_pieces.size > 1
+
+    parsed_names = arrow_parts.map { |part| parse_name_part(part) }
+    current = parsed_names.last
+    { name: current[:name], name_kana: current[:name_kana], name_log: parsed_names, aliases: }
+  end
+
+  def parse_unit_names_from_plain_line(first_line)
+    pieces = first_line.to_s.split('、').map(&:strip)
+    aliases = parse_alias_parts(pieces[1..])
+    main_part = pieces.first.to_s
+    name, name_kana = extract_name_and_kana_from_part(main_part)
+    { name:, name_kana:, name_log: [], aliases: }
+  end
+
+  def parse_unit_names_from_title
+    title = @wikipage.title.to_s.strip
+    pieces = title.split('、').map(&:strip)
+    main_title = pieces.first.to_s
+    if main_title =~ /^(.+?)\s*[（(](.+)[）)]$/
+      { name: Regexp.last_match(1).strip, name_kana: Regexp.last_match(2).strip, alias_parts: pieces[1..] }
+    else
+      { name: main_title, name_kana: nil, alias_parts: pieces[1..] }
+    end
+  end
+
+  def parse_name_part(part)
+    if part =~ /\{\{rb\s+(.+?),\s*(.+?)\}\}/
+      { name: extract_name_from_wiki_link(Regexp.last_match(1).strip), name_kana: Regexp.last_match(2).strip }
+    elsif part =~ /^(.+?)\s*[（(](.+)[）)]$/
+      { name: extract_name_from_wiki_link(Regexp.last_match(1).strip), name_kana: Regexp.last_match(2).strip }
+    else
+      { name: extract_name_from_wiki_link(part), name_kana: nil }
+    end
+  end
+
+  def extract_name_and_kana_from_part(part)
+    if part =~ /^\s*\{\{rb\s+(.+?),\s*(.+?)\}\}(.*)$/
+      name = extract_name_from_wiki_link(Regexp.last_match(1).strip) + Regexp.last_match(3)
+      [name, Regexp.last_match(2).strip]
+    elsif part =~ /^(.+?)\s*[（(](.+)[）)]$/
+      [extract_name_from_wiki_link(Regexp.last_match(1).strip), Regexp.last_match(2).strip]
+    else
+      [nil, nil]
+    end
+  end
+
   def import_unit
     # 2. Derive Unit Data
     # Check first line for history definition: "OldName(Kana) → NewName(Kana)"
     first_line = @wiki_content.lines.first&.strip&.gsub(/^!+/, '')&.strip
-    unit_name = nil
-    unit_name_kana = nil
-    name_log_entries = []
-
-    if first_line&.include?('→')
-      parts = first_line.split('→').map(&:strip)
-      parsed_names = parts.map do |part|
-        if part =~ /\{\{rb\s+(.+?),\s*(.+?)\}\}/
-          raw_name = Regexp.last_match(1).strip
-          { name: extract_name_from_wiki_link(raw_name), name_kana: Regexp.last_match(2).strip }
-        elsif part =~ /^(.+?)\s*[（(](.+)[）)]$/
-          raw_name = Regexp.last_match(1).strip
-          { name: extract_name_from_wiki_link(raw_name), name_kana: Regexp.last_match(2).strip }
-        else
-          { name: extract_name_from_wiki_link(part), name_kana: nil }
-        end
-      end
-
-      current_unit_data = parsed_names.last
-      unit_name = current_unit_data[:name]
-      unit_name_kana = current_unit_data[:name_kana]
-      name_log_entries = parsed_names
-    elsif first_line =~ /^\s*\{\{rb\s+(.+?),\s*(.+?)\}\}(.*)$/
-      raw_name = Regexp.last_match(1).strip
-      suffix = Regexp.last_match(3)
-      unit_name = extract_name_from_wiki_link(raw_name) + suffix
-      unit_name_kana = Regexp.last_match(2).strip
-    elsif first_line =~ /^(.+?)\s*[（(](.+)[）)]$/
-      raw_name = Regexp.last_match(1).strip
-      unit_name = extract_name_from_wiki_link(raw_name)
-      unit_name_kana = Regexp.last_match(2).strip
-    end
+    parsed = parse_unit_names_from_first_line(first_line)
+    unit_name      = parsed[:name]
+    unit_name_kana = parsed[:name_kana]
+    name_log_entries = parsed[:name_log]
+    unit_aliases     = parsed[:aliases]
 
     # Fallback to Wiki Title
     if unit_name.nil?
-      title = @wikipage.title.to_s.strip
-      if title =~ /^(.+?)\s*[（(](.+)[）)]$/
-        unit_name = Regexp.last_match(1).strip
-        unit_name_kana = Regexp.last_match(2).strip
-      else
-        unit_name = title
-        unit_name_kana = nil
-      end
+      parsed = parse_unit_names_from_title
+      unit_aliases = parse_alias_parts(parsed[:alias_parts]) if unit_aliases.empty?
+      unit_name      = parsed[:name]
+      unit_name_kana = parsed[:name_kana]
     end
 
     if unit_name.blank?
@@ -109,6 +137,8 @@ class WikipageImporter < BaseWikipageImporter
 
     source_for_key = if @wikipage_name.match?(/^[[:ascii:]\s-]+$/)
                        @wikipage_name
+                     elsif unit_name.match?(/\A[a-zA-Z0-9\s]+\z/)
+                       unit_name
                      elsif unit_name_kana.present?
                        Romaji.kana2romaji(unit_name_kana)
                      else
@@ -143,6 +173,7 @@ class WikipageImporter < BaseWikipageImporter
     unit.name = unit_name
     unit.name_kana = unit_name_kana
     unit.name_log = name_log_entries if name_log_entries.present?
+    unit[:aliases] = unit_aliases if unit_aliases.any?
     unit.old_key = encoded_old_key
     unit.old_wiki_id = @wikipage.id
     unit.old_wiki_text = @original_content
@@ -156,6 +187,7 @@ class WikipageImporter < BaseWikipageImporter
     parse_youtube_tags(unit)
     parse_band_name_history(unit, unit_name, unit_name_kana)
     parse_sections(unit)
+    parse_activity_period(unit)
   end
 
   def parse_band_name_history(unit, current_name, current_kana) # rubocop:disable Metrics/PerceivedComplexity
@@ -269,13 +301,36 @@ class WikipageImporter < BaseWikipageImporter
     results
   end
 
+  def member_section_ranges
+    ranges = []
+    @wiki_content.scan(/^!!(.*?)(?:\n|$)/) do
+      section_name = Regexp.last_match(1).strip
+      next unless section_name.match?(/^(メンバー|関係者)/)
+
+      section_start = Regexp.last_match.begin(0)
+      header_end = Regexp.last_match.end(0)
+      next_section = @wiki_content.index(/^!!/, header_end)
+      section_end = next_section || @wiki_content.length
+      ranges << (section_start...section_end)
+    end
+    ranges
+  end
+
+  def in_member_section?(pos, ranges)
+    ranges.any? { |r| r.cover?(pos) }
+  end
+
   def parse_members(unit)
     separator_index = @wiki_content.index(/^!!関係者/) || Float::INFINITY
+    valid_ranges = member_section_ranges
+    restrict_to_sections = valid_ranges.any?
     current_order = 1
 
     # Plugin format - use balanced bracket matching
     extract_member_blocks.each do |block_data|
       current_pos = block_data[:begin]
+      next if restrict_to_sections && !in_member_section?(current_pos, valid_ranges)
+
       member_status = current_pos > separator_index ? :left : :active
       content = block_data[:content]
 
@@ -300,7 +355,7 @@ class WikipageImporter < BaseWikipageImporter
 
       next if name_str.blank?
 
-      if old_member_key.present?
+      if old_member_key.present? && old_member_key != '-'
         old_member_key = old_member_key.strip
         old_member_key = [name_str, old_member_key].join if old_member_key =~ /^\(/ && old_member_key =~ /\)$/
       else
@@ -317,12 +372,16 @@ class WikipageImporter < BaseWikipageImporter
     # Current supported formats:
     # 1. !Part… [[Name]]
     # 2. ![[Name]]… Part
+    # 3. !Part… PlainName (no wiki link)
     old_member_regex1 = /^!([^…\n]+)…\s*\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/
-    old_member_regex2 = /^!\[\[([^|\]\n]+)(?:\|([^\]\n]+))?\]\]…([^…\n]+)/
+    old_member_regex2 = /^!\[\[([^|\]\n]+)(?:\|([^\]\n]+))?\]\]\s*…\s*([^…\n\r]+)/
+    old_member_regex3 = /^!([^…\n]+)…[^\S\n]*([^\[\s\n][^\n]*)/
 
     @wiki_content.scan(old_member_regex1) do |match|
       match_data = Regexp.last_match
       current_pos = match_data.begin(0)
+      next if restrict_to_sections && !in_member_section?(current_pos, valid_ranges)
+
       member_status = current_pos > separator_index ? :left : :active
 
       part_str = match[0].strip
@@ -336,6 +395,8 @@ class WikipageImporter < BaseWikipageImporter
     @wiki_content.scan(old_member_regex2) do |match|
       match_data = Regexp.last_match
       current_pos = match_data.begin(0)
+      next if restrict_to_sections && !in_member_section?(current_pos, valid_ranges)
+
       member_status = current_pos > separator_index ? :left : :active
 
       name_str = match[0].strip
@@ -343,6 +404,21 @@ class WikipageImporter < BaseWikipageImporter
       part_str = match[2].strip
 
       register_old_format_member(unit, part_str, name_str, old_member_key, member_status, current_order)
+      current_order += 1
+    end
+
+    @wiki_content.scan(old_member_regex3) do |match|
+      match_data = Regexp.last_match
+      current_pos = match_data.begin(0)
+      next if restrict_to_sections && !in_member_section?(current_pos, valid_ranges)
+
+      member_status = current_pos > separator_index ? :left : :active
+
+      part_str = match[0].strip
+      name_str = match[1].strip
+      next if name_str.empty?
+
+      register_old_format_member(unit, part_str, name_str, nil, member_status, current_order)
       current_order += 1
     end
   end
@@ -462,6 +538,25 @@ class WikipageImporter < BaseWikipageImporter
     parse_wiki_links(unit, active_content, true)
   end
 
+  def parse_activity_period(unit)
+    regex = /^\*活動時期\s*(?:…|\.\.\.)\s*(.+)/
+    entries = []
+
+    @wiki_content.scan(regex) do |match|
+      value = match[0].strip
+      from, to = value.split(/\s*~\s*/, 2)
+      entries << { 'from' => extract_date_only(from), 'to' => extract_date_only(to) }
+    end
+
+    unit.update!(activity_period: entries) if entries.present?
+  end
+
+  def extract_date_only(value)
+    return nil if value.nil?
+
+    value.gsub(/\(.*?\)/, '').gsub(/（.*?）/, '').strip.presence
+  end
+
   def resolve_key_collision(base_key, current_id = nil)
     return base_key unless Unit.where(key: base_key).where.not(id: current_id).exists?
 
@@ -473,5 +568,5 @@ class WikipageImporter < BaseWikipageImporter
       suffix += 1
     end
   end
-  # rubocop:enable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity
+  # rubocop:enable Metrics/ClassLength, Metrics/AbcSize, Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
 end

@@ -73,6 +73,9 @@ class Trend < ApplicationRecord
 
   # Scopes
   scope :on_date, ->(date) { where(date: date) }
+  scope :on_month_day, lambda { |month, day|
+    where('EXTRACT(MONTH FROM date) = ? AND EXTRACT(DAY FROM date) = ?', month, day)
+  }
 
   # Validations
   validates :date, presence: true

@@ -77,6 +77,12 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     parse_wiki_links(formatted, link: link)
   end
 
+  def sanitize_with_ruby(text)
+    return '' if text.blank?
+
+    sanitize(text, tags: %w[ruby rt span], attributes: %w[class]).html_safe
+  end
+
   private
 
   def parse_wiki_lines(text)
@@ -98,7 +104,10 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
 
       if line.match?(/^\{\{bq/)
         blocks << current_block unless current_block[:lines].empty?
-        current_block = { type: :blockquote, lines: [] }
+        # 先頭行にTwitter URLが含まれる場合はtweet_embedタイプとして扱う
+        tweet_url = line.match(%r{https?://(?:twitter\.com|x\.com)/\S+})&.to_s
+        block_type = tweet_url ? :tweet_embed : :blockquote
+        current_block = { type: block_type, lines: [] }
         in_blockquote = true
         next
       end
@@ -121,6 +130,8 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
       handle_list(line, blocks, current_block, &block)
     when /^:(.+?):(.*)$/
       handle_dl(line, blocks, current_block, &block)
+    when /\{\{youtube2\s+([^,}\s]+)/i
+      handle_youtube2(line, blocks, current_block, &block)
     else
       handle_text(line, blocks, current_block, &block)
     end
@@ -168,6 +179,34 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     end
   end
 
+  def handle_youtube2(line, blocks, current_block, &block)
+    raw = line.match(/\{\{youtube2\s+([^,}\s]+)/i)&.captures&.first&.strip
+    return handle_text(line, blocks, current_block, &block) unless raw
+
+    video_id = extract_youtube_video_id(raw)
+    return handle_text(line, blocks, current_block, &block) unless video_id
+
+    blocks << current_block unless current_block[:lines].empty?
+    block.call({ type: :youtube2, video_id: video_id, lines: [line] })
+  end
+
+  # YouTube URLまたはIDからビデオIDを抽出する
+  # 対応フォーマット:
+  #   https://www.youtube.com/watch?v=XXXX
+  #   https://youtu.be/XXXX
+  #   XXXX (IDそのまま)
+  def extract_youtube_video_id(raw)
+    case raw
+    when %r{youtu\.be/([^?&\s]+)}
+      Regexp.last_match(1)
+    when /[?&]v=([^&\s]+)/
+      Regexp.last_match(1)
+    else
+      # URLでなければそのままIDとして扱う
+      raw
+    end
+  end
+
   def render_wiki_blocks(blocks)
     safe_join(blocks.map do |block|
       case block[:type]
@@ -178,6 +217,8 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
         end
       when :list
         render_wiki_list(block[:lines])
+      when :tweet_embed
+        render_tweet_embed(block[:lines].join)
       when :blockquote
         content = block[:lines].join
         tag.blockquote(class: 'border-l-4 border-slate-300 dark:border-slate-600 pl-4 italic text-slate-600 dark:text-slate-400 my-4') do
@@ -187,6 +228,15 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
         render_wiki_dl(block[:lines])
       when :multi_dl
         render_wiki_multi_dl(block[:lines])
+      when :youtube2
+        video_id = block[:video_id]
+        tag.div(class: 'relative pb-[56.25%] h-0 overflow-hidden rounded-xl my-4') do
+          tag.iframe(src: "https://www.youtube.com/embed/#{video_id}",
+                     frameborder: '0',
+                     allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
+                     allowfullscreen: true,
+                     class: 'absolute top-0 left-0 w-full h-full border-0')
+        end
       else
         text_content = block[:lines].join
         formatted = simple_format(text_content, {}, wrapper_tag: 'div')
@@ -201,7 +251,7 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
 
     # 1. Protect wiki links [[...]] and [...]
     # [[Display|Link]]
-    protected_text = text.gsub(/\[\[(.*?)\|(.*?)\]\]/) do
+    protected_text = text.gsub(/\[\[([^\[\]|]+)\|([^\[\]]+)\]\]/) do
       key = "WIKILINKPLACEHOLDER#{placeholders.size}"
       display = Regexp.last_match(1)
       target = Regexp.last_match(2)
@@ -210,7 +260,7 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     end
 
     # [[Link]]
-    protected_text = protected_text.gsub(/\[\[([^|]+?)\]\]/) do
+    protected_text = protected_text.gsub(/\[\[([^\[\]|]+)\]\]/) do
       key = "WIKILINKPLACEHOLDER#{placeholders.size}"
       target = Regexp.last_match(1)
       placeholders[key] = link ? create_internal_link(target, target) : target
@@ -250,16 +300,23 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     sanitize(protected_text, tags: %w[a div p br ul li dt dd dl blockquote ruby rt], attributes: %w[href target rel class])
   end
 
-  def sanitize_with_ruby(text)
-    return '' if text.blank?
-
-    sanitize(text, tags: %w[ruby rt span], attributes: %w[class]).html_safe
-  end
-
   def create_internal_link(display, target)
     encoded = URI.encode_www_form_component(target.encode('EUC-JP'))
     link_to(display.html_safe, "/#{encoded}.html", class: 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline')
   rescue Encoding::UndefinedConversionError
     link_to(display.html_safe, '#', class: 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline')
+  end
+
+  # Twitter tweet embedを出力する
+  # <blockquote class="twitter-tweet"> をサニタイズしつつそのまま出力し、
+  # Twitter widget scriptを付加する
+  def render_tweet_embed(content)
+    sanitized = sanitize(
+      content,
+      tags: %w[blockquote a p br],
+      attributes: %w[class lang href]
+    )
+    script = tag.script(src: '//platform.twitter.com/widgets.js', async: true, charset: 'utf-8')
+    (sanitized + script).html_safe
   end
 end

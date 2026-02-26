@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-# require 'pagy/extras/bootstrap'
-require 'pagy/extras/overflow'
+require 'pagy/toolbox/helpers/support/series'
 
 # Pagy initializer
-Pagy::DEFAULT[:limit] = 60
-Pagy::DEFAULT[:overflow] = :last_page
+Pagy.options[:limit] = 60

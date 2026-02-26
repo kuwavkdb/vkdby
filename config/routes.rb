@@ -15,16 +15,32 @@ Rails.application.routes.draw do
       collection do
         get :search
       end
+      member do
+        patch :undiscard
+      end
       resources :unit_logs
       resources :unit_people, only: %i[create edit update destroy] do
         collection do
           patch :reorder
         end
       end
+      resources :unit_snapshots, except: %i[show] do
+        collection do
+          patch :reorder
+        end
+        resources :snapshot_people, only: %i[create destroy edit update] do
+          collection do
+            patch :reorder
+          end
+        end
+      end
     end
     resources :people do
       collection do
         get :search
+      end
+      member do
+        patch :undiscard
       end
       resources :person_logs do
         collection do
@@ -42,6 +58,8 @@ Rails.application.routes.draw do
         post :detach_indices
       end
     end
+
+    resources :items
 
     resources :tag_indices, only: %i[update] do
       collection do
@@ -67,7 +85,11 @@ Rails.application.routes.draw do
   get '/index/show/:id', to: 'indices#show', as: :index_show
 
   resources :people, param: :key, only: %i[index show], constraints: { key: %r{[^/]+} }
-  resources :units, param: :key, only: %i[index show], constraints: { key: %r{[^/]+} }
+  resources :units, param: :key, only: %i[index show], constraints: { key: %r{[^/]+} } do
+    collection do
+      get :search
+    end
+  end
   resources :trends, only: %i[index show]
   resources :items, only: %i[index]
 
@@ -81,6 +103,10 @@ Rails.application.routes.draw do
   # Monthly page (MUST be before daily route!)
   get '/date/:year/:month', to: 'monthly#show', as: :monthly,
                             constraints: { year: /\d{4}/, month: /\d{1,2}/ }
+
+  # Birthday page (year-agnostic: /date/-/MM/DD)
+  get '/date/-/:month/:day', to: 'daily#show', as: :birthday_date,
+                             constraints: { month: /\d{1,2}/, day: /\d{1,2}/ }
 
   # Daily page
   get '/date/:year/:month/:day', to: 'daily#show', as: :daily,

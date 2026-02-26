@@ -30,7 +30,11 @@
 #  index_people_on_name_kana  (name_kana)
 #  index_people_on_old_key    (old_key) UNIQUE
 #
+require 'cgi'
+require 'discard'
+
 class Person < ApplicationRecord
+  include Discard::Model
   include WikiParser
   has_many :links, as: :linkable, dependent: :destroy
   has_many :unit_people
@@ -39,8 +43,9 @@ class Person < ApplicationRecord
   has_many :tag_index_items, as: :indexable, dependent: :destroy
   has_many :tag_indices, through: :tag_index_items
   has_many :sections, as: :sectionable, dependent: :destroy
+  has_many :snapshot_people
 
-  accepts_nested_attributes_for :links, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :links, allow_destroy: true, reject_if: proc { |attrs| attrs['url'].blank? }
 
   enum :status, { pre: 0, active: 1, free: 2, hiatus: 3, retirement: 90, passed_away: 98, unknown: 99 }
 
@@ -69,6 +74,10 @@ class Person < ApplicationRecord
 
   validate :key_immutable, on: :update
   after_create :auto_link_unit_people
+
+  def name
+    CGI.unescapeHTML(super.to_s).presence
+  end
 
   def status_text
     STATUS_TRANSLATIONS[status] || status.humanize
@@ -107,10 +116,7 @@ class Person < ApplicationRecord
   # Person logs for form (virtual attribute)
   def name_logs
     require 'ostruct'
-    return person_logs.map { |log| ::OpenStruct.new(log.attributes) } if person_logs.loaded?
-
-    person_log_entries = self[:name_log] || []
-    person_log_entries.map { |entry| ::OpenStruct.new(entry) }
+    (self[:name_log] || []).map { |entry| ::OpenStruct.new(entry) }
   end
 
   def name_logs_attributes=(attributes)
@@ -128,6 +134,17 @@ class Person < ApplicationRecord
         name: attrs['name'],
         name_kana: attrs['name_kana']
       }
+    end
+  end
+
+  def aliases
+    require 'ostruct'
+    (self[:aliases] || []).map { |a| ::OpenStruct.new(a) }
+  end
+
+  def aliases_attributes=(attributes)
+    self[:aliases] = attributes.values.reject { |a| a['name'].blank? }.map do |a|
+      { name: CGI.unescapeHTML(a['name'].to_s), kana: a['kana'].to_s }
     end
   end
 

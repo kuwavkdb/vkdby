@@ -105,4 +105,90 @@ class PersonTest < ActiveSupport::TestCase
     # So (Solo) should result in unit_name: "(Solo)"
     assert_equal '(Solo)', history[0][0][:unit_name]
   end
+
+  test 'parse_old_history does not split arrow inside parentheses' do
+    # (C.F.Randle→輝喜) は名前変更を意味するため、経歴の区切りではない
+    history_str = '[[feathers-blue]](輝喜) → [[アンティック-珈琲店-]](C.F.Randle→輝喜) → [[NextBand]]'
+    person = Person.new(old_history: history_str)
+    history = person.parse_old_history
+
+    assert_equal 3, history.size
+
+    assert_equal 'feathers-blue', history[0][0][:unit_name]
+    assert_equal '輝喜', history[0][0][:part_and_name]
+
+    assert_equal 'アンティック-珈琲店-', history[1][0][:unit_name]
+    assert_equal 'C.F.Randle→輝喜', history[1][0][:part_and_name]
+
+    assert_equal 'NextBand', history[2][0][:unit_name]
+  end
+
+  test 'parse_old_history does not split comma inside braces (fn plugin)' do
+    # {{fn 2010/06/13、2010/06/18~2011/06/26}} 内の、は区切りではない
+    history_str = '[[アンティック-珈琲店-]]、[[DOGinTheパラレルワールドオーケストラ]](サポート){{fn 2010/06/13、2010/06/18~2011/06/26}}、他サポート多数'
+    person = Person.new(old_history: history_str)
+    history = person.parse_old_history
+
+    assert_equal 1, history.size
+    concurrent = history[0]
+    assert_equal 3, concurrent.size
+
+    assert_equal 'アンティック-珈琲店-', concurrent[0][:unit_name]
+
+    assert_equal 'DOGinTheパラレルワールドオーケストラ', concurrent[1][:unit_name]
+    assert_equal 'サポート', concurrent[1][:part_and_name]
+    assert_equal ['2010/06/13、2010/06/18~2011/06/26'], concurrent[1][:notes]
+
+    assert_equal '他サポート多数', concurrent[2][:unit_name]
+  end
+
+  test 'parse_old_history captures trailing role text after wiki link' do
+    # [[バンド名]]ローディー のように括弧なしで役割テキストが続く場合
+    person = Person.new(old_history: '[[ザアザア]]ローディー → [[OLD CIRCUS]]')
+    history = person.parse_old_history
+
+    assert_equal 2, history.size
+    assert_equal 'ザアザア', history[0][0][:unit_name]
+    assert_equal 'ローディー', history[0][0][:part_and_name]
+    assert_equal 'OLD CIRCUS', history[1][0][:unit_name]
+    assert_nil history[1][0][:part_and_name]
+  end
+
+  test 'parse_old_history captures parenthesized role after wiki link' do
+    # [[バンド名]](サポート) 形式
+    person = Person.new(old_history: '[[バンドA]](サポート) → [[バンドB]]')
+    history = person.parse_old_history
+
+    assert_equal 2, history.size
+    assert_equal 'バンドA', history[0][0][:unit_name]
+    assert_equal 'サポート', history[0][0][:part_and_name]
+    assert_equal 'バンドB', history[1][0][:unit_name]
+    assert_nil history[1][0][:part_and_name]
+  end
+
+  test 'parse_old_history encodes space in band name as plus sign for old_key' do
+    # DBのold_keyはスペースが+で保存されるため、+でエンコードされることを確認
+    person = Person.new(old_history: '[[BULL ZEICHEN 88]]')
+    history = person.parse_old_history
+
+    assert_equal 1, history.size
+    item = history[0][0]
+    assert_equal 'BULL ZEICHEN 88', item[:unit_name]
+    # スペースは+に変換される（DBのold_keyフォーマットに合わせる）
+    assert_equal '%42%55%4C%4C+%5A%45%49%43%48%45%4E+%38%38', item[:old_key]
+  end
+
+  test 'parse_old_history double-encodes apostrophe in band name for old_key' do
+    # アポストロフィ(')はURI.encode_www_form_componentで%27としてDBに保存される
+    # Railsのルーティングは%27を'にデコードするため、%2527に二重エンコードする必要がある
+    # （%2527 → Railsデコード → %27 → DBのold_keyと一致）
+    person = Person.new(old_history: "[[Develop One's Faculties]]")
+    history = person.parse_old_history
+
+    assert_equal 1, history.size
+    item = history[0][0]
+    assert_equal "Develop One's Faculties", item[:unit_name]
+    # '(0x27)は%2527に二重エンコード
+    assert_equal '%44%65%76%65%6C%6F%70+%4F%6E%65%2527%73+%46%61%63%75%6C%74%69%65%73', item[:old_key]
+  end
 end

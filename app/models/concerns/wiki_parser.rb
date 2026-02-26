@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module WikiParser
+module WikiParser # rubocop:disable Metrics/ModuleLength
   extend ActiveSupport::Concern
 
   # 履歴文字列をパースして構造化データの配列を返す
@@ -23,12 +23,12 @@ module WikiParser
 
     timeline = []
 
-    # Split by → and process each period
-    clean_history_text.split('→').each do |period_segment|
+    # Split by → and process each period (括弧内の→は区切りとしない)
+    split_top_level(clean_history_text, '→').each do |period_segment|
       concurrent_items = []
 
-      # Split by 、 to handle concurrent activities
-      period_segment.split('、').each do |item_segment|
+      # Split by 、 to handle concurrent activities (括弧内の、は区切りとしない)
+      split_top_level(period_segment, '、').each do |item_segment|
         metadata = { notes: [] }
         item_segment = process_plugins(item_segment.strip, metadata)
         next if item_segment.empty? && metadata[:notes].empty?
@@ -41,10 +41,16 @@ module WikiParser
         content = wrapped_in_parens ? item_segment[1..-2] : item_segment
 
         case content
-        # Pattern 1: [[UnitName]] or [[UnitName]](Part) - Internal unit link
+        # Pattern 1: [[UnitName]] or [[UnitName]](Part) or [[UnitName]]Role - Internal unit link
         when /\[\[([^\]]+)\]\](?:\(([^)]+)\))?/
           unit_text = ::Regexp.last_match(1)
           part_and_name = ::Regexp.last_match(2)
+
+          # [[バンド名]]ローディー のように括弧なしで役割テキストが続く場合に取り込む
+          unless part_and_name
+            trailing = content[::Regexp.last_match(0).length..].strip
+            part_and_name = trailing.presence
+          end
 
           # [[XXXX|YYYY]] の場合、XXXXが表示名、YYYYがold_key(エンコード前)
           if unit_text.include?('|')
@@ -137,8 +143,56 @@ module WikiParser
     end.strip
   end
 
+  # 指定の区切り文字で分割するが、括弧()・角括弧[[]]・波括弧{{}}内の区切り文字は無視する
+  def split_top_level(text, delimiter)
+    segments = []
+    current = +''
+    paren_depth = 0
+    bracket_depth = 0
+    brace_depth = 0
+
+    text.each_char do |char|
+      case char
+      when '(' then paren_depth += 1
+      when ')' then paren_depth -= 1 if paren_depth.positive?
+      when '[' then bracket_depth += 1
+      when ']' then bracket_depth -= 1 if bracket_depth.positive?
+      when '{' then brace_depth += 1
+      when '}' then brace_depth -= 1 if brace_depth.positive?
+      end
+
+      if char == delimiter && paren_depth.zero? && bracket_depth.zero? && brace_depth.zero?
+        segments << current
+        current = +''
+      else
+        current << char
+      end
+    end
+    segments << current
+    segments
+  end
+
   def encode_euc_jp(str)
-    str.encode('EUC-JP').bytes.map { |b| "%#{b.to_s(16).upcase}" }.join
+    # DBのold_key（URI.encode_www_form_component形式）との対応関係：
+    #   space(0x20)              → + （DBの+と一致）
+    #   高ビット(>0x7F, EUC-JP) → %XX （ミドルウェアが%25XXに二重エンコード → Railsデコード後%XX → DBと一致）
+    #   [A-Za-z0-9\-_.*]        → %XX （Railsがデコードした文字 → DBの文字と一致）
+    #   その他ASCII特殊文字      → %25XX （Railsが%25→%にデコード → 結果%XX → DBのリテラル%XXと一致）
+    str.encode('EUC-JP').bytes.map do |b|
+      if b == 0x20
+        '+'
+      elsif b > 0x7F
+        "%#{b.to_s(16).upcase}"
+      elsif (b >= 0x41 && b <= 0x5A) || (b >= 0x61 && b <= 0x7A) ||
+            (b >= 0x30 && b <= 0x39) ||
+            [0x2D, 0x5F, 0x2E, 0x2A].include?(b) # - _ . *
+        "%#{b.to_s(16).upcase}"
+      else
+        # URI.encode_www_form_componentがエンコードする特殊ASCII文字（'など）
+        # %25XX → Railsルーティングで%→ 結果%XX → DBのリテラル%XXと一致
+        "%25#{b.to_s(16).upcase}"
+      end
+    end.join
   rescue Encoding::UndefinedConversionError
     # Fallback if conversion fails
     str

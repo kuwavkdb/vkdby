@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_11_144725) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_26_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -79,10 +79,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_144725) do
   end
 
   create_table "people", force: :cascade do |t|
+    t.jsonb "aliases", default: [], null: false
     t.integer "birth_year"
     t.date "birthday"
     t.string "blood"
     t.datetime "created_at", null: false
+    t.datetime "discarded_at"
     t.string "hometown"
     t.string "key"
     t.string "name"
@@ -96,9 +98,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_144725) do
     t.json "parts"
     t.integer "status", default: 1, null: false
     t.datetime "updated_at", null: false
+    t.index ["aliases"], name: "index_people_on_aliases", using: :gin
+    t.index ["discarded_at"], name: "index_people_on_discarded_at"
     t.index ["key"], name: "index_people_on_key", unique: true
-    t.index ["name"], name: "index_people_on_name"
-    t.index ["name_kana"], name: "index_people_on_name_kana"
+    t.index ["name"], name: "index_people_on_name", opclass: :gin_trgm_ops, using: :gin
+    t.index ["name_kana"], name: "index_people_on_name_kana", opclass: :gin_trgm_ops, using: :gin
     t.index ["old_key"], name: "index_people_on_old_key", unique: true
   end
 
@@ -159,6 +163,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_144725) do
     t.datetime "updated_at", null: false
     t.text "wiki_text"
     t.index ["sectionable_type", "sectionable_id"], name: "index_sections_on_sectionable"
+  end
+
+  create_table "snapshot_people", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "inline_history"
+    t.string "name_alias"
+    t.string "old_person_key"
+    t.integer "part", default: 0, null: false
+    t.string "part_alias"
+    t.bigint "person_id"
+    t.string "person_key"
+    t.string "person_name"
+    t.json "sns"
+    t.integer "sort_order", default: 0, null: false
+    t.integer "status", default: 1, null: false
+    t.boolean "support", default: false, null: false
+    t.bigint "unit_snapshot_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["old_person_key"], name: "index_snapshot_people_on_old_person_key"
+    t.index ["person_id"], name: "index_snapshot_people_on_person_id"
+    t.index ["person_key"], name: "index_snapshot_people_on_person_key"
+    t.index ["unit_snapshot_id", "sort_order"], name: "index_snapshot_people_on_unit_snapshot_id_and_sort_order"
+    t.index ["unit_snapshot_id"], name: "index_snapshot_people_on_unit_snapshot_id"
   end
 
   create_table "tag_index_items", force: :cascade do |t|
@@ -246,8 +273,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_144725) do
     t.index ["unit_id"], name: "index_unit_people_on_unit_id"
   end
 
-  create_table "units", force: :cascade do |t|
+  create_table "unit_snapshots", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.boolean "current", default: false, null: false
+    t.string "label"
+    t.boolean "past", default: false, null: false
+    t.date "snapshot_date"
+    t.integer "snapshot_index", default: 0, null: false
+    t.bigint "unit_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["unit_id", "current", "snapshot_index"], name: "index_unit_snapshots_on_unit_id_and_current_and_index"
+    t.index ["unit_id"], name: "index_unit_snapshots_on_unit_id"
+  end
+
+  create_table "units", force: :cascade do |t|
+    t.jsonb "activity_period"
+    t.jsonb "aliases", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "discarded_at"
     t.string "key"
     t.string "name"
     t.string "name_kana"
@@ -259,9 +302,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_144725) do
     t.integer "status", default: 1, null: false
     t.integer "unit_type"
     t.datetime "updated_at", null: false
+    t.index ["aliases"], name: "index_units_on_aliases", using: :gin
+    t.index ["discarded_at"], name: "index_units_on_discarded_at"
     t.index ["key"], name: "index_units_on_key", unique: true
-    t.index ["name"], name: "index_units_on_name"
-    t.index ["name_kana"], name: "index_units_on_name_kana"
+    t.index ["name"], name: "index_units_on_name", opclass: :gin_trgm_ops, using: :gin
+    t.index ["name_kana"], name: "index_units_on_name_kana", opclass: :gin_trgm_ops, using: :gin
     t.index ["old_key"], name: "index_units_on_old_key", unique: true
   end
 
@@ -294,9 +339,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_11_144725) do
 
   add_foreign_key "person_logs", "people"
   add_foreign_key "person_logs", "units"
+  add_foreign_key "snapshot_people", "people"
+  add_foreign_key "snapshot_people", "unit_snapshots"
   add_foreign_key "tag_index_items", "tag_indices"
   add_foreign_key "tag_indices", "index_groups"
   add_foreign_key "unit_logs", "units"
   add_foreign_key "unit_people", "people"
   add_foreign_key "unit_people", "units"
+  add_foreign_key "unit_snapshots", "units"
 end

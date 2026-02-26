@@ -4,6 +4,9 @@
 
 import { application } from "controllers/application"
 
+import ArtistRowsController from "controllers/artist_rows_controller"
+application.register("artist-rows", ArtistRowsController)
+
 import AutocompleteController from "controllers/autocomplete_controller"
 application.register("autocomplete", AutocompleteController)
 
@@ -16,5 +19,14 @@ application.register("dropdown", DropdownController)
 import MobileMenuController from "controllers/mobile_menu_controller"
 application.register("mobile-menu", MobileMenuController)
 
+import SearchSuggestController from "controllers/search_suggest_controller"
+application.register("search-suggest", SearchSuggestController)
+
+import PersonSelectController from "controllers/person_select_controller"
+application.register("person-select", PersonSelectController)
+
 import SortableController from "controllers/sortable_controller"
 application.register("sortable", SortableController)
+
+import ToggleController from "controllers/toggle_controller"
+application.register("toggle", ToggleController)

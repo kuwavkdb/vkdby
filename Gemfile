@@ -80,6 +80,7 @@ group :test do
   gem 'selenium-webdriver'
 end
 
+gem 'discard', '~> 1.4'
 gem 'romaji', '~> 0.3.0'
 
-gem 'pagy', '~> 9.3'
+gem 'pagy', '~> 43.2'

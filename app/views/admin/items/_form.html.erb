@@ -1,0 +1,143 @@
+<%= form_with(model: [:admin, item], class: "space-y-6") do |form| %>
+  <% if item.errors.any? %>
+    <div class="bg-red-50 p-4 rounded text-red-700">
+      <h2><%= pluralize(item.errors.count, "error") %> prohibited this item from being saved:</h2>
+      <ul class="list-disc list-inside">
+        <% item.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :title, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= form.text_field :title, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= form.label :release_date, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <%= form.date_field :release_date, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    </div>
+    <div>
+      <%= form.label :asin, "ASIN", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <%= form.text_field :asin, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    </div>
+  </div>
+
+  <div>
+    <%= form.label :link_url, "Link URL", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= form.url_field :link_url, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+  </div>
+
+  <div>
+    <%= form.label :image_url, "Image URL", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= form.url_field :image_url, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+  </div>
+
+  <div data-controller="artist-rows"
+       data-artist-rows-url-units-value="<%= search_admin_units_path %>"
+       data-artist-rows-url-people-value="<%= search_admin_people_path %>">
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Artists</label>
+
+    <%# Row container %>
+    <div data-artist-rows-target="container" class="space-y-2">
+      <% (item.artists || []).each do |artist| %>
+        <%# Existing artist row — already selected %>
+        <div class="flex items-center gap-2" data-artist-rows-target="row" data-mode="unit">
+          <button type="button"
+                  class="flex-none px-2 py-1 text-xs rounded border border-indigo-300 bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 dark:border-indigo-700 whitespace-nowrap"
+                  data-action="click->artist-rows#toggleMode">Units</button>
+
+          <%# Search wrapper (hidden — item already selected) %>
+          <div class="artist-search-wrapper flex-1 relative hidden">
+            <input type="text"
+                   class="artist-search-input block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                   placeholder="ユニット名で検索..."
+                   autocomplete="off"
+                   data-action="input->artist-rows#onSearchInput keydown->artist-rows#onKeydown">
+            <div class="artist-results hidden absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 max-h-60 overflow-auto"></div>
+          </div>
+
+          <%# Selected display (visible) %>
+          <div class="artist-selected-display flex-1 flex items-center">
+            <span class="artist-chip inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+              <span class="artist-name-display"><%= artist['name'] %></span>
+              <button type="button"
+                      class="hover:text-red-600"
+                      data-action="click->artist-rows#clearSelection">×</button>
+            </span>
+          </div>
+
+          <%# Alias %>
+          <input type="text"
+                 class="artist-alias-input w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                 placeholder="別名（任意）"
+                 value="<%= artist['alias'] %>"
+                 data-action="input->artist-rows#onAliasInput">
+
+          <%# Hidden data %>
+          <input type="hidden" class="artist-name-hidden" value="<%= artist['name'] %>">
+          <input type="hidden" class="artist-key-hidden" value="<%= artist['key'] %>">
+
+          <%# Remove row %>
+          <button type="button"
+                  class="flex-none text-gray-400 hover:text-red-500"
+                  data-action="click->artist-rows#removeRow">×</button>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Template for new empty rows %>
+    <template data-artist-rows-target="template">
+      <div class="flex items-center gap-2 mt-2" data-artist-rows-target="row" data-mode="unit">
+        <button type="button"
+                class="flex-none px-2 py-1 text-xs rounded border border-indigo-300 bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 dark:border-indigo-700 whitespace-nowrap"
+                data-action="click->artist-rows#toggleMode">Units</button>
+
+        <div class="artist-search-wrapper flex-1 relative">
+          <input type="text"
+                 class="artist-search-input block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                 placeholder="ユニット名で検索..."
+                 autocomplete="off"
+                 data-action="input->artist-rows#onSearchInput keydown->artist-rows#onKeydown">
+          <div class="artist-results hidden absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 max-h-60 overflow-auto"></div>
+        </div>
+
+        <div class="artist-selected-display flex-1 items-center hidden">
+          <span class="artist-chip inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+            <span class="artist-name-display"></span>
+            <button type="button"
+                    class="hover:text-red-600"
+                    data-action="click->artist-rows#clearSelection">×</button>
+          </span>
+        </div>
+
+        <input type="text"
+               class="artist-alias-input w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+               placeholder="別名（任意）"
+               data-action="input->artist-rows#onAliasInput">
+
+        <input type="hidden" class="artist-name-hidden" value="">
+        <input type="hidden" class="artist-key-hidden" value="">
+
+        <button type="button"
+                class="flex-none text-gray-400 hover:text-red-500"
+                data-action="click->artist-rows#removeRow">×</button>
+      </div>
+    </template>
+
+    <button type="button"
+            class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200"
+            data-action="click->artist-rows#addRow">+ Artist を追加</button>
+
+    <%= hidden_field_tag "item[artists_json]", (item.artists || []).to_json,
+        data: { artist_rows_target: "hiddenField" } %>
+  </div>
+
+  <div class="flex justify-end gap-x-4">
+    <%= link_to "Cancel", admin_items_path, class: "px-4 py-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" %>
+    <%= form.submit class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+  </div>
+<% end %>

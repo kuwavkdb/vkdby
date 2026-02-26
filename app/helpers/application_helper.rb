@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 module ApplicationHelper
-  include Pagy::Frontend
-
   def pagy_tailwind_nav(pagy)
     html = +'<nav class="flex justify-center gap-1" aria-label="Pagination">'
 
@@ -15,17 +13,17 @@ module ApplicationHelper
     disabled_class = "#{base_class} text-slate-300 dark:text-slate-600 cursor-not-allowed"
 
     # Prev
-    html << if pagy.prev
-              link_to('Prev', pagy_url_for(pagy, pagy.prev), class: inactive_class)
+    html << if pagy.previous
+              link_to('Prev', pagy.page_url(pagy.previous), class: inactive_class)
             else
               content_tag(:span, 'Prev', class: disabled_class)
             end
 
     # Series
-    pagy.series.each do |item|
+    pagy.send(:series).each do |item|
       case item
       when Integer
-        html << link_to(item, pagy_url_for(pagy, item), class: inactive_class)
+        html << link_to(item, pagy.page_url(item), class: inactive_class)
       when String # current page
         html << content_tag(:span, item, class: active_class)
       when :gap
@@ -35,7 +33,7 @@ module ApplicationHelper
 
     # Next
     html << if pagy.next
-              link_to('Next', pagy_url_for(pagy, pagy.next), class: inactive_class)
+              link_to('Next', pagy.page_url(pagy.next), class: inactive_class)
             else
               content_tag(:span, 'Next', class: disabled_class)
             end

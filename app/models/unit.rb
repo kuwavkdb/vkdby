@@ -25,11 +25,14 @@
 #  index_units_on_name_kana  (name_kana)
 #  index_units_on_old_key    (old_key) UNIQUE
 #
+require 'cgi'
 require 'ostruct'
+require 'discard'
 
 class Unit < ApplicationRecord
+  include Discard::Model
   has_many :links, as: :linkable, dependent: :destroy
-  accepts_nested_attributes_for :links, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :links, allow_destroy: true, reject_if: proc { |attrs| attrs['url'].blank? }
   has_many :unit_people
   has_many :people, through: :unit_people
   has_many :unit_logs, dependent: :destroy
@@ -37,6 +40,7 @@ class Unit < ApplicationRecord
   has_many :tag_index_items, as: :indexable, dependent: :destroy
   has_many :tag_indices, through: :tag_index_items
   has_many :sections, as: :sectionable, dependent: :destroy
+  has_many :unit_snapshots, dependent: :destroy
   enum :unit_type, { band: 0, unit: 1, session: 2, solo: 3, limited: 4, other: 99 }
   enum :status, { pre: 0, active: 1, freeze: 2, disbanded: 3, unknown: 99 }
 
@@ -49,6 +53,10 @@ class Unit < ApplicationRecord
     'disbanded' => '解散',
     'unknown' => '不明'
   }.freeze
+
+  def name
+    CGI.unescapeHTML(super.to_s).presence
+  end
 
   def status_text
     STATUS_TRANSLATIONS[status] || status.humanize
@@ -64,6 +72,10 @@ class Unit < ApplicationRecord
     (name_log || []).map { |h| OpenStruct.new(h) }
   end
 
+  def activity_periods
+    (activity_period || []).map { |h| OpenStruct.new(h) }
+  end
+
   def name_logs_attributes=(attributes)
     self.name_log = attributes.values.map do |attrs|
       next if attrs['name'].blank?
@@ -74,6 +86,16 @@ class Unit < ApplicationRecord
         date: attrs['date']
       }
     end.compact
+  end
+
+  def aliases
+    (self[:aliases] || []).map { |a| OpenStruct.new(a) }
+  end
+
+  def aliases_attributes=(attributes)
+    self[:aliases] = attributes.values.reject { |a| a['name'].blank? }.map do |a|
+      { name: CGI.unescapeHTML(a['name'].to_s), kana: a['kana'].to_s }
+    end
   end
 
   private

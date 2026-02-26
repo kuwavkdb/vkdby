@@ -124,6 +124,16 @@ class BaseWikipageImporter
       link.active = active
       link.save!
     end
+
+    # Plain URL Format (e.g. *http://example.com)
+    content.scan(%r{^\*?(https?://[^\s\]]+)}).each do |match|
+      url = match[0].strip
+
+      link = owner.links.find_or_initialize_by(url: url)
+      link.text = url if link.text.blank?
+      link.active = active
+      link.save!
+    end
   end
 
   def map_service_link(service, account)
@@ -181,6 +191,25 @@ class BaseWikipageImporter
     end
   end
 
+  # Parse alias strings (e.g. "英語名（えいごな）") into alias hashes
+  def parse_alias_parts(parts)
+    return [] if parts.blank?
+
+    parsed = parts.filter_map do |part|
+      part = part.to_s.strip
+      next if part.blank?
+
+      if (m = part.match(/\A(.+?)（([^）]+)）/))
+        { name: extract_name_from_wiki_link(m[1].strip), kana: m[2].strip }
+      elsif (m = part.match(/\A(.+?)\(([^)]+)\)/))
+        { name: extract_name_from_wiki_link(m[1].strip), kana: m[2].strip }
+      else
+        { name: extract_name_from_wiki_link(part), kana: '' }
+      end
+    end
+    parsed.reject { |a| a[:name].blank? }
+  end
+
   # ==========================================
   # Section Parsing Logic
   # ==========================================
@@ -204,7 +233,11 @@ class BaseWikipageImporter
     書籍
     バンド名の変遷
     バンド名変遷
+    カラオケ配信
   ].freeze
+
+  # 部分一致で除外するセクション名
+  EXCLUDED_SECTIONS_CONTAINING = ['同名のアーティスト'].freeze
 
   def parse_sections(owner)
     return unless @wiki_content
@@ -234,10 +267,10 @@ class BaseWikipageImporter
       section_name = section_data[:name]
       section_content = section_data[:content]
 
-      # 除外チェック: 完全一致またはワイルドカード（前方一致）
+      # 除外チェック: 完全一致またはワイルドカード（前方一致）、または部分一致
       is_excluded = EXCLUDED_SECTIONS.any? do |excluded|
         section_name == excluded || section_name.start_with?(excluded)
-      end
+      end || EXCLUDED_SECTIONS_CONTAINING.any? { |partial| section_name.include?(partial) }
 
       next if is_excluded
 

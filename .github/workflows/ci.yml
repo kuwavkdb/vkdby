@@ -56,7 +56,7 @@ jobs:
           bundler-cache: true
 
       - name: Prepare RuboCop cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         env:
           DEPENDENCIES_HASH: ${{ hashFiles('.ruby-version', '**/.rubocop.yml', '**/.rubocop_todo.yml', 'Gemfile.lock') }}
         with:
@@ -148,10 +148,17 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/vkdby_test
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:test:prepare test:system
+        run: |
+          bin/rails db:test:prepare
+          count=$(find test/system -name '*_test.rb' 2>/dev/null | wc -l)
+          if [ "$count" -gt 0 ]; then
+            bin/rails test:system
+          else
+            echo "No system tests found, skipping"
+          fi
 
       - name: Keep screenshots from failed system tests
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: screenshots

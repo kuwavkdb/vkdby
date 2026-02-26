@@ -14,6 +14,14 @@
 }
 
 @layer components {
+  .history-row::before {
+    content: "↓ ";
+    color: #cbd5e1;
+    font-size: 0.55rem;
+    vertical-align: middle;
+  }
+
+
   .search-input-responsive {
     width: 2.5rem; /* 40px */
     transition: width 300ms ease-in-out, padding 300ms ease-in-out;

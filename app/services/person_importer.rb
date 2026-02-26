@@ -53,6 +53,7 @@ class PersonImporter < BaseWikipageImporter
     person.name = person_name
     person.name_kana = person_name_kana
     person.name_log = name_log_entries if name_log_entries.present?
+    person[:aliases] = basic_info[:aliases] if basic_info[:aliases].present?
     person.old_key = encoded_old_key
     person.old_wiki_id = @wikipage.id
     person.old_wiki_text = @original_content
@@ -113,6 +114,7 @@ class PersonImporter < BaseWikipageImporter
     return if person.old_key.blank?
 
     UnitPerson.where(old_person_key: person.old_key).update_all(person_id: person.id, person_key: person.key)
+    SnapshotPerson.where(old_person_key: person.old_key).update_all(person_id: person.id, person_key: person.key)
   end
 
   def parse_categories_data
@@ -189,6 +191,8 @@ class PersonImporter < BaseWikipageImporter
 
     if wikipage_name.match?(/^[[:ascii:]\s-]+$/)
       source_for_key = wikipage_name
+    elsif person_name.match?(/\A[a-zA-Z0-9\s]+\z/)
+      source_for_key = person_name
     elsif person_name_kana.present?
       source_for_key = Romaji.kana2romaji(person_name_kana)
     else
@@ -237,9 +241,9 @@ class PersonImporter < BaseWikipageImporter
     person.old_history = career_section
     person.save!
 
-    career_section.scan(/→\s*\[\[([^\]]+)\]\](?:\(([^)]+)\))?/).each do |unit_name, part_str|
+    career_section.scan(/→\s*\[\[([^\]]+)\]\](?:\(([^)]+)\))?([^→(、\n]*)/).each do |unit_name, part_in_paren, part_trailing|
       unit_name = unit_name.strip
-      part_str = part_str&.strip
+      part_str = (part_in_paren || part_trailing&.strip).presence
 
       unit = find_unit_by_name(unit_name)
       puts "Warning: Could not find unit '#{unit_name}' for person #{person.name} (ID: #{@wikipage.id})" if unit.nil?
@@ -248,7 +252,10 @@ class PersonImporter < BaseWikipageImporter
       unit_person = UnitPerson.find_or_initialize_by(unit: unit, person: person)
 
       if part_str
-        part_key = case part_str.downcase
+        is_support = part_str.match?(/サポート|support/i)
+        cleaned_part = part_str.gsub(/サポート|support/i, '').strip
+
+        part_key = case cleaned_part.downcase
                    when /vocal/ then :vocal
                    when /guitar/ then :guitar
                    when /bass/ then :bass
@@ -258,6 +265,8 @@ class PersonImporter < BaseWikipageImporter
                    else :unknown
                    end
         unit_person.part = part_key if unit_person.new_record?
+        unit_person.support = is_support
+        unit_person.part_alias = cleaned_part.presence if part_key == :unknown && !is_support
       end
 
       unit_person.status = :left
@@ -284,23 +293,34 @@ class PersonImporter < BaseWikipageImporter
 
   def extract_person_basic_info
     # 1. Parse Person Data
-    title = @wikipage.title.to_s.strip
-    if title =~ /^(.+?)[（(](.+?)[）)]/
+    first_line = @wiki_content.lines.first&.strip&.gsub(/^!+/, '')&.strip
+    title = @wikipage.title.presence || first_line
+    title = title.to_s.strip
+    # Extract main name from title as default (may be overridden by "→" history parsing below)
+    title_pieces = title.split('、').map(&:strip)
+    main_title = title_pieces.first.to_s
+    if main_title =~ /^(.+?)[（(](.+?)[）)]/
       raw_name = Regexp.last_match(1).strip
       person_name = extract_name_from_wiki_link(raw_name)
       person_name_kana = Regexp.last_match(2).strip
     else
-      person_name = extract_name_from_wiki_link(title)
+      person_name = extract_name_from_wiki_link(main_title)
       person_name_kana = nil
     end
+    aliases = parse_alias_parts(title_pieces[1..])
 
     # Parse history from first line: "OldName(Kana) → NewName(Kana)"
-    first_line = @wiki_content.lines.first&.strip&.gsub(/^!+/, '')&.strip
     name_log_entries = []
 
     if first_line&.include?('→')
-      parts = first_line.split('→').map(&:strip)
-      parsed_names = parts.map do |part|
+      arrow_parts = first_line.split('→').map(&:strip)
+
+      # Extract aliases from the last arrow part (e.g. "新名（よみ）、英語名（えいごな）")
+      last_pieces = arrow_parts.last.to_s.split('、').map(&:strip)
+      aliases = parse_alias_parts(last_pieces[1..])
+      arrow_parts[-1] = last_pieces.first.to_s if last_pieces.size > 1
+
+      parsed_names = arrow_parts.map do |part|
         if part =~ /\{\{rb\s+(.+?),\s*(.+?)\}\}/
           raw_name = Regexp.last_match(1).strip
           { name: extract_name_from_wiki_link(raw_name), name_kana: Regexp.last_match(2).strip }
@@ -335,7 +355,8 @@ class PersonImporter < BaseWikipageImporter
     {
       name: person_name,
       name_kana: person_name_kana,
-      name_log: name_log_entries
+      name_log: name_log_entries,
+      aliases: aliases
     }
   end
 end
