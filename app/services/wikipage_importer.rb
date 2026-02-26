@@ -545,10 +545,16 @@ class WikipageImporter < BaseWikipageImporter
     @wiki_content.scan(regex) do |match|
       value = match[0].strip
       from, to = value.split(/\s*~\s*/, 2)
-      entries << { 'from' => from&.strip.presence, 'to' => to&.strip.presence }
+      entries << { 'from' => extract_date_only(from), 'to' => extract_date_only(to) }
     end
 
     unit.update!(activity_period: entries) if entries.present?
+  end
+
+  def extract_date_only(value)
+    return nil if value.nil?
+
+    value.gsub(/\(.*?\)/, '').gsub(/（.*?）/, '').strip.presence
   end
 
   def resolve_key_collision(base_key, current_id = nil)
