@@ -9,8 +9,8 @@ module Admin
       @q = params[:q]
       @show_discarded = params[:discarded]
       scope = case @show_discarded
-              when "only" then Unit.discarded
-              when "all"  then Unit.with_discarded
+              when 'only' then Unit.discarded
+              when 'all'  then Unit.with_discarded
               else             Unit.kept
               end
       if @q.present?
