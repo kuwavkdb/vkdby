@@ -31,8 +31,10 @@
 #  index_people_on_old_key    (old_key) UNIQUE
 #
 require 'cgi'
+require 'discard'
 
 class Person < ApplicationRecord
+  include Discard::Model
   include WikiParser
   has_many :links, as: :linkable, dependent: :destroy
   has_many :unit_people

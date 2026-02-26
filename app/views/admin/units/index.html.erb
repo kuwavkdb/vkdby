@@ -3,11 +3,21 @@
     <h1 class="text-2xl font-bold mb-4 md:mb-0">Unit Management</h1>
     <div class="flex items-center space-x-4">
       <%= form_with url: admin_units_path, method: :get, local: true, class: "flex" do |f| %>
+        <%= f.hidden_field :discarded, value: params[:discarded] %>
         <%= f.text_field :q, value: params[:q], placeholder: "Search by name or key...", class: "rounded-l-md border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" %>
         <%= f.submit "Search", class: "px-4 py-2 bg-white text-gray-700 border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-50 cursor-pointer" %>
       <% end %>
       <%= link_to "Add Unit", new_admin_unit_path, class: "px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700" %>
     </div>
+  </div>
+
+  <div class="flex space-x-2 mb-4">
+    <%= link_to "通常", admin_units_path(q: params[:q]),
+        class: "px-3 py-1 rounded text-sm #{params[:discarded].blank? ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+    <%= link_to "削除済みのみ", admin_units_path(q: params[:q], discarded: "only"),
+        class: "px-3 py-1 rounded text-sm #{params[:discarded] == 'only' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+    <%= link_to "全件", admin_units_path(q: params[:q], discarded: "all"),
+        class: "px-3 py-1 rounded text-sm #{params[:discarded] == 'all' ? 'bg-gray-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
   </div>
 
   <div class="mb-4">
@@ -27,12 +37,17 @@
       </thead>
       <tbody class="bg-white divide-y divide-gray-200">
         <% @units.each do |unit| %>
-          <tr>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><%= unit.name %></td>
+          <tr class="<%= unit.discarded? ? 'bg-red-50' : '' %>">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              <%= unit.name %>
+              <% if unit.discarded? %>
+                <span class="ml-1 text-xs text-red-500">削除済み</span>
+              <% end %>
+            </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               <%= unit.unit_type&.humanize %>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs break-all">
               <%= link_to unit.key, profile_path(unit.key), class: "text-indigo-600 hover:text-indigo-900", target: "_blank" %>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -41,10 +56,21 @@
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-              <%= link_to "Logs", admin_unit_unit_logs_path(unit), class: "text-indigo-600 hover:text-indigo-900 mr-4" %>
-              <%= link_to "Edit", edit_admin_unit_path(unit), class: "text-indigo-600 hover:text-indigo-900 mr-4" %>
-              <% if current_user.super_operator_or_above? %>
-                <%= link_to "Delete", admin_unit_path(unit), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "text-red-600 hover:text-red-900" %>
+              <% if unit.discarded? %>
+                <% if current_user.super_operator_or_above? %>
+                  <%= button_to "復元", undiscard_admin_unit_path(unit), method: :patch,
+                      form: { class: "inline-block" },
+                      class: "text-green-600 hover:text-green-900 bg-transparent border-0 cursor-pointer p-0" %>
+                <% end %>
+              <% else %>
+                <%= link_to "Logs", admin_unit_unit_logs_path(unit), class: "text-indigo-600 hover:text-indigo-900 mr-4" %>
+                <%= link_to "Edit", edit_admin_unit_path(unit), class: "text-indigo-600 hover:text-indigo-900 mr-4" %>
+                <% if current_user.super_operator_or_above? %>
+                  <%= button_to "Delete", admin_unit_path(unit), method: :delete,
+                    form_class: "inline",
+                    onclick: "return confirm('Are you sure?')",
+                    class: "text-red-600 hover:text-red-900 bg-transparent border-0 cursor-pointer p-0" %>
+                <% end %>
               <% end %>
             </td>
           </tr>

@@ -7,7 +7,7 @@ class UnitsController < ApplicationController
                                    .group(:tag_index_id)
                                    .count
 
-    scope = Unit.all.order(updated_at: :desc)
+    scope = Unit.kept.order(updated_at: :desc)
     if params[:q].present?
       scope = scope.where(
         'name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
@@ -29,7 +29,7 @@ class UnitsController < ApplicationController
       return
     end
 
-    units = Unit.where('name ILIKE :q OR name_kana ILIKE :q', q: "%#{q}%")
+    units = Unit.kept.where('name ILIKE :q OR name_kana ILIKE :q', q: "%#{q}%")
                 .order(name_kana: :asc)
                 .limit(10)
                 .pluck(:name, :name_kana, :key)
@@ -38,7 +38,7 @@ class UnitsController < ApplicationController
   end
 
   def show
-    @unit = Unit.find_by!(key: params[:key])
+    @unit = Unit.kept.find_by!(key: params[:key])
     render json: @unit
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Unit not found' }, status: :not_found
