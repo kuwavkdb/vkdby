@@ -97,7 +97,7 @@ Rails.application.routes.draw do
     end
   end
   resources :trends, only: %i[index show]
-  resources :items, only: %i[index]
+  resources :items, only: %i[index show]
 
   # Date index page (MUST be before other date routes!)
   get '/date', to: 'yearly#index', as: :date_index
@@ -130,6 +130,9 @@ Rails.application.routes.draw do
 
   # Legacy redirects for /NEWS_{id} format
   get '/NEWS_:id', to: 'legacy_redirects#news_redirect', constraints: { id: /\d+/ }
+
+  # Legacy redirects for /ITEM_{asin} format
+  get '/ITEM_:asin', to: 'legacy_redirects#item_redirect'
 
   get '/:key', to: 'profiles#show', as: :profile, constraints: { key: %r{[^/]+} }
 end

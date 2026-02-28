@@ -14,7 +14,7 @@
   <div class="flex-1 p-4 space-y-3 min-w-0">
     <!-- タイトル -->
     <div>
-      <%= link_to @item.link_url, target: "_blank", rel: "noopener noreferrer", class: "block" do %>
+      <%= link_to item_path(@item), class: "block" do %>
         <h3 class="font-bold text-slate-800 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors line-clamp-2"><%= @item.title %></h3>
       <% end %>
     </div>
