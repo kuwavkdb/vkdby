@@ -118,5 +118,8 @@ Rails.application.routes.draw do
   # Legacy redirects for .html extensions
   get '/:old_key.html', to: 'legacy_redirects#show', constraints: { old_key: %r{[^/]+} }
 
+  # Legacy redirects for /NEWS_{id} format
+  get '/NEWS_:id', to: 'legacy_redirects#news_redirect', constraints: { id: /\d+/ }
+
   get '/:key', to: 'profiles#show', as: :profile, constraints: { key: %r{[^/]+} }
 end
