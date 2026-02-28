@@ -33,6 +33,10 @@ module Admin
     def edit
       @person_logs = @person.person_logs.order(:log_date)
       @person.links.build # Always add an empty link field for new entries
+      @update_logs = UpdateLog.where(loggable_type: 'Person', loggable_id: @person.id)
+                              .includes(:user)
+                              .order(created_at: :desc)
+                              .limit(50)
     end
 
     def create

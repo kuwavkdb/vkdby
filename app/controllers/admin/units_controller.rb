@@ -38,6 +38,10 @@ module Admin
       @unit_person = @unit.unit_people.build(period: 1, order_in_period: (@unit_people.last&.order_in_period || 0) + 1)
       @unit_snapshots = @unit.unit_snapshots.includes(snapshot_people: :person).order(snapshot_date: :desc)
       @unit.links.build # Build an empty link for the form
+      @update_logs = UpdateLog.where(loggable_type: 'Unit', loggable_id: @unit.id)
+                              .includes(:user)
+                              .order(created_at: :desc)
+                              .limit(50)
     end
 
     def create
