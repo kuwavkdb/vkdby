@@ -83,4 +83,4 @@ end
 gem 'discard', '~> 1.4'
 gem 'romaji', '~> 0.3.0'
 
-gem 'pagy', '~> 43.2'
+gem 'pagy', '~> 43.3'
