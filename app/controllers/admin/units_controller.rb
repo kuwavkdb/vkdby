@@ -44,6 +44,7 @@ module Admin
       @unit = Unit.new(unit_params)
 
       if @unit.save
+        record_update_log(@unit, action: 'create')
         redirect_to admin_units_path, notice: 'Unit created successfully.'
       else
         @unit.links.build if @unit.links.none?(&:new_record?)
@@ -53,6 +54,7 @@ module Admin
 
     def update
       if @unit.update(unit_params)
+        record_update_log(@unit, action: 'update')
         redirect_to edit_admin_unit_path(@unit), notice: 'Unit updated successfully.'
       else
         @unit_logs = @unit.unit_logs.order(:log_date)
@@ -67,11 +69,13 @@ module Admin
 
     def destroy
       @unit.discard
+      record_update_log(@unit, action: 'discard')
       redirect_to admin_units_path, notice: 'Unit deleted successfully.'
     end
 
     def undiscard
       @unit.undiscard
+      record_update_log(@unit, action: 'undiscard')
       redirect_to admin_units_path, notice: 'Unit restored successfully.'
     end
 
