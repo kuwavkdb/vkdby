@@ -66,9 +66,15 @@ Rails.application.routes.draw do
         post :bulk_update
       end
     end
+
+    resources :custom_pages do
+      member do
+        patch :undiscard
+      end
+    end
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-  root 'units#index'
+  root 'custom_pages#index_page'
 
   mount Lookbook::Engine, at: '/lookbook' if Rails.env.development?
 
@@ -111,6 +117,10 @@ Rails.application.routes.draw do
   # Daily page
   get '/date/:year/:month/:day', to: 'daily#show', as: :daily,
                                  constraints: { year: /\d{4}/, month: /\d{1,2}/, day: /\d{1,2}/ }
+
+  # Custom pages
+  get '/pages/:key', to: 'custom_pages#show', as: :custom_page,
+                     constraints: { key: /[a-z0-9_-]+/ }
 
   # Cross-search
   get 'search', to: 'search#index'

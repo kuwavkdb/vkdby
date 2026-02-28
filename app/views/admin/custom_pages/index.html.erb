@@ -1,0 +1,90 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold mb-4 md:mb-0 text-gray-900 dark:text-gray-100">カスタムページ管理</h1>
+    <div class="flex items-center space-x-4">
+      <%= form_with url: admin_custom_pages_path, method: :get, local: true, class: "flex" do |f| %>
+        <%= f.text_field :q, value: params[:q], placeholder: "key / タイトルで検索...",
+            class: "rounded-l-md border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+        <%= f.submit "検索", class: "px-4 py-2 bg-white text-gray-700 border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-50 cursor-pointer dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600" %>
+      <% end %>
+      <%= link_to "新規作成", new_admin_custom_page_path, class: "px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700" %>
+    </div>
+  </div>
+
+  <div class="mb-4 flex items-center gap-4 text-sm">
+    <%= link_to "通常", admin_custom_pages_path(q: params[:q]),
+        class: "#{params[:discarded].blank? ? 'font-bold underline' : 'text-indigo-600 hover:underline'}" %>
+    <%= link_to "削除済み", admin_custom_pages_path(q: params[:q], discarded: 'only'),
+        class: "#{params[:discarded] == 'only' ? 'font-bold underline' : 'text-indigo-600 hover:underline'}" %>
+    <%= link_to "すべて", admin_custom_pages_path(q: params[:q], discarded: 'all'),
+        class: "#{params[:discarded] == 'all' ? 'font-bold underline' : 'text-indigo-600 hover:underline'}" %>
+  </div>
+
+  <div class="mb-4 flex justify-center">
+    <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
+  </div>
+
+  <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg mb-4">
+    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+      <thead class="bg-gray-50 dark:bg-gray-700">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Key</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">タイトル</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">状態</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">更新日時</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">操作</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+        <% @custom_pages.each do |page| %>
+          <tr class="<%= page.discarded? ? 'opacity-50' : '' %>">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900 dark:text-gray-100">
+              <%= page.key %>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+              <%= page.title %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <% if page.discarded? %>
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">削除済み</span>
+              <% elsif page.active? %>
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">公開</span>
+              <% else %>
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">下書き</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+              <%= page.updated_at.strftime('%Y/%m/%d %H:%M') %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+              <% if page.discarded? %>
+                <% if current_user.super_operator_or_above? %>
+                  <%= link_to "復元", undiscard_admin_custom_page_path(page),
+                      data: { turbo_method: :patch, turbo_confirm: "このページを復元しますか？" },
+                      class: "text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300" %>
+                <% end %>
+              <% else %>
+                <%= link_to "編集", edit_admin_custom_page_path(page),
+                    class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
+                <% if current_user.super_operator_or_above? && !page.protected? %>
+                  <%= link_to "削除", admin_custom_page_path(page),
+                      data: { turbo_method: :delete, turbo_confirm: "「#{page.title}」を削除しますか？" },
+                      class: "text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" %>
+                <% end %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @custom_pages.empty? %>
+          <tr>
+            <td colspan="5" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">ページがありません</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4 flex justify-center">
+    <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
+  </div>
+</div>

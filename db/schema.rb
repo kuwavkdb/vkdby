@@ -10,10 +10,22 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_26_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_28_015352) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
+
+  create_table "custom_pages", force: :cascade do |t|
+    t.boolean "active", default: false, null: false
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.datetime "discarded_at"
+    t.string "key", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["discarded_at"], name: "index_custom_pages_on_discarded_at"
+    t.index ["key"], name: "index_custom_pages_on_key", unique: true
+  end
 
   create_table "external_sites", force: :cascade do |t|
     t.datetime "created_at", null: false
