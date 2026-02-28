@@ -53,11 +53,10 @@ module ApplicationHelper
       link_attributes: { target: '_blank', rel: 'noopener noreferrer' }
     )
     Redcarpet::Markdown.new(renderer,
-      autolink: true,
-      tables: true,
-      fenced_code_blocks: true,
-      strikethrough: true,
-      no_intra_emphasis: true
-    ).render(text).html_safe
+                            autolink: true,
+                            tables: true,
+                            fenced_code_blocks: true,
+                            strikethrough: true,
+                            no_intra_emphasis: true).render(text).html_safe
   end
 end
