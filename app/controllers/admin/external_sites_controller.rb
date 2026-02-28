@@ -5,7 +5,7 @@ module Admin
     before_action :set_external_site, only: %i[edit update destroy]
 
     def index
-      @external_sites = ExternalSite.order(:site_key).page(params[:page])
+      @pagy, @external_sites = pagy(ExternalSite.order(:site_key))
     end
 
     def new

@@ -41,5 +41,5 @@
 </div>
 
 <div class="mt-4">
-  <%= paginate @external_sites %>
+  <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
 </div>
