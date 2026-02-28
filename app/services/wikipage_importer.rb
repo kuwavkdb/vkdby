@@ -554,7 +554,7 @@ class WikipageImporter < BaseWikipageImporter
   def extract_date_only(value)
     return nil if value.nil?
 
-    value.gsub(/\(.*?\)/, '').gsub(/（.*?）/, '').strip.presence
+    value.gsub(/\(.*?\)/, '').gsub(/（.*?）/, '').gsub(/\\/, '').strip.presence
   end
 
   def resolve_key_collision(base_key, current_id = nil)
