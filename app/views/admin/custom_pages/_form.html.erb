@@ -24,11 +24,22 @@
         class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
   </div>
 
-  <div>
-    <%= form.label :body, "本文", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Markdown形式で記述できます</p>
-    <%= form.text_area :body, rows: 20,
-        class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm px-3 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+  <div data-controller="markdown-preview">
+    <div class="flex justify-between items-baseline">
+      <%= form.label :body, "本文", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <p class="text-xs text-gray-500 dark:text-gray-400">Markdown形式で記述できます</p>
+    </div>
+    <div class="mt-1 grid grid-cols-2 gap-4">
+      <div>
+        <%= form.text_area :body, rows: 20,
+            class: "block w-full h-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm px-3 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none",
+            data: { markdown_preview_target: "textarea", action: "input->markdown-preview#updatePreview" } %>
+      </div>
+      <div class="rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 overflow-auto bg-white dark:bg-gray-700" style="min-height: 500px;">
+        <div class="markdown-content max-w-none text-sm"
+             data-markdown-preview-target="previewContent"></div>
+      </div>
+    </div>
   </div>
 
   <div class="flex items-center">

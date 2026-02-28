@@ -39,7 +39,11 @@
         <% @custom_pages.each do |page| %>
           <tr class="<%= page.discarded? ? 'opacity-50' : '' %>">
             <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900 dark:text-gray-100">
-              <%= page.key %>
+              <% if page.discarded? %>
+                <%= page.key %>
+              <% else %>
+                <%= link_to page.key, custom_page_path(page.key), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline", target: "_blank" %>
+              <% end %>
             </td>
             <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
               <%= page.title %>
