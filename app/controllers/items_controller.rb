@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 class ItemsController < ApplicationController
+  def show
+    @item = Item.find(params[:id])
+  end
+
   def index
     # 基本となるスコープの作成
     base_scope = Item.all
