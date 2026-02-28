@@ -53,4 +53,12 @@ class WikipageImporterTest < ActiveSupport::TestCase
     unit.reload
     assert_equal [{ 'from' => '1998/08/25', 'to' => '活動中' }], unit.activity_period
   end
+
+  test 'バックスラッシュエスケープされた区切り文字（\~）が含まれる場合はバックスラッシュを除去する' do
+    unit = units(:one)
+    wiki = "*活動時期 … 2003/07/01\\~2009/12/31\n"
+    parse_activity_period(unit, wiki)
+    unit.reload
+    assert_equal [{ 'from' => '2003/07/01', 'to' => '2009/12/31' }], unit.activity_period
+  end
 end
