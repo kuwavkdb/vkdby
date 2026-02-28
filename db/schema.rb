@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_28_015352) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_28_143955) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -322,6 +322,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_015352) do
     t.index ["old_key"], name: "index_units_on_old_key", unique: true
   end
 
+  create_table "update_logs", force: :cascade do |t|
+    t.string "action", null: false
+    t.datetime "created_at", null: false
+    t.jsonb "diff"
+    t.bigint "loggable_id", null: false
+    t.string "loggable_type", null: false
+    t.bigint "user_id", null: false
+    t.index ["created_at"], name: "index_update_logs_on_created_at"
+    t.index ["loggable_type", "loggable_id"], name: "index_update_logs_on_loggable_type_and_loggable_id"
+    t.index ["user_id"], name: "index_update_logs_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
@@ -359,4 +371,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_015352) do
   add_foreign_key "unit_people", "people"
   add_foreign_key "unit_people", "units"
   add_foreign_key "unit_snapshots", "units"
+  add_foreign_key "update_logs", "users"
 end

@@ -18,5 +18,21 @@ module Admin
 
       redirect_to admin_root_path, alert: '権限がありません'
     end
+
+    def record_update_log(record, action:)
+      diff = case action
+             when 'create'
+               record.saved_changes.except('created_at', 'updated_at')
+             when 'update'
+               record.saved_changes.except('updated_at')
+             end
+
+      UpdateLog.create!(
+        user: current_user,
+        action: action,
+        loggable: record,
+        diff: diff
+      )
+    end
   end
 end
