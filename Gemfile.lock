@@ -503,6 +503,7 @@ DEPENDENCIES
   propshaft
   puma (>= 5.0)
   rails (~> 8.1.2)
+  redcarpet
   romaji (~> 0.3.0)
   rubocop-rails-omakase
   ruby-lsp
