@@ -6,7 +6,7 @@ class TrendsController < ApplicationController
     @year_counts = dates.map(&:year).tally
     @years = @year_counts.keys.sort.reverse
 
-    scope = Trend.all.order(date: :desc)
+    scope = Trend.all.order(id: :desc)
 
     if params[:year].present?
       year = params[:year].to_i
