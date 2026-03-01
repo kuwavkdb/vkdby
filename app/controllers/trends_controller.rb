@@ -6,8 +6,6 @@ class TrendsController < ApplicationController
     @year_counts = dates.map(&:year).tally
     @years = @year_counts.keys.sort.reverse
 
-    scope = Trend.all.order(id: :desc)
-
     if params[:year].present?
       year = params[:year].to_i
       month = params[:month].presence&.to_i
@@ -19,7 +17,9 @@ class TrendsController < ApplicationController
       start_date = Date.new(year, month || 1, 1)
       end_date = month ? start_date.end_of_month : start_date.end_of_year
 
-      scope = scope.where(date: start_date..end_date)
+      scope = Trend.all.order(date: :desc).where(date: start_date..end_date)
+    else
+      scope = Trend.all.order(id: :desc)
     end
 
     @pagy, @trends = pagy(scope, limit: 20)
