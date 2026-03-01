@@ -42,3 +42,4 @@
 /*.sql
 
 /.idea/*
+.envrc
