@@ -96,7 +96,7 @@
                 <span class="font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"><%= format_wiki_title(trend.title, link: false) %></span>
               <% end %>
               <% if current_year.nil? %>
-                <div class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">更新日: <%= trend.updated_at.strftime('%Y/%m/%d') %></div>
+                <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">更新日: <%= trend.updated_at.strftime('%Y/%m/%d') %></div>
               <% end %>
             </div>
           </div>
