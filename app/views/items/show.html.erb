@@ -58,7 +58,19 @@
               <% end %>
             <% end %>
 
-            <% tower_url = "https://tower.jp/search/tower?keyword=#{ERB::Util.url_encode(@item.title)}" %>
+            <%
+              artist_labels = @item.artists.map { |a| a['alias'].presence || a['name'] }
+              title_keyword = @item.title.dup
+              artist_labels.each do |label|
+                if title_keyword.start_with?("#{label} ") || title_keyword.start_with?("#{label}　")
+                  title_keyword = title_keyword.sub(/\A#{Regexp.escape(label)}[\s　]+/, '')
+                  break
+                end
+              end
+              search_keyword = [artist_labels.join(' '), title_keyword].reject(&:blank?).join(' ')
+              tower_search_url = "https://tower.jp/search/item/#{ERB::Util.url_encode(search_keyword)}"
+              tower_url = "//ck.jp.ap.valuecommerce.com/servlet/referral?sid=2143338&pid=881339479&vc_url=#{ERB::Util.url_encode(tower_search_url)}"
+            %>
             <%= link_to tower_url, target: "_blank", rel: "noopener noreferrer",
                 class: "#{btn} bg-yellow-400 hover:bg-yellow-500 text-red-700" do %>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 shrink-0">
@@ -67,7 +79,10 @@
               TOWER RECORDS ONLINE で検索
             <% end %>
 
-            <% yahoo_url = "https://shopping.yahoo.co.jp/search?p=#{ERB::Util.url_encode(@item.title)}" %>
+            <%
+              yahoo_search_url = "https://shopping.yahoo.co.jp/search?p=#{ERB::Util.url_encode(search_keyword)}"
+              yahoo_url = "//ck.jp.ap.valuecommerce.com/servlet/referral?sid=2143338&pid=881475147&vc_url=#{ERB::Util.url_encode(yahoo_search_url)}"
+            %>
             <%= link_to yahoo_url, target: "_blank", rel: "noopener noreferrer",
                 class: "#{btn} bg-rose-500 hover:bg-rose-600 text-white" do %>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 shrink-0">
