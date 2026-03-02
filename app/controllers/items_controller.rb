@@ -51,4 +51,38 @@ class ItemsController < ApplicationController
 
     @pagy, @items = pagy(scope, limit: 20)
   end
+
+  def show
+    @item = Item.find_by!(asin: params[:asin])
+
+    # artistsのjsonbからold_keyを使用して関連するアーティスト(PersonまたはUnit)を読み込み
+    @artists = @item.artists.filter_map do |artist_data|
+      next unless artist_data['old_key'].present?
+
+      Unit.find_by(old_key: artist_data['old_key']) ||
+        Person.find_by(old_key: artist_data['old_key'])
+    end
+
+    # 同じアーティストの関連アイテムを検索
+    @related_items = if @item.artists.any? { |a| a['old_key'].present? }
+                       Item.where.not(id: @item.id)
+                           .by_artist_old_key(@item.artists.first['old_key'])
+                           .order(release_date: :desc)
+                           .limit(6)
+                     else
+                       Item.none
+                     end
+
+    respond_to do |format|
+      format.html
+      format.json { render json: @item }
+    end
+  rescue ActiveRecord::RecordNotFound
+    respond_to do |format|
+      format.html do
+        render file: Rails.root.join('public/404.html'), status: :not_found, layout: false
+      end
+      format.json { render json: { error: 'Item not found' }, status: :not_found }
+    end
+  end
 end
