@@ -132,7 +132,7 @@ Rails.application.routes.draw do
   get '/NEWS_:id', to: 'legacy_redirects#news_redirect', constraints: { id: /\d+/ }
 
   # Legacy redirects for /ITEM_{asin} format
-  get '/ITEM_:asin', to: 'legacy_redirects#item_redirect'
+  get '/ITEM_:asin', to: 'legacy_redirects#item_redirect', constraints: { asin: /[A-Z0-9]+/ }
 
   get '/:key', to: 'profiles#show', as: :profile, constraints: { key: %r{[^/]+} }
 end
