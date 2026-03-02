@@ -12,11 +12,11 @@ class ItemsController < ApplicationController
       ].compact
     end
 
-    if scopes.any?
-      @related_items = scopes.reduce(:or).where.not(id: @item.id).order(Arel.sql('RANDOM()')).limit(10)
-    else
-      @related_items = Item.none
-    end
+    @related_items = if scopes.any?
+                       scopes.reduce(:or).where.not(id: @item.id).order(Arel.sql('RANDOM()')).limit(10)
+                     else
+                       Item.none
+                     end
   end
 
   def index
