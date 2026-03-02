@@ -38,12 +38,17 @@ module Admin
       @unit_person = @unit.unit_people.build(period: 1, order_in_period: (@unit_people.last&.order_in_period || 0) + 1)
       @unit_snapshots = @unit.unit_snapshots.includes(snapshot_people: :person).order(snapshot_date: :desc)
       @unit.links.build # Build an empty link for the form
+      @update_logs = UpdateLog.where(loggable_type: 'Unit', loggable_id: @unit.id)
+                              .includes(:user)
+                              .order(created_at: :desc)
+                              .limit(50)
     end
 
     def create
       @unit = Unit.new(unit_params)
 
       if @unit.save
+        record_update_log(@unit, action: 'create')
         redirect_to admin_units_path, notice: 'Unit created successfully.'
       else
         @unit.links.build if @unit.links.none?(&:new_record?)
@@ -53,6 +58,7 @@ module Admin
 
     def update
       if @unit.update(unit_params)
+        record_update_log(@unit, action: 'update')
         redirect_to edit_admin_unit_path(@unit), notice: 'Unit updated successfully.'
       else
         @unit_logs = @unit.unit_logs.order(:log_date)
@@ -67,11 +73,13 @@ module Admin
 
     def destroy
       @unit.discard
+      record_update_log(@unit, action: 'discard')
       redirect_to admin_units_path, notice: 'Unit deleted successfully.'
     end
 
     def undiscard
       @unit.undiscard
+      record_update_log(@unit, action: 'undiscard')
       redirect_to admin_units_path, notice: 'Unit restored successfully.'
     end
 

@@ -11,7 +11,13 @@ class ApplicationController < ActionController::Base
 
   include Pagy::Method
 
+  before_action :load_footer_page
+
   private
+
+  def load_footer_page
+    @footer_page = CustomPage.published.find_by(key: 'footer')
+  end
 
   def current_user
     @current_user ||= User.find_by(id: session[:user_id]) if session[:user_id]

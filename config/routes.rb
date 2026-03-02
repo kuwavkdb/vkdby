@@ -66,9 +66,15 @@ Rails.application.routes.draw do
         post :bulk_update
       end
     end
+
+    resources :custom_pages do
+      member do
+        patch :undiscard
+      end
+    end
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-  root 'units#index'
+  root 'custom_pages#index_page'
 
   mount Lookbook::Engine, at: '/lookbook' if Rails.env.development?
 
@@ -91,7 +97,7 @@ Rails.application.routes.draw do
     end
   end
   resources :trends, only: %i[index show]
-  resources :items, only: %i[index]
+  resources :items, only: %i[index show]
 
   # Date index page (MUST be before other date routes!)
   get '/date', to: 'yearly#index', as: :date_index
@@ -112,14 +118,21 @@ Rails.application.routes.draw do
   get '/date/:year/:month/:day', to: 'daily#show', as: :daily,
                                  constraints: { year: /\d{4}/, month: /\d{1,2}/, day: /\d{1,2}/ }
 
-  # Item詳細ページのルート
-  get '/ITEM_:asin', to: 'items#show', as: :item, constraints: { asin: /[A-Z0-9]+/ }
+  # Custom pages
+  get '/pages/:key', to: 'custom_pages#show', as: :custom_page,
+                     constraints: { key: /[a-z0-9_-]+/ }
 
   # Cross-search
   get 'search', to: 'search#index'
 
   # Legacy redirects for .html extensions
   get '/:old_key.html', to: 'legacy_redirects#show', constraints: { old_key: %r{[^/]+} }
+
+  # Legacy redirects for /NEWS_{id} format
+  get '/NEWS_:id', to: 'legacy_redirects#news_redirect', constraints: { id: /\d+/ }
+
+  # Legacy redirects for /ITEM_{asin} format
+  get '/ITEM_:asin', to: 'legacy_redirects#item_redirect', constraints: { asin: /[A-Z0-9]+/ }
 
   get '/:key', to: 'profiles#show', as: :profile, constraints: { key: %r{[^/]+} }
 end

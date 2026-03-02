@@ -14,6 +14,51 @@
 }
 
 @layer components {
+  .markdown-content {
+    color: #334155;
+    line-height: 1.75;
+    h1 { font-size: 2em; font-weight: 700; margin: 0.5em 0; line-height: 1.25; color: #0f172a; }
+    h2 { font-size: 1.5em; font-weight: 700; margin: 1.25em 0 0.5em; line-height: 1.3; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.3em; }
+    h3 { font-size: 1.25em; font-weight: 600; margin: 1em 0 0.4em; line-height: 1.35; color: #1e293b; }
+    h4, h5 { font-size: 1.05em; font-weight: 600; margin: 0.8em 0 0.3em; color: #1e293b; }
+    h6 { font-size: 0.875em; font-weight: 600; margin: 0.8em 0 0.3em; color: #64748b; }
+    p { margin: 0.875em 0; }
+    ul { list-style-type: disc; padding-left: 1.75em; margin: 0.75em 0; }
+    ol { list-style-type: decimal; padding-left: 1.75em; margin: 0.75em 0; }
+    li { margin: 0.25em 0; }
+    li > ul, li > ol { margin: 0.25em 0; }
+    a { color: #6366f1; text-decoration: underline; }
+    a:hover { color: #4f46e5; }
+    strong { font-weight: 700; color: #1e293b; }
+    em { font-style: italic; }
+    code { font-family: ui-monospace, monospace; font-size: 0.875em; background-color: #f1f5f9; color: #0f172a; padding: 0.1em 0.35em; border-radius: 0.25em; }
+    pre { background-color: #0f172a; color: #e2e8f0; padding: 1em 1.25em; border-radius: 0.75em; overflow-x: auto; margin: 1em 0; }
+    pre code { background: none; padding: 0; color: inherit; font-size: 0.875em; }
+    blockquote { border-left: 4px solid #6366f1; padding: 0.5em 1em; margin: 1em 0; color: #475569; background-color: #f8fafc; border-radius: 0 0.5em 0.5em 0; font-style: italic; }
+    hr { border: none; border-top: 1px solid #e2e8f0; margin: 1.5em 0; }
+    table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: 0.9em; }
+    th { background-color: #f8fafc; font-weight: 600; text-align: left; padding: 0.5em 0.75em; border: 1px solid #e2e8f0; color: #475569; }
+    td { padding: 0.5em 0.75em; border: 1px solid #e2e8f0; }
+    tr:nth-child(even) td { background-color: #f8fafc; }
+    img { max-width: 100%; height: auto; border-radius: 0.5em; margin: 0.5em 0; }
+  }
+
+  @variant dark {
+    .markdown-content {
+      color: #cbd5e1;
+      h1, h2, h3, h4, h5 { color: #f1f5f9; }
+      h2 { border-bottom-color: #334155; }
+      h6 { color: #94a3b8; }
+      strong { color: #f1f5f9; }
+      code { background-color: #1e293b; color: #e2e8f0; }
+      blockquote { border-left-color: #6366f1; color: #94a3b8; background-color: #1e293b; }
+      hr { border-top-color: #334155; }
+      th { background-color: #1e293b; border-color: #334155; color: #94a3b8; }
+      td { border-color: #334155; }
+      tr:nth-child(even) td { background-color: #1e293b; }
+    }
+  }
+
   .history-row::before {
     content: "↓ ";
     color: #cbd5e1;

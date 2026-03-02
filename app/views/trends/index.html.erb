@@ -20,7 +20,7 @@
           years_by_decade = @years.group_by { |y| (y / 10) * 10 }
         %>
 
-        <%= link_to "NEWEST", trends_path, class: "#{base_classes} #{current_year.nil? ? active_classes : inactive_classes}" %>
+        <%= link_to "UPDATE", trends_path, class: "#{base_classes} #{current_year.nil? ? active_classes : inactive_classes}" %>
 
         <% years_by_decade.each do |decade, years| %>
           <% is_active_decade = years.include?(current_year) %>
@@ -94,6 +94,9 @@
               <% end %>
               <%= link_to trend_path(trend), class: "inline" do %>
                 <span class="font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"><%= format_wiki_title(trend.title, link: false) %></span>
+              <% end %>
+              <% if current_year.nil? %>
+                <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">更新日: <%= trend.updated_at.strftime('%Y/%m/%d') %></div>
               <% end %>
             </div>
           </div>

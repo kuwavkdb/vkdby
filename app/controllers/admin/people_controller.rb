@@ -33,12 +33,17 @@ module Admin
     def edit
       @person_logs = @person.person_logs.order(:log_date)
       @person.links.build # Always add an empty link field for new entries
+      @update_logs = UpdateLog.where(loggable_type: 'Person', loggable_id: @person.id)
+                              .includes(:user)
+                              .order(created_at: :desc)
+                              .limit(50)
     end
 
     def create
       @person = Person.new(person_params)
 
       if @person.save
+        record_update_log(@person, action: 'create')
         redirect_to admin_people_path, notice: 'Person created successfully.'
       else
         render :new, status: :unprocessable_entity
@@ -47,6 +52,7 @@ module Admin
 
     def update
       if @person.update(person_params)
+        record_update_log(@person, action: 'update')
         redirect_to admin_people_path, notice: 'Person updated successfully.'
       else
         render :edit, status: :unprocessable_entity
@@ -55,11 +61,13 @@ module Admin
 
     def destroy
       @person.discard
+      record_update_log(@person, action: 'discard')
       redirect_to admin_people_path, notice: 'Person deleted successfully.'
     end
 
     def undiscard
       @person.undiscard
+      record_update_log(@person, action: 'undiscard')
       redirect_to admin_people_path, notice: 'Person restored successfully.'
     end
 

@@ -30,3 +30,6 @@ application.register("sortable", SortableController)
 
 import ToggleController from "controllers/toggle_controller"
 application.register("toggle", ToggleController)
+
+import MarkdownPreviewController from "controllers/markdown_preview_controller"
+application.register("markdown-preview", MarkdownPreviewController)

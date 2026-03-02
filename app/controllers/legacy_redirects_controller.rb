@@ -33,4 +33,22 @@ class LegacyRedirectsController < ApplicationController
 
     render 'not_found', status: :not_found, layout: false
   end
+
+  def news_redirect
+    trend = Trend.find_by(id: params[:id])
+    if trend
+      redirect_to trend_url(trend), status: :moved_permanently
+    else
+      render 'not_found', status: :not_found, layout: false
+    end
+  end
+
+  def item_redirect
+    item = Item.find_by(asin: params[:asin])
+    if item
+      redirect_to item_url(item), status: :moved_permanently
+    else
+      render 'not_found', status: :not_found, layout: false
+    end
+  end
 end
