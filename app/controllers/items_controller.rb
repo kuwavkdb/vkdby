@@ -3,6 +3,20 @@
 class ItemsController < ApplicationController
   def show
     @item = Item.find(params[:id])
+
+    scopes = @item.artists.flat_map do |a|
+      [
+        (Item.by_artist_key(a['key']) if a['key'].present?),
+        (Item.by_artist_old_key(a['old_key']) if a['old_key'].present?),
+        (Item.by_artist_name(a['name']) if a['name'].present?)
+      ].compact
+    end
+
+    if scopes.any?
+      @related_items = scopes.reduce(:or).where.not(id: @item.id).order(Arel.sql('RANDOM()')).limit(10)
+    else
+      @related_items = Item.none
+    end
   end
 
   def index

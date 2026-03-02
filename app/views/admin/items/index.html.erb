@@ -31,7 +31,7 @@
         <% @items.each do |item| %>
           <tr>
             <td class="px-6 py-4 text-sm font-medium text-gray-900">
-              <%= link_to item.title, item.link_url, target: "_blank", rel: "noopener noreferrer", class: "text-indigo-600 hover:text-indigo-900" %>
+              <%= link_to item.title, item_path(item), class: "text-indigo-600 hover:text-indigo-900" %>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.release_date %></td>
             <td class="px-6 py-4 text-sm text-gray-500">

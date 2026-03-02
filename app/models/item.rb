@@ -41,6 +41,16 @@ class Item < ApplicationRecord
     where('artists @> ?', [{ old_key: old_key }].to_json)
   }
 
+  # key でアーティストを検索するスコープ
+  scope :by_artist_key, lambda { |key|
+    where('artists @> ?', [{ key: key }].to_json)
+  }
+
+  # name でアーティストを検索するスコープ
+  scope :by_artist_name, lambda { |name|
+    where('artists @> ?', [{ name: name }].to_json)
+  }
+
   # 発売日で検索するスコープ
   scope :released_on, ->(date) { where(release_date: date) }
   scope :released_on_month_day, lambda { |month, day|
