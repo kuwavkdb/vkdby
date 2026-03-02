@@ -73,6 +73,8 @@ export default class extends Controller {
   clearRowSelection(row) {
     row.querySelector(".artist-name-hidden").value = ""
     row.querySelector(".artist-key-hidden").value = ""
+    const oldKeyEl = row.querySelector(".artist-old-key-hidden")
+    if (oldKeyEl) oldKeyEl.value = ""
 
     const selectedDisplay = row.querySelector(".artist-selected-display")
     selectedDisplay.classList.add("hidden")
@@ -229,10 +231,13 @@ export default class extends Controller {
     const data = this.rowTargets.map(row => {
       const name = row.querySelector(".artist-name-hidden").value.trim()
       const key = row.querySelector(".artist-key-hidden").value.trim()
+      const oldKeyEl = row.querySelector(".artist-old-key-hidden")
+      const oldKey = oldKeyEl ? oldKeyEl.value.trim() : ""
       const alias = row.querySelector(".artist-alias-input").value.trim()
       if (!name) return null
       const entry = { name }
       if (key) entry.key = key
+      if (oldKey) entry.old_key = oldKey
       if (alias) entry.alias = alias
       return entry
     }).filter(Boolean)

@@ -74,7 +74,7 @@ module Admin
 
       JSON.parse(json)
           .reject { |a| a['name'].blank? }
-          .map { |a| a.slice('name', 'key', 'alias').compact_blank }
+          .map { |a| a.slice('name', 'key', 'old_key', 'alias').compact_blank }
     rescue JSON::ParserError
       []
     end

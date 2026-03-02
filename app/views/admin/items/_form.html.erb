@@ -80,6 +80,7 @@
           <%# Hidden data %>
           <input type="hidden" class="artist-name-hidden" value="<%= artist['name'] %>">
           <input type="hidden" class="artist-key-hidden" value="<%= artist['key'] %>">
+          <input type="hidden" class="artist-old-key-hidden" value="<%= artist['old_key'] %>">
 
           <%# Remove row %>
           <button type="button"
@@ -121,6 +122,7 @@
 
         <input type="hidden" class="artist-name-hidden" value="">
         <input type="hidden" class="artist-key-hidden" value="">
+        <input type="hidden" class="artist-old-key-hidden" value="">
 
         <button type="button"
                 class="flex-none text-gray-400 hover:text-red-500"
