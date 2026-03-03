@@ -5,15 +5,15 @@ class ArtistItemsButtonComponentPreview < ViewComponent::Preview
 
   def default
     render(ArtistItemsButtonComponent.new(
-      artist_name: 'lynch.',
-      old_key: 'lynch.'
-    ))
+             artist_name: 'lynch.',
+             old_key: 'lynch.'
+           ))
   end
 
   def with_key
     render(ArtistItemsButtonComponent.new(
-      artist_name: 'SomeArtist',
-      key: 'some-artist'
-    ))
+             artist_name: 'SomeArtist',
+             key: 'some-artist'
+           ))
   end
 end
