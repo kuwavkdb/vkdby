@@ -44,4 +44,30 @@ class ItemConverterTest < ActiveSupport::TestCase
     assert_equal '名前B', result[1]['name']
     assert_nil result[1]['alias']
   end
+
+  # encode_euc_jp のテスト
+  def encode_euc_jp(text)
+    ItemConverter.new(nil).send(:encode_euc_jp, text)
+  end
+
+  test 'ASCII のみのテキストは CGI.escape でエンコードされる' do
+    assert_equal 'Dir+en+grey', encode_euc_jp('Dir en grey')
+    assert_equal 'Plastic+Tree', encode_euc_jp('Plastic Tree')
+    assert_equal 'the+GazettE', encode_euc_jp('the GazettE')
+  end
+
+  test 'スペースのない ASCII テキストはそのまま返る' do
+    assert_equal 'lynch.', encode_euc_jp('lynch.')
+    assert_equal 'MUCC', encode_euc_jp('MUCC')
+  end
+
+  test '日本語テキストは EUC-JP でエンコードされる' do
+    # ディルアングレイ (EUC-JP) = %A5%C7%A5%A3%A5%EB%A5%A2%A5%F3%A5%B0%A5%EC%A5%A4
+    assert_equal '%A5%C7%A5%A3%A5%EB%A5%A2%A5%F3%A5%B0%A5%EC%A5%A4', encode_euc_jp('ディルアングレイ')
+  end
+
+  test '空文字は空文字を返す' do
+    assert_equal '', encode_euc_jp('')
+    assert_equal '', encode_euc_jp(nil)
+  end
 end
