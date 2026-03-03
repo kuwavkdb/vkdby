@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @source "../../views";
+@source "../../components";
 
 @theme {
   --color-unit: #6366f1;

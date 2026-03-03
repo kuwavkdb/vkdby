@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'cgi'
+
 # ReleaseSchedule を Item に変換するサービス
 # rubocop:disable Metrics/ClassLength
 class ItemConverter
@@ -130,12 +132,12 @@ class ItemConverter
   end
 
   # EUC-JP エンコード処理
-  # ASCII 文字はそのまま、非 ASCII 文字のみ EUC-JP でエンコード
+  # ASCII 文字は CGI.escape で URL エンコード（スペース→+）、非 ASCII 文字は EUC-JP でエンコード
   def encode_euc_jp(text)
     return '' if text.blank?
 
-    # ASCII のみの場合はそのまま返す
-    return text if text.ascii_only?
+    # ASCII のみの場合は CGI.escape でエンコード（Unit の old_key 形式に合わせる）
+    return CGI.escape(text) if text.ascii_only?
 
     # 非 ASCII 文字を含む場合は EUC-JP でエンコード
     text.encode('EUC-JP', invalid: :replace, undef: :replace)
