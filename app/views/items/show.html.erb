@@ -12,7 +12,14 @@
         <!-- 画像（左） -->
         <% if @item.image_url.present? %>
           <div class="shrink-0">
-            <img src="<%= @item.image_url %>" alt="<%= @item.title %>" class="w-52 h-52 object-cover shadow-md">
+            <% amazon_url = safe_url(@item.link_url) %>
+            <% if amazon_url %>
+              <%= link_to amazon_url, target: "_blank", rel: "noopener noreferrer" do %>
+                <img src="<%= @item.image_url %>" alt="<%= @item.title %>" class="w-52 h-52 object-cover shadow-md hover:opacity-90 transition-opacity">
+              <% end %>
+            <% else %>
+              <img src="<%= @item.image_url %>" alt="<%= @item.title %>" class="w-52 h-52 object-cover shadow-md">
+            <% end %>
           </div>
         <% end %>
 

@@ -2,7 +2,13 @@
   <!-- 画像（左側） -->
   <% if @item.image_url.present? %>
     <div class="shrink-0 w-40 h-40 flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-      <img src="<%= @item.image_url %>" alt="<%= @item.title %>" class="w-40 h-40 object-cover">
+      <% if @item.link_url.present? %>
+        <%= link_to @item.link_url, target: "_blank", rel: "noopener noreferrer" do %>
+          <img src="<%= @item.image_url %>" alt="<%= @item.title %>" class="w-40 h-40 object-cover hover:opacity-90 transition-opacity">
+        <% end %>
+      <% else %>
+        <img src="<%= @item.image_url %>" alt="<%= @item.title %>" class="w-40 h-40 object-cover">
+      <% end %>
     </div>
   <% else %>
     <div class="shrink-0 w-40 h-40 bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
