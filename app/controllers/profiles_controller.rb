@@ -50,9 +50,12 @@ class ProfilesController < ApplicationController
   end
 
   def load_items
-    return if @resource.old_key.blank?
+    scopes = []
+    scopes << Item.by_artist_key(@resource.key) if @resource.key.present?
+    scopes << Item.by_artist_old_key(@resource.old_key) if @resource.old_key.present?
+    return if scopes.empty?
 
-    query = Item.by_artist_old_key(@resource.old_key)
+    query = scopes.reduce(:or)
     @items_count = query.count
     @items = query.order(release_date: :desc).limit(10)
   end
