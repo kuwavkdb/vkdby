@@ -12,11 +12,14 @@ class ItemsController < ApplicationController
       ].compact
     end
 
-    @related_items = if scopes.any?
-                       scopes.reduce(:or).where.not(id: @item.id).order(Arel.sql('RANDOM()')).limit(10)
-                     else
-                       Item.none
-                     end
+    if scopes.any?
+      base_query = scopes.reduce(:or).where.not(id: @item.id)
+      @related_items_count = base_query.count
+      @related_items = base_query.order(Arel.sql('RANDOM()')).limit(10)
+    else
+      @related_items_count = 0
+      @related_items = Item.none
+    end
   end
 
   def index
@@ -24,7 +27,14 @@ class ItemsController < ApplicationController
     base_scope = Item.all
     if params[:old_key].present?
       @artist = Unit.find_by(old_key: params[:old_key]) || Person.find_by(old_key: params[:old_key])
-      base_scope = base_scope.by_artist_old_key(params[:old_key])
+      scopes = [Item.by_artist_old_key(params[:old_key])]
+      scopes << Item.by_artist_key(@artist.key) if @artist&.key.present?
+      base_scope = base_scope.merge(scopes.reduce(:or))
+    elsif params[:key].present?
+      @artist = Unit.find_by(key: params[:key]) || Person.find_by(key: params[:key])
+      scopes = [Item.by_artist_key(params[:key])]
+      scopes << Item.by_artist_old_key(@artist.old_key) if @artist&.old_key.present?
+      base_scope = base_scope.merge(scopes.reduce(:or))
     end
 
     # 年月タブ用のカウント取得（アーティスト絞り込みがある場合はそれに限定）

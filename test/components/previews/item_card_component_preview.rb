@@ -64,4 +64,19 @@ class ItemCardComponentPreview < ViewComponent::Preview
 
     render(ItemCardComponent.new(item_card: item))
   end
+
+  def with_key_artist
+    item = Item.new(
+      id: 5,
+      title: 'SomeArtist 1st ALBUM',
+      release_date: Date.new(2026, 4, 1),
+      image_url: 'https://m.media-amazon.com/images/I/51EXAMPLE._SL160_.jpg',
+      link_url: 'https://www.amazon.co.jp/exec/obidos/ASIN/B0EXAMPLE5/vkdb-22/',
+      artists: [
+        { 'name' => 'SomeArtist', 'key' => 'some-artist', 'old_key' => '%A5%BD%A5%E1' }
+      ]
+    )
+
+    render(ItemCardComponent.new(item_card: item))
+  end
 end
