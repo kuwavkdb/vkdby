@@ -1,47 +1,47 @@
 <section>
-  <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">Basic Information</h2>
+  <h2 class="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-2">Basic Information</h2>
   <dl class="grid gap-4">
     <% if @resource.is_a?(Person) %>
       <% if @resource.parts.present? %>
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0">
-          <dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">Parts</dt>
-          <dd class="text-[0.9375rem] font-bold text-slate-800 dark:text-slate-200 text-right"><%= @resource.parts.map(&:humanize).join(", ") %></dd>
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
+          <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Parts</dt>
+          <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 text-right"><%= @resource.parts.map(&:humanize).join(", ") %></dd>
         </div>
       <% end %>
 
       <% if @resource.birthday.present? %>
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0">
-          <dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">Birthday</dt>
-          <dd class="text-[0.9375rem] font-bold text-slate-800 dark:text-slate-200">
-            <%= link_to @resource.birthday_display, birthday_date_path(month: @resource.birthday.month, day: @resource.birthday.day), class: "hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" %>
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
+          <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Birthday</dt>
+          <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100">
+            <%= link_to @resource.birthday_display, birthday_date_path(month: @resource.birthday.month, day: @resource.birthday.day), class: "hover:text-amber-600 dark:hover:text-amber-400 transition-colors" %>
           </dd>
         </div>
       <% end %>
 
       <% if @resource.blood.present? %>
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0">
-          <dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">Blood Type</dt>
-          <dd class="text-[0.9375rem] font-bold text-slate-800 dark:text-slate-200 text-right"><%= @resource.blood %></dd>
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
+          <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Blood Type</dt>
+          <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 text-right"><%= @resource.blood %></dd>
         </div>
       <% end %>
       <% if @resource.hometown.present? %>
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0">
-          <dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">Hometown</dt>
-          <dd class="text-[0.9375rem] font-bold text-slate-800 dark:text-slate-200 text-right"><%= @resource.hometown %></dd>
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
+          <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Hometown</dt>
+          <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 text-right"><%= @resource.hometown %></dd>
         </div>
       <% end %>
     <% elsif @resource.is_a?(Unit) %>
       <% if @resource.unit_type.present? %>
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0">
-          <dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">Unit Type</dt>
-          <dd class="text-[0.9375rem] font-bold text-slate-800 dark:text-slate-200"><%= @resource.unit_type %></dd>
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
+          <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Unit Type</dt>
+          <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100"><%= @resource.unit_type %></dd>
         </div>
       <% end %>
 
       <% if @resource.activity_periods.present? %>
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0">
-          <dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">活動時期</dt>
-          <dd class="text-[0.9375rem] font-bold text-slate-800 dark:text-slate-200 text-right">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
+          <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">活動時期</dt>
+          <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 text-right">
             <% @resource.activity_periods.each do |period| %>
               <div><%= period.from %> 〜 <%= period.to.presence || '現在' %></div>
             <% end %>
@@ -51,18 +51,18 @@
     <% end %>
 
     <% if @resource.status.present? %>
-      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0">
-        <dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">Status</dt>
-        <dd><span class="bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full text-xs font-bold text-slate-600 dark:text-slate-300"><%= @resource.status_text %></span></dd>
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
+        <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Status</dt>
+        <dd><span class="bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded text-xs font-bold text-zinc-600 dark:text-zinc-300"><%= @resource.status_text %></span></dd>
       </div>
     <% end %>
 
     <% if @resource.tag_indices.present? %>
-      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0">
-        <dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">Tags</dt>
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
+        <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Tags</dt>
         <dd class="text-right flex flex-wrap justify-end gap-2">
           <% @resource.tag_indices.order(:name).each do |tag| %>
-            <%= link_to tag.name, index_show_path(tag.id), class: "inline-block bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 px-2 py-0.5 rounded text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors" %>
+            <%= link_to tag.name, index_show_path(tag.id), class: "inline-block bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded text-xs font-bold hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors" %>
           <% end %>
         </dd>
       </div>
