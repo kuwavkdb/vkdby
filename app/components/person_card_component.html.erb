@@ -14,8 +14,8 @@
         <% end %>
       </h3>
       <% if @person.aliases.any? %>
-        <span class="text-sm text-slate-400 dark:text-slate-500 opacity-60 mx-1 group-hover:text-person dark:group-hover:text-person group-hover:opacity-80 transition-all">/</span>
-        <span class="text-sm text-slate-600 dark:text-slate-300 group-hover:text-person dark:group-hover:text-person group-hover:opacity-80 transition-all">
+        <span class="text-sm text-zinc-400 dark:text-zinc-500 opacity-60 mx-1 group-hover:text-person dark:group-hover:text-person group-hover:opacity-80 transition-all">/</span>
+        <span class="text-sm text-zinc-600 dark:text-zinc-300 group-hover:text-person dark:group-hover:text-person group-hover:opacity-80 transition-all">
           <% @person.aliases.each_with_index do |a, i| %>
             <%= " / " if i > 0 %><% if a.kana.present? %><ruby><%= a.name %><rt><%= a.kana %></rt></ruby><% else %><%= a.name %><% end %>
           <% end %>
@@ -28,7 +28,7 @@
       <% recent_histories = @person.parse_old_history.last(3) %>
       <% if recent_histories.present? %>
         <% recent_histories.each do |recent_history| %>
-          <div class="mt-2 pl-3 text-xs text-slate-500 dark:text-slate-400">
+          <div class="mt-2 pl-3 text-xs text-zinc-500 dark:text-zinc-400">
             <% recent_history.each_with_index do |item, index| %>
               <% if index > 0 %>
                 <span class="mx-1">、</span>
@@ -39,7 +39,7 @@
               <% end %>
               <% if item[:notes].present? %>
                 <% item[:notes].each do |note| %>
-                  <span class="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded ml-1"><%= note %></span>
+                  <span class="text-xs bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded ml-1"><%= note %></span>
                 <% end %>
               <% end %>
             <% end %>
@@ -49,7 +49,7 @@
     <% end %>
 
     <% if @show_details %>
-      <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center text-[0.65rem] font-bold text-slate-400 dark:text-slate-500">
+      <div class="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center text-[0.65rem] font-bold text-zinc-400 dark:text-zinc-600 tracking-widest uppercase">
         <span class="uppercase tracking-widest">Update</span>
         <span><%= @person.updated_at.strftime("%Y.%m.%d") %></span>
       </div>
