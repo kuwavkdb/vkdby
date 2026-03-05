@@ -52,7 +52,7 @@
             <% artist_label = artist_data['alias'].presence || artist_data['name'] %>
             <% artist_path = artist_profile_path(artist_data) %>
             <% if artist_path %>
-              <%= link_to artist_label, artist_path, class: "inline-block px-2 py-0.5 rounded text-sm font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:hover:bg-amber-900/40 transition-colors border border-amber-200 dark:border-amber-800" %>
+              <%= link_to artist_label, artist_path, class: "inline-block px-2 py-0.5 rounded text-sm font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/50 dark:text-indigo-200 dark:hover:bg-indigo-900/70 transition-colors border border-indigo-200 dark:border-indigo-700" %>
             <% else %>
               <span class="inline-block px-2 py-0.5 rounded text-sm font-semibold bg-zinc-100 text-zinc-600 border border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700"><%= artist_label %></span>
             <% end %>
