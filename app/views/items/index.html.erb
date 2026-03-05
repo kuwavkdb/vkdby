@@ -1,17 +1,17 @@
 <div class="flex justify-center items-start min-h-screen p-0 md:p-8">
-  <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
+  <div class="bg-white dark:bg-zinc-900 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
+    <div class="bg-amber-500 px-5 py-6 md:px-8 text-center">
+      <h1 class="text-3xl font-black text-zinc-900 flex items-center justify-center gap-3">
+        <span>ITEMS</span>
+        <span class="text-amber-900/50 text-lg font-bold"><%= @pagy.count %> records</span>
+      </h1>
+      <% if @artist %>
+        <div class="mt-2 text-xl font-bold text-zinc-800">
+          for <%= link_to @artist.name, profile_path(key: @artist.key), class: "hover:text-zinc-900 transition-colors underline decoration-zinc-700/50 underline-offset-4" %>
+        </div>
+      <% end %>
+    </div>
     <div class="p-5 md:p-8">
-      <header class="mb-8 text-center flex flex-col items-center">
-        <h1 class="text-3xl font-black text-slate-800 dark:text-slate-100 flex items-center justify-center gap-3">
-          <span class="text-indigo-600 dark:text-indigo-400">ITEMS</span>
-          <span class="text-slate-300 dark:text-slate-600 text-lg font-bold"><%= @pagy.count %> records</span>
-        </h1>
-        <% if @artist %>
-          <div class="mt-2 text-xl font-bold text-slate-600 dark:text-slate-400">
-            for <%= link_to @artist.name, profile_path(key: @artist.key), class: "hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors underline decoration-slate-300 dark:decoration-slate-600 underline-offset-4" %>
-          </div>
-        <% end %>
-      </header>
 
       <div class="flex flex-wrap gap-2 mb-6">
 
@@ -25,7 +25,7 @@
           years_by_decade = @years.group_by { |y| (y / 10) * 10 }
         %>
 
-        <%= link_to "NEWEST", items_path(old_key: params[:old_key]), class: "#{base_classes} #{current_year.nil? ? active_classes : inactive_classes}" %>
+        <%= link_to "NEWEST", items_path(key: params[:key], old_key: params[:old_key]), class: "#{base_classes} #{current_year.nil? ? active_classes : inactive_classes}" %>
 
         <% years_by_decade.each do |decade, years| %>
           <% is_active_decade = years.include?(current_year) %>
@@ -53,7 +53,7 @@
                  data-transition-leave-start="transform opacity-100 scale-100"
                  data-transition-leave-end="transform opacity-0 scale-95">
               <% years.each do |year| %>
-                <%= link_to "#{year} <span class='text-xs opacity-50 ml-1 font-normal'>(#{@year_counts[year]})</span>".html_safe, items_path(year: year, old_key: params[:old_key]), class: "block px-4 py-2 text-sm whitespace-nowrap text-slate-700 dark:text-slate-300 hover:bg-slate-100 hover:text-indigo-600 dark:hover:bg-slate-700 dark:hover:text-white #{current_year == year ? 'bg-indigo-50 dark:bg-slate-700 font-bold text-indigo-700 dark:text-indigo-300' : ''}" %>
+                <%= link_to "#{year} <span class='text-xs opacity-50 ml-1 font-normal'>(#{@year_counts[year]})</span>".html_safe, items_path(year: year, key: params[:key], old_key: params[:old_key]), class: "block px-4 py-2 text-sm whitespace-nowrap text-slate-700 dark:text-slate-300 hover:bg-slate-100 hover:text-indigo-600 dark:hover:bg-slate-700 dark:hover:text-white #{current_year == year ? 'bg-indigo-50 dark:bg-slate-700 font-bold text-indigo-700 dark:text-indigo-300' : ''}" %>
               <% end %>
             </div>
           </div>
@@ -70,10 +70,10 @@
               current_month = params[:month].presence&.to_i
             %>
 
-            <%= link_to params[:year], items_path(year: params[:year], old_key: params[:old_key]), class: "#{month_base_classes} #{current_month.nil? ? month_active_classes : month_inactive_classes}" %>
+            <%= link_to params[:year], items_path(year: params[:year], key: params[:key], old_key: params[:old_key]), class: "#{month_base_classes} #{current_month.nil? ? month_active_classes : month_inactive_classes}" %>
 
             <% @months.each do |month| %>
-                <%= link_to "#{month} <span class='opacity-60 ml-0.5 font-normal'>(#{@month_counts[month]})</span>".html_safe, items_path(year: params[:year], month: month, old_key: params[:old_key]), class: "#{month_base_classes} #{current_month == month ? month_active_classes : month_inactive_classes}" %>
+                <%= link_to "#{month} <span class='opacity-60 ml-0.5 font-normal'>(#{@month_counts[month]})</span>".html_safe, items_path(year: params[:year], month: month, key: params[:key], old_key: params[:old_key]), class: "#{month_base_classes} #{current_month == month ? month_active_classes : month_inactive_classes}" %>
             <% end %>
         </div>
       <% end %>

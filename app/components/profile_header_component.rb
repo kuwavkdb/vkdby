@@ -8,7 +8,11 @@ class ProfileHeaderComponent < ViewComponent::Base
   private
 
   def bg_class
-    @resource.is_a?(Unit) ? 'bg-unit' : 'bg-person'
+    if @resource.is_a?(Unit)
+      'bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800'
+    else
+      'bg-gradient-to-br from-rose-950 via-rose-900 to-rose-800'
+    end
   end
 
   def name
