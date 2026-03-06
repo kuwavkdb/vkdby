@@ -60,6 +60,34 @@
         <% end %>
       </div>
       
+      <% if @snapshot %>
+        <section class="mt-10">
+          <div class="flex items-center gap-2 mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Members</h2>
+            <% if @snapshot.label.present? %>
+              <span class="text-xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"><%= @snapshot.label %></span>
+            <% end %>
+            <% if @snapshot.current? %>
+              <span class="text-xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400">Current</span>
+            <% end %>
+          </div>
+          <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm">
+            <%= render MemberRowComponent.with_collection(@snapshot.snapshot_people.sort_by(&:sort_order), hide_active: true, hide_status: @snapshot.past?) %>
+          </div>
+        </section>
+      <% end %>
+
+      <% if @items.present? %>
+        <section class="mt-8">
+          <div class="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Recent Items (Max 8)</h2>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <%= render ItemCardComponent.with_collection(@items) %>
+          </div>
+        </section>
+      <% end %>
+
       <div class="mt-12 pt-8 border-t border-slate-100 dark:border-slate-700">
         <% if defined?(logged_in?) && logged_in? %>
           <%= link_to "Edit", edit_admin_trend_path(@trend), class: "text-sm font-bold text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors mr-4" %>
