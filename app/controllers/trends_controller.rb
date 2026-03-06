@@ -34,5 +34,22 @@ class TrendsController < ApplicationController
 
     unit_ids = @trend.units.map { |u| u['unit_id'] }
     @related_units = Unit.where(id: unit_ids).index_by(&:id)
+
+    return unless unit_ids.size == 1
+
+    unit = @related_units.values.first
+    return unless unit
+
+    @snapshot = unit.unit_snapshots
+                    .includes(snapshot_people: :person)
+                    .find_by(snapshot_date: @trend.date) ||
+                unit.unit_snapshots
+                    .includes(snapshot_people: :person)
+                    .find_by(current: true)
+
+    scopes = []
+    scopes << Item.by_artist_key(unit.key) if unit.key.present?
+    scopes << Item.by_artist_old_key(unit.old_key) if unit.old_key.present?
+    @items = scopes.reduce(:or).order(release_date: :desc).limit(8) if scopes.any?
   end
 end
