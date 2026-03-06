@@ -31,12 +31,11 @@ module Admin
       @trend.publish_start_at ||= Time.current
       @trend.active = true
 
-      # Pre-populate from params (for "Add Trend" button from profiles)
       if params[:unit_id].present?
         unit = Unit.find_by(id: params[:unit_id])
         if unit
           @trend.units = [{ 'unit_id' => unit.id, 'name' => unit.name }]
-          @snapshots = load_snapshots_for_unit(unit)
+          set_snapshots_from_trend
         end
       end
 
@@ -47,14 +46,9 @@ module Admin
     end
 
     def edit
-      # Load related units and people for editing
       @related_units = Unit.where(id: (@trend.units || []).map { |u| u['unit_id'] }).index_by(&:id)
       @related_people = Person.where(id: (@trend.people || []).map { |p| p['person_id'] }).index_by(&:id)
-
-      return unless (@trend.units || []).size == 1
-
-      unit = Unit.find_by(id: @trend.units.first['unit_id'])
-      @snapshots = load_snapshots_for_unit(unit) if unit
+      set_snapshots_from_trend
     end
 
     def create
@@ -63,6 +57,7 @@ module Admin
       if @trend.save
         redirect_to admin_trends_path, notice: 'Trend created successfully.'
       else
+        set_snapshots_from_trend
         render :new, status: :unprocessable_entity
       end
     end
@@ -73,6 +68,7 @@ module Admin
       else
         @related_units = Unit.where(id: (@trend.units || []).map { |u| u['unit_id'] }).index_by(&:id)
         @related_people = Person.where(id: (@trend.people || []).map { |p| p['person_id'] }).index_by(&:id)
+        set_snapshots_from_trend
         render :edit, status: :unprocessable_entity
       end
     end
@@ -100,11 +96,11 @@ module Admin
         units_json: {},
         people_json: {}
       ).tap do |whitelisted|
-        # Parse JSON fields for units and people
         whitelisted[:units] = parse_json_field(params[:trend][:units_json])
         whitelisted[:people] = parse_json_field(params[:trend][:people_json])
         whitelisted.delete(:units_json)
         whitelisted.delete(:people_json)
+        whitelisted[:snapshot_date] = nil if whitelisted[:snapshot_date].blank?
       end
     end
 
@@ -120,11 +116,17 @@ module Admin
       nil
     end
 
-    def load_snapshots_for_unit(unit)
-      unit.unit_snapshots
-          .includes(snapshot_people: :person)
-          .where.not(snapshot_date: nil)
-          .order(snapshot_date: :asc)
+    def set_snapshots_from_trend
+      units = @trend.units || []
+      return unless units.size == 1
+
+      unit = Unit.find_by(id: units.first['unit_id'])
+      return unless unit
+
+      @snapshots = unit.unit_snapshots
+                       .includes(snapshot_people: :person)
+                       .where.not(snapshot_date: nil)
+                       .order(snapshot_date: :asc)
     end
   end
 end
