@@ -35,6 +35,10 @@ class UnitSnapshot < ApplicationRecord
   scope :past, -> { where(past: true) }
   scope :not_past, -> { where(past: false) }
 
+  def member_names
+    snapshot_people.sort_by(&:sort_order).map(&:name).join('、')
+  end
+
   def display_label
     return label if label.present?
     return snapshot_date.strftime('%Y/%m/%d') if snapshot_date.present?

@@ -2,6 +2,7 @@
 
 class MemberRowComponent < ViewComponent::Base
   include WikiLinkHelper
+  with_collection_parameter :member
 
   def initialize(member:, hide_active: false, hide_left: false, hide_status: false)
     @member = member

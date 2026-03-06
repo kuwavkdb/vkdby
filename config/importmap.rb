@@ -8,3 +8,4 @@ pin '@hotwired/stimulus', to: 'stimulus.min.js'
 pin '@hotwired/stimulus-loading', to: 'stimulus-loading.js'
 pin_all_from 'app/javascript/controllers', under: 'controllers', to: 'controllers'
 pin 'marked' # @17.0.3
+pin 'htmx.org', to: 'https://unpkg.com/htmx.org@2.0.4/dist/htmx.esm.js'

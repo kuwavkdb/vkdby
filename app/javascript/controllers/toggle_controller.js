@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-    static targets = ["content", "icon", "area"]
+    static targets = ["content", "icon", "area", "summary"]
     static values = { open: Boolean }
 
     connect() {
@@ -16,6 +16,19 @@ export default class extends Controller {
     openValueChanged() {
         if (this.element.isConnected) {
             this.applyState(true)
+            if (this.openValue) {
+                this.dispatch('opened')
+            }
+        }
+    }
+
+    contentTargetConnected(el) {
+        el.style.transition = "max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease"
+        el.style.overflow = "hidden"
+        if (!this.openValue) {
+            el.style.maxHeight = "0px"
+            el.style.opacity = "0"
+            el.style.marginTop = "0px"
         }
     }
 
@@ -29,7 +42,7 @@ export default class extends Controller {
                 el.style.maxHeight = el.scrollHeight + "px"
                 el.style.opacity = "1"
                 el.style.marginTop = ""
-                if (animate) {
+                if (animate && el.scrollHeight > 0) {
                     el.addEventListener("transitionend", () => {
                         if (this.openValue) el.style.maxHeight = "none"
                     }, { once: true })
@@ -59,6 +72,10 @@ export default class extends Controller {
         if (this.hasAreaTarget) {
             this.areaTarget.classList.toggle("cursor-pointer", !this.openValue)
         }
+
+        this.summaryTargets.forEach(el => {
+            el.classList.toggle("hidden", this.openValue)
+        })
     }
 
     toggle() {

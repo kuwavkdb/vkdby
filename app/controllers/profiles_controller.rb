@@ -21,6 +21,16 @@ class ProfilesController < ApplicationController
     end
   end
 
+  def snapshot_members
+    unit = Unit.kept.find_by!(key: params[:key])
+    snapshot = unit.unit_snapshots.find(params[:id])
+    render partial: 'snapshot_members',
+           locals: { snapshot_people: snapshot.snapshot_people.includes(:person).sort_by(&:sort_order),
+                     snapshot: snapshot }
+  rescue ActiveRecord::RecordNotFound
+    render plain: '', status: :not_found
+  end
+
   private
 
   def load_person_data

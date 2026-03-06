@@ -69,6 +69,15 @@
   }
 
 
+  [data-toggle-target~="summary"]:not(.hidden) {
+    transition: opacity 0.3s ease;
+    opacity: 1;
+
+    @starting-style {
+      opacity: 0;
+    }
+  }
+
   .search-input-responsive {
     width: 2.5rem; /* 40px */
     transition: width 300ms ease-in-out, padding 300ms ease-in-out;
