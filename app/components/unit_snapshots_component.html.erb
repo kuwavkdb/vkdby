@@ -33,7 +33,7 @@
              data-toggle-target="summary area"
              data-action="click->toggle#expand">
           <p class="text-sm text-slate-600 dark:text-slate-300">
-            <%= snapshot.snapshot_people.sort_by(&:sort_order).map(&:name).join("、") %>
+            <%= snapshot.member_names %>
           </p>
         </div>
         <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm mt-3"
