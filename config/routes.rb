@@ -134,5 +134,7 @@ Rails.application.routes.draw do
   # Legacy redirects for /ITEM_{asin} format
   get '/ITEM_:asin', to: 'legacy_redirects#item_redirect', constraints: { asin: /[A-Z0-9]+/ }
 
+  get '/:key/snapshots/:id/members', to: 'profiles#snapshot_members', as: :snapshot_members,
+                                     constraints: { key: %r{[^/]+} }
   get '/:key', to: 'profiles#show', as: :profile, constraints: { key: %r{[^/]+} }
 end
