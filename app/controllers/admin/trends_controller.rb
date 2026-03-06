@@ -34,7 +34,10 @@ module Admin
       # Pre-populate from params (for "Add Trend" button from profiles)
       if params[:unit_id].present?
         unit = Unit.find_by(id: params[:unit_id])
-        @trend.units = [{ 'unit_id' => unit.id, 'name' => unit.name }] if unit
+        if unit
+          @trend.units = [{ 'unit_id' => unit.id, 'name' => unit.name }]
+          @snapshots = load_snapshots_for_unit(unit)
+        end
       end
 
       return unless params[:person_id].present?
@@ -47,6 +50,11 @@ module Admin
       # Load related units and people for editing
       @related_units = Unit.where(id: (@trend.units || []).map { |u| u['unit_id'] }).index_by(&:id)
       @related_people = Person.where(id: (@trend.people || []).map { |p| p['person_id'] }).index_by(&:id)
+
+      if (@trend.units || []).size == 1
+        unit = Unit.find_by(id: @trend.units.first['unit_id'])
+        @snapshots = load_snapshots_for_unit(unit) if unit
+      end
     end
 
     def create
@@ -83,6 +91,7 @@ module Admin
     def trend_params
       params.require(:trend).permit(
         :date, :day_unknown, :month_unknown,
+        :snapshot_date,
         :publish_start_at, :active,
         :title, :content,
         :quote, :quote_title, :quote_url,
@@ -109,6 +118,13 @@ module Admin
       JSON.parse(json_string)
     rescue JSON::ParserError
       nil
+    end
+
+    def load_snapshots_for_unit(unit)
+      unit.unit_snapshots
+          .includes(snapshot_people: :person)
+          .where.not(snapshot_date: nil)
+          .order(snapshot_date: :asc)
     end
   end
 end
