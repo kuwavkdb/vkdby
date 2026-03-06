@@ -51,10 +51,10 @@ module Admin
       @related_units = Unit.where(id: (@trend.units || []).map { |u| u['unit_id'] }).index_by(&:id)
       @related_people = Person.where(id: (@trend.people || []).map { |p| p['person_id'] }).index_by(&:id)
 
-      if (@trend.units || []).size == 1
-        unit = Unit.find_by(id: @trend.units.first['unit_id'])
-        @snapshots = load_snapshots_for_unit(unit) if unit
-      end
+      return unless (@trend.units || []).size == 1
+
+      unit = Unit.find_by(id: @trend.units.first['unit_id'])
+      @snapshots = load_snapshots_for_unit(unit) if unit
     end
 
     def create
