@@ -1,3 +1,7 @@
+previews:
+  generation: automatic
+  expireAfterDays: 1
+
 databases:
   - name: vkdby-db
     databaseName: vkdby_production
