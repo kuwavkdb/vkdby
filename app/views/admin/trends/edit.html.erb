@@ -5,6 +5,12 @@
       <%= link_to "Back", admin_trends_path, class: "text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white" %>
     </div>
 
+    <% if notice %>
+      <div class="mb-4 p-4 rounded bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" role="alert">
+        <%= notice %>
+      </div>
+    <% end %>
+
     <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
       <%= render "form", trend: @trend %>
     </div>
