@@ -64,7 +64,7 @@ module Admin
 
     def update
       if @trend.update(trend_params)
-        redirect_to admin_trends_path, notice: 'Trend updated successfully.'
+        redirect_to edit_admin_trend_path(@trend), notice: 'Trendを更新しました。'
       else
         @related_units = Unit.where(id: (@trend.units || []).map { |u| u['unit_id'] }).index_by(&:id)
         @related_people = Person.where(id: (@trend.people || []).map { |p| p['person_id'] }).index_by(&:id)
