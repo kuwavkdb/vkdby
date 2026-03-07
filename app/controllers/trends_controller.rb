@@ -40,9 +40,10 @@ class TrendsController < ApplicationController
     unit = @related_units.values.first
     return unless unit
 
+    candidate_date = @trend.snapshot_date || @trend.date
     @snapshot = unit.unit_snapshots
                     .includes(snapshot_people: :person)
-                    .find_by(snapshot_date: @trend.date) ||
+                    .find_by(snapshot_date: candidate_date) ||
                 unit.unit_snapshots
                     .includes(snapshot_people: :person)
                     .find_by(current: true)
