@@ -64,7 +64,7 @@ class ProfilesController < ApplicationController
     @update_logs = UpdateLog.where(loggable: @resource)
                             .includes(:user)
                             .order(created_at: :desc)
-                            .limit(20)
+                            .limit(10)
   end
 
   def load_items
