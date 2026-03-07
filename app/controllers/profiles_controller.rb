@@ -9,6 +9,7 @@ class ProfilesController < ApplicationController
 
     @resource.is_a?(Person) ? load_person_data : load_unit_data
     load_items
+    load_update_logs
 
     respond_to do |format|
       format.html
@@ -57,6 +58,12 @@ class ProfilesController < ApplicationController
     @snapshots = @resource.unit_snapshots
                           .includes(snapshot_people: :person)
                           .order(past: :asc, current: :desc, snapshot_index: :asc)
+  end
+
+  def load_update_logs
+    @update_logs = UpdateLog.where(loggable: @resource)
+                            .order(created_at: :desc)
+                            .limit(20)
   end
 
   def load_items
