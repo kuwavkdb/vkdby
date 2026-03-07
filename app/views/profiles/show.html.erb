@@ -120,8 +120,6 @@
         </section>
       <% end %>
 
-      <%= render ManagementInformationComponent.new(resource: @resource) %>
-
       <% if @update_logs.present? %>
         <section class="mt-8">
           <div class="mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
@@ -140,11 +138,14 @@
                                  when 'undiscard' then ['復元', 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300']
                                  end %>
                 <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[0.65rem] font-medium <%= cls %>"><%= label %></span>
+                <span class="text-slate-400 dark:text-slate-500"><%= log.user.name %></span>
               </li>
             <% end %>
           </ol>
         </section>
       <% end %>
+
+      <%= render ManagementInformationComponent.new(resource: @resource) %>
 
       <footer class="mt-12 pt-8 border-t border-slate-100 dark:border-slate-700 text-center">
         <p class="text-[0.65rem] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-loose">
