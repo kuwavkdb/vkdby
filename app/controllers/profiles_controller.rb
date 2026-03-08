@@ -61,10 +61,14 @@ class ProfilesController < ApplicationController
   end
 
   def load_update_logs
-    @update_logs = UpdateLog.where(loggable: @resource)
-                            .includes(:user)
-                            .order(created_at: :desc)
-                            .limit(10)
+    @update_logs = if @resource.is_a?(Unit)
+                     UpdateLog.for_unit(@resource)
+                   else
+                     UpdateLog.where(loggable: @resource)
+                   end
+                   .includes(:user)
+                   .order(created_at: :desc)
+                   .limit(10)
   end
 
   def load_items

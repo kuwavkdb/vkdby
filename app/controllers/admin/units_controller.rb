@@ -2,6 +2,8 @@
 
 module Admin
   class UnitsController < Admin::BaseController
+    include LoggableLinkChanges
+
     before_action :set_unit, only: %i[show edit update destroy undiscard]
     before_action :require_super_operator, only: %i[destroy]
 
@@ -38,7 +40,7 @@ module Admin
       @unit_person = @unit.unit_people.build(period: 1, order_in_period: (@unit_people.last&.order_in_period || 0) + 1)
       @unit_snapshots = @unit.unit_snapshots.includes(snapshot_people: :person).order(snapshot_date: :desc)
       @unit.links.build # Build an empty link for the form
-      @update_logs = UpdateLog.where(loggable_type: 'Unit', loggable_id: @unit.id)
+      @update_logs = UpdateLog.for_unit(@unit)
                               .includes(:user)
                               .order(created_at: :desc)
                               .limit(50)
@@ -57,8 +59,11 @@ module Admin
     end
 
     def update
+      pre_link_ids = @unit.links.pluck(:id)
+
       if @unit.update(unit_params)
         record_update_log(@unit, action: 'update')
+        record_link_changes(@unit, pre_link_ids)
         redirect_to edit_admin_unit_path(@unit), notice: 'Unit updated successfully.'
       else
         @unit_logs = @unit.unit_logs.order(:log_date)
