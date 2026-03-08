@@ -2,6 +2,8 @@
 
 module Admin
   class UnitsController < Admin::BaseController
+    include LoggableLinkChanges
+
     before_action :set_unit, only: %i[show edit update destroy undiscard]
     before_action :require_super_operator, only: %i[destroy]
 
@@ -106,22 +108,6 @@ module Admin
 
     def set_unit
       @unit = Unit.with_discarded.find(params[:id])
-    end
-
-    def record_link_changes(unit, pre_link_ids)
-      unit.links.each do |link|
-        if pre_link_ids.include?(link.id)
-          record_update_log(link, action: 'update') if link.saved_changes.except('updated_at').any?
-        else
-          record_update_log(link, action: 'create')
-        end
-      end
-
-      destroyed_ids = pre_link_ids - unit.links.map(&:id)
-      destroyed_ids.each do |link_id|
-        UpdateLog.create!(user: current_user, action: 'discard',
-                          loggable_type: 'Link', loggable_id: link_id, diff: nil)
-      end
     end
 
     def unit_params
