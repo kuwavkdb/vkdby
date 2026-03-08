@@ -72,6 +72,15 @@ Rails.application.routes.draw do
         patch :undiscard
       end
     end
+
+    resources :sections, only: %i[new create edit update destroy] do
+      member do
+        patch :undiscard
+      end
+      collection do
+        patch :reorder
+      end
+    end
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   root 'custom_pages#index_page'
