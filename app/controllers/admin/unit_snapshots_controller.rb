@@ -23,6 +23,7 @@ module Admin
       @unit_snapshot = @unit.unit_snapshots.build(unit_snapshot_params)
 
       if @unit_snapshot.save
+        record_update_log(@unit_snapshot, action: 'create')
         redirect_to edit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
                     notice: 'Snapshot was successfully created.'
       else
@@ -32,6 +33,7 @@ module Admin
 
     def update
       if @unit_snapshot.update(unit_snapshot_params)
+        record_update_log(@unit_snapshot, action: 'update')
         redirect_to admin_unit_unit_snapshots_path(@unit),
                     notice: 'Snapshot was successfully updated.'
       else
@@ -43,6 +45,7 @@ module Admin
 
     def destroy
       @unit_snapshot.destroy
+      record_update_log(@unit_snapshot, action: 'discard')
       redirect_to admin_unit_unit_snapshots_path(@unit),
                   notice: 'Snapshot was successfully destroyed.'
     end

@@ -38,7 +38,7 @@ module Admin
       @unit_person = @unit.unit_people.build(period: 1, order_in_period: (@unit_people.last&.order_in_period || 0) + 1)
       @unit_snapshots = @unit.unit_snapshots.includes(snapshot_people: :person).order(snapshot_date: :desc)
       @unit.links.build # Build an empty link for the form
-      @update_logs = UpdateLog.where(loggable_type: 'Unit', loggable_id: @unit.id)
+      @update_logs = UpdateLog.for_unit(@unit)
                               .includes(:user)
                               .order(created_at: :desc)
                               .limit(50)
@@ -57,8 +57,11 @@ module Admin
     end
 
     def update
+      pre_link_ids = @unit.links.pluck(:id)
+
       if @unit.update(unit_params)
         record_update_log(@unit, action: 'update')
+        record_link_changes(@unit, pre_link_ids)
         redirect_to edit_admin_unit_path(@unit), notice: 'Unit updated successfully.'
       else
         @unit_logs = @unit.unit_logs.order(:log_date)
@@ -103,6 +106,22 @@ module Admin
 
     def set_unit
       @unit = Unit.with_discarded.find(params[:id])
+    end
+
+    def record_link_changes(unit, pre_link_ids)
+      unit.links.each do |link|
+        if pre_link_ids.include?(link.id)
+          record_update_log(link, action: 'update') if link.saved_changes.except('updated_at').any?
+        else
+          record_update_log(link, action: 'create')
+        end
+      end
+
+      destroyed_ids = pre_link_ids - unit.links.map(&:id)
+      destroyed_ids.each do |link_id|
+        UpdateLog.create!(user: current_user, action: 'discard',
+                          loggable_type: 'Link', loggable_id: link_id, diff: nil)
+      end
     end
 
     def unit_params

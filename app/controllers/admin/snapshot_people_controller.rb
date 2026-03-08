@@ -10,6 +10,7 @@ module Admin
       @snapshot_person = @unit_snapshot.snapshot_people.build(snapshot_person_params)
 
       if @snapshot_person.save
+        record_update_log(@snapshot_person, action: 'create')
         redirect_to edit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
                     notice: 'Member was successfully added.'
       else
@@ -22,6 +23,7 @@ module Admin
 
     def update
       if @snapshot_person.update(snapshot_person_params)
+        record_update_log(@snapshot_person, action: 'update')
         redirect_to edit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
                     notice: 'Member was successfully updated.'
       else
@@ -31,6 +33,7 @@ module Admin
 
     def destroy
       @snapshot_person.destroy
+      record_update_log(@snapshot_person, action: 'discard')
       redirect_to edit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
                   notice: 'Member was successfully removed.'
     end
