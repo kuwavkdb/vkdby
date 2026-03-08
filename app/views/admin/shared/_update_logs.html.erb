@@ -25,8 +25,12 @@
                 <% loggable_label = { 'Unit' => 'ユニット', 'Person' => '人物',
                                       'UnitSnapshot' => 'スナップショット',
                                       'SnapshotPerson' => 'メンバー',
-                                      'Link' => 'リンク' }[log.loggable_type] || log.loggable_type %>
+                                      'Link' => 'リンク',
+                                      'Section' => 'セクション' }[log.loggable_type] || log.loggable_type %>
                 <%= loggable_label %>
+                <% if log.loggable_type == 'Section' && (section_name = log.loggable&.name || log.diff&.dig('name', 1)) %>
+                  <span class="text-gray-400 dark:text-gray-500">: <%= section_name %></span>
+                <% end %>
               </td>
               <td class="px-4 py-3 text-sm whitespace-nowrap">
                 <% label, color = case log.action

@@ -18,6 +18,8 @@
 #  index_sections_on_sectionable  (sectionable_type,sectionable_id)
 #
 class Section < ApplicationRecord
+  include Discard::Model
+
   belongs_to :sectionable, polymorphic: true
 
   validates :name, presence: true

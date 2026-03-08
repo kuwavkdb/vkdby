@@ -4,6 +4,10 @@
   </h2>
 
   <div class="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed wiki-content">
-    <%= format_wiki_content(@section.wiki_text) %>
+    <% if @section.markdown.present? %>
+      <%= markdown(@section.markdown) %>
+    <% else %>
+      <%= format_wiki_content(@section.wiki_text) %>
+    <% end %>
   </div>
 </section>

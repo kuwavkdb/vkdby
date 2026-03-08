@@ -64,7 +64,7 @@ class ProfilesController < ApplicationController
     @update_logs = if @resource.is_a?(Unit)
                      UpdateLog.for_unit(@resource)
                    else
-                     UpdateLog.where(loggable: @resource)
+                     UpdateLog.for_person(@resource)
                    end
                    .includes(:user)
                    .order(created_at: :desc)

@@ -324,6 +324,16 @@
       </div>
     </nav>
     <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <% if notice %>
+        <div class="mb-4 p-4 rounded bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" role="alert">
+          <%= notice %>
+        </div>
+      <% end %>
+      <% if alert %>
+        <div class="mb-4 p-4 rounded bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" role="alert">
+          <%= alert %>
+        </div>
+      <% end %>
       <%= yield %>
     </main>
     <% if @footer_page %>
