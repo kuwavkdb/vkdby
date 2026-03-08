@@ -1,6 +1,11 @@
 <div class="flex justify-center items-start min-h-screen p-0 md:p-8">
   <div class="bg-white dark:bg-zinc-900 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
-    <div class="bg-amber-500 p-6 md:p-8 border-b border-amber-600/30">
+    <div class="bg-amber-500 p-6 md:p-8 border-b border-amber-600/30 relative">
+      <% if defined?(logged_in?) && logged_in? %>
+        <div class="absolute top-4 right-4">
+          <%= link_to "Edit", edit_admin_trend_path(@trend), class: "px-3 py-1 bg-white/10 hover:bg-white/20 text-amber-900/80 hover:text-amber-900 text-xs font-bold rounded border border-amber-900/20 backdrop-blur-sm transition" %>
+        </div>
+      <% end %>
       <div class="flex items-center gap-3 text-sm text-amber-900 font-mono mb-2 font-bold">
         <% date_path, date_label = if @trend.month_unknown?
                                       [yearly_path(year: @trend.date.year), @trend.date.strftime('%Y')]
@@ -60,10 +65,35 @@
         <% end %>
       </div>
       
+      <% if @snapshot %>
+        <section class="mt-10">
+          <div class="flex items-center gap-2 mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Members</h2>
+            <% if @snapshot.label.present? && @trend.snapshot_date.blank? %>
+              <span class="text-xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"><%= @snapshot.label %></span>
+            <% end %>
+            <% if @snapshot.current? %>
+              <span class="text-xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400">Current</span>
+            <% end %>
+          </div>
+          <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm">
+            <%= render MemberRowComponent.with_collection(@snapshot.snapshot_people.sort_by(&:sort_order), hide_active: true, hide_status: @snapshot.past?) %>
+          </div>
+        </section>
+      <% end %>
+
+      <% if @items.present? %>
+        <section class="mt-8">
+          <div class="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Recent Items (Max 8)</h2>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <%= render ItemCardComponent.with_collection(@items) %>
+          </div>
+        </section>
+      <% end %>
+
       <div class="mt-12 pt-8 border-t border-slate-100 dark:border-slate-700">
-        <% if defined?(logged_in?) && logged_in? %>
-          <%= link_to "Edit", edit_admin_trend_path(@trend), class: "text-sm font-bold text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors mr-4" %>
-        <% end %>
         <%= link_to "Back to Trends", trends_path, class: "text-sm font-bold text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors" %>
       </div>
     </div>

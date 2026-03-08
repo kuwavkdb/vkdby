@@ -72,6 +72,15 @@ Rails.application.routes.draw do
         patch :undiscard
       end
     end
+
+    resources :sections, only: %i[new create edit update destroy] do
+      member do
+        patch :undiscard
+      end
+      collection do
+        patch :reorder
+      end
+    end
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   root 'custom_pages#index_page'
@@ -134,5 +143,7 @@ Rails.application.routes.draw do
   # Legacy redirects for /ITEM_{asin} format
   get '/ITEM_:asin', to: 'legacy_redirects#item_redirect', constraints: { asin: /[A-Z0-9]+/ }
 
+  get '/:key/snapshots/:id/members', to: 'profiles#snapshot_members', as: :snapshot_members,
+                                     constraints: { key: %r{[^/]+} }
   get '/:key', to: 'profiles#show', as: :profile, constraints: { key: %r{[^/]+} }
 end

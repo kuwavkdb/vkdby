@@ -31,10 +31,12 @@ module Admin
       @trend.publish_start_at ||= Time.current
       @trend.active = true
 
-      # Pre-populate from params (for "Add Trend" button from profiles)
       if params[:unit_id].present?
         unit = Unit.find_by(id: params[:unit_id])
-        @trend.units = [{ 'unit_id' => unit.id, 'name' => unit.name }] if unit
+        if unit
+          @trend.units = [{ 'unit_id' => unit.id, 'name' => unit.name }]
+          set_snapshots_from_trend
+        end
       end
 
       return unless params[:person_id].present?
@@ -44,9 +46,9 @@ module Admin
     end
 
     def edit
-      # Load related units and people for editing
       @related_units = Unit.where(id: (@trend.units || []).map { |u| u['unit_id'] }).index_by(&:id)
       @related_people = Person.where(id: (@trend.people || []).map { |p| p['person_id'] }).index_by(&:id)
+      set_snapshots_from_trend
     end
 
     def create
@@ -55,16 +57,18 @@ module Admin
       if @trend.save
         redirect_to admin_trends_path, notice: 'Trend created successfully.'
       else
+        set_snapshots_from_trend
         render :new, status: :unprocessable_entity
       end
     end
 
     def update
       if @trend.update(trend_params)
-        redirect_to admin_trends_path, notice: 'Trend updated successfully.'
+        redirect_to edit_admin_trend_path(@trend), notice: 'Trendを更新しました。'
       else
         @related_units = Unit.where(id: (@trend.units || []).map { |u| u['unit_id'] }).index_by(&:id)
         @related_people = Person.where(id: (@trend.people || []).map { |p| p['person_id'] }).index_by(&:id)
+        set_snapshots_from_trend
         render :edit, status: :unprocessable_entity
       end
     end
@@ -83,6 +87,7 @@ module Admin
     def trend_params
       params.require(:trend).permit(
         :date, :day_unknown, :month_unknown,
+        :snapshot_date,
         :publish_start_at, :active,
         :title, :content,
         :quote, :quote_title, :quote_url,
@@ -91,11 +96,11 @@ module Admin
         units_json: {},
         people_json: {}
       ).tap do |whitelisted|
-        # Parse JSON fields for units and people
         whitelisted[:units] = parse_json_field(params[:trend][:units_json])
         whitelisted[:people] = parse_json_field(params[:trend][:people_json])
         whitelisted.delete(:units_json)
         whitelisted.delete(:people_json)
+        whitelisted[:snapshot_date] = nil if whitelisted[:snapshot_date].blank?
       end
     end
 
@@ -109,6 +114,19 @@ module Admin
       JSON.parse(json_string)
     rescue JSON::ParserError
       nil
+    end
+
+    def set_snapshots_from_trend
+      units = @trend.units || []
+      return unless units.size == 1
+
+      unit = Unit.find_by(id: units.first['unit_id'])
+      return unless unit
+
+      @snapshots = unit.unit_snapshots
+                       .includes(snapshot_people: :person)
+                       .where.not(snapshot_date: nil)
+                       .order(snapshot_date: :asc)
     end
   end
 end

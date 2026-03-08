@@ -24,11 +24,24 @@
           </button>
         </div>
       </div>
-      <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm" data-toggle-target="area" data-action="click->toggle#expand">
-        <% snapshot.snapshot_people.sort_by(&:sort_order).each do |sp| %>
-          <%= render MemberRowComponent.new(member: sp, hide_active: true, hide_status: snapshot.past?) %>
-        <% end %>
-      </div>
+      <% if snapshot.current? %>
+        <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm" data-toggle-target="area" data-action="click->toggle#expand">
+          <%= render MemberRowComponent.with_collection(snapshot.snapshot_people.sort_by(&:sort_order), hide_active: true, hide_status: snapshot.past?) %>
+        </div>
+      <% else %>
+        <div class="border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-3 shadow-sm"
+             data-toggle-target="summary area"
+             data-action="click->toggle#expand">
+          <p class="text-sm text-slate-600 dark:text-slate-300">
+            <%= snapshot.member_names %>
+          </p>
+        </div>
+        <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm mt-3"
+             data-toggle-target="content"
+             hx-get="<%= snapshot_members_path(key: @unit.key, id: snapshot.id) %>"
+             hx-trigger="toggle:opened from:closest section once"
+             hx-swap="innerHTML"></div>
+      <% end %>
     </section>
   <% end %>
 </div>

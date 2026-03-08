@@ -14,6 +14,7 @@
       
       <div>
         <%= render "links_form", person: @person %>
+        <%= render "admin/sections/list", sectionable: @person, sections: @person.sections.with_discarded.order(:sort_order) %>
       </div>
     </div>
   </div>

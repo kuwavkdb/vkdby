@@ -117,6 +117,20 @@
         data: { autocomplete_target: "hiddenField" } %>
   </div>
 
+  <!-- Snapshot Selection (Unit1組の場合のみ表示) -->
+  <% if @snapshots.present? %>
+    <div>
+      <%= form.label :snapshot_date, "Snapshot", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <%= form.select :snapshot_date,
+          [['(自動)', '']] + @snapshots.map { |s|
+            ["#{s.snapshot_date.strftime('%Y/%m/%d')} — #{s.member_names}", s.snapshot_date.to_s]
+          },
+          { selected: trend.snapshot_date&.to_s || '' },
+          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">指定しない場合はTrendsの日付 → カレントスナップショットの順で自動選択されます</p>
+    </div>
+  <% end %>
+
   <!-- People Autocomplete -->
   <div data-controller="autocomplete"
        data-autocomplete-url-value="<%= search_admin_people_path %>"
