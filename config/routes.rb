@@ -25,6 +25,9 @@ Rails.application.routes.draw do
         end
       end
       resources :unit_snapshots, except: %i[show] do
+        member do
+          post :copy
+        end
         collection do
           patch :reorder
         end

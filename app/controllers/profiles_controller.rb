@@ -56,6 +56,7 @@ class ProfilesController < ApplicationController
                    .limit(10)
 
     @snapshots = @resource.unit_snapshots
+                          .active
                           .includes(snapshot_people: :person)
                           .order(past: :asc, current: :desc, snapshot_index: :asc)
   end

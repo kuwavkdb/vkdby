@@ -34,6 +34,7 @@ class UnitSnapshot < ApplicationRecord
   scope :reverse_chronological, -> { order(snapshot_date: :desc) }
   scope :past, -> { where(past: true) }
   scope :not_past, -> { where(past: false) }
+  scope :active, -> { where(active: true) }
 
   def member_names
     snapshot_people.sort_by(&:sort_order).map(&:name).join('、')
