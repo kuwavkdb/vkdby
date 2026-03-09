@@ -30,7 +30,11 @@ class ItemsController < ApplicationController
     @years = @year_counts.keys.sort.reverse
 
     scope = base_scope.order(release_date: :desc)
-    scope = filter_by_date(scope, dates) if params[:year].present?
+    if params[:decade].present?
+      scope = filter_by_decade(scope)
+    elsif params[:year].present?
+      scope = filter_by_year(scope, dates)
+    end
 
     @pagy, @items = pagy(scope, limit: 20)
   end
@@ -53,7 +57,12 @@ class ItemsController < ApplicationController
     end
   end
 
-  def filter_by_date(scope, dates)
+  def filter_by_decade(scope)
+    decade = params[:decade].to_i
+    scope.where(release_date: Date.new(decade, 1, 1)..Date.new(decade + 9, 12, 31))
+  end
+
+  def filter_by_year(scope, dates)
     year = params[:year].to_i
     month = params[:month].presence&.to_i
 
