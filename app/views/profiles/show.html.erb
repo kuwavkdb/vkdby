@@ -100,8 +100,8 @@
             <% end %>
           <% end %>
 
-          <% if @resource.sections.exists? %>
-            <%= render SectionComponent.with_collection(@resource.sections.order(:sort_order)) %>
+          <% if @resource.sections.kept.exists? %>
+            <%= render SectionComponent.with_collection(@resource.sections.kept.order(:sort_order), admin: defined?(logged_in?) && logged_in?) %>
           <% end %>
         </div>
       </div>
