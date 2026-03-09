@@ -32,7 +32,7 @@ module Admin
     end
 
     def destroy
-      @snapshot_person.destroy
+      @snapshot_person.discard
       record_update_log(@snapshot_person, action: 'discard')
       redirect_to edit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
                   notice: 'Member was successfully removed.'
