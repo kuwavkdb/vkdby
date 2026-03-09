@@ -5,8 +5,11 @@ class UpdateLog < ApplicationRecord
   belongs_to :loggable, polymorphic: true, optional: true
 
   def loggable
-    if loggable_type == 'Section'
+    case loggable_type
+    when 'Section'
       Section.with_discarded.find_by(id: loggable_id)
+    when 'SnapshotPerson'
+      SnapshotPerson.with_discarded.find_by(id: loggable_id)
     else
       super
     end
@@ -16,7 +19,7 @@ class UpdateLog < ApplicationRecord
 
   def self.for_unit(unit)
     snapshot_ids = unit.unit_snapshot_ids
-    snapshot_person_ids = SnapshotPerson.where(unit_snapshot_id: snapshot_ids).pluck(:id)
+    snapshot_person_ids = SnapshotPerson.with_discarded.where(unit_snapshot_id: snapshot_ids).pluck(:id)
     link_ids = unit.links.pluck(:id)
     section_ids = Section.with_discarded.where(sectionable_type: 'Unit', sectionable_id: unit.id).pluck(:id)
 

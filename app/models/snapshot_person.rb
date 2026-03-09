@@ -35,7 +35,10 @@
 #  fk_rails_...  (unit_snapshot_id => unit_snapshots.id)
 #
 class SnapshotPerson < ApplicationRecord
+  include Discard::Model
   include WikiParser
+
+  default_scope { kept }
 
   belongs_to :unit_snapshot
   belongs_to :person, optional: true

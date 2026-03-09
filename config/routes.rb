@@ -84,6 +84,12 @@ Rails.application.routes.draw do
         patch :reorder
       end
     end
+
+    resources :update_logs, only: [] do
+      member do
+        post :restore
+      end
+    end
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   root 'custom_pages#index_page'
