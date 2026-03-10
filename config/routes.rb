@@ -154,5 +154,7 @@ Rails.application.routes.draw do
 
   get '/:key/snapshots/:id/members', to: 'profiles#snapshot_members', as: :snapshot_members,
                                      constraints: { key: %r{[^/]+} }
+  get '/:key/update_logs', to: 'profiles#update_logs', as: :profile_update_logs,
+                           constraints: { key: %r{[^/]+} }
   get '/:key', to: 'profiles#show', as: :profile, constraints: { key: %r{[^/]+} }
 end
