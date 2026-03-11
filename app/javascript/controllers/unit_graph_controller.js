@@ -15,7 +15,7 @@ export default class extends Controller {
 
     const isDark = document.documentElement.classList.contains("dark")
 
-    const cy = cytoscape({
+    this.cy = cytoscape({
       container: this.element,
       elements: [...nodes, ...edges],
       style: [
@@ -78,17 +78,40 @@ export default class extends Controller {
       },
     })
 
-    cy.on("tap", "node", (evt) => {
+    this.cy.on("tap", "node", (evt) => {
       const url = evt.target.data("url")
       if (url) window.location.href = url
     })
 
-    cy.on("mouseover", "node", () => {
+    this.cy.on("mouseover", "node", () => {
       this.element.style.cursor = "pointer"
     })
 
-    cy.on("mouseout", "node", () => {
+    this.cy.on("mouseout", "node", () => {
       this.element.style.cursor = "default"
     })
+
+    this._onFullscreenChange = () => this.cy.resize()
+    document.addEventListener("fullscreenchange", this._onFullscreenChange)
+  }
+
+  disconnect() {
+    document.removeEventListener("fullscreenchange", this._onFullscreenChange)
+  }
+
+  toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      this.element.requestFullscreen().then(() => {
+        this.element.style.height = "100vh"
+        this.element.style.borderRadius = "0"
+        this.cy?.resize()
+      })
+    } else {
+      document.exitFullscreen().then(() => {
+        this.element.style.height = "420px"
+        this.element.style.borderRadius = ""
+        this.cy?.resize()
+      })
+    }
   }
 }
