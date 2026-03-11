@@ -89,31 +89,43 @@ class ProfilesController < ApplicationController
 
     return { nodes: [], edges: [] } if person_ids.empty?
 
-    related_snapshot_people = SnapshotPerson
+    # person_id → [unit_id, ...] のマップを構築
+    unit_ids_by_person = SnapshotPerson
       .joins(:unit_snapshot)
       .where(unit_snapshots: { current: true })
       .where(person_id: person_ids)
-      .includes(:person, unit_snapshot: :unit)
+      .pluck(:person_id, "unit_snapshots.unit_id")
+      .each_with_object(Hash.new { |h, k| h[k] = [] }) { |(pid, uid), h| h[pid] << uid }
+
+    # 関連する全 unit_id を収集
+    related_unit_ids = unit_ids_by_person.values.flatten.uniq
+    related_units = Unit.where(id: related_unit_ids).index_by(&:id)
 
     nodes = {}
-    edges = []
+    edges = {}
 
     # 中心ユニットノード
     nodes["unit_#{unit.id}"] = { data: { id: "unit_#{unit.id}", label: unit.name, type: "unit", url: "/#{unit.key}", current: true } }
 
-    related_snapshot_people.each do |sp|
-      related_unit = sp.unit_snapshot.unit
-      person = sp.person
-      next unless person
+    # 共通メンバーを持つ Unit ペアにエッジを張る
+    unit_ids_by_person.each do |_person_id, uids|
+      uids.combination(2).each do |uid_a, uid_b|
+        uid_a, uid_b = [uid_a, uid_b].sort
+        edge_key = "e_#{uid_a}_#{uid_b}"
+        next if edges[edge_key]
 
-      nodes["unit_#{related_unit.id}"] ||= { data: { id: "unit_#{related_unit.id}", label: related_unit.name, type: "unit", url: "/#{related_unit.key}", current: false } }
-      nodes["person_#{person.id}"] ||= { data: { id: "person_#{person.id}", label: person.name, type: "person", url: "/#{person.key}" } }
+        [uid_a, uid_b].each do |uid|
+          next if nodes["unit_#{uid}"]
+          u = related_units[uid]
+          next unless u
+          nodes["unit_#{uid}"] = { data: { id: "unit_#{uid}", label: u.name, type: "unit", url: "/#{u.key}", current: uid == unit.id } }
+        end
 
-      edge_id = "e_#{[related_unit.id, person.id].join('_')}"
-      edges << { data: { id: edge_id, source: "unit_#{related_unit.id}", target: "person_#{person.id}" } }
+        edges[edge_key] = { data: { id: edge_key, source: "unit_#{uid_a}", target: "unit_#{uid_b}" } }
+      end
     end
 
-    { nodes: nodes.values, edges: edges.uniq { |e| e[:data][:id] } }
+    { nodes: nodes.values, edges: edges.values }
   end
 
   def load_items

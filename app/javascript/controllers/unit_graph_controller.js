@@ -47,24 +47,6 @@ export default class extends Controller {
           },
         },
         {
-          selector: 'node[type="person"]',
-          style: {
-            "background-color": "#10b981",
-            "label": "data(label)",
-            "color": "#ffffff",
-            "text-valign": "center",
-            "text-halign": "center",
-            "font-size": "9px",
-            "font-weight": "bold",
-            "width": 56,
-            "height": 56,
-            "shape": "ellipse",
-            "text-wrap": "wrap",
-            "text-max-width": "52px",
-            "cursor": "pointer",
-          },
-        },
-        {
           selector: "edge",
           style: {
             "width": 1.5,
