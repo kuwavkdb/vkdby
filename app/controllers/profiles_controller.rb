@@ -39,6 +39,13 @@ class ProfilesController < ApplicationController
     render plain: '', status: :not_found
   end
 
+  def relationship_graph
+    unit = Unit.kept.find_by!(key: params[:key])
+    render json: build_unit_graph_data(unit)
+  rescue ActiveRecord::RecordNotFound
+    render json: { nodes: [], edges: [] }, status: :not_found
+  end
+
   def snapshot_members
     unit = Unit.kept.find_by!(key: params[:key])
     snapshot = unit.unit_snapshots.find(params[:id])
@@ -77,7 +84,6 @@ class ProfilesController < ApplicationController
                           .includes(snapshot_people: :person)
                           .order(past: :asc, current: :desc, snapshot_index: :asc)
 
-    @graph_data = build_unit_graph_data(@resource)
   end
 
   def build_unit_graph_data(unit)
@@ -128,7 +134,7 @@ class ProfilesController < ApplicationController
     edges = {}
 
     # 中心ユニットノード
-    nodes["unit_#{unit.id}"] = { data: { id: "unit_#{unit.id}", label: unit.name, type: "unit", url: "/#{unit.key}", current: true } }
+    nodes["unit_#{unit.id}"] = { data: { id: "unit_#{unit.id}", label: unit.name, type: "unit", url: "/#{unit.key}#relationship-graph", current: true } }
 
     # 共通メンバーを持つ Unit ペアにエッジを張る
     unit_ids_by_person.each do |_person_id, uids|
@@ -141,7 +147,7 @@ class ProfilesController < ApplicationController
           next if nodes["unit_#{uid}"]
           u = related_units[uid]
           next unless u
-          nodes["unit_#{uid}"] = { data: { id: "unit_#{uid}", label: u.name, type: "unit", url: "/#{u.key}", current: uid == unit.id } }
+          nodes["unit_#{uid}"] = { data: { id: "unit_#{uid}", label: u.name, type: "unit", url: "/#{u.key}#relationship-graph", current: uid == unit.id } }
         end
 
         edges[edge_key] = { data: { id: edge_key, source: "unit_#{uid_a}", target: "unit_#{uid_b}" } }

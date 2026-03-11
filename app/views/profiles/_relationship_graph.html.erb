@@ -1,22 +1,37 @@
-<% node_count = graph_data[:nodes].length %>
-<% if node_count > 1 %>
-  <section class="mt-8"
-    data-controller="unit-graph"
-    data-unit-graph-data-value="<%= html_escape(graph_data.to_json) %>">
-    <div class="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
-      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Relationship Graph</h2>
-      <div class="flex items-center gap-3">
-        <span class="text-xs text-slate-400 dark:text-slate-500"><%= node_count %> nodes</span>
-        <button
-          data-action="click->unit-graph#toggleFullscreen"
-          class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-          aria-label="全画面表示">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-          </svg>
-        </button>
-      </div>
+<section id="relationship-graph" class="mt-8"
+  data-controller="unit-graph"
+  data-unit-graph-url-value="<%= profile_relationship_graph_path(unit.key) %>">
+
+  <div class="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
+    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Relationship Graph</h2>
+    <div class="flex items-center gap-3">
+      <span data-unit-graph-target="nodeCount" class="text-xs text-slate-400 dark:text-slate-500 hidden"></span>
+      <button
+        data-unit-graph-target="fullscreenBtn"
+        data-action="click->unit-graph#toggleFullscreen"
+        class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors hidden"
+        aria-label="全画面表示">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+        </svg>
+      </button>
     </div>
+  </div>
+
+  <%# 初期表示: ボタンのみ %>
+  <div data-unit-graph-target="placeholder" class="flex justify-center py-8">
+    <button
+      data-action="click->unit-graph#load"
+      class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z" />
+      </svg>
+      関連図を表示
+    </button>
+  </div>
+
+  <%# グラフ表示領域（初期非表示）%>
+  <div data-unit-graph-target="graphArea" class="hidden">
     <div style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-bottom:0.75rem;font-size:0.75rem;color:#64748b;">
       <span style="display:flex;align-items:center;gap:0.375rem;">
         <span style="display:inline-block;width:0.75rem;height:0.75rem;border-radius:2px;background:#dc2626;" aria-hidden="true"></span>
@@ -39,5 +54,6 @@
         aria-label="縮小"
         style="display:none;position:absolute;top:0.75rem;right:0.75rem;z-index:10000;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:2rem;height:2rem;font-size:1rem;cursor:pointer;line-height:1;">✕</button>
     </div>
-  </section>
-<% end %>
+  </div>
+
+</section>

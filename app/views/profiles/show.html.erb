@@ -120,8 +120,8 @@
         </section>
       <% end %>
 
-      <% if @resource.is_a?(Unit) && @graph_data %>
-        <%= render "relationship_graph", graph_data: @graph_data, unit: @resource %>
+      <% if @resource.is_a?(Unit) %>
+        <%= render "relationship_graph", unit: @resource %>
       <% end %>
 
       <section class="mt-8">
