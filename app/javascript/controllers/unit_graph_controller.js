@@ -85,12 +85,27 @@ export default class extends Controller {
           },
         },
         {
+          selector: "node.newly-added",
+          style: {
+            "background-color": "#0d9488",
+            "background-opacity": 0.85,
+            "border-color": "#0f766e",
+          },
+        },
+        {
           selector: "edge",
           style: {
             "width": 1.5,
             "line-color": isDark ? "#475569" : "#cbd5e1",
             "curve-style": "bezier",
             "opacity": 0.7,
+          },
+        },
+        {
+          selector: "edge.dragging",
+          style: {
+            "width": 3,
+            "opacity": 1,
           },
         },
         {
@@ -122,8 +137,21 @@ export default class extends Controller {
     })
 
     this.cy.on("tap", "node", (evt) => {
+      const graphUrl = evt.target.data("graph_url")
+      if (graphUrl) this._expandNode(evt.target, graphUrl)
+    })
+
+    this.cy.on("dblclick", "node", (evt) => {
       const url = evt.target.data("url")
       if (url) window.location.href = url
+    })
+
+    this.cy.on("grabon", "node", (evt) => {
+      evt.target.connectedEdges().addClass("dragging")
+    })
+
+    this.cy.on("free", "node", (evt) => {
+      evt.target.connectedEdges().removeClass("dragging")
     })
 
     this.cy.on("mouseover", "node", () => {
@@ -133,6 +161,67 @@ export default class extends Controller {
     this.cy.on("mouseout", "node", () => {
       this.containerTarget.style.cursor = "default"
     })
+  }
+
+  async _expandNode(node, graphUrl) {
+    if (node.data("expanding")) return
+    node.data("expanding", true)
+
+    let data
+    try {
+      const res = await fetch(graphUrl, { headers: { Accept: "application/json" } })
+      data = await res.json()
+    } catch (e) {
+      console.error("unit-graph: expand fetch failed", e)
+      node.data("expanding", false)
+      return
+    }
+
+    const existingIds = new Set(this.cy.elements().map((el) => el.id()))
+    const newNodes = (data.nodes || []).filter((n) => !existingIds.has(n.data.id))
+    const newEdges = (data.edges || []).filter((e) => !existingIds.has(e.data.id))
+
+    if (newNodes.length === 0 && newEdges.length === 0) {
+      node.data("expanding", false)
+      return
+    }
+
+    this.cy.nodes(".newly-added").removeClass("newly-added")
+
+    const existingNodes = this.cy.nodes()
+    existingNodes.lock()
+
+    const origin = node.position()
+    const spread = 80
+    const positionedNodes = newNodes.map((n) => ({
+      ...n,
+      position: {
+        x: origin.x + (Math.random() - 0.5) * spread,
+        y: origin.y + (Math.random() - 0.5) * spread,
+      },
+    }))
+    const added = this.cy.add([...positionedNodes, ...newEdges])
+    added.nodes().addClass("newly-added")
+
+    const container = this.containerTarget
+    const w = container.offsetWidth || 800
+    const h = container.offsetHeight || 420
+
+    this.cy.layout({
+      name: "cose",
+      padding: 40,
+      boundingBox: { x1: 0, y1: 0, w, h },
+      nodeRepulsion: 600000,
+      idealEdgeLength: 250,
+      nodeOverlap: 80,
+      gravity: 0.1,
+      numIter: 2000,
+      animate: false,
+      fit: false,
+    }).run()
+
+    existingNodes.unlock()
+    node.data("expanding", false)
   }
 
   disconnect() {

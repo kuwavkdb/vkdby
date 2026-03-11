@@ -100,11 +100,15 @@ class UnitGraphBuilder
 
   def center_node
     { data: { id: "unit_#{@unit.id}", label: @unit.name, type: 'unit',
-              url: "/#{@unit.key}#relationship-graph", current: true } }
+              url: "/#{@unit.key}#relationship-graph",
+              graph_url: "/#{@unit.key}/relationship_graph",
+              current: true } }
   end
 
   def unit_node(unit, current)
     { data: { id: "unit_#{unit.id}", label: unit.name, type: 'unit',
-              url: "/#{unit.key}#relationship-graph", current: } }
+              url: "/#{unit.key}#relationship-graph",
+              graph_url: "/#{unit.key}/relationship_graph",
+              current: } }
   end
 end
