@@ -9,7 +9,6 @@ class ProfilesController < ApplicationController
 
     @resource.is_a?(Person) ? load_person_data : load_unit_data
     load_items
-    load_update_logs
 
     respond_to do |format|
       format.html
@@ -20,6 +19,24 @@ class ProfilesController < ApplicationController
       format.html { render file: Rails.root.join('public/404.html'), status: :not_found, layout: false }
       format.json { render json: { error: 'Resource not found' }, status: :not_found }
     end
+  end
+
+  def update_logs
+    @resource = Unit.kept.find_by(key: params[:key]) ||
+                Person.kept.find_by!(key: params[:key])
+
+    update_logs = if @resource.is_a?(Unit)
+                    UpdateLog.for_unit(@resource)
+                  else
+                    UpdateLog.for_person(@resource)
+                  end
+                  .includes(:user)
+                  .order(created_at: :desc)
+                  .limit(50)
+
+    render partial: 'update_logs', locals: { update_logs: }
+  rescue ActiveRecord::RecordNotFound
+    render plain: '', status: :not_found
   end
 
   def snapshot_members
@@ -56,19 +73,9 @@ class ProfilesController < ApplicationController
                    .limit(10)
 
     @snapshots = @resource.unit_snapshots
+                          .active
                           .includes(snapshot_people: :person)
                           .order(past: :asc, current: :desc, snapshot_index: :asc)
-  end
-
-  def load_update_logs
-    @update_logs = if @resource.is_a?(Unit)
-                     UpdateLog.for_unit(@resource)
-                   else
-                     UpdateLog.for_person(@resource)
-                   end
-                   .includes(:user)
-                   .order(created_at: :desc)
-                   .limit(10)
   end
 
   def load_items

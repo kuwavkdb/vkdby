@@ -1,7 +1,7 @@
 <%= form_with(model: [:admin, unit, unit_snapshot], class: "space-y-6") do |form| %>
   <% if unit_snapshot.errors.any? %>
     <div class="bg-red-50 p-4 rounded text-red-700">
-      <h2><%= pluralize(unit_snapshot.errors.count, "error") %> prohibited this snapshot from being saved:</h2>
+      <h2><%= unit_snapshot.errors.count %>件のエラーがあります：</h2>
       <ul class="list-disc list-inside">
         <% unit_snapshot.errors.each do |error| %>
           <li><%= error.full_message %></li>
@@ -18,13 +18,20 @@
   <div>
     <%= form.label :label, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
     <%= form.text_field :label, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white", placeholder: "e.g. 結成時, 5周年" %>
-    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Optional label for this snapshot.</p>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">任意のラベルを設定できます。</p>
   </div>
 
   <div>
     <label class="inline-flex items-center">
       <%= form.check_box :current, class: "form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600" %>
       <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Current lineup</span>
+    </label>
+  </div>
+
+  <div>
+    <label class="inline-flex items-center">
+      <%= form.check_box :active, class: "form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600" %>
+      <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Active（ユニットページに表示する）</span>
     </label>
   </div>
 

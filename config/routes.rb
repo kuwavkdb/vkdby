@@ -25,6 +25,9 @@ Rails.application.routes.draw do
         end
       end
       resources :unit_snapshots, except: %i[show] do
+        member do
+          post :copy
+        end
         collection do
           patch :reorder
         end
@@ -79,6 +82,12 @@ Rails.application.routes.draw do
       end
       collection do
         patch :reorder
+      end
+    end
+
+    resources :update_logs, only: [] do
+      member do
+        post :restore
       end
     end
   end
@@ -145,5 +154,7 @@ Rails.application.routes.draw do
 
   get '/:key/snapshots/:id/members', to: 'profiles#snapshot_members', as: :snapshot_members,
                                      constraints: { key: %r{[^/]+} }
+  get '/:key/update_logs', to: 'profiles#update_logs', as: :profile_update_logs,
+                           constraints: { key: %r{[^/]+} }
   get '/:key', to: 'profiles#show', as: :profile, constraints: { key: %r{[^/]+} }
 end

@@ -6,6 +6,6 @@ class ManagementInformationComponent < ViewComponent::Base
   end
 
   def render?
-    helpers.logged_in?
+    helpers.logged_in? && helpers.current_user.super_operator_or_above?
   end
 end

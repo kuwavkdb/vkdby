@@ -1,4 +1,18 @@
 <div class="container mx-auto px-2 py-4 max-w-4xl">
-  <h1 class="text-2xl font-bold mb-6 dark:text-white">セクション編集: <%= @section.name %></h1>
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold dark:text-white">セクション編集: <%= @section.name %></h1>
+    <% if @section.discarded? %>
+      <%= button_to "復元",
+            undiscard_admin_section_path(@section),
+            method: :patch,
+            class: "inline-flex items-center px-3 py-1.5 text-sm font-medium text-green-700 bg-green-100 hover:bg-green-200 dark:text-green-300 dark:bg-green-900/50 dark:hover:bg-green-900 rounded-md transition-colors" %>
+    <% else %>
+      <%= button_to "削除",
+            admin_section_path(@section),
+            method: :delete,
+            onclick: "return confirm('本当に削除しますか？')",
+            class: "inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 dark:text-red-300 dark:bg-red-900/50 dark:hover:bg-red-900 rounded-md transition-colors" %>
+    <% end %>
+  </div>
   <%= render "form", section: @section, sectionable: @sectionable %>
 </div>
