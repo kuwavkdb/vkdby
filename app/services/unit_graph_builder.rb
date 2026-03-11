@@ -6,6 +6,17 @@ class UnitGraphBuilder
   end
 
   def call
+    Rails.cache.fetch(cache_key, expires_in: 24.hours) { compute }
+  end
+
+  private
+
+  def cache_key
+    latest = UnitSnapshot.where(current: true).maximum(:updated_at)
+    "unit_graph/#{@unit.id}/#{latest.to_i}"
+  end
+
+  def compute
     hop1_person_ids = fetch_hop1_person_ids
     return { nodes: [], edges: [] } if hop1_person_ids.empty?
 
@@ -21,8 +32,6 @@ class UnitGraphBuilder
 
     build_graph(unit_ids_by_person, relevant_unit_ids)
   end
-
-  private
 
   def fetch_hop1_person_ids
     snapshot_ids = @unit.unit_snapshots.where(current: true).select(:id)
