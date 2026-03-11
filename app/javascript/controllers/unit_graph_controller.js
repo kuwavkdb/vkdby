@@ -92,28 +92,41 @@ export default class extends Controller {
       this.containerTarget.style.cursor = "default"
     })
 
-    this._onFullscreenChange = () => this.cy.resize()
-    document.addEventListener("fullscreenchange", this._onFullscreenChange)
   }
 
   disconnect() {
-    document.removeEventListener("fullscreenchange", this._onFullscreenChange)
+    this._collapse()
   }
 
   toggleFullscreen() {
-    const container = this.containerTarget
-    if (!document.fullscreenElement) {
-      container.requestFullscreen().then(() => {
-        container.style.height = "100vh"
-        container.style.borderRadius = "0"
-        this.cy?.resize()
-      })
+    if (this.containerTarget.classList.contains("unit-graph--expanded")) {
+      this._collapse()
     } else {
-      document.exitFullscreen().then(() => {
-        container.style.height = "420px"
-        container.style.borderRadius = ""
-        this.cy?.resize()
-      })
+      this._expand()
     }
+  }
+
+  _expand() {
+    const container = this.containerTarget
+    container.classList.add("unit-graph--expanded")
+    container.style.cssText = [
+      "position:fixed",
+      "inset:0",
+      "z-index:9999",
+      "width:100vw",
+      "height:100vh",
+      "border-radius:0",
+      "border:none",
+    ].join(";")
+    document.body.style.overflow = "hidden"
+    this.cy?.resize()
+  }
+
+  _collapse() {
+    const container = this.containerTarget
+    container.classList.remove("unit-graph--expanded")
+    container.style.cssText = "height:420px;"
+    document.body.style.overflow = ""
+    this.cy?.resize()
   }
 }
