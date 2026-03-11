@@ -1,6 +1,8 @@
 <% node_count = graph_data[:nodes].length %>
 <% if node_count > 1 %>
-  <section class="mt-8">
+  <section class="mt-8"
+    data-controller="unit-graph"
+    data-unit-graph-data-value="<%= html_escape(graph_data.to_json) %>">
     <div class="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
       <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Relationship Graph</h2>
       <div class="flex items-center gap-3">
@@ -26,8 +28,7 @@
       </span>
     </div>
     <div
-      data-controller="unit-graph"
-      data-unit-graph-data-value="<%= html_escape(graph_data.to_json) %>"
+      data-unit-graph-target="container"
       class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900"
       style="height: 420px;"
       role="img"

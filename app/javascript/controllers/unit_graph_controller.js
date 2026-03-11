@@ -2,6 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static values = { data: Object }
+  static targets = ["container"]
 
   connect() {
     const { nodes, edges } = this.dataValue
@@ -16,7 +17,7 @@ export default class extends Controller {
     const isDark = document.documentElement.classList.contains("dark")
 
     this.cy = cytoscape({
-      container: this.element,
+      container: this.containerTarget,
       elements: [...nodes, ...edges],
       style: [
         {
@@ -84,11 +85,11 @@ export default class extends Controller {
     })
 
     this.cy.on("mouseover", "node", () => {
-      this.element.style.cursor = "pointer"
+      this.containerTarget.style.cursor = "pointer"
     })
 
     this.cy.on("mouseout", "node", () => {
-      this.element.style.cursor = "default"
+      this.containerTarget.style.cursor = "default"
     })
 
     this._onFullscreenChange = () => this.cy.resize()
@@ -100,16 +101,17 @@ export default class extends Controller {
   }
 
   toggleFullscreen() {
+    const container = this.containerTarget
     if (!document.fullscreenElement) {
-      this.element.requestFullscreen().then(() => {
-        this.element.style.height = "100vh"
-        this.element.style.borderRadius = "0"
+      container.requestFullscreen().then(() => {
+        container.style.height = "100vh"
+        container.style.borderRadius = "0"
         this.cy?.resize()
       })
     } else {
       document.exitFullscreen().then(() => {
-        this.element.style.height = "420px"
-        this.element.style.borderRadius = ""
+        container.style.height = "420px"
+        container.style.borderRadius = ""
         this.cy?.resize()
       })
     }
