@@ -30,9 +30,14 @@
     <div
       data-unit-graph-target="container"
       class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900"
-      style="height: 420px;"
+      style="height: 420px; position: relative;"
       role="img"
       aria-label="<%= unit.name %> のメンバー関連図">
+      <button
+        data-unit-graph-target="closeBtn"
+        data-action="click->unit-graph#toggleFullscreen"
+        aria-label="縮小"
+        style="display:none;position:absolute;top:0.75rem;right:0.75rem;z-index:10000;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:2rem;height:2rem;font-size:1rem;cursor:pointer;line-height:1;">✕</button>
     </div>
   </section>
 <% end %>

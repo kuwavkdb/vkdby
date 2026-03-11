@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static values = { data: Object }
-  static targets = ["container"]
+  static targets = ["container", "closeBtn"]
 
   connect() {
     const { nodes, edges } = this.dataValue
@@ -15,8 +15,6 @@ export default class extends Controller {
     }
 
     const isDark = document.documentElement.classList.contains("dark")
-
-    const rootId = nodes.find(n => n.data.current)?.data.id
 
     this.cy = cytoscape({
       container: this.containerTarget,
@@ -73,11 +71,10 @@ export default class extends Controller {
         },
       ],
       layout: {
-        name: "breadthfirst",
+        name: "cose",
         padding: 40,
-        spacingFactor: 1.8,
-        directed: false,
-        roots: rootId ? [`#${rootId}`] : undefined,
+        nodeRepulsion: 15000,
+        idealEdgeLength: 120,
         animate: false,
         fit: true,
       },
@@ -122,6 +119,7 @@ export default class extends Controller {
       "border-radius:0",
       "border:none",
     ].join(";")
+    this.closeBtnTarget.style.display = "block"
     document.body.style.overflow = "hidden"
     this.cy?.resize()
   }
@@ -129,7 +127,8 @@ export default class extends Controller {
   _collapse() {
     const container = this.containerTarget
     container.classList.remove("unit-graph--expanded")
-    container.style.cssText = "height:420px;"
+    container.style.cssText = "height:420px;position:relative;"
+    this.closeBtnTarget.style.display = "none"
     document.body.style.overflow = ""
     this.cy?.resize()
   }
