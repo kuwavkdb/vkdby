@@ -76,6 +76,44 @@ class ProfilesController < ApplicationController
                           .active
                           .includes(snapshot_people: :person)
                           .order(past: :asc, current: :desc, snapshot_index: :asc)
+
+    @graph_data = build_unit_graph_data(@resource)
+  end
+
+  def build_unit_graph_data(unit)
+    current_snapshot_ids = unit.unit_snapshots.where(current: true).select(:id)
+    person_ids = SnapshotPerson.where(unit_snapshot_id: current_snapshot_ids)
+                               .where.not(person_id: nil)
+                               .pluck(:person_id)
+                               .uniq
+
+    return { nodes: [], edges: [] } if person_ids.empty?
+
+    related_snapshot_people = SnapshotPerson
+      .joins(:unit_snapshot)
+      .where(unit_snapshots: { current: true })
+      .where(person_id: person_ids)
+      .includes(:person, unit_snapshot: :unit)
+
+    nodes = {}
+    edges = []
+
+    # 中心ユニットノード
+    nodes["unit_#{unit.id}"] = { data: { id: "unit_#{unit.id}", label: unit.name, type: "unit", url: "/#{unit.key}", current: true } }
+
+    related_snapshot_people.each do |sp|
+      related_unit = sp.unit_snapshot.unit
+      person = sp.person
+      next unless person
+
+      nodes["unit_#{related_unit.id}"] ||= { data: { id: "unit_#{related_unit.id}", label: related_unit.name, type: "unit", url: "/#{related_unit.key}", current: false } }
+      nodes["person_#{person.id}"] ||= { data: { id: "person_#{person.id}", label: person.name, type: "person", url: "/#{person.key}" } }
+
+      edge_id = "e_#{[related_unit.id, person.id].join('_')}"
+      edges << { data: { id: edge_id, source: "unit_#{related_unit.id}", target: "person_#{person.id}" } }
+    end
+
+    { nodes: nodes.values, edges: edges.uniq { |e| e[:data][:id] } }
   end
 
   def load_items

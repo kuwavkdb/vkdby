@@ -1,0 +1,31 @@
+<% node_count = graph_data[:nodes].length %>
+<% if node_count > 1 %>
+  <section class="mt-8">
+    <div class="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
+      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Relationship Graph</h2>
+      <span class="text-xs text-slate-400 dark:text-slate-500"><%= node_count %> nodes</span>
+    </div>
+    <div class="mb-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
+      <span class="flex items-center gap-1.5">
+        <span class="inline-block w-3 h-3 rounded-sm bg-red-600" aria-hidden="true"></span>
+        このユニット
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="inline-block w-3 h-3 rounded-sm bg-indigo-500" aria-hidden="true"></span>
+        関連ユニット
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="inline-block w-3 h-3 rounded-full bg-emerald-500" aria-hidden="true"></span>
+        メンバー
+      </span>
+    </div>
+    <div
+      data-controller="unit-graph"
+      data-unit-graph-data-value="<%= html_escape(graph_data.to_json) %>"
+      class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900"
+      style="height: 420px;"
+      role="img"
+      aria-label="<%= unit.name %> のメンバー関連図">
+    </div>
+  </section>
+<% end %>
