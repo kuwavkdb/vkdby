@@ -16,16 +16,7 @@ export default class extends Controller {
 
     const isDark = document.documentElement.classList.contains("dark")
 
-    const layoutOptions = {
-      name: "cose",
-      padding: 40,
-      nodeRepulsion: 20000,
-      idealEdgeLength: 160,
-      gravity: 0.2,
-      componentSpacing: 100,
-      animate: false,
-      fit: true,
-    }
+    const rootId = nodes.find(n => n.data.current)?.data.id
 
     this.cy = cytoscape({
       container: this.containerTarget,
@@ -81,13 +72,15 @@ export default class extends Controller {
           },
         },
       ],
-      layout: { name: "preset" },
-    })
-
-    // コンテナが描画されたサイズで layout を実行する
-    requestAnimationFrame(() => {
-      this.cy.resize()
-      this.cy.layout(layoutOptions).run()
+      layout: {
+        name: "breadthfirst",
+        padding: 40,
+        spacingFactor: 1.8,
+        directed: false,
+        roots: rootId ? [`#${rootId}`] : undefined,
+        animate: false,
+        fit: true,
+      },
     })
 
     this.cy.on("tap", "node", (evt) => {
