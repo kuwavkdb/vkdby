@@ -39,6 +39,13 @@ class ProfilesController < ApplicationController
     render plain: '', status: :not_found
   end
 
+  def relationship_graph
+    unit = Unit.kept.find_by!(key: params[:key])
+    render json: UnitGraphBuilder.new(unit).call
+  rescue ActiveRecord::RecordNotFound
+    render json: { nodes: [], edges: [] }, status: :not_found
+  end
+
   def snapshot_members
     unit = Unit.kept.find_by!(key: params[:key])
     snapshot = unit.unit_snapshots.find(params[:id])
