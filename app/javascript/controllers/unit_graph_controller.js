@@ -2,9 +2,13 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static values = { url: String }
-  static targets = ["placeholder", "graphArea", "container", "closeBtn", "fullscreenBtn", "nodeCount"]
+  static targets = ["placeholder", "graphArea", "container", "fullscreenBtn", "nodeCount"]
 
   connect() {
+    this.fullscreenBtnTarget.addEventListener("pointerdown", (e) => {
+      e.preventDefault()
+      this.toggleFullscreen(e)
+    })
     if (window.location.hash === "#relationship-graph") {
       this.load()
     }
@@ -235,7 +239,9 @@ export default class extends Controller {
     this._collapse()
   }
 
-  toggleFullscreen() {
+  toggleFullscreen(e) {
+    e?.preventDefault()
+    if (this._lastCollapseAt && Date.now() - this._lastCollapseAt < 400) return
     if (this.containerTarget.classList.contains("unit-graph--expanded")) {
       this._collapse()
     } else {
@@ -245,17 +251,24 @@ export default class extends Controller {
 
   _expand() {
     const container = this.containerTarget
+    console.log("unit-graph: _expand called", container)
     container.classList.add("unit-graph--expanded")
-    container.style.cssText = [
-      "position:fixed",
-      "inset:0",
-      "z-index:9999",
-      "width:100vw",
-      "height:100vh",
-      "border-radius:0",
-      "border:none",
-    ].join(";")
-    this.closeBtnTarget.style.display = "block"
+    // 上部 48px をヘッダーバー用に空ける（Cytoscape キャンバスと重ならない領域）
+    container.style.cssText = "position:fixed;top:48px;left:0;right:0;bottom:0;z-index:9999;border-radius:0;border:none;"
+    console.log("unit-graph: container style set", container.style.cssText)
+
+    // キャンバスと重ならない上部ヘッダーバーに閉じるボタンを配置
+    const header = document.createElement("div")
+    header.style.cssText = "position:fixed;top:0;left:0;right:0;height:48px;z-index:10000;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:flex-end;padding:0 1rem;"
+    const btn = document.createElement("button")
+    btn.setAttribute("aria-label", "縮小")
+    btn.style.cssText = "background:none;color:#fff;border:none;font-size:1.5rem;cursor:pointer;padding:0.5rem;touch-action:manipulation;user-select:none;line-height:1;"
+    btn.textContent = "✕"
+    btn.addEventListener("pointerdown", (e) => { e.preventDefault(); this._collapse() })
+    header.appendChild(btn)
+    document.body.appendChild(header)
+    this._bodyCloseBtn = header
+
     document.body.style.overflow = "hidden"
     this.cy?.resize()
     this.cy?.fit(undefined, 40)
@@ -263,10 +276,14 @@ export default class extends Controller {
 
   _collapse() {
     if (!this.hasContainerTarget) return
+    this._lastCollapseAt = Date.now()
     const container = this.containerTarget
     container.classList.remove("unit-graph--expanded")
     container.style.cssText = "height:420px;position:relative;"
-    if (this.hasCloseBtnTarget) this.closeBtnTarget.style.display = "none"
+
+    this._bodyCloseBtn?.remove()
+    this._bodyCloseBtn = null
+
     document.body.style.overflow = ""
     this.cy?.resize()
     this.cy?.fit(undefined, 40)

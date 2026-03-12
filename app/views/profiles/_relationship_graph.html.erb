@@ -9,9 +9,10 @@
       <button
         data-unit-graph-target="fullscreenBtn"
         data-action="click->unit-graph#toggleFullscreen"
-        class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors hidden"
+        class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors hidden p-2 -m-2"
+        style="touch-action:manipulation;"
         aria-label="全画面表示">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
         </svg>
       </button>
@@ -53,11 +54,6 @@
       style="height: 420px; position: relative;"
       role="img"
       aria-label="<%= unit.name %> のメンバー関連図">
-      <button
-        data-unit-graph-target="closeBtn"
-        data-action="click->unit-graph#toggleFullscreen"
-        aria-label="縮小"
-        style="display:none;position:absolute;top:0.75rem;right:0.75rem;z-index:10000;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:2rem;height:2rem;font-size:1rem;cursor:pointer;line-height:1;">✕</button>
     </div>
   </div>
 
