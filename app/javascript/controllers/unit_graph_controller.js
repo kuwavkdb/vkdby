@@ -251,11 +251,9 @@ export default class extends Controller {
 
   _expand() {
     const container = this.containerTarget
-    console.log("unit-graph: _expand called", container)
     container.classList.add("unit-graph--expanded")
     // 上部 48px をヘッダーバー用に空ける（Cytoscape キャンバスと重ならない領域）
     container.style.cssText = "position:fixed;top:48px;left:0;right:0;bottom:0;z-index:9999;border-radius:0;border:none;"
-    console.log("unit-graph: container style set", container.style.cssText)
 
     // キャンバスと重ならない上部ヘッダーバーに閉じるボタンを配置
     const header = document.createElement("div")
