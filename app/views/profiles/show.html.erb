@@ -120,6 +120,10 @@
         </section>
       <% end %>
 
+      <% if @resource.is_a?(Unit) %>
+        <%= render "relationship_graph", unit: @resource %>
+      <% end %>
+
       <section class="mt-8">
         <details class="group"
                  hx-get="<%= profile_update_logs_path(@resource.key) %>"

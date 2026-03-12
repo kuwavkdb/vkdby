@@ -156,5 +156,7 @@ Rails.application.routes.draw do
                                      constraints: { key: %r{[^/]+} }
   get '/:key/update_logs', to: 'profiles#update_logs', as: :profile_update_logs,
                            constraints: { key: %r{[^/]+} }
+  get '/:key/relationship_graph', to: 'profiles#relationship_graph', as: :profile_relationship_graph,
+                                  constraints: { key: %r{[^/]+} }
   get '/:key', to: 'profiles#show', as: :profile, constraints: { key: %r{[^/]+} }
 end

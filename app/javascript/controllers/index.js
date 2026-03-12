@@ -33,3 +33,6 @@ application.register("toggle", ToggleController)
 
 import MarkdownPreviewController from "controllers/markdown_preview_controller"
 application.register("markdown-preview", MarkdownPreviewController)
+
+import UnitGraphController from "controllers/unit_graph_controller"
+application.register("unit-graph", UnitGraphController)
