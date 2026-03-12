@@ -109,6 +109,14 @@ export default class extends Controller {
           },
         },
         {
+          selector: "node.neighbor-highlight",
+          style: {
+            "border-width": 3,
+            "border-color": "#f59e0b",
+            "background-opacity": 1,
+          },
+        },
+        {
           selector: "node:selected",
           style: {
             "border-width": 3,
@@ -137,21 +145,20 @@ export default class extends Controller {
     })
 
     this.cy.on("tap", "node", (evt) => {
-      const graphUrl = evt.target.data("graph_url")
-      if (graphUrl) this._expandNode(evt.target, graphUrl)
-    })
-
-    this.cy.on("dblclick", "node", (evt) => {
       const url = evt.target.data("url")
       if (url) window.location.href = url
     })
 
     this.cy.on("grabon", "node", (evt) => {
-      evt.target.connectedEdges().addClass("dragging")
+      const node = evt.target
+      node.connectedEdges().addClass("dragging")
+      node.neighborhood("node").addClass("neighbor-highlight")
     })
 
     this.cy.on("free", "node", (evt) => {
-      evt.target.connectedEdges().removeClass("dragging")
+      const node = evt.target
+      node.connectedEdges().removeClass("dragging")
+      node.neighborhood("node").removeClass("neighbor-highlight")
     })
 
     this.cy.on("mouseover", "node", () => {
