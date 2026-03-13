@@ -120,6 +120,9 @@ export default class extends Controller {
             "line-color": isDark ? "#94a3b8" : "#64748b",
             "curve-style": "bezier",
             "opacity": 0.8,
+            "target-arrow-shape": "triangle",
+            "target-arrow-color": isDark ? "#94a3b8" : "#64748b",
+            "arrow-scale": 0.8,
           },
         },
         {
@@ -131,6 +134,9 @@ export default class extends Controller {
             "line-dash-pattern": [4, 3],
             "curve-style": "bezier",
             "opacity": 0.6,
+            "target-arrow-shape": "triangle",
+            "target-arrow-color": isDark ? "#475569" : "#94a3b8",
+            "arrow-scale": 0.7,
           },
         },
         {
