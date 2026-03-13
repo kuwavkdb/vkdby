@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class UnitGraphBuilder
+class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
   def initialize(unit)
     @unit = unit
   end
@@ -20,7 +20,7 @@ class UnitGraphBuilder
     hop1_person_ids = fetch_hop1_person_ids
     return { nodes: [], edges: [] } if hop1_person_ids.empty?
 
-    hop1_unit_ids = fetch_unit_ids_for_persons(hop1_person_ids)  # カレントのみ（エッジ実線判定用）
+    hop1_unit_ids = fetch_unit_ids_for_persons(hop1_person_ids) # カレントのみ（エッジ実線判定用）
 
     # カレント中心メンバーが過去を含めて所属したことのある全ユニット（ダリ等を含むhop2の起点）
     hop1_adjacent_unit_ids = fetch_all_unit_ids_for_persons(hop1_person_ids) - [@unit.id]
@@ -40,8 +40,8 @@ class UnitGraphBuilder
 
     # hop1（グラフ距離1）: 中心ユニットと人物を共有する全ユニット（過去含む）
     hop1_display_unit_ids = unit_ids_by_person
-                              .select { |_pid, uids| uids.include?(@unit.id) }
-                              .values.flatten.uniq.to_set - Set[@unit.id]
+                            .select { |_pid, uids| uids.include?(@unit.id) }
+                            .values.flatten.uniq.to_set - Set[@unit.id]
 
     build_graph(unit_ids_by_person, current_edge_pairs, relevant_unit_ids, hop1_display_unit_ids)
   end
@@ -97,12 +97,12 @@ class UnitGraphBuilder
   #   同じhop階層のエッジ → いずれか一方でもカレントメンバーなら実線
   def build_current_edge_pairs(all_person_ids, unit_ids_by_person, hop1_unit_ids)
     current_unit_ids_by_person = SnapshotPerson
-      .joins(:unit_snapshot)
-      .where(unit_snapshots: { current: true })
-      .where(person_id: all_person_ids)
-      .pluck(:person_id, 'unit_snapshots.unit_id')
-      .each_with_object(Hash.new { |h, k| h[k] = [] }) { |(pid, uid), h| h[pid] << uid }
-      .transform_values(&:uniq)
+                                 .joins(:unit_snapshot)
+                                 .where(unit_snapshots: { current: true })
+                                 .where(person_id: all_person_ids)
+                                 .pluck(:person_id, 'unit_snapshots.unit_id')
+                                 .each_with_object(Hash.new { |h, k| h[k] = [] }) { |(pid, uid), h| h[pid] << uid }
+                                 .transform_values(&:uniq)
 
     hop1_set = hop1_unit_ids.to_set
     pairs = Set.new
