@@ -13,7 +13,7 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
 
   def cache_key
     latest = UnitSnapshot.maximum(:updated_at)
-    "unit_graph/#{@unit.id}/v20/#{latest.to_i}"
+    "unit_graph/#{@unit.id}/v19/#{latest.to_i}"
   end
 
   def compute
@@ -138,13 +138,6 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
   def build_graph(unit_ids_by_person, current_edge_pairs, relevant_unit_ids, hop1_unit_ids_set = Set.new)
     related_units = Unit.where(id: relevant_unit_ids).index_by(&:id)
 
-    hop_for = lambda { |uid|
-      if uid == @unit.id then 0
-      elsif hop1_unit_ids_set.include?(uid) then 1
-      else 2
-      end
-    }
-
     nodes = { "unit_#{@unit.id}" => center_node }
     edges = {}
 
@@ -160,7 +153,10 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
           u = related_units[uid]
           next unless u
 
-          hop_level = hop_for.call(uid)
+          hop_level = if uid == @unit.id then 0
+                      elsif hop1_unit_ids_set.include?(uid) then 1
+                      else 2
+                      end
           # hop1 = 紫、hop2 = グレー（hopのみで色分け）
           nodes["unit_#{uid}"] = unit_node(u, uid == @unit.id, hop_level == 1, hop_level)
         end
@@ -168,9 +164,7 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
         if edges[edge_key]
           edges[edge_key][:data][:current] = 1 if edge_current
         else
-          # source = hopの低い方（中心側）、target = hopの高い方（末端側）
-          src, tgt = hop_for.call(uid_a) <= hop_for.call(uid_b) ? [uid_a, uid_b] : [uid_b, uid_a]
-          edges[edge_key] = { data: { id: edge_key, source: "unit_#{src}", target: "unit_#{tgt}",
+          edges[edge_key] = { data: { id: edge_key, source: "unit_#{uid_a}", target: "unit_#{uid_b}",
                                       current: edge_current ? 1 : 0 } }
         end
       end
