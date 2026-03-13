@@ -58,10 +58,18 @@ export default class extends Controller {
       elements: [...nodes, ...edges],
       style: [
         {
+          selector: 'node[hop = 1]',
+          style: { "z-index": 300 },
+        },
+        {
+          selector: 'node[hop = 2]',
+          style: { "z-index": 200 },
+        },
+        {
           selector: 'node[type="unit"]',
           style: {
-            "background-color": "#6366f1",
-            "background-opacity": 0.75,
+            "background-color": "#94a3b8",
+            "background-opacity": 0.7,
             "label": "data(label)",
             "color": "#ffffff",
             "text-valign": "center",
@@ -76,16 +84,25 @@ export default class extends Controller {
             "text-max-width": "120px",
             "cursor": "pointer",
             "border-width": 2,
+            "border-color": "#64748b",
+          },
+        },
+        {
+          selector: 'node[type="unit"].snapshot-current',
+          style: {
+            "background-color": "#6366f1",
+            "background-opacity": 0.75,
             "border-color": "#4338ca",
           },
         },
         {
-          selector: 'node[type="unit"][?current]',
+          selector: 'node[type="unit"].center',
           style: {
             "background-color": "#dc2626",
             "background-opacity": 1,
             "border-width": 3,
             "border-color": "#fca5a5",
+            "z-index": 9999,
           },
         },
         {
@@ -97,12 +114,23 @@ export default class extends Controller {
           },
         },
         {
-          selector: "edge",
+          selector: "edge[current = 1]",
+          style: {
+            "width": 2,
+            "line-color": isDark ? "#94a3b8" : "#64748b",
+            "curve-style": "bezier",
+            "opacity": 0.8,
+          },
+        },
+        {
+          selector: "edge[current = 0]",
           style: {
             "width": 1.5,
-            "line-color": isDark ? "#475569" : "#cbd5e1",
+            "line-color": isDark ? "#475569" : "#94a3b8",
+            "line-style": "dashed",
+            "line-dash-pattern": [4, 3],
             "curve-style": "bezier",
-            "opacity": 0.7,
+            "opacity": 0.6,
           },
         },
         {
@@ -147,6 +175,9 @@ export default class extends Controller {
         fit: true,
       },
     })
+
+    // 中心ノードを確実に最前面に（スタイルシートより優先）
+    this.cy.nodes(".center").style("z-index", 9999)
 
     this.cy.on("tap", "node", (evt) => {
       const url = evt.target.data("url")
@@ -255,12 +286,44 @@ export default class extends Controller {
     // 上部 48px をヘッダーバー用に空ける（Cytoscape キャンバスと重ならない領域）
     container.style.cssText = "position:fixed;top:48px;left:0;right:0;bottom:0;z-index:9999;border-radius:0;border:none;"
 
-    // キャンバスと重ならない上部ヘッダーバーに閉じるボタンを配置
+    const isDark = document.documentElement.classList.contains("dark")
+    const textColor = isDark ? "#94a3b8" : "#64748b"
+    const mutedColor = isDark ? "#64748b" : "#94a3b8"
+
+    // キャンバスと重ならない上部ヘッダーバーに凡例と閉じるボタンを配置
     const header = document.createElement("div")
-    header.style.cssText = "position:fixed;top:0;left:0;right:0;height:48px;z-index:10000;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:flex-end;padding:0 1rem;"
+    const bgColor = isDark ? "#000000" : "#ffffff"
+    header.style.cssText = `position:fixed;top:0;left:0;right:0;height:48px;z-index:10000;background:${bgColor};display:flex;align-items:center;justify-content:space-between;padding:0 1rem;`
+
+    // 凡例（PC のみ表示）
+    const isPC = window.matchMedia("(min-width: 768px)").matches
+    if (isPC) {
+      const legend = document.createElement("div")
+      legend.style.cssText = `display:flex;align-items:center;gap:0.75rem;font-size:0.75rem;color:${textColor};`
+      legend.innerHTML = `
+        <span style="display:flex;align-items:center;gap:0.375rem;">
+          <span style="display:inline-block;width:0.75rem;height:0.75rem;border-radius:2px;background:#dc2626;" aria-hidden="true"></span>
+          このユニット
+        </span>
+        <span style="display:flex;align-items:center;gap:0.375rem;">
+          <span style="display:inline-block;width:0.75rem;height:0.75rem;border-radius:2px;background:#6366f1;" aria-hidden="true"></span>
+          直接の関連ユニット
+        </span>
+        <span style="display:flex;align-items:center;gap:0.375rem;">
+          <svg width="24" height="8" aria-hidden="true"><line x1="0" y1="4" x2="24" y2="4" stroke="${textColor}" stroke-width="2"/></svg>
+          現在の関連
+        </span>
+        <span style="display:flex;align-items:center;gap:0.375rem;color:${mutedColor};">
+          <svg width="24" height="8" aria-hidden="true"><line x1="0" y1="4" x2="24" y2="4" stroke="${mutedColor}" stroke-width="1.5" stroke-dasharray="4 3"/></svg>
+          過去の関連
+        </span>
+      `
+      header.appendChild(legend)
+    }
+
     const btn = document.createElement("button")
     btn.setAttribute("aria-label", "縮小")
-    btn.style.cssText = "background:none;color:#fff;border:none;font-size:1.5rem;cursor:pointer;padding:0.5rem;touch-action:manipulation;user-select:none;line-height:1;"
+    btn.style.cssText = `background:none;color:${textColor};border:none;font-size:1.5rem;cursor:pointer;padding:0.5rem;touch-action:manipulation;user-select:none;line-height:1;margin-left:auto;`
     btn.textContent = "✕"
     btn.addEventListener("pointerdown", (e) => { e.preventDefault(); this._collapse() })
     header.appendChild(btn)
