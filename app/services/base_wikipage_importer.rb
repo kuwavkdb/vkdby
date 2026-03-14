@@ -50,6 +50,13 @@ class BaseWikipageImporter
     @wiki_content = @wiki_content&.lines&.reject { |line| line.strip.start_with?('//') }&.join
   end
 
+  def strip_category_plugin(section_name, content)
+    return content unless SECTIONS_STRIP_CATEGORY_PLUGIN.any? { |prefix| section_name.start_with?(prefix) }
+
+    content = content.gsub(/\{\{category\s+[^}]*\}\}/i, '')
+    content.lines.reject { |line| line.strip.match?(/\A[*-]+\z/) }.join.strip
+  end
+
   def parse_youtube_tags(owner)
     return unless @wiki_content
 
@@ -276,11 +283,7 @@ class BaseWikipageImporter
 
       next if is_excluded
 
-      # 「個人情報」「プロフィール」セクションは categoryプラグインを除去
-      if SECTIONS_STRIP_CATEGORY_PLUGIN.any? { |prefix| section_name.start_with?(prefix) }
-        section_content = section_content.gsub(/\{\{category\s+[^}]*\}\}/i, '')
-        section_content = section_content.lines.reject { |line| line.strip.match?(/\A[*\-]+\z/) }.join.strip
-      end
+      section_content = strip_category_plugin(section_name, section_content)
 
       # wiki_text が空の場合は除外
       next if section_content.blank?
