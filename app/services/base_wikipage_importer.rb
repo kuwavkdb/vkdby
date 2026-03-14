@@ -220,7 +220,6 @@ class BaseWikipageImporter
     リンク
     メンバー
     関係者
-    個人情報
     情報
     ディスコグラフィ
     経歴
@@ -238,6 +237,9 @@ class BaseWikipageImporter
 
   # 部分一致で除外するセクション名
   EXCLUDED_SECTIONS_CONTAINING = ['同名のアーティスト'].freeze
+
+  # categoryプラグインを除去するセクション名（前方一致）
+  SECTIONS_STRIP_CATEGORY_PLUGIN = %w[個人情報 プロフィール].freeze
 
   def parse_sections(owner)
     return unless @wiki_content
@@ -273,6 +275,12 @@ class BaseWikipageImporter
       end || EXCLUDED_SECTIONS_CONTAINING.any? { |partial| section_name.include?(partial) }
 
       next if is_excluded
+
+      # 「個人情報」「プロフィール」セクションは categoryプラグインを除去
+      if SECTIONS_STRIP_CATEGORY_PLUGIN.any? { |prefix| section_name.start_with?(prefix) }
+        section_content = section_content.gsub(/\{\{category\s+[^}]*\}\}/i, '')
+        section_content = section_content.lines.reject { |line| line.strip.match?(/\A[*\-]+\z/) }.join.strip
+      end
 
       # wiki_text が空の場合は除外
       next if section_content.blank?
