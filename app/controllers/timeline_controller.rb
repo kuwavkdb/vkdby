@@ -35,17 +35,17 @@ class TimelineController < ApplicationController
         .where(active: true)
         .select(:id, :date, :title, :units)
 
-      debut_markers = Hash.new { |h, k| h[k] = [] }
+      debut_markers = {}
       debut_trends.each do |trend|
         (trend.units || []).each do |u|
           uid = u['unit_id'].to_i
           next unless unit_id_set.include?(uid)
 
-          debut_markers[uid] << { year: trend.date.year, date: trend.date.to_s, title: trend.title }
+          (debut_markers[uid] ||= []) << { year: trend.date.year, date: trend.date.to_s, title: trend.title }
         end
       end
 
-      { units:, year_min:, year_max:, debut_markers: debut_markers.to_h }
+      { units:, year_min:, year_max:, debut_markers: }
     end
 
     @units          = @timeline_data[:units]
