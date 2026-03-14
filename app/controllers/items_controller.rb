@@ -25,15 +25,15 @@ class ItemsController < ApplicationController
   def index
     base_scope = filter_by_artist(Item.all)
 
-    dates = base_scope.pluck(:release_date)
-    @year_counts = dates.map(&:year).tally
+    @year_counts = base_scope.where.not(release_date: nil)
+                             .group('EXTRACT(year FROM release_date)::integer').count
     @years = @year_counts.keys.sort.reverse
 
     scope = base_scope.order(release_date: :desc)
     if params[:decade].present?
       scope = filter_by_decade(scope)
     elsif params[:year].present?
-      scope = filter_by_year(scope, dates)
+      scope = filter_by_year(scope, base_scope)
     end
 
     @pagy, @items = pagy(scope, limit: 20)
@@ -62,12 +62,12 @@ class ItemsController < ApplicationController
     scope.where(release_date: Date.new(decade, 1, 1)..Date.new(decade + 9, 12, 31))
   end
 
-  def filter_by_year(scope, dates)
+  def filter_by_year(scope, base_scope)
     year = params[:year].to_i
     month = params[:month].presence&.to_i
 
-    target_dates = dates.select { |d| d.year == year }
-    @month_counts = target_dates.map(&:month).tally
+    @month_counts = base_scope.where('EXTRACT(year FROM release_date) = ?', year)
+                              .group('EXTRACT(month FROM release_date)::integer').count
     @months = @month_counts.keys.sort.reverse
 
     start_date = Date.new(year, month || 1, 1)
