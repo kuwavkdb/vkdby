@@ -31,7 +31,6 @@ module Admin
     end
 
     def edit
-      @person_logs = @person.person_logs.order(:log_date)
       @person.links.build # Always add an empty link field for new entries
       @update_logs = UpdateLog.for_person(@person)
                               .includes(:user)
