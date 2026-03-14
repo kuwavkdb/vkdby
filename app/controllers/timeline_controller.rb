@@ -28,13 +28,31 @@ class TimelineController < ApplicationController
         [earliest, unit.name_kana.to_s]
       end
 
-      { units:, year_min:, year_max: }
+      # 「メジャーデビュー」Trend を収集し unit_id → [{year:, date:, title:}] のハッシュに変換
+      unit_id_set = units.map(&:id).to_set
+      debut_trends = Trend
+        .where('title LIKE ?', '%メジャーデビュー%')
+        .where(active: true)
+        .select(:id, :date, :title, :units)
+
+      debut_markers = Hash.new { |h, k| h[k] = [] }
+      debut_trends.each do |trend|
+        (trend.units || []).each do |u|
+          uid = u['unit_id'].to_i
+          next unless unit_id_set.include?(uid)
+
+          debut_markers[uid] << { year: trend.date.year, date: trend.date.to_s, title: trend.title }
+        end
+      end
+
+      { units:, year_min:, year_max:, debut_markers: debut_markers.to_h }
     end
 
-    @units     = @timeline_data[:units]
-    @year_min  = @timeline_data[:year_min]
-    @year_max  = @timeline_data[:year_max]
-    @year_range = (@year_min..@year_max).to_a
+    @units          = @timeline_data[:units]
+    @year_min       = @timeline_data[:year_min]
+    @year_max       = @timeline_data[:year_max]
+    @year_range     = (@year_min..@year_max).to_a
+    @debut_markers  = @timeline_data[:debut_markers]
   end
 
   private
