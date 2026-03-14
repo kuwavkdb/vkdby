@@ -14,7 +14,7 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
 
   def cache_key
     latest = UnitSnapshot.maximum(:updated_at)
-    "unit_graph/#{@unit.id}/v19/#{@track_past ? 'past' : 'cur'}/#{latest.to_i}"
+    "unit_graph/#{@unit.id}/v20/#{@track_past ? 'past' : 'cur'}/#{latest.to_i}"
   end
 
   def compute
@@ -44,9 +44,12 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
     # 中心に近い側のユニットでカレントメンバーなら実線（同階層の場合はいずれか一方でも可）
     current_edge_pairs = build_current_edge_pairs(all_person_ids, unit_ids_by_person, hop1_unit_ids)
 
-    # hop1（グラフ距離1）: 中心ユニットと人物を共有する全ユニット（過去含む）
+    # hop1（グラフ距離1）の色付け対象:
+    #   track_past=false: カレントメンバーを経由するユニットのみをhop1（紫）とする
+    #   track_past=true : 過去メンバーを含む全歴史メンバー経由のユニットもhop1とする
+    center_pids_for_hop1 = @track_past ? all_center_person_ids.to_set : hop1_person_ids.to_set
     hop1_display_unit_ids = unit_ids_by_person
-                            .select { |_pid, uids| uids.include?(@unit.id) }
+                            .select { |pid, uids| center_pids_for_hop1.include?(pid) && uids.include?(@unit.id) }
                             .values.flatten.uniq.to_set - Set[@unit.id]
 
     build_graph(unit_ids_by_person, current_edge_pairs, relevant_unit_ids, hop1_display_unit_ids)
