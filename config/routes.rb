@@ -45,11 +45,6 @@ Rails.application.routes.draw do
       member do
         patch :undiscard
       end
-      resources :person_logs do
-        collection do
-          patch :reorder
-        end
-      end
     end
 
     resources :trends
