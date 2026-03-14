@@ -126,6 +126,10 @@ export default class extends Controller {
           style: { "z-index": 200, "padding": "5px 10px", "font-size": "9px" },
         },
         {
+          selector: 'node[past_only = 1]',
+          style: { "border-style": "dashed", "border-width": 2, "border-color": "#94a3b8" },
+        },
+        {
           selector: "node.newly-added",
           style: {
             "background-color": "#0d9488",
@@ -165,7 +169,6 @@ export default class extends Controller {
           style: {
             "border-width": 3,
             "border-color": "#f59e0b",
-            "background-opacity": 1,
           },
         },
         {
@@ -340,7 +343,7 @@ export default class extends Controller {
         </span>
         <span style="display:flex;align-items:center;gap:0.375rem;color:${mutedColor};">
           <svg width="24" height="8" aria-hidden="true"><line x1="0" y1="4" x2="24" y2="4" stroke="${mutedColor}" stroke-width="1.5" stroke-dasharray="4 3"/></svg>
-          過去の関連
+          過去/サポートの関連
         </span>
       `
       header.appendChild(legend)

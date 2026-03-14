@@ -14,7 +14,7 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
 
   def cache_key
     latest = UnitSnapshot.maximum(:updated_at)
-    "unit_graph/#{@unit.id}/v21/#{@track_past ? 'past' : 'cur'}/#{latest.to_i}"
+    "unit_graph/#{@unit.id}/v22/#{@track_past ? 'past' : 'cur'}/#{latest.to_i}"
   end
 
   def compute
@@ -52,7 +52,43 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
                             .select { |pid, uids| center_pids_for_hop1.include?(pid) && uids.include?(@unit.id) }
                             .values.flatten.uniq.to_set - Set[@unit.id]
 
-    build_graph(unit_ids_by_person, current_edge_pairs, relevant_unit_ids, hop1_display_unit_ids)
+    # track_past=true の場合、デフォルト表示（過去・サポート除外）では見えないノードを past_only としてマーク
+    base_unit_ids = @track_past ? compute_base_unit_ids : nil
+
+    build_graph(unit_ids_by_person, current_edge_pairs, relevant_unit_ids, hop1_display_unit_ids, base_unit_ids)
+  end
+
+  # track_past=false 相当の relevant_unit_ids を計算（past_only マーク用）
+  def compute_base_unit_ids
+    base_sp = SnapshotPerson.where(support: false)
+
+    snap_ids = @unit.unit_snapshots.where(current: true).select(:id)
+    base_hop1_pids = base_sp.where(unit_snapshot_id: snap_ids).where.not(person_id: nil).pluck(:person_id).uniq
+    return Set.new if base_hop1_pids.empty?
+
+    base_hop1_uids = base_sp.joins(:unit_snapshot)
+                            .where(unit_snapshots: { current: true })
+                            .where(person_id: base_hop1_pids)
+                            .pluck('unit_snapshots.unit_id').uniq
+
+    base_hop2_source = base_hop1_uids - [@unit.id]
+    base_hop2_snap_ids = UnitSnapshot.where(unit_id: base_hop2_source, current: true).select(:id)
+    base_hop2_pids = base_sp.where(unit_snapshot_id: base_hop2_snap_ids).where.not(person_id: nil).pluck(:person_id).uniq
+
+    base_all_center_pids = base_sp.where(unit_snapshot_id: @unit.unit_snapshots.select(:id))
+                                  .where.not(person_id: nil).pluck(:person_id).uniq
+
+    base_all_pids = (base_all_center_pids + base_hop2_pids).uniq
+    base_map = base_sp.joins(:unit_snapshot)
+                      .where(person_id: base_all_pids)
+                      .pluck(:person_id, 'unit_snapshots.unit_id')
+                      .each_with_object(Hash.new { |h, k| h[k] = [] }) { |(pid, uid), h| h[pid] << uid }
+                      .transform_values(&:uniq)
+
+    base_relevant = resolve_relevant_unit_ids(base_map, [@unit.id] + base_hop2_source)
+    base_map.transform_values! { |uids| uids & base_relevant }
+    base_map.reject! { |_pid, uids| uids.size < 2 }
+    base_map.values.flatten.to_set | Set[@unit.id]
   end
 
   def sp_scope
@@ -148,7 +184,7 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
     (hop1_unit_ids + hop2_unit_ids).uniq
   end
 
-  def build_graph(unit_ids_by_person, current_edge_pairs, relevant_unit_ids, hop1_unit_ids_set = Set.new)
+  def build_graph(unit_ids_by_person, current_edge_pairs, relevant_unit_ids, hop1_unit_ids_set = Set.new, base_unit_ids = nil)
     related_units = Unit.where(id: relevant_unit_ids).index_by(&:id)
 
     nodes = { "unit_#{@unit.id}" => center_node }
@@ -170,8 +206,9 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
                       elsif hop1_unit_ids_set.include?(uid) then 1
                       else 2
                       end
+          past_only = base_unit_ids && !base_unit_ids.include?(uid)
           # hop1 = 紫、hop2 = グレー（hopのみで色分け）
-          nodes["unit_#{uid}"] = unit_node(u, uid == @unit.id, hop_level == 1, hop_level)
+          nodes["unit_#{uid}"] = unit_node(u, uid == @unit.id, hop_level == 1, hop_level, past_only: past_only)
         end
 
         if edges[edge_key]
@@ -194,14 +231,15 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
       classes: 'center snapshot-current' }
   end
 
-  def unit_node(unit, is_center, is_current, hop_level = 1)
+  def unit_node(unit, is_center, is_current, hop_level = 1, past_only: false)
     classes = []
     classes << 'center' if is_center
     classes << 'snapshot-current' if is_current
-    { data: { id: "unit_#{unit.id}", label: unit.name, type: 'unit',
-              url: "/#{unit.key}#relationship-graph",
-              graph_url: "/#{unit.key}/relationship_graph",
-              hop: hop_level },
-      classes: classes.join(' ') }
+    data = { id: "unit_#{unit.id}", label: unit.name, type: 'unit',
+             url: "/#{unit.key}#relationship-graph",
+             graph_url: "/#{unit.key}/relationship_graph",
+             hop: hop_level }
+    data[:past_only] = 1 if past_only
+    { data: data, classes: classes.join(' ') }
   end
 end
