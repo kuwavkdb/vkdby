@@ -50,6 +50,7 @@ Rails.application.configure do
 
   config.cache_store = :redis_cache_store, {
     url: ENV['REDIS_URL'],
+    expires_in: 1.hour,
     error_handler: lambda { |method:, exception:, returning: nil| # rubocop:disable Lint/UnusedBlockArgument
       Rails.logger.error "RedisCache error (#{method}): #{exception.class}: #{exception.message}"
     }
