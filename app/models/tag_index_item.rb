@@ -24,4 +24,12 @@
 class TagIndexItem < ApplicationRecord
   belongs_to :tag_index
   belongs_to :indexable, polymorphic: true
+
+  after_commit :expire_timeline_cache
+
+  private
+
+  def expire_timeline_cache
+    Rails.cache.delete(TimelineController::CACHE_KEY)
+  end
 end
