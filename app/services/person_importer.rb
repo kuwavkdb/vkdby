@@ -237,7 +237,7 @@ class PersonImporter < BaseWikipageImporter
   def parse_career_history(person)
     return unless @wiki_content =~ /!!経歴\s*\n(.+?)(?=\n!!|\z)/m
 
-    career_section = Regexp.last_match(1).strip
+    career_section = strip_career_plugins(Regexp.last_match(1).strip)
     person.old_history = career_section
     person.save!
 
