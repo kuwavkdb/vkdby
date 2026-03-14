@@ -5,6 +5,14 @@
   <div class="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
     <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Relationship Graph</h2>
     <div class="flex items-center gap-3">
+      <label class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 cursor-pointer select-none">
+        <input type="checkbox"
+          data-unit-graph-target="trackPast"
+          data-action="change->unit-graph#toggleTrackPast"
+          class="rounded border-slate-300 dark:border-slate-600 text-indigo-500 focus:ring-indigo-400"
+          aria-label="過去メンバーの活動を追跡">
+        過去メンバーを追跡
+      </label>
       <span data-unit-graph-target="nodeCount" class="text-xs text-slate-400 dark:text-slate-500 hidden"></span>
       <button
         data-unit-graph-target="fullscreenBtn"

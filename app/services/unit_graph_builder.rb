@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
-  def initialize(unit)
+  def initialize(unit, track_past: false)
     @unit = unit
+    @track_past = track_past
   end
 
   def call
@@ -13,7 +14,7 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
 
   def cache_key
     latest = UnitSnapshot.maximum(:updated_at)
-    "unit_graph/#{@unit.id}/v19/#{latest.to_i}"
+    "unit_graph/#{@unit.id}/v19/#{@track_past ? 'past' : 'cur'}/#{latest.to_i}"
   end
 
   def compute
@@ -22,15 +23,20 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
 
     hop1_unit_ids = fetch_unit_ids_for_persons(hop1_person_ids) # カレントのみ（エッジ実線判定用）
 
-    # カレント中心メンバーが過去を含めて所属したことのある全ユニット（ダリ等を含むhop2の起点）
-    hop1_adjacent_unit_ids = fetch_all_unit_ids_for_persons(hop1_person_ids) - [@unit.id]
+    # track_past=true: カレント中心メンバーの全履歴ユニットを起点にhop2を展開
+    # track_past=false: カレント在籍ユニットのみ（デフォルト）
+    hop2_source_unit_ids = if @track_past
+                             fetch_all_unit_ids_for_persons(hop1_person_ids) - [@unit.id]
+                           else
+                             hop1_unit_ids - [@unit.id]
+                           end
 
     all_center_person_ids = fetch_all_center_person_ids
-    hop2_person_ids = fetch_hop2_person_ids(hop1_adjacent_unit_ids)
+    hop2_person_ids = fetch_hop2_person_ids(hop2_source_unit_ids)
     all_person_ids = (all_center_person_ids + hop2_person_ids).uniq
 
     unit_ids_by_person = build_person_unit_map(all_person_ids)
-    relevant_unit_ids = resolve_relevant_unit_ids(unit_ids_by_person, [@unit.id] + hop1_adjacent_unit_ids)
+    relevant_unit_ids = resolve_relevant_unit_ids(unit_ids_by_person, [@unit.id] + hop2_source_unit_ids)
 
     unit_ids_by_person.transform_values! { |uids| uids & relevant_unit_ids }
     unit_ids_by_person.reject! { |_pid, uids| uids.size < 2 }

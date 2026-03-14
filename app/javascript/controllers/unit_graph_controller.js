@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static values = { url: String }
-  static targets = ["placeholder", "graphArea", "container", "fullscreenBtn", "nodeCount"]
+  static targets = ["placeholder", "graphArea", "container", "fullscreenBtn", "nodeCount", "trackPast"]
 
   connect() {
     this.fullscreenBtnTarget.addEventListener("pointerdown", (e) => {
@@ -12,6 +12,24 @@ export default class extends Controller {
     if (window.location.hash === "#relationship-graph") {
       this.load()
     }
+  }
+
+  toggleTrackPast() {
+    if (!this._loaded) return
+    this._loaded = false
+    this.cy?.destroy()
+    this.cy = null
+    this.graphAreaTarget.classList.add("hidden")
+    this.nodeCountTarget.classList.add("hidden")
+    this.fullscreenBtnTarget.classList.add("hidden")
+    this.placeholderTarget.classList.remove("hidden")
+    this.placeholderTarget.innerHTML = '<span class="text-sm text-slate-400 dark:text-slate-500">読み込み中...</span>'
+    this.load()
+  }
+
+  _graphUrl() {
+    const trackPast = this.hasTrackPastTarget && this.trackPastTarget.checked
+    return trackPast ? `${this.urlValue}?track_past=1` : this.urlValue
   }
 
   async load() {
@@ -29,7 +47,7 @@ export default class extends Controller {
 
     let data
     try {
-      const res = await fetch(this.urlValue, { headers: { Accept: "application/json" } })
+      const res = await fetch(this._graphUrl(), { headers: { Accept: "application/json" } })
       data = await res.json()
     } catch (e) {
       console.error("unit-graph: fetch failed", e)
@@ -59,7 +77,7 @@ export default class extends Controller {
       style: [
         {
           selector: 'node[hop = 1]',
-          style: { "z-index": 300 },
+          style: { "z-index": 300, "padding": "10px 18px", "font-size": "11px" },
         },
         {
           selector: 'node[hop = 2]',
@@ -103,6 +121,8 @@ export default class extends Controller {
             "border-width": 3,
             "border-color": "#fca5a5",
             "z-index": 9999,
+            "padding": "14px 24px",
+            "font-size": "13px",
           },
         },
         {
@@ -164,13 +184,14 @@ export default class extends Controller {
       ],
       layout: {
         name: "cose",
-        padding: 40,
+        padding: 60,
         boundingBox: { x1: 0, y1: 0, w: containerW, h: containerH },
-        nodeRepulsion: 600000,
-        idealEdgeLength: 250,
+        nodeRepulsion: 4000000,
+        idealEdgeLength: 320,
         nodeOverlap: 80,
-        gravity: 0.1,
-        numIter: 2000,
+        gravity: 0.03,
+        numIter: 5000,
+        coolingFactor: 0.99,
         animate: false,
         fit: true,
       },
@@ -251,13 +272,14 @@ export default class extends Controller {
 
     this.cy.layout({
       name: "cose",
-      padding: 40,
-      boundingBox: { x1: 0, y1: 0, w, h },
-      nodeRepulsion: 600000,
-      idealEdgeLength: 250,
-      nodeOverlap: 80,
-      gravity: 0.1,
-      numIter: 2000,
+      padding: 60,
+      boundingBox: { x1: 0, y1: 0, w: w * 3, h: h * 3 },
+      nodeRepulsion: 4500000,
+      idealEdgeLength: 400,
+      nodeOverlap: 40,
+      gravity: 0.03,
+      numIter: 3000,
+      coolingFactor: 0.95,
       animate: false,
       fit: false,
     }).run()
