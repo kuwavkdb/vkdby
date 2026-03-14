@@ -41,7 +41,8 @@ class ProfilesController < ApplicationController
 
   def relationship_graph
     unit = Unit.kept.find_by!(key: params[:key])
-    render json: UnitGraphBuilder.new(unit).call
+    track_past = params[:track_past] == '1'
+    render json: UnitGraphBuilder.new(unit, track_past:).call
   rescue ActiveRecord::RecordNotFound
     render json: { nodes: [], edges: [] }, status: :not_found
   end

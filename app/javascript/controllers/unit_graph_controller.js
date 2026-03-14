@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static values = { url: String }
-  static targets = ["placeholder", "graphArea", "container", "fullscreenBtn", "nodeCount"]
+  static targets = ["placeholder", "graphArea", "container", "fullscreenBtn", "nodeCount", "trackPast"]
 
   connect() {
     this.fullscreenBtnTarget.addEventListener("pointerdown", (e) => {
@@ -12,6 +12,24 @@ export default class extends Controller {
     if (window.location.hash === "#relationship-graph") {
       this.load()
     }
+  }
+
+  toggleTrackPast() {
+    if (!this._loaded) return
+    this._loaded = false
+    this.cy?.destroy()
+    this.cy = null
+    this.graphAreaTarget.classList.add("hidden")
+    this.nodeCountTarget.classList.add("hidden")
+    this.fullscreenBtnTarget.classList.add("hidden")
+    this.placeholderTarget.classList.remove("hidden")
+    this.placeholderTarget.innerHTML = '<span class="text-sm text-slate-400 dark:text-slate-500">読み込み中...</span>'
+    this.load()
+  }
+
+  _graphUrl() {
+    const trackPast = this.hasTrackPastTarget && this.trackPastTarget.checked
+    return trackPast ? `${this.urlValue}?track_past=1` : this.urlValue
   }
 
   async load() {
@@ -29,7 +47,7 @@ export default class extends Controller {
 
     let data
     try {
-      const res = await fetch(this.urlValue, { headers: { Accept: "application/json" } })
+      const res = await fetch(this._graphUrl(), { headers: { Accept: "application/json" } })
       data = await res.json()
     } catch (e) {
       console.error("unit-graph: fetch failed", e)
@@ -60,8 +78,8 @@ export default class extends Controller {
         {
           selector: 'node[type="unit"]',
           style: {
-            "background-color": "#6366f1",
-            "background-opacity": 0.75,
+            "background-color": "#94a3b8",
+            "background-opacity": 0.7,
             "label": "data(label)",
             "color": "#ffffff",
             "text-valign": "center",
@@ -76,17 +94,40 @@ export default class extends Controller {
             "text-max-width": "120px",
             "cursor": "pointer",
             "border-width": 2,
+            "border-color": "#64748b",
+          },
+        },
+        {
+          selector: 'node[type="unit"].snapshot-current',
+          style: {
+            "background-color": "#6366f1",
+            "background-opacity": 0.75,
             "border-color": "#4338ca",
           },
         },
         {
-          selector: 'node[type="unit"][?current]',
+          selector: 'node[type="unit"].center',
           style: {
             "background-color": "#dc2626",
             "background-opacity": 1,
             "border-width": 3,
             "border-color": "#fca5a5",
+            "z-index": 9999,
+            "padding": "14px 24px",
+            "font-size": "13px",
           },
+        },
+        {
+          selector: 'node[hop = 1]',
+          style: { "z-index": 300, "padding": "10px 18px", "font-size": "11px" },
+        },
+        {
+          selector: 'node[hop = 2]',
+          style: { "z-index": 200, "padding": "5px 10px", "font-size": "9px" },
+        },
+        {
+          selector: 'node[past_only = 1]',
+          style: { "border-style": "dashed", "border-width": 2, "border-color": "#94a3b8" },
         },
         {
           selector: "node.newly-added",
@@ -97,12 +138,23 @@ export default class extends Controller {
           },
         },
         {
-          selector: "edge",
+          selector: "edge[current = 1]",
+          style: {
+            "width": 2,
+            "line-color": isDark ? "#94a3b8" : "#64748b",
+            "curve-style": "bezier",
+            "opacity": 0.8,
+          },
+        },
+        {
+          selector: "edge[current = 0]",
           style: {
             "width": 1.5,
-            "line-color": isDark ? "#475569" : "#cbd5e1",
+            "line-color": isDark ? "#475569" : "#94a3b8",
+            "line-style": "dashed",
+            "line-dash-pattern": [4, 3],
             "curve-style": "bezier",
-            "opacity": 0.7,
+            "opacity": 0.6,
           },
         },
         {
@@ -117,7 +169,6 @@ export default class extends Controller {
           style: {
             "border-width": 3,
             "border-color": "#f59e0b",
-            "background-opacity": 1,
           },
         },
         {
@@ -136,17 +187,24 @@ export default class extends Controller {
       ],
       layout: {
         name: "cose",
-        padding: 40,
+        padding: 60,
         boundingBox: { x1: 0, y1: 0, w: containerW, h: containerH },
-        nodeRepulsion: 600000,
-        idealEdgeLength: 250,
+        nodeRepulsion: 4000000,
+        idealEdgeLength: 320,
         nodeOverlap: 80,
-        gravity: 0.1,
-        numIter: 2000,
+        gravity: 0.03,
+        numIter: 5000,
+        coolingFactor: 0.99,
         animate: false,
         fit: true,
       },
     })
+
+    // layout完了後（fit済み）にさらにズームイン
+    this.cy.zoom({ level: this.cy.zoom() * 1.35, renderedPosition: { x: containerW / 2, y: containerH / 2 } })
+
+    // 中心ノードを確実に最前面に（スタイルシートより優先）
+    this.cy.nodes(".center").style("z-index", 9999)
 
     this.cy.on("tap", "node", (evt) => {
       const url = evt.target.data("url")
@@ -220,13 +278,14 @@ export default class extends Controller {
 
     this.cy.layout({
       name: "cose",
-      padding: 40,
-      boundingBox: { x1: 0, y1: 0, w, h },
-      nodeRepulsion: 600000,
-      idealEdgeLength: 250,
-      nodeOverlap: 80,
-      gravity: 0.1,
-      numIter: 2000,
+      padding: 60,
+      boundingBox: { x1: 0, y1: 0, w: w * 3, h: h * 3 },
+      nodeRepulsion: 4500000,
+      idealEdgeLength: 400,
+      nodeOverlap: 40,
+      gravity: 0.03,
+      numIter: 3000,
+      coolingFactor: 0.95,
       animate: false,
       fit: false,
     }).run()
@@ -255,12 +314,44 @@ export default class extends Controller {
     // 上部 48px をヘッダーバー用に空ける（Cytoscape キャンバスと重ならない領域）
     container.style.cssText = "position:fixed;top:48px;left:0;right:0;bottom:0;z-index:9999;border-radius:0;border:none;"
 
-    // キャンバスと重ならない上部ヘッダーバーに閉じるボタンを配置
+    const isDark = document.documentElement.classList.contains("dark")
+    const textColor = isDark ? "#94a3b8" : "#64748b"
+    const mutedColor = isDark ? "#64748b" : "#94a3b8"
+
+    // キャンバスと重ならない上部ヘッダーバーに凡例と閉じるボタンを配置
     const header = document.createElement("div")
-    header.style.cssText = "position:fixed;top:0;left:0;right:0;height:48px;z-index:10000;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:flex-end;padding:0 1rem;"
+    const bgColor = isDark ? "#000000" : "#ffffff"
+    header.style.cssText = `position:fixed;top:0;left:0;right:0;height:48px;z-index:10000;background:${bgColor};display:flex;align-items:center;justify-content:space-between;padding:0 1rem;`
+
+    // 凡例（PC のみ表示）
+    const isPC = window.matchMedia("(min-width: 768px)").matches
+    if (isPC) {
+      const legend = document.createElement("div")
+      legend.style.cssText = `display:flex;align-items:center;gap:0.75rem;font-size:0.75rem;color:${textColor};`
+      legend.innerHTML = `
+        <span style="display:flex;align-items:center;gap:0.375rem;">
+          <span style="display:inline-block;width:0.75rem;height:0.75rem;border-radius:2px;background:#dc2626;" aria-hidden="true"></span>
+          このユニット
+        </span>
+        <span style="display:flex;align-items:center;gap:0.375rem;">
+          <span style="display:inline-block;width:0.75rem;height:0.75rem;border-radius:2px;background:#6366f1;" aria-hidden="true"></span>
+          直接の関連ユニット
+        </span>
+        <span style="display:flex;align-items:center;gap:0.375rem;">
+          <svg width="24" height="8" aria-hidden="true"><line x1="0" y1="4" x2="24" y2="4" stroke="${textColor}" stroke-width="2"/></svg>
+          現在の関連
+        </span>
+        <span style="display:flex;align-items:center;gap:0.375rem;color:${mutedColor};">
+          <svg width="24" height="8" aria-hidden="true"><line x1="0" y1="4" x2="24" y2="4" stroke="${mutedColor}" stroke-width="1.5" stroke-dasharray="4 3"/></svg>
+          過去/サポートの関連
+        </span>
+      `
+      header.appendChild(legend)
+    }
+
     const btn = document.createElement("button")
     btn.setAttribute("aria-label", "縮小")
-    btn.style.cssText = "background:none;color:#fff;border:none;font-size:1.5rem;cursor:pointer;padding:0.5rem;touch-action:manipulation;user-select:none;line-height:1;"
+    btn.style.cssText = `background:none;color:${textColor};border:none;font-size:1.5rem;cursor:pointer;padding:0.5rem;touch-action:manipulation;user-select:none;line-height:1;margin-left:auto;`
     btn.textContent = "✕"
     btn.addEventListener("pointerdown", (e) => { e.preventDefault(); this._collapse() })
     header.appendChild(btn)
