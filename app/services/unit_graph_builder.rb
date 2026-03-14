@@ -14,7 +14,7 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
 
   def cache_key
     latest = UnitSnapshot.maximum(:updated_at)
-    "unit_graph/#{@unit.id}/v20/#{@track_past ? 'past' : 'cur'}/#{latest.to_i}"
+    "unit_graph/#{@unit.id}/v21/#{@track_past ? 'past' : 'cur'}/#{latest.to_i}"
   end
 
   def compute
@@ -55,23 +55,27 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
     build_graph(unit_ids_by_person, current_edge_pairs, relevant_unit_ids, hop1_display_unit_ids)
   end
 
+  def sp_scope
+    @track_past ? SnapshotPerson : SnapshotPerson.where(support: false)
+  end
+
   def fetch_hop1_person_ids
     snapshot_ids = @unit.unit_snapshots.where(current: true).select(:id)
-    SnapshotPerson.where(unit_snapshot_id: snapshot_ids)
-                  .where.not(person_id: nil)
-                  .pluck(:person_id).uniq
+    sp_scope.where(unit_snapshot_id: snapshot_ids)
+            .where.not(person_id: nil)
+            .pluck(:person_id).uniq
   end
 
   # 中心ユニットの全スナップショット（過去含む）に登場した全メンバー
   def fetch_all_center_person_ids
     snapshot_ids = @unit.unit_snapshots.select(:id)
-    SnapshotPerson.where(unit_snapshot_id: snapshot_ids)
-                  .where.not(person_id: nil)
-                  .pluck(:person_id).uniq
+    sp_scope.where(unit_snapshot_id: snapshot_ids)
+            .where.not(person_id: nil)
+            .pluck(:person_id).uniq
   end
 
   def fetch_unit_ids_for_persons(person_ids)
-    SnapshotPerson
+    sp_scope
       .joins(:unit_snapshot)
       .where(unit_snapshots: { current: true })
       .where(person_id: person_ids)
@@ -80,20 +84,20 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
 
   def fetch_hop2_person_ids(adjacent_unit_ids)
     snapshot_ids = UnitSnapshot.where(unit_id: adjacent_unit_ids, current: true).select(:id)
-    SnapshotPerson.where(unit_snapshot_id: snapshot_ids)
-                  .where.not(person_id: nil)
-                  .pluck(:person_id).uniq
+    sp_scope.where(unit_snapshot_id: snapshot_ids)
+            .where.not(person_id: nil)
+            .pluck(:person_id).uniq
   end
 
   def fetch_all_unit_ids_for_persons(person_ids)
-    SnapshotPerson
+    sp_scope
       .joins(:unit_snapshot)
       .where(person_id: person_ids)
       .pluck('unit_snapshots.unit_id').uniq
   end
 
   def build_person_unit_map(person_ids)
-    SnapshotPerson
+    sp_scope
       .joins(:unit_snapshot)
       .where(person_id: person_ids)
       .pluck(:person_id, 'unit_snapshots.unit_id')
@@ -105,7 +109,7 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
   #   異なるhop間のエッジ → 中心に近い側（hop1）でカレントメンバーなら実線
   #   同じhop階層のエッジ → いずれか一方でもカレントメンバーなら実線
   def build_current_edge_pairs(all_person_ids, unit_ids_by_person, hop1_unit_ids)
-    current_unit_ids_by_person = SnapshotPerson
+    current_unit_ids_by_person = sp_scope
                                  .joins(:unit_snapshot)
                                  .where(unit_snapshots: { current: true })
                                  .where(person_id: all_person_ids)

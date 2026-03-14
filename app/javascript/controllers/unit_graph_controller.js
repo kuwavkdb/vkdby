@@ -76,14 +76,6 @@ export default class extends Controller {
       elements: [...nodes, ...edges],
       style: [
         {
-          selector: 'node[hop = 1]',
-          style: { "z-index": 300, "padding": "10px 18px", "font-size": "11px" },
-        },
-        {
-          selector: 'node[hop = 2]',
-          style: { "z-index": 200 },
-        },
-        {
           selector: 'node[type="unit"]',
           style: {
             "background-color": "#94a3b8",
@@ -124,6 +116,14 @@ export default class extends Controller {
             "padding": "14px 24px",
             "font-size": "13px",
           },
+        },
+        {
+          selector: 'node[hop = 1]',
+          style: { "z-index": 300, "padding": "10px 18px", "font-size": "11px" },
+        },
+        {
+          selector: 'node[hop = 2]',
+          style: { "z-index": 200, "padding": "5px 10px", "font-size": "9px" },
         },
         {
           selector: "node.newly-added",
@@ -196,6 +196,9 @@ export default class extends Controller {
         fit: true,
       },
     })
+
+    // layout完了後（fit済み）にさらにズームイン
+    this.cy.zoom({ level: this.cy.zoom() * 1.35, renderedPosition: { x: containerW / 2, y: containerH / 2 } })
 
     // 中心ノードを確実に最前面に（スタイルシートより優先）
     this.cy.nodes(".center").style("z-index", 9999)
