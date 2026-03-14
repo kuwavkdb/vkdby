@@ -20,24 +20,6 @@
         </span>
       <% end %>
     </div>
-    <% if member.person.person_logs.present? %>
-      <div class="mt-3 pl-4 border-l-2 border-slate-100 dark:border-slate-800 flex flex-col gap-1">
-        <% member.person.person_logs.sort_by { |l| [l.log_date.to_s, l.sort_order || 0] }.each do |log| %>
-          <div class="flex items-start gap-3 text-[0.7rem] leading-relaxed text-slate-500 dark:text-slate-400">
-            <span class="font-black opacity-60 tabular-nums shrink-0"><%= log.log_date %></span>
-            <span class="truncate">
-              <% if log.unit %>
-                <%= link_to (log.unit_name.presence || log.unit.name), profile_path(log.unit.key), class: "font-bold text-slate-600 dark:text-slate-300 hover:text-person" %>
-              <% else %>
-                <span class="font-bold"><%= log.name %></span>
-              <% end %>
-              <% if log.status.present? && log.status != "stay" %>
-                <small class="text-[0.65rem] opacity-70 ml-1">(<%= log.status %>)</small>
-              <% end %>
-            </span>
-          </div>
-        <% end %>
-      </div>
-    <% end %>
+
   </div>
 </div>

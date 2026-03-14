@@ -1,6 +1,6 @@
-<%= form_with(model: [:admin, person], class: "space-y-6") do |form| %>
+<%= form_with(model: [:admin, person], class: "space-y-0") do |form| %>
   <% if person.errors.any? %>
-    <div class="bg-red-50 p-4 rounded text-red-700">
+    <div class="bg-red-50 p-4 rounded text-red-700 mb-6">
       <h2><%= pluralize(person.errors.count, "error") %> prohibited this person from being saved:</h2>
       <ul class="list-disc list-inside">
         <% person.errors.each do |error| %>
@@ -10,156 +10,165 @@
     </div>
   <% end %>
 
-  <div>
-    <%= form.label :name, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
-  </div>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-0">
+    <%# 左カラム: 基本情報 %>
+    <div class="space-y-6">
+      <div>
+        <%= form.label :name, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+        <%= form.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+      </div>
 
-  <div>
-    <%= form.label :name_kana, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.text_field :name_kana, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
-  </div>
+      <div>
+        <%= form.label :name_kana, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+        <%= form.text_field :name_kana, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+      </div>
 
-  <div>
-    <h3 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name History (Log)</h3>
-    <div class="space-y-4">
-      <%
-        logs_for_form = person.name_logs
-        logs_for_form << ::OpenStruct.new(name: "", name_kana: "")
-      %>
-      <%= form.fields_for :name_logs, logs_for_form do |log_form| %>
-        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
-          <div class="flex-1 w-full">
-            <%= log_form.label :name, "Name", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
-            <%= log_form.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
-          </div>
-          <div class="flex-1 w-full">
-            <%= log_form.label :name_kana, "Kana", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
-            <%= log_form.text_field :name_kana, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
-          </div>
+      <div>
+        <h3 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name History (Log)</h3>
+        <div class="space-y-4">
+          <%
+            logs_for_form = person.name_logs
+            logs_for_form << ::OpenStruct.new(name: "", name_kana: "")
+          %>
+          <%= form.fields_for :name_logs, logs_for_form do |log_form| %>
+            <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+              <div class="flex-1 w-full">
+                <%= log_form.label :name, "Name", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
+                <%= log_form.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+              </div>
+              <div class="flex-1 w-full">
+                <%= log_form.label :name_kana, "Kana", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
+                <%= log_form.text_field :name_kana, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+              </div>
+            </div>
+          <% end %>
+          <div class="text-xs text-gray-500">※名前を空にすると保存時に削除されます</div>
         </div>
-      <% end %>
-      <div class="text-xs text-gray-500">※名前を空にすると保存時に削除されます</div>
-    </div>
-  </div>
+      </div>
 
-  <div>
-    <h3 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">別名 (Aliases)</h3>
-    <div class="space-y-4">
-      <%
-        aliases_for_form = person.aliases
-        aliases_for_form << ::OpenStruct.new(name: "", kana: "")
-      %>
-      <%= form.fields_for :aliases, aliases_for_form do |alias_form| %>
-        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
-          <div class="flex-1 w-full">
-            <%= alias_form.label :name, "別名", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
-            <%= alias_form.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
-          </div>
-          <div class="flex-1 w-full">
-            <%= alias_form.label :kana, "よみ", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
-            <%= alias_form.text_field :kana, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
-          </div>
+      <div>
+        <h3 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">別名 (Aliases)</h3>
+        <div class="space-y-4">
+          <%
+            aliases_for_form = person.aliases
+            aliases_for_form << ::OpenStruct.new(name: "", kana: "")
+          %>
+          <%= form.fields_for :aliases, aliases_for_form do |alias_form| %>
+            <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+              <div class="flex-1 w-full">
+                <%= alias_form.label :name, "別名", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
+                <%= alias_form.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+              </div>
+              <div class="flex-1 w-full">
+                <%= alias_form.label :kana, "よみ", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
+                <%= alias_form.text_field :kana, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+              </div>
+            </div>
+          <% end %>
+          <div class="text-xs text-gray-500">※名前を空にすると保存時に削除されます</div>
         </div>
-      <% end %>
-      <div class="text-xs text-gray-500">※名前を空にすると保存時に削除されます</div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <%= form.label :key, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+          <div class="mt-1 block w-full rounded-md bg-gray-100 border-gray-300 px-3 py-2 text-base text-gray-600 dark:bg-gray-900 dark:text-gray-400">
+            <%= person.key || "(not set)" %>
+          </div>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Key cannot be changed</p>
+        </div>
+        <div>
+          <%= form.label :old_key, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+          <div class="mt-1 block w-full rounded-md bg-gray-100 border-gray-300 px-3 py-2 text-base text-gray-600 dark:bg-gray-900 dark:text-gray-400">
+            <%= person.old_key || "(not set)" %>
+          </div>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Old key cannot be changed</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <%= form.label :birthday, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+          <%= form.date_field :birthday,
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+          %>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">月日のみ使用</p>
+        </div>
+        <div>
+          <%= form.label :birth_year, "Birth Year", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+          <%= form.number_field :birth_year,
+              placeholder: "例: 1990",
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+          %>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">年不明は空欄</p>
+        </div>
+      </div>
+
+      <div>
+        <%= form.label :hometown, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+        <%= form.text_field :hometown, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+      </div>
+
+      <div>
+        <%= form.label :blood, "Blood Type", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+        <div class="mt-2 space-x-4">
+          <% %w[A B O AB Unknown].each do |type| %>
+            <label class="inline-flex items-center">
+              <%= form.radio_button :blood, type, class: "form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
+              <span class="ml-2 text-sm text-gray-700 dark:text-gray-300"><%= type %></span>
+            </label>
+          <% end %>
+        </div>
+      </div>
+
+      <div>
+        <%= form.label :status, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+        <div class="mt-2 flex flex-wrap gap-4">
+          <% Person.statuses.keys.each do |status| %>
+            <label class="inline-flex items-center">
+              <%= form.radio_button :status, status, class: "form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
+              <span class="ml-2 text-sm text-gray-700 dark:text-gray-300"><%= Person::STATUS_TRANSLATIONS[status] %></span>
+            </label>
+          <% end %>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Parts</label>
+        <div class="mt-2 flex flex-wrap gap-4">
+          <% Person::AVAILABLE_PARTS.each do |part| %>
+            <label class="inline-flex items-center">
+              <%= form.check_box :parts, { multiple: true, class: "form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" }, part, nil %>
+              <span class="ml-2 text-sm text-gray-700 dark:text-gray-300"><%= part.humanize %></span>
+            </label>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <%# 右カラム: テキストエリア %>
+    <div class="space-y-6 mt-6 lg:mt-0">
+      <div>
+        <%= form.label :old_history, "Old History (Wiki Career Text)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+        <%= form.text_area :old_history, rows: 14, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 text-sm font-mono dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Wiki形式の経歴テキスト</p>
+      </div>
+
+      <div>
+        <%= form.label :old_wiki_text, "Old Wiki Text", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+        <%= form.text_area :old_wiki_text, rows: 14, readonly: true, class: "mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm font-mono text-gray-600 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed" %>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">移行元のWikiテキスト (Read Only)</p>
+      </div>
+
+      <div>
+        <%= form.label :note, "Note", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+        <%= form.text_area :note, rows: 5, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">管理用メモ</p>
+      </div>
     </div>
   </div>
 
-  <div>
-    <%= form.label :key, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <div class="mt-1 block w-full rounded-md bg-gray-100 border-gray-300 px-3 py-2 text-base text-gray-600 dark:bg-gray-900 dark:text-gray-400">
-      <%= person.key || "(not set)" %>
-    </div>
-    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Key cannot be changed</p>
-  </div>
-
-  <div>
-    <%= form.label :old_key, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <div class="mt-1 block w-full rounded-md bg-gray-100 border-gray-300 px-3 py-2 text-base text-gray-600 dark:bg-gray-900 dark:text-gray-400">
-      <%= person.old_key || "(not set)" %>
-    </div>
-    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Old key cannot be changed</p>
-  </div>
-
-  <div class="grid grid-cols-2 gap-4">
-    <div>
-      <%= form.label :birthday, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-      <%= form.date_field :birthday, 
-          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-      %>
-      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">月日のみ使用</p>
-    </div>
-    <div>
-      <%= form.label :birth_year, "Birth Year", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-      <%= form.number_field :birth_year, 
-          placeholder: "例: 1990",
-          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-      %>
-      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">年不明は空欄</p>
-    </div>
-  </div>
-
-  <div>
-    <%= form.label :hometown, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.text_field :hometown, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
-  </div>
-
-  <div>
-    <%= form.label :blood, "Blood Type", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <div class="mt-2 space-x-4">
-      <% %w[A B O AB Unknown].each do |type| %>
-        <label class="inline-flex items-center">
-          <%= form.radio_button :blood, type, class: "form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
-          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300"><%= type %></span>
-        </label>
-      <% end %>
-    </div>
-  </div>
-
-  <div>
-    <%= form.label :status, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <div class="mt-2 flex flex-wrap gap-4">
-      <% Person.statuses.keys.each do |status| %>
-        <label class="inline-flex items-center">
-          <%= form.radio_button :status, status, class: "form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
-          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300"><%= Person::STATUS_TRANSLATIONS[status] %></span>
-        </label>
-      <% end %>
-    </div>
-  </div>
-
-  <div>
-    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Parts</label>
-    <div class="mt-2 flex flex-wrap gap-4">
-      <% Person::AVAILABLE_PARTS.each do |part| %>
-        <label class="inline-flex items-center">
-          <%= form.check_box :parts, { multiple: true, class: "form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" }, part, nil %>
-          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300"><%= part.humanize %></span>
-        </label>
-      <% end %>
-    </div>
-  </div>
-
-  <div>
-    <%= form.label :old_history, "Old History (Wiki Career Text)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.text_area :old_history, rows: 10, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm font-mono dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
-    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Wiki形式の経歴テキスト</p>
-  </div>
-
-  <div>
-    <%= form.label :old_wiki_text, "Old Wiki Text", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.text_area :old_wiki_text, rows: 10, readonly: true, class: "mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm font-mono text-gray-600 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed" %>
-    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">移行元のWikiテキスト (Read Only)</p>
-  </div>
-
-  <div>
-    <%= form.label :note, "Note", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.text_area :note, rows: 5, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
-    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">管理用メモ</p>
-  </div>
-
-  <div class="flex justify-end gap-x-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+  <div class="flex justify-end gap-x-4 pt-6 mt-6 border-t border-gray-200 dark:border-gray-700">
     <%= link_to "Cancel", admin_people_path, class: "px-4 py-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" %>
     <%= form.submit class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
   </div>

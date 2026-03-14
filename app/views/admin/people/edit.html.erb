@@ -5,13 +5,11 @@
       <%= link_to "Back to Public Page", profile_path(@person.key), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
     </div>
     
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div>
-        <div class="bg-white shadow rounded-lg p-6 dark:bg-gray-800">
-          <%= render "form", person: @person %>
-        </div>
+    <div class="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-8 items-start">
+      <div class="bg-white shadow rounded-lg p-6 dark:bg-gray-800">
+        <%= render "form", person: @person %>
       </div>
-      
+
       <div>
         <%= render "links_form", person: @person %>
         <%= render "admin/sections/list", sectionable: @person, sections: @person.sections.with_discarded.order(:sort_order) %>
