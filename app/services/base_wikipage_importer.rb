@@ -50,6 +50,13 @@ class BaseWikipageImporter
     @wiki_content = @wiki_content&.lines&.reject { |line| line.strip.start_with?('//') }&.join
   end
 
+  def strip_category_plugin(section_name, content)
+    return content unless SECTIONS_STRIP_CATEGORY_PLUGIN.any? { |prefix| section_name.start_with?(prefix) }
+
+    content = content.gsub(/\{\{category\s+[^}]*\}\}/i, '')
+    content.lines.reject { |line| line.strip.match?(/\A[*-]+\z/) }.join.strip
+  end
+
   def parse_youtube_tags(owner)
     return unless @wiki_content
 
@@ -220,7 +227,6 @@ class BaseWikipageImporter
     リンク
     メンバー
     関係者
-    個人情報
     情報
     ディスコグラフィ
     経歴
@@ -238,6 +244,9 @@ class BaseWikipageImporter
 
   # 部分一致で除外するセクション名
   EXCLUDED_SECTIONS_CONTAINING = ['同名のアーティスト'].freeze
+
+  # categoryプラグインを除去するセクション名（前方一致）
+  SECTIONS_STRIP_CATEGORY_PLUGIN = %w[個人情報 プロフィール].freeze
 
   def parse_sections(owner)
     return unless @wiki_content
@@ -273,6 +282,8 @@ class BaseWikipageImporter
       end || EXCLUDED_SECTIONS_CONTAINING.any? { |partial| section_name.include?(partial) }
 
       next if is_excluded
+
+      section_content = strip_category_plugin(section_name, section_content)
 
       # wiki_text が空の場合は除外
       next if section_content.blank?
