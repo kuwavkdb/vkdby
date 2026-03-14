@@ -52,7 +52,7 @@ module Admin
     def update
       if @person.update(person_params)
         record_update_log(@person, action: 'update')
-        redirect_to admin_people_path, notice: 'Person updated successfully.'
+        redirect_to edit_admin_person_path(@person), notice: 'Person updated successfully.'
       else
         render :edit, status: :unprocessable_entity
       end
