@@ -26,7 +26,7 @@ class ItemsController < ApplicationController
     base_scope = filter_by_artist(Item.all)
 
     @year_counts = base_scope.where.not(release_date: nil)
-                             .group("EXTRACT(year FROM release_date)::integer").count
+                             .group('EXTRACT(year FROM release_date)::integer').count
     @years = @year_counts.keys.sort.reverse
 
     scope = base_scope.order(release_date: :desc)
@@ -66,8 +66,8 @@ class ItemsController < ApplicationController
     year = params[:year].to_i
     month = params[:month].presence&.to_i
 
-    @month_counts = base_scope.where("EXTRACT(year FROM release_date) = ?", year)
-                              .group("EXTRACT(month FROM release_date)::integer").count
+    @month_counts = base_scope.where('EXTRACT(year FROM release_date) = ?', year)
+                              .group('EXTRACT(month FROM release_date)::integer').count
     @months = @month_counts.keys.sort.reverse
 
     start_date = Date.new(year, month || 1, 1)

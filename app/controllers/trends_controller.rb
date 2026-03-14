@@ -2,15 +2,15 @@
 
 class TrendsController < ApplicationController
   def index
-    @year_counts = Trend.group("EXTRACT(year FROM date)::integer").count
+    @year_counts = Trend.group('EXTRACT(year FROM date)::integer').count
     @years = @year_counts.keys.sort.reverse
 
     if params[:year].present?
       year = params[:year].to_i
       month = params[:month].presence&.to_i
 
-      @month_counts = Trend.where("EXTRACT(year FROM date) = ?", year)
-                           .group("EXTRACT(month FROM date)::integer").count
+      @month_counts = Trend.where('EXTRACT(year FROM date) = ?', year)
+                           .group('EXTRACT(month FROM date)::integer').count
       @months = @month_counts.keys.sort.reverse
 
       start_date = Date.new(year, month || 1, 1)
