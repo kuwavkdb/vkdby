@@ -57,6 +57,14 @@ class BaseWikipageImporter
     content.lines.reject { |line| line.strip.match?(/\A[*-]+\z/) }.join.strip
   end
 
+  def strip_career_plugins(content)
+    return content if content.nil?
+
+    CAREER_STRIP_PLUGINS.reduce(content) do |text, plugin|
+      text.gsub(/\{\{#{Regexp.escape(plugin)}\s+[^}]*\}\}/i, '')
+    end
+  end
+
   def parse_youtube_tags(owner)
     return unless @wiki_content
 
@@ -247,6 +255,9 @@ class BaseWikipageImporter
 
   # categoryプラグインを除去するセクション名（前方一致）
   SECTIONS_STRIP_CATEGORY_PLUGIN = %w[個人情報 プロフィール].freeze
+
+  # 経歴テキストから除去するプラグイン名
+  CAREER_STRIP_PLUGINS = %w[tweet tweets].freeze
 
   def parse_sections(owner)
     return unless @wiki_content

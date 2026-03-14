@@ -347,7 +347,7 @@ class WikipageImporter < BaseWikipageImporter
       old_member_key = parts[2]
       sns_account = parts[3]
 
-      inline_history = inline_history_text&.strip
+      inline_history = strip_career_plugins(inline_history_text&.strip)
       inline_history = nil if inline_history.blank?
 
       part_str = part_str&.strip
