@@ -6,7 +6,7 @@
   name_col_w       = 176   # w-44 = 11rem = 176px
   grid_span        = year_px * 5   # 5年分のピクセル幅
   five_year_offset = (5 - @year_min % 5) % 5 * year_px  # 最初の5年ラインまでのオフセット
-  grid_style       = "background-image: repeating-linear-gradient(to right, transparent, transparent #{grid_span - 1}px, rgba(113,113,122,0.18) #{grid_span - 1}px, rgba(113,113,122,0.18) #{grid_span}px); background-size: #{grid_span}px 100%; background-position: #{five_year_offset}px 0;"
+  grid_style       = "background-image: repeating-linear-gradient(to right, transparent, transparent #{grid_span - 1}px, rgba(113,113,122,0.35) #{grid_span - 1}px, rgba(113,113,122,0.35) #{grid_span}px); background-size: #{grid_span}px 100%; background-position: #{five_year_offset}px 0;"
 %>
 
 <div class="px-0 sm:px-2">
