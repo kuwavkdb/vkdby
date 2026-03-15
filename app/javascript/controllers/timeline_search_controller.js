@@ -3,12 +3,15 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["input", "suggestions"]
 
+  static STORAGE_KEY = "timeline_added_bands"
+
   connect() {
     this.debounceTimer = null
     this.addedKeys = new Set()
     this.selectedIndex = -1
     this.handleClickOutside = this._onClickOutside.bind(this)
     document.addEventListener("click", this.handleClickOutside)
+    this._restoreFromStorage()
   }
 
   disconnect() {
@@ -110,6 +113,7 @@ export default class extends Controller {
       const rows = document.getElementById("timeline-rows")
       if (!rows) return
       this.addedKeys.add(key)
+      this._saveToStorage()
       const tmp = document.createElement("div")
       tmp.innerHTML = html.trim()
       const row = tmp.firstElementChild
@@ -132,6 +136,7 @@ export default class extends Controller {
         btn.className = "flex-shrink-0 ml-1 text-xs text-zinc-400 hover:text-red-500 leading-none"
         btn.addEventListener("click", () => {
           this.addedKeys.delete(key)
+          this._saveToStorage()
           row.remove()
         })
         nameCell.appendChild(btn)
@@ -162,5 +167,14 @@ export default class extends Controller {
 
   _onClickOutside(event) {
     if (!this.element.contains(event.target)) this.hideSuggestions()
+  }
+
+  _saveToStorage() {
+    localStorage.setItem(this.constructor.STORAGE_KEY, JSON.stringify([...this.addedKeys]))
+  }
+
+  _restoreFromStorage() {
+    const saved = JSON.parse(localStorage.getItem(this.constructor.STORAGE_KEY) || "[]")
+    saved.forEach(key => this.addUnit(key, key))
   }
 }
