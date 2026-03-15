@@ -43,7 +43,7 @@
 
     <!-- カスタムツールチップ -->
     <div data-timeline-target="tooltip"
-         class="hidden fixed z-50 px-2 py-1 text-sm text-white bg-zinc-800 dark:bg-zinc-600 rounded shadow-lg pointer-events-none whitespace-pre-wrap max-w-xs"
+         class="hidden fixed z-50 px-2 py-1 text-sm text-white bg-zinc-800/80 dark:bg-zinc-600/80 rounded shadow-lg pointer-events-none whitespace-pre-wrap max-w-xs backdrop-blur-sm"
          style="top: 0; left: 0;" role="tooltip"></div>
 
     <!-- ヘッダー行（縦スクロール固定 + 横スクロール同期） -->
@@ -94,7 +94,7 @@
                       border-r border-zinc-200 dark:border-zinc-700 transition-colors"
                style="width: <%= name_col_w %>px;">
             <%= link_to unit.name, profile_path(unit.key),
-                  class: "text-indigo-600 dark:text-indigo-400 hover:underline text-xs font-medium leading-tight truncate block w-full",
+                  class: "inline-block px-2 py-0.5 rounded text-sm font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800 transition-colors border border-indigo-200 dark:border-indigo-700 truncate max-w-full",
                   title: unit.name %>
           </div>
           <!-- ガントバー + デビューマーカー -->
