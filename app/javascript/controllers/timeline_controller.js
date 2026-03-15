@@ -3,8 +3,12 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["header", "body", "tooltip"]
 
+  static LEGEND_STORAGE_KEY = "timeline_hidden_types"
+
   connect() {
-    this.hiddenTypes = new Set()
+    const saved = JSON.parse(localStorage.getItem(this.constructor.LEGEND_STORAGE_KEY) || "[]")
+    this.hiddenTypes = new Set(saved)
+    this._restoreLegend()
   }
 
   toggleType(event) {
@@ -18,6 +22,15 @@ export default class extends Controller {
       item.classList.add("opacity-40", "line-through")
     }
     this._applyVisibility(type)
+    localStorage.setItem(this.constructor.LEGEND_STORAGE_KEY, JSON.stringify([...this.hiddenTypes]))
+  }
+
+  _restoreLegend() {
+    this.hiddenTypes.forEach(type => {
+      this._applyVisibility(type)
+      const btn = this.element.querySelector(`[data-type='${type}']`)
+      if (btn) btn.classList.add("opacity-40", "line-through")
+    })
   }
 
   _applyVisibility(type) {

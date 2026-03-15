@@ -1,7 +1,7 @@
 <% content_for :title, "年表 - メジャーバンド | Vkdby" %>
 
 <%
-  year_px          = 20    # 1年あたりのピクセル幅
+  year_px          = 24    # 1年あたりのピクセル幅
   chart_width      = (@year_max - @year_min + 1) * year_px
   name_col_w       = 176   # w-44 = 11rem = 176px
   grid_span        = year_px * 5   # 5年分のピクセル幅
@@ -125,9 +125,7 @@
          data-timeline-target="body"
          data-action="scroll->timeline#syncHeader"
          id="timeline-rows">
-      <% @units.each do |unit| %>
-        <%= render 'row', unit: unit, year_min: @year_min, year_max: @year_max, debut_markers: @debut_markers %>
-      <% end %>
+      <%= render TimelineRowComponent.with_collection(@units, year_min: @year_min, year_max: @year_max, debut_markers: @debut_markers) %>
     </div>
 
   </div>

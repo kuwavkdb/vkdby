@@ -53,7 +53,7 @@ class TimelineController < ApplicationController
           uid = u['unit_id'].to_i
           next unless unit_id_set.include?(uid)
 
-          (debut_markers[uid] ||= []) << { year: trend.date.year, date: trend.date.to_s, title: trend.title }
+          (debut_markers[uid] ||= []) << { year: trend.date.year, month: trend.date.month, date: trend.date.to_s, title: strip_wiki_links(trend.title), debut: trend.title.include?('メジャーデビュー') }
         end
       end
 
@@ -79,19 +79,20 @@ class TimelineController < ApplicationController
     markers = []
     Trend.where(active: true).select(:id, :date, :title, :units).each do |trend|
       (trend.units || []).each do |u|
-        markers << { year: trend.date.year, date: trend.date.to_s, title: trend.title } if u['unit_id'].to_i == unit.id
+        markers << { year: trend.date.year, month: trend.date.month, date: trend.date.to_s, title: strip_wiki_links(trend.title), debut: trend.title.include?('メジャーデビュー') } if u['unit_id'].to_i == unit.id
       end
     end
 
-    render partial: 'row', locals: {
-      unit:,
-      year_min:,
-      year_max:,
-      debut_markers: { unit.id => markers }
-    }
+    render TimelineRowComponent.new(unit: unit, year_min: year_min, year_max: year_max, debut_markers: { unit.id => markers })
   end
 
   private
+
+  # Wiki記法リンクをラベルテキストに置換 [[A|B]]→A, [A|B]→A, [[A]]→A
+  def strip_wiki_links(str)
+    str.gsub(/\[{1,2}([^|\]]+)(?:\|[^\]]+)?\]{1,2}/, '\1')
+  end
+  helper_method :strip_wiki_links
 
   # 1970年未満は不正データとみなして nil を返す
   def parse_year(str)

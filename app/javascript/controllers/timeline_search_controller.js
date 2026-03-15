@@ -4,6 +4,7 @@ export default class extends Controller {
   static targets = ["input", "suggestions"]
 
   static STORAGE_KEY = "timeline_added_bands"
+  static HTML_CACHE_PREFIX = "timeline_unit_html_"
 
   connect() {
     this.debounceTimer = null
@@ -97,19 +98,24 @@ export default class extends Controller {
     this.suggestionsTarget.classList.remove("hidden")
   }
 
-  async addUnit(key, name) {
+  async addUnit(key, name, { scroll = true } = {}) {
     this.hideSuggestions()
     this.inputTarget.value = ""
     const unitUrl = this.inputTarget.dataset.unitUrl
     try {
-      const res = await fetch(`${unitUrl}?key=${encodeURIComponent(key)}`, {
-        headers: { "Accept": "text/html" }
-      })
-      if (!res.ok) {
-        alert(`「${name}」の追加に失敗しました`)
-        return
+      const cacheKey = this.constructor.HTML_CACHE_PREFIX + key
+      let html = sessionStorage.getItem(cacheKey)
+      if (!html) {
+        const res = await fetch(`${unitUrl}?key=${encodeURIComponent(key)}`, {
+          headers: { "Accept": "text/html" }
+        })
+        if (!res.ok) {
+          alert(`「${name}」の追加に失敗しました`)
+          return
+        }
+        html = await res.text()
+        sessionStorage.setItem(cacheKey, html)
       }
-      const html = await res.text()
       const rows = document.getElementById("timeline-rows")
       if (!rows) return
       this.addedKeys.add(key)
@@ -121,7 +127,7 @@ export default class extends Controller {
       const startYear = parseInt(row.dataset.startYear, 10)
       const after = Array.from(rows.children).find(r => parseInt(r.dataset.startYear, 10) > startYear)
       after ? rows.insertBefore(row, after) : rows.appendChild(row)
-      row.scrollIntoView({ behavior: "smooth", block: "center" })
+      if (scroll) row.scrollIntoView({ behavior: "smooth", block: "center" })
       row.dataset.rowType = "added"
       row.querySelectorAll("div.absolute.rounded").forEach(bar => {
         bar.style.backgroundColor = "#22c55e"
@@ -137,6 +143,7 @@ export default class extends Controller {
         btn.addEventListener("click", () => {
           this.addedKeys.delete(key)
           this._saveToStorage()
+          sessionStorage.removeItem(this.constructor.HTML_CACHE_PREFIX + key)
           row.remove()
         })
         nameCell.appendChild(btn)
@@ -175,6 +182,6 @@ export default class extends Controller {
 
   _restoreFromStorage() {
     const saved = JSON.parse(localStorage.getItem(this.constructor.STORAGE_KEY) || "[]")
-    saved.forEach(key => this.addUnit(key, key))
+    saved.forEach(key => this.addUnit(key, key, { scroll: false }))
   }
 }
