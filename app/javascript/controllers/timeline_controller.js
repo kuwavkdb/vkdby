@@ -25,11 +25,10 @@ export default class extends Controller {
 
   _position(event) {
     const el = this.tooltipTarget
-    const x = event.clientX + 14
+    const x = event.clientX - el.offsetWidth + 4
     const y = event.clientY + 14
-    const vw = window.innerWidth
     const vh = window.innerHeight
-    el.style.left = (x + el.offsetWidth  > vw ? event.clientX - el.offsetWidth  - 8 : x) + "px"
+    el.style.left = Math.max(0, x) + "px"
     el.style.top  = (y + el.offsetHeight > vh ? event.clientY - el.offsetHeight - 8 : y) + "px"
   }
 }
