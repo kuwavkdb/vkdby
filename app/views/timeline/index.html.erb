@@ -94,7 +94,7 @@
                       border-r border-zinc-200 dark:border-zinc-700 transition-colors"
                style="width: <%= name_col_w %>px;">
             <%= link_to unit.name, profile_path(unit.key),
-                  class: "inline-block px-2 py-0.5 rounded text-sm font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800 transition-colors border border-indigo-200 dark:border-indigo-700 truncate max-w-full",
+                  class: "text-sm font-semibold text-indigo-600 dark:text-indigo-200 hover:underline truncate block w-full",
                   title: unit.name %>
           </div>
           <!-- ガントバー + デビューマーカー -->
@@ -112,7 +112,7 @@
               <% bar_left  = (from_year - @year_min) * year_px %>
               <% bar_width = [((to_year - from_year + 1) * year_px), year_px / 2].max %>
               <div class="absolute rounded transition-opacity"
-                   style="background-color: <%= bar_color %>; left: <%= bar_left %>px; width: <%= bar_width %>px; top: 8px; height: 16px; opacity: 0.85;"
+                   style="background-color: <%= bar_color %>; left: <%= bar_left %>px; width: <%= bar_width %>px; top: 10px; height: 16px; opacity: 0.85;"
                    data-tooltip="<%= unit.name %>&#10;<%= period.from %> 〜 <%= period.to.presence || '現在' %>"
                    data-action="mouseenter->timeline#show mousemove->timeline#move mouseleave->timeline#hide"
                    role="img"
