@@ -118,9 +118,7 @@ export default class extends Controller {
       const after = Array.from(rows.children).find(r => parseInt(r.dataset.startYear, 10) > startYear)
       after ? rows.insertBefore(row, after) : rows.appendChild(row)
       row.scrollIntoView({ behavior: "smooth", block: "center" })
-      row.style.transition = "background-color 1.5s ease"
-      row.style.backgroundColor = "rgba(99,102,241,0.15)"
-      setTimeout(() => { row.style.backgroundColor = "" }, 1500)
+      row.style.borderLeft = "3px solid rgba(99,102,241,0.6)"
     } catch (e) {
       console.error("timeline-search addUnit error:", e)
     }
