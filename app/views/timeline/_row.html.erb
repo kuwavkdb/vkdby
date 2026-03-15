@@ -9,8 +9,9 @@
   tag_names           = unit.tag_index_items.map { |ti| ti.tag_index.name }
   has_major_disbanded = tag_names.include?('メジャーで解散')
   bar_color           = has_major_disbanded ? '#a855f7' : '#3b82f6'
+  earliest_year       = unit.activity_periods.filter_map { |p| parse_year(p.from) }.min || 9999
 %>
-<div class="group flex border-b border-zinc-200 dark:border-zinc-700">
+<div class="group flex border-b border-zinc-200 dark:border-zinc-700" data-start-year="<%= earliest_year %>">
   <!-- バンド名（横スクロール固定） -->
   <div class="flex-shrink-0 px-3 py-2 flex items-center
               sticky left-0 z-10 bg-zinc-50 dark:bg-zinc-950

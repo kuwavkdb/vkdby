@@ -113,7 +113,10 @@ export default class extends Controller {
       const tmp = document.createElement("div")
       tmp.innerHTML = html.trim()
       const row = tmp.firstElementChild
-      if (row) rows.appendChild(row)
+      if (!row) return
+      const startYear = parseInt(row.dataset.startYear, 10)
+      const after = Array.from(rows.children).find(r => parseInt(r.dataset.startYear, 10) > startYear)
+      after ? rows.insertBefore(row, after) : rows.appendChild(row)
     } catch (e) {
       console.error("timeline-search addUnit error:", e)
     }
