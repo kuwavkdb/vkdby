@@ -41,6 +41,11 @@
   %>
   <div data-controller="timeline" class="rounded border border-zinc-200 dark:border-zinc-700">
 
+    <!-- カスタムツールチップ -->
+    <div data-timeline-target="tooltip"
+         class="hidden fixed z-50 px-2 py-1 text-xs text-white bg-zinc-800 dark:bg-zinc-600 rounded shadow-lg pointer-events-none whitespace-pre-wrap max-w-xs"
+         style="top: 0; left: 0;" role="tooltip"></div>
+
     <!-- ヘッダー行（縦スクロール固定 + 横スクロール同期） -->
     <div class="sticky top-0 z-20 border-b border-zinc-200 dark:border-zinc-700 overflow-x-hidden"
          data-timeline-target="header">
@@ -108,7 +113,8 @@
               <% bar_width = [((to_year - from_year + 1) * year_px), year_px / 2].max %>
               <div class="absolute rounded transition-opacity"
                    style="background-color: <%= bar_color %>; left: <%= bar_left %>px; width: <%= bar_width %>px; top: 8px; height: 16px; opacity: 0.85;"
-                   title="<%= period.from %> 〜 <%= period.to.presence || '現在' %>"
+                   data-tooltip="<%= period.from %> 〜 <%= period.to.presence || '現在' %>"
+                   data-action="mouseenter->timeline#show mousemove->timeline#move mouseleave->timeline#hide"
                    role="img"
                    aria-label="<%= unit.name %> 活動期間: <%= period.from %> 〜 <%= period.to.presence || '現在' %>">
               </div>
@@ -119,7 +125,8 @@
               <% mx = (marker[:year] - @year_min) * year_px + year_px / 2 %>
               <div class="absolute"
                    style="left: <%= mx %>px; top: 0; width: 12px; height: 36px; transform: translateX(-50%); z-index: 1; cursor: default; display: flex; align-items: center; justify-content: center;"
-                   title="<%= marker[:title] %>（<%= marker[:date] %>）"
+                   data-tooltip="<%= marker[:title] %>（<%= marker[:date] %>）"
+                   data-action="mouseenter->timeline#show mousemove->timeline#move mouseleave->timeline#hide"
                    role="img"
                    aria-label="<%= unit.name %> <%= marker[:title] %>: <%= marker[:date] %>">
                 <span style="display: block; width: 6px; height: 28px; background-color: #f59e0b; border-radius: 1px; pointer-events: none;"></span>
