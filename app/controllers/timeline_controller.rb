@@ -68,6 +68,32 @@ class TimelineController < ApplicationController
   end
   # rubocop:enable Metrics/AbcSize, Metrics/PerceivedComplexity
 
+  def unit
+    cached = Rails.cache.read(CACHE_KEY)
+    year_min = cached&.dig(:year_min) || Time.current.year
+    year_max = cached&.dig(:year_max) || Time.current.year
+
+    unit = Unit.kept.preload(tag_index_items: :tag_index).find_by(key: params[:key])
+    return head :not_found unless unit
+
+    debut_trends = Trend.where('title LIKE ?', '%メジャーデビュー%')
+                        .where(active: true)
+                        .select(:id, :date, :title, :units)
+    markers = []
+    debut_trends.each do |trend|
+      (trend.units || []).each do |u|
+        markers << { year: trend.date.year, date: trend.date.to_s, title: trend.title } if u['unit_id'].to_i == unit.id
+      end
+    end
+
+    render partial: 'row', locals: {
+      unit:,
+      year_min:,
+      year_max:,
+      debut_markers: { unit.id => markers }
+    }
+  end
+
   private
 
   # 1970年未満は不正データとみなして nil を返す

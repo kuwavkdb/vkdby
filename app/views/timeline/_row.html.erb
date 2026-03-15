@@ -1,0 +1,60 @@
+<%
+  year_px     = 20
+  chart_width = (year_max - year_min + 1) * year_px
+  name_col_w  = 176
+  grid_span        = year_px * 5
+  five_year_offset = (5 - year_min % 5) % 5 * year_px
+  row_grid_style   = "background-image: repeating-linear-gradient(to right, transparent, transparent #{grid_span - 2}px, rgba(113,113,122,0.35) #{grid_span - 2}px, rgba(113,113,122,0.35) #{grid_span}px); background-size: #{grid_span}px 100%; background-position: #{five_year_offset}px 0;"
+
+  tag_names           = unit.tag_index_items.map { |ti| ti.tag_index.name }
+  has_major_disbanded = tag_names.include?('メジャーで解散')
+  bar_color           = has_major_disbanded ? '#a855f7' : '#3b82f6'
+%>
+<div class="group flex border-b border-zinc-200 dark:border-zinc-700">
+  <!-- バンド名（横スクロール固定） -->
+  <div class="flex-shrink-0 px-3 py-2 flex items-center
+              sticky left-0 z-10 bg-zinc-50 dark:bg-zinc-950
+              group-hover:bg-zinc-100 dark:group-hover:bg-zinc-900
+              border-r border-zinc-200 dark:border-zinc-700 transition-colors"
+       style="width: <%= name_col_w %>px;">
+    <%= link_to unit.name, profile_path(unit.key),
+          class: "text-sm font-semibold text-indigo-600 dark:text-indigo-200 hover:underline truncate block w-full",
+          title: unit.name %>
+  </div>
+  <!-- ガントバー + デビューマーカー -->
+  <div class="relative flex-shrink-0 bg-white dark:bg-zinc-950
+              group-hover:bg-zinc-50 dark:group-hover:bg-zinc-900 transition-colors"
+       style="width: <%= chart_width %>px; height: 36px; <%= row_grid_style %>">
+    <%# 活動期間バー %>
+    <% unit.activity_periods.each do |period| %>
+      <% from_year = parse_year(period.from) %>
+      <% next unless from_year %>
+      <% to_year   = parse_year(period.to) || year_max %>
+      <% from_year = [from_year, year_min].max %>
+      <% to_year   = [to_year,   year_max].min %>
+      <% next if from_year > to_year %>
+      <% bar_left  = (from_year - year_min) * year_px %>
+      <% bar_width = [((to_year - from_year + 1) * year_px), year_px / 2].max %>
+      <div class="absolute rounded transition-opacity"
+           style="background-color: <%= bar_color %>; left: <%= bar_left %>px; width: <%= bar_width %>px; top: 10px; height: 16px; opacity: 0.85;"
+           data-tooltip="<%= unit.name %>&#10;<%= period.from %> 〜 <%= period.to.presence || '現在' %>"
+           data-action="mouseenter->timeline#show mousemove->timeline#move mouseleave->timeline#hide"
+           role="img"
+           aria-label="<%= unit.name %> 活動期間: <%= period.from %> 〜 <%= period.to.presence || '現在' %>">
+      </div>
+    <% end %>
+    <%# メジャーデビューマーカー（縦線）%>
+    <% (debut_markers[unit.id] || []).each do |marker| %>
+      <% next unless marker[:year] >= year_min && marker[:year] <= year_max %>
+      <% mx = (marker[:year] - year_min) * year_px + year_px / 2 %>
+      <div class="absolute"
+           style="left: <%= mx %>px; top: 0; width: 12px; height: 36px; transform: translateX(-50%); z-index: 1; cursor: default; display: flex; align-items: center; justify-content: center;"
+           data-tooltip="<%= unit.name %>&#10;<%= marker[:title] %>（<%= marker[:date] %>）"
+           data-action="mouseenter->timeline#show mousemove->timeline#move mouseleave->timeline#hide"
+           role="img"
+           aria-label="<%= unit.name %> <%= marker[:title] %>: <%= marker[:date] %>">
+        <span style="display: block; width: 6px; height: 28px; background-color: #f59e0b; border-radius: 1px; pointer-events: none;"></span>
+      </div>
+    <% end %>
+  </div>
+</div>
