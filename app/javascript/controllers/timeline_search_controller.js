@@ -117,6 +117,7 @@ export default class extends Controller {
       const startYear = parseInt(row.dataset.startYear, 10)
       const after = Array.from(rows.children).find(r => parseInt(r.dataset.startYear, 10) > startYear)
       after ? rows.insertBefore(row, after) : rows.appendChild(row)
+      row.scrollIntoView({ behavior: "smooth", block: "center" })
     } catch (e) {
       console.error("timeline-search addUnit error:", e)
     }
