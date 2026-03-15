@@ -28,6 +28,17 @@ class TimelineController < ApplicationController
         [earliest, unit.name_kana.to_s]
       end
 
+      # 有効なバーが1本も描けないユニットを除外
+      units.select! do |unit|
+        unit.activity_periods.any? do |p|
+          fy = parse_year(p.from)
+          next false unless fy
+
+          ty = parse_year(p.to) || year_max
+          [fy, year_min].max <= [ty, year_max].min
+        end
+      end
+
       # 「メジャーデビュー」Trend を収集し unit_id → [{year:, date:, title:}] のハッシュに変換
       unit_id_set = units.map(&:id).to_set
       debut_trends = Trend
