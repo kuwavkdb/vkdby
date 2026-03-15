@@ -119,8 +119,11 @@ export default class extends Controller {
       after ? rows.insertBefore(row, after) : rows.appendChild(row)
       row.scrollIntoView({ behavior: "smooth", block: "center" })
       row.dataset.rowType = "added"
+      row.querySelectorAll("div.absolute.rounded").forEach(bar => {
+        bar.style.backgroundColor = "#22c55e"
+      })
       const nameCell = row.querySelector("div[style*='width']")
-      if (nameCell) nameCell.style.backgroundColor = "rgba(99,102,241,0.12)"
+      if (nameCell) nameCell.style.backgroundColor = "rgba(34,197,94,0.12)"
     } catch (e) {
       console.error("timeline-search addUnit error:", e)
     }
