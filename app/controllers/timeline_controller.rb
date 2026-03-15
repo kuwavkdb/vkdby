@@ -76,11 +76,8 @@ class TimelineController < ApplicationController
     unit = Unit.kept.preload(tag_index_items: :tag_index).find_by(key: params[:key])
     return head :not_found unless unit
 
-    debut_trends = Trend.where('title LIKE ?', '%メジャーデビュー%')
-                        .where(active: true)
-                        .select(:id, :date, :title, :units)
     markers = []
-    debut_trends.each do |trend|
+    Trend.where(active: true).select(:id, :date, :title, :units).each do |trend|
       (trend.units || []).each do |u|
         markers << { year: trend.date.year, date: trend.date.to_s, title: trend.title } if u['unit_id'].to_i == unit.id
       end
