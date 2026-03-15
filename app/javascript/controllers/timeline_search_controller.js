@@ -123,7 +123,19 @@ export default class extends Controller {
         bar.style.backgroundColor = "#22c55e"
       })
       const nameCell = row.querySelector("div[style*='width']")
-      if (nameCell) nameCell.style.backgroundColor = "rgba(34,197,94,0.12)"
+      if (nameCell) {
+        nameCell.style.backgroundColor = "rgba(34,197,94,0.12)"
+        const btn = document.createElement("button")
+        btn.type = "button"
+        btn.textContent = "✕"
+        btn.setAttribute("aria-label", "行を削除")
+        btn.className = "flex-shrink-0 ml-1 text-xs text-zinc-400 hover:text-red-500 leading-none"
+        btn.addEventListener("click", () => {
+          this.addedKeys.delete(key)
+          row.remove()
+        })
+        nameCell.appendChild(btn)
+      }
     } catch (e) {
       console.error("timeline-search addUnit error:", e)
     }
