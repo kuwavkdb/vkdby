@@ -22,15 +22,9 @@ export default class extends Controller {
 
   _applyVisibility(type) {
     const hidden = this.hiddenTypes.has(type)
-    if (type === "debut") {
-      this.bodyTarget.querySelectorAll("[data-marker-type='debut']").forEach(el => {
-        el.classList.toggle("hidden", hidden)
-      })
-    } else {
-      this.bodyTarget.querySelectorAll(`[data-row-type='${type}']`).forEach(row => {
-        row.classList.toggle("hidden", hidden)
-      })
-    }
+    this.bodyTarget.querySelectorAll(`[data-row-type='${type}']`).forEach(row => {
+      row.classList.toggle("hidden", hidden)
+    })
   }
 
   syncHeader() {

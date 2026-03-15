@@ -9,7 +9,8 @@
   grid_style       = "background-image: repeating-linear-gradient(to right, transparent, transparent #{grid_span - 2}px, rgba(113,113,122,0.35) #{grid_span - 2}px, rgba(113,113,122,0.35) #{grid_span}px); background-size: #{grid_span}px 100%; background-position: #{five_year_offset}px 0;"
 %>
 
-<div class="px-0 sm:px-2">
+<div class="px-0 sm:px-2" data-controller="timeline">
+
   <div class="mb-4">
     <h1 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">年表</h1>
     <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">メジャーデビュー・メジャーで解散したバンドの活動時期</p>
@@ -35,15 +36,10 @@
       <span class="inline-block w-6 h-4 rounded" style="background-color: #a855f7;" aria-hidden="true"></span>
       <span class="text-zinc-600 dark:text-zinc-400">メジャーで解散</span>
     </button>
-    <button type="button"
-            class="flex items-center gap-2 cursor-pointer select-none transition-opacity"
-            data-action="click->timeline#toggleType"
-            data-type="debut"
-            aria-pressed="false"
-            title="クリックで表示切替">
+    <div class="flex items-center gap-2">
       <span class="inline-block" style="width: 3px; height: 16px; background-color: #f59e0b; border-radius: 1px;" aria-hidden="true"></span>
       <span class="text-zinc-600 dark:text-zinc-400">メジャーデビュー</span>
-    </button>
+    </div>
   </div>
 
   <!-- バンド追加検索 -->
@@ -78,8 +74,7 @@
     - ページ自体が縦スクロール（コンテナに height 制限なし）
     - ヘッダ行は sticky top-16 でビューポートに固定
   %>
-  <div data-controller="timeline"
-       id="timeline-widget"
+  <div id="timeline-widget"
        class="rounded border border-zinc-200 dark:border-zinc-700">
 
     <!-- カスタムツールチップ -->
