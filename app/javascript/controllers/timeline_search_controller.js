@@ -124,7 +124,7 @@ export default class extends Controller {
       })
       const nameCell = row.querySelector("div[style*='width']")
       if (nameCell) {
-        nameCell.style.backgroundColor = "rgba(34,197,94,0.12)"
+        nameCell.style.backgroundColor = "#dcfce7"
         const btn = document.createElement("button")
         btn.type = "button"
         btn.textContent = "✕"
