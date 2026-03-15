@@ -15,21 +15,35 @@
     <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">メジャーデビュー・メジャーで解散したバンドの活動時期</p>
   </div>
 
-  <!-- 凡例 -->
+  <!-- 凡例（クリックで表示切替） -->
   <div class="flex flex-wrap gap-4 mb-3 text-sm" role="note" aria-label="凡例">
-    <div class="flex items-center gap-2">
+    <button type="button"
+            class="flex items-center gap-2 cursor-pointer select-none transition-opacity"
+            data-action="click->timeline#toggleType"
+            data-type="major"
+            aria-pressed="false"
+            title="クリックで表示切替">
       <span class="inline-block w-6 h-4 rounded" style="background-color: #3b82f6;" aria-hidden="true"></span>
       <span class="text-zinc-600 dark:text-zinc-400">メジャー</span>
-    </div>
-    <div class="flex items-center gap-2">
+    </button>
+    <button type="button"
+            class="flex items-center gap-2 cursor-pointer select-none transition-opacity"
+            data-action="click->timeline#toggleType"
+            data-type="major-disbanded"
+            aria-pressed="false"
+            title="クリックで表示切替">
       <span class="inline-block w-6 h-4 rounded" style="background-color: #a855f7;" aria-hidden="true"></span>
       <span class="text-zinc-600 dark:text-zinc-400">メジャーで解散</span>
-    </div>
-
-    <div class="flex items-center gap-2">
+    </button>
+    <button type="button"
+            class="flex items-center gap-2 cursor-pointer select-none transition-opacity"
+            data-action="click->timeline#toggleType"
+            data-type="debut"
+            aria-pressed="false"
+            title="クリックで表示切替">
       <span class="inline-block" style="width: 3px; height: 16px; background-color: #f59e0b; border-radius: 1px;" aria-hidden="true"></span>
       <span class="text-zinc-600 dark:text-zinc-400">メジャーデビュー</span>
-    </div>
+    </button>
   </div>
 
   <!-- バンド追加検索 -->

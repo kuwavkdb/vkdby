@@ -11,7 +11,9 @@
   bar_color           = has_major_disbanded ? '#a855f7' : '#3b82f6'
   earliest_year       = unit.activity_periods.filter_map { |p| parse_year(p.from) }.min || 9999
 %>
-<div class="group flex border-b border-zinc-200 dark:border-zinc-700" data-start-year="<%= earliest_year %>">
+<div class="group flex border-b border-zinc-200 dark:border-zinc-700"
+     data-start-year="<%= earliest_year %>"
+     data-row-type="<%= has_major_disbanded ? 'major-disbanded' : 'major' %>">
   <!-- バンド名（横スクロール固定） -->
   <div class="flex-shrink-0 px-3 py-2 flex items-center
               sticky left-0 z-10 bg-zinc-50 dark:bg-zinc-950
@@ -49,6 +51,7 @@
       <% next unless marker[:year] >= year_min && marker[:year] <= year_max %>
       <% mx = (marker[:year] - year_min) * year_px + year_px / 2 %>
       <div class="absolute"
+           data-marker-type="debut"
            style="left: <%= mx %>px; top: 0; width: 12px; height: 36px; transform: translateX(-50%); z-index: 1; cursor: default; display: flex; align-items: center; justify-content: center;"
            data-tooltip="<%= unit.name %>&#10;<%= marker[:title] %>（<%= marker[:date] %>）"
            data-action="mouseenter->timeline#show mousemove->timeline#move mouseleave->timeline#hide"

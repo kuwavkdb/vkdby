@@ -3,6 +3,36 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["header", "body", "tooltip"]
 
+  connect() {
+    this.hiddenTypes = new Set()
+  }
+
+  toggleType(event) {
+    const item = event.currentTarget
+    const type = item.dataset.type
+    if (this.hiddenTypes.has(type)) {
+      this.hiddenTypes.delete(type)
+      item.classList.remove("opacity-40", "line-through")
+    } else {
+      this.hiddenTypes.add(type)
+      item.classList.add("opacity-40", "line-through")
+    }
+    this._applyVisibility(type)
+  }
+
+  _applyVisibility(type) {
+    const hidden = this.hiddenTypes.has(type)
+    if (type === "debut") {
+      this.bodyTarget.querySelectorAll("[data-marker-type='debut']").forEach(el => {
+        el.classList.toggle("hidden", hidden)
+      })
+    } else {
+      this.bodyTarget.querySelectorAll(`[data-row-type='${type}']`).forEach(row => {
+        row.classList.toggle("hidden", hidden)
+      })
+    }
+  }
+
   syncHeader() {
     this.headerTarget.scrollLeft = this.bodyTarget.scrollLeft
   }
