@@ -118,6 +118,7 @@ export default class extends Controller {
       const after = Array.from(rows.children).find(r => parseInt(r.dataset.startYear, 10) > startYear)
       after ? rows.insertBefore(row, after) : rows.appendChild(row)
       row.scrollIntoView({ behavior: "smooth", block: "center" })
+      row.dataset.rowType = "added"
       const nameCell = row.querySelector("div[style*='width']")
       if (nameCell) nameCell.style.backgroundColor = "rgba(99,102,241,0.12)"
     } catch (e) {
