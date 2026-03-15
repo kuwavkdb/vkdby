@@ -1,19 +1,20 @@
 # frozen_string_literal: true
 
 class TimelineController < ApplicationController
-  TARGET_TAG_NAMES = ['メジャー', 'メジャーで解散'].freeze
+  TARGET_TAG_NAMES = %w[メジャー メジャーで解散].freeze
   CACHE_KEY = 'timeline/major_units'
   CACHE_TTL = 1.hour
 
+  # rubocop:disable Metrics/AbcSize, Metrics/PerceivedComplexity
   def index
     @timeline_data = Rails.cache.fetch(CACHE_KEY, expires_in: CACHE_TTL) do
       units = Unit.kept
-        .joins(tag_index_items: :tag_index)
-        .where(tag_indices: { name: TARGET_TAG_NAMES })
-        .where.not(activity_period: nil)
-        .distinct
-        .preload(tag_index_items: :tag_index)
-        .to_a
+                  .joins(tag_index_items: :tag_index)
+                  .where(tag_indices: { name: TARGET_TAG_NAMES })
+                  .where.not(activity_period: nil)
+                  .distinct
+                  .preload(tag_index_items: :tag_index)
+                  .to_a
 
       all_years = units.flat_map do |unit|
         unit.activity_periods.map { |p| parse_year(p.from) }
@@ -42,9 +43,9 @@ class TimelineController < ApplicationController
       # 「メジャーデビュー」Trend を収集し unit_id → [{year:, date:, title:}] のハッシュに変換
       unit_id_set = units.map(&:id).to_set
       debut_trends = Trend
-        .where('title LIKE ?', '%メジャーデビュー%')
-        .where(active: true)
-        .select(:id, :date, :title, :units)
+                     .where('title LIKE ?', '%メジャーデビュー%')
+                     .where(active: true)
+                     .select(:id, :date, :title, :units)
 
       debut_markers = {}
       debut_trends.each do |trend|
@@ -65,6 +66,7 @@ class TimelineController < ApplicationController
     @year_range     = (@year_min..@year_max).to_a
     @debut_markers  = @timeline_data[:debut_markers]
   end
+  # rubocop:enable Metrics/AbcSize, Metrics/PerceivedComplexity
 
   private
 
