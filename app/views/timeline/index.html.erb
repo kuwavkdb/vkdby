@@ -113,7 +113,7 @@
               <% bar_width = [((to_year - from_year + 1) * year_px), year_px / 2].max %>
               <div class="absolute rounded transition-opacity"
                    style="background-color: <%= bar_color %>; left: <%= bar_left %>px; width: <%= bar_width %>px; top: 8px; height: 16px; opacity: 0.85;"
-                   data-tooltip="<%= period.from %> 〜 <%= period.to.presence || '現在' %>"
+                   data-tooltip="<%= unit.name %>&#10;<%= period.from %> 〜 <%= period.to.presence || '現在' %>"
                    data-action="mouseenter->timeline#show mousemove->timeline#move mouseleave->timeline#hide"
                    role="img"
                    aria-label="<%= unit.name %> 活動期間: <%= period.from %> 〜 <%= period.to.presence || '現在' %>">
@@ -125,7 +125,7 @@
               <% mx = (marker[:year] - @year_min) * year_px + year_px / 2 %>
               <div class="absolute"
                    style="left: <%= mx %>px; top: 0; width: 12px; height: 36px; transform: translateX(-50%); z-index: 1; cursor: default; display: flex; align-items: center; justify-content: center;"
-                   data-tooltip="<%= marker[:title] %>（<%= marker[:date] %>）"
+                   data-tooltip="<%= unit.name %>&#10;<%= marker[:title] %>（<%= marker[:date] %>）"
                    data-action="mouseenter->timeline#show mousemove->timeline#move mouseleave->timeline#hide"
                    role="img"
                    aria-label="<%= unit.name %> <%= marker[:title] %>: <%= marker[:date] %>">
