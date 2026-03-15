@@ -81,12 +81,12 @@
           has_major_disbanded = tag_names.include?('メジャーで解散')
           bar_color = has_major_disbanded ? '#f87171' : '#3b82f6'
         %>
-        <div class="group flex border-b border-zinc-100 dark:border-zinc-800">
+        <div class="group flex border-b border-zinc-200 dark:border-zinc-700">
           <!-- バンド名（横スクロール固定） -->
           <div class="flex-shrink-0 px-3 py-2 flex items-center
                       sticky left-0 z-10 bg-zinc-50 dark:bg-zinc-950
                       group-hover:bg-zinc-100 dark:group-hover:bg-zinc-900
-                      border-r border-zinc-100 dark:border-zinc-800 transition-colors"
+                      border-r border-zinc-200 dark:border-zinc-700 transition-colors"
                style="width: <%= name_col_w %>px;">
             <%= link_to unit.name, profile_path(unit.key),
                   class: "text-indigo-600 dark:text-indigo-400 hover:underline text-xs font-medium leading-tight truncate block w-full",
