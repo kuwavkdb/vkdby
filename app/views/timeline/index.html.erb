@@ -1,9 +1,12 @@
 <% content_for :title, "年表 - メジャーバンド | Vkdby" %>
 
 <%
-  year_px     = 20    # 1年あたりのピクセル幅
-  chart_width = (@year_max - @year_min + 1) * year_px
-  name_col_w  = 176   # w-44 = 11rem = 176px
+  year_px          = 20    # 1年あたりのピクセル幅
+  chart_width      = (@year_max - @year_min + 1) * year_px
+  name_col_w       = 176   # w-44 = 11rem = 176px
+  grid_span        = year_px * 5   # 5年分のピクセル幅
+  five_year_offset = (5 - @year_min % 5) % 5 * year_px  # 最初の5年ラインまでのオフセット
+  grid_style       = "background-image: repeating-linear-gradient(to right, transparent, transparent #{grid_span - 1}px, rgba(113,113,122,0.18) #{grid_span - 1}px, rgba(113,113,122,0.18) #{grid_span}px); background-size: #{grid_span}px 100%; background-position: #{five_year_offset}px 0;"
 %>
 
 <div class="px-0 sm:px-2">
@@ -92,7 +95,7 @@
           <!-- ガントバー + デビューマーカー -->
           <div class="relative flex-shrink-0 bg-white dark:bg-zinc-950
                       group-hover:bg-zinc-50 dark:group-hover:bg-zinc-900 transition-colors"
-               style="width: <%= chart_width %>px; height: 36px;">
+               style="width: <%= chart_width %>px; height: 36px; <%= grid_style %>">
             <%# 活動期間バー %>
             <% unit.activity_periods.each do |period| %>
               <% from_year = parse_year(period.from) %>
