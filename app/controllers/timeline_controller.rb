@@ -53,7 +53,10 @@ class TimelineController < ApplicationController
           uid = u['unit_id'].to_i
           next unless unit_id_set.include?(uid)
 
-          (debut_markers[uid] ||= []) << { year: trend.date.year, month: trend.date.month, date: trend.date.to_s, title: strip_wiki_links(trend.title), debut: trend.title.include?('メジャーデビュー') }
+          (debut_markers[uid] ||= []) << {
+            year: trend.date.year, month: trend.date.month, date: trend.date.to_s,
+            title: strip_wiki_links(trend.title), debut: trend.title.include?('メジャーデビュー')
+          }
         end
       end
 
@@ -79,7 +82,12 @@ class TimelineController < ApplicationController
     markers = []
     Trend.where(active: true).select(:id, :date, :title, :units).each do |trend|
       (trend.units || []).each do |u|
-        markers << { year: trend.date.year, month: trend.date.month, date: trend.date.to_s, title: strip_wiki_links(trend.title), debut: trend.title.include?('メジャーデビュー') } if u['unit_id'].to_i == unit.id
+        next unless u['unit_id'].to_i == unit.id
+
+        markers << {
+          year: trend.date.year, month: trend.date.month, date: trend.date.to_s,
+          title: strip_wiki_links(trend.title), debut: trend.title.include?('メジャーデビュー')
+        }
       end
     end
 

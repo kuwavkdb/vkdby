@@ -14,19 +14,20 @@ class TimelineRowComponent < ViewComponent::Base
     @debut_markers = debut_markers
   end
 
-  def chart_width   = (@year_max - @year_min + 1) * YEAR_PX
-  def grid_span     = YEAR_PX * 5
+  def chart_width      = (@year_max - @year_min + 1) * YEAR_PX
+  def grid_span        = YEAR_PX * 5
   def five_year_offset = (5 - @year_min % 5) % 5 * YEAR_PX
 
   def row_grid_style
-    "background-image: repeating-linear-gradient(to right, transparent, transparent #{grid_span - 2}px, rgba(113,113,122,0.35) #{grid_span - 2}px, rgba(113,113,122,0.35) #{grid_span}px); " \
-      "background-size: #{grid_span}px 100%; background-position: #{five_year_offset}px 0;"
+    gradient = "repeating-linear-gradient(to right, transparent, transparent #{grid_span - 2}px, " \
+               "rgba(113,113,122,0.35) #{grid_span - 2}px, rgba(113,113,122,0.35) #{grid_span}px)"
+    "background-image: #{gradient}; background-size: #{grid_span}px 100%; background-position: #{five_year_offset}px 0;"
   end
 
-  def tag_names           = @unit.tag_index_items.map { |ti| ti.tag_index.name }
-  def has_major_disbanded = tag_names.include?('メジャーで解散')
-  def bar_color           = has_major_disbanded ? '#a855f7' : '#3b82f6'
-  def row_type            = has_major_disbanded ? 'major-disbanded' : 'major'
+  def tag_names = @unit.tag_index_items.map { |ti| ti.tag_index.name }
+  def major_disbanded? = tag_names.include?('メジャーで解散')
+  def bar_color      = major_disbanded? ? '#a855f7' : '#3b82f6'
+  def row_type       = major_disbanded? ? 'major-disbanded' : 'major'
 
   def earliest_year
     @unit.activity_periods.filter_map { |p| parse_year(p.from) }.min || 9999
@@ -36,11 +37,11 @@ class TimelineRowComponent < ViewComponent::Base
     @debut_markers[@unit.id] || []
   end
 
-  def bar_left(from_year)  = (from_year - @year_min) * YEAR_PX
-  def bar_width(from_year, to_year) = [((to_year - from_year + 1) * YEAR_PX), YEAR_PX / 2].max
+  def bar_left(from_year)            = (from_year - @year_min) * YEAR_PX
+  def bar_width(from_year, to_year)  = [((to_year - from_year + 1) * YEAR_PX), YEAR_PX / 2].max
 
   def marker_x(marker)
-    (@year_min == 0 ? 0 : (marker[:year] - @year_min)) * YEAR_PX +
+    (@year_min.zero? ? 0 : (marker[:year] - @year_min)) * YEAR_PX +
       ((marker[:month] || 1) - 1) * YEAR_PX / 12
   end
 
@@ -49,6 +50,7 @@ class TimelineRowComponent < ViewComponent::Base
   end
 
   def clamp_year(year, min, max) = [[year, min].max, max].min
+
   def parse_year(str)
     return nil if str.blank?
 
