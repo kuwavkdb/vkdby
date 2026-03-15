@@ -22,10 +22,7 @@
       <span class="inline-block w-6 h-4 rounded" style="background-color: #f87171;" aria-hidden="true"></span>
       <span class="text-zinc-600 dark:text-zinc-400">メジャーで解散</span>
     </div>
-    <div class="flex items-center gap-2">
-      <span class="inline-block w-6 h-4 rounded" style="background-color: #a855f7;" aria-hidden="true"></span>
-      <span class="text-zinc-600 dark:text-zinc-400">両方</span>
-    </div>
+
     <div class="flex items-center gap-2">
       <span class="inline-block" style="width: 3px; height: 16px; background-color: #f59e0b; border-radius: 1px;" aria-hidden="true"></span>
       <span class="text-zinc-600 dark:text-zinc-400">メジャーデビュー</span>
@@ -79,13 +76,7 @@
           tag_names = unit.tag_index_items.map { |ti| ti.tag_index.name }
           has_major           = tag_names.include?('メジャー')
           has_major_disbanded = tag_names.include?('メジャーで解散')
-          bar_color = if has_major && has_major_disbanded
-                        '#a855f7'
-                      elsif has_major_disbanded
-                        '#f87171'
-                      else
-                        '#3b82f6'
-                      end
+          bar_color = has_major_disbanded ? '#f87171' : '#3b82f6'
         %>
         <div class="group flex border-b border-zinc-100 dark:border-zinc-800">
           <!-- バンド名（横スクロール固定） -->
