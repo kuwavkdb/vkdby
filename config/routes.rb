@@ -135,6 +135,9 @@ Rails.application.routes.draw do
   get '/pages/:key', to: 'custom_pages#show', as: :custom_page,
                      constraints: { key: /[a-z0-9_-]+/ }
 
+  # Timeline
+  get 'timeline', to: 'timeline#index'
+
   # Cross-search
   get 'search', to: 'search#index'
 
