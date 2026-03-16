@@ -104,17 +104,30 @@ export default class extends Controller {
     const unitUrl = this.inputTarget.dataset.unitUrl
     try {
       const cacheKey = this.constructor.HTML_CACHE_PREFIX + key
-      let html = sessionStorage.getItem(cacheKey)
-      if (!html) {
+      const fetchHtml = async () => {
         const res = await fetch(`${unitUrl}?key=${encodeURIComponent(key)}`, {
           headers: { "Accept": "text/html" }
         })
-        if (!res.ok) {
+        if (!res.ok) throw new Error(`fetch failed: ${res.status}`)
+        return res.text()
+      }
+      let html = sessionStorage.getItem(cacheKey)
+      if (html) {
+        const probe = document.createElement("div")
+        probe.innerHTML = html.trim()
+        if (!probe.firstElementChild?.dataset.startYear) {
+          sessionStorage.removeItem(cacheKey)
+          html = null
+        }
+      }
+      if (!html) {
+        try {
+          html = await fetchHtml()
+          sessionStorage.setItem(cacheKey, html)
+        } catch {
           alert(`「${name}」の追加に失敗しました`)
           return
         }
-        html = await res.text()
-        sessionStorage.setItem(cacheKey, html)
       }
       const rows = document.getElementById("timeline-rows")
       if (!rows) return
@@ -127,6 +140,7 @@ export default class extends Controller {
       const startYear = parseInt(row.dataset.startYear, 10)
       const after = Array.from(rows.children).find(r => parseInt(r.dataset.startYear, 10) > startYear)
       after ? rows.insertBefore(row, after) : rows.appendChild(row)
+      this.element.dispatchEvent(new CustomEvent("timeline:row-added", { detail: { row }, bubbles: true }))
       if (scroll) row.scrollIntoView({ behavior: "smooth", block: "center" })
       row.dataset.rowType = "added"
       row.querySelectorAll("div.absolute.rounded").forEach(bar => {

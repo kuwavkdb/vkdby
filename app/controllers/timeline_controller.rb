@@ -91,7 +91,7 @@ class TimelineController < ApplicationController
       end
     end
 
-    render TimelineRowComponent.new(unit: unit, year_min: year_min, year_max: year_max, debut_markers: { unit.id => markers })
+    render TimelineRowComponent.new(unit: unit, year_min: year_min, year_max: year_max, debut_markers: { unit.id => markers }), layout: false
   end
 
   private
