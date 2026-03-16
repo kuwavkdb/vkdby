@@ -49,13 +49,6 @@
       <span class="inline-block w-6 h-4 rounded" style="background-color: #22c55e;" aria-hidden="true"></span>
       <span class="text-zinc-600 dark:text-zinc-400">任意追加バンド</span>
     </button>
-    <button type="button"
-            class="ml-auto text-xs px-2 py-1 rounded border border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-            data-action="click->timeline#toggleZoom"
-            title="1年あたりの表示幅を切り替え"
-            aria-label="表示幅切り替え">
-      幅: <span data-timeline-target="zoomLabel">標準</span>
-    </button>
   </div>
 
   <!-- バンド追加検索 -->
@@ -109,26 +102,21 @@
           バンド
         </div>
         <!-- 年ラベル -->
-        <div class="relative flex-shrink-0" style="width: <%= chart_width %>px; height: 32px;"
-             data-year-min="<%= @year_min %>"
-             data-year-max="<%= @year_max %>">
+        <div class="relative flex-shrink-0" style="width: <%= chart_width %>px; height: 32px;">
           <% @year_range.each_with_index do |year, i| %>
             <% left = i * year_px %>
             <% if year % 5 == 0 %>
               <span class="absolute text-xs text-zinc-500 dark:text-zinc-400 whitespace-nowrap"
-                    style="left: <%= left %>px; top: 2px; transform: translateX(-50%);"
-                    data-header-year="<%= year %>">
+                    style="left: <%= left %>px; top: 2px; transform: translateX(-50%);">
                 <%= year %>
               </span>
             <% end %>
             <span class="absolute bottom-0 bg-zinc-300 dark:bg-zinc-600 <%= year % 5 == 0 ? 'h-2 w-px' : 'h-1 w-px' %>"
                   style="left: <%= left %>px;"
-                  data-header-year="<%= year %>"
                   aria-hidden="true"></span>
           <% end %>
           <span class="absolute bottom-0 h-2 w-px bg-zinc-300 dark:bg-zinc-600"
                 style="left: <%= chart_width %>px;"
-                data-header-last-tick
                 aria-hidden="true"></span>
         </div>
       </div>

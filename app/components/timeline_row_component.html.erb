@@ -14,10 +14,7 @@
   <!-- ガントバー + Trendマーカー -->
   <div class="relative flex-shrink-0 bg-white dark:bg-zinc-950
               group-hover:bg-zinc-50 dark:group-hover:bg-zinc-900 transition-colors"
-       style="width: <%= chart_width %>px; height: 36px; <%= row_grid_style %>"
-       data-chart-area
-       data-year-min="<%= @year_min %>"
-       data-year-max="<%= @year_max %>">
+       style="width: <%= chart_width %>px; height: 36px; <%= row_grid_style %>">
     <%# 活動期間バー %>
     <% @unit.activity_periods.each do |period| %>
       <% from_year = parse_year(period.from) %>
@@ -27,8 +24,6 @@
       <% to_year   = clamp_year(to_year,   @year_min, @year_max) %>
       <% next if from_year > to_year %>
       <div class="absolute rounded transition-opacity"
-           data-bar-from="<%= from_year %>"
-           data-bar-to="<%= to_year %>"
            style="background-color: <%= bar_color %>; left: <%= bar_left(from_year) %>px; width: <%= bar_width(from_year, to_year) %>px; top: 10px; height: 16px; opacity: 0.85;"
            data-tooltip="<%= @unit.name %>&#10;<%= period.from %> 〜 <%= period.to.presence || '現在' %><%= period.label.present? ? " (#{period.label})" : "" %>"
            data-action="mouseenter->timeline#show mousemove->timeline#move mouseleave->timeline#hide"
@@ -42,8 +37,6 @@
       <% is_debut = debut_marker?(marker) %>
       <div class="absolute"
            data-marker-type="<%= is_debut ? 'debut' : 'trend' %>"
-           data-marker-year="<%= marker[:year] %>"
-           data-marker-month="<%= marker[:month] || 1 %>"
            style="left: <%= marker_x(marker) %>px; top: 0; width: 12px; height: 36px; transform: translateX(-50%); z-index: 1; cursor: default; display: flex; align-items: center; justify-content: center;"
            data-tooltip="<%= @unit.name %>&#10;<%= marker[:title] %>（<%= marker[:date] %>）"
            data-action="mouseenter->timeline#show mousemove->timeline#move mouseleave->timeline#hide"

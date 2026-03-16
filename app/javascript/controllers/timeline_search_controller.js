@@ -140,7 +140,6 @@ export default class extends Controller {
       const startYear = parseInt(row.dataset.startYear, 10)
       const after = Array.from(rows.children).find(r => parseInt(r.dataset.startYear, 10) > startYear)
       after ? rows.insertBefore(row, after) : rows.appendChild(row)
-      this.element.dispatchEvent(new CustomEvent("timeline:row-added", { detail: { row }, bubbles: true }))
       if (scroll) row.scrollIntoView({ behavior: "smooth", block: "center" })
       row.dataset.rowType = "added"
       row.querySelectorAll("div.absolute.rounded").forEach(bar => {
