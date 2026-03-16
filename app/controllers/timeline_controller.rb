@@ -5,8 +5,14 @@ class TimelineController < ApplicationController
   CACHE_KEY = 'timeline/major_units'
   CACHE_TTL = 1.hour
 
+  VALID_ZOOMS = { "2" => 48 }.freeze
+  DEFAULT_YEAR_PX = 24
+
   # rubocop:disable Metrics/AbcSize, Metrics/PerceivedComplexity
   def index
+    @year_px = VALID_ZOOMS.fetch(params[:zoom].to_s, DEFAULT_YEAR_PX)
+    @zoom    = @year_px == DEFAULT_YEAR_PX ? "1" : params[:zoom]
+
     @timeline_data = Rails.cache.fetch(CACHE_KEY, expires_in: CACHE_TTL) do
       units = Unit.kept
                   .joins(tag_index_items: :tag_index)
@@ -91,7 +97,8 @@ class TimelineController < ApplicationController
       end
     end
 
-    render TimelineRowComponent.new(unit: unit, year_min: year_min, year_max: year_max, debut_markers: { unit.id => markers }), layout: false
+    year_px = VALID_ZOOMS.fetch(params[:zoom].to_s, DEFAULT_YEAR_PX)
+    render TimelineRowComponent.new(unit: unit, year_min: year_min, year_max: year_max, debut_markers: { unit.id => markers }, year_px: year_px), layout: false
   end
 
   private

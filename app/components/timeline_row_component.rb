@@ -3,20 +3,21 @@
 class TimelineRowComponent < ViewComponent::Base
   with_collection_parameter :unit
 
-  YEAR_PX    = 24
-  NAME_COL_W = 176
+  DEFAULT_YEAR_PX = 24
+  NAME_COL_W      = 176
 
-  def initialize(unit:, year_min:, year_max:, debut_markers:)
+  def initialize(unit:, year_min:, year_max:, debut_markers:, year_px: DEFAULT_YEAR_PX)
     super()
     @unit          = unit
     @year_min      = year_min
     @year_max      = year_max
     @debut_markers = debut_markers
+    @year_px       = year_px
   end
 
-  def chart_width      = (@year_max - @year_min + 1) * YEAR_PX
-  def grid_span        = YEAR_PX * 5
-  def five_year_offset = (5 - @year_min % 5) % 5 * YEAR_PX
+  def chart_width      = (@year_max - @year_min + 1) * @year_px
+  def grid_span        = @year_px * 5
+  def five_year_offset = (5 - @year_min % 5) % 5 * @year_px
 
   def row_grid_style
     gradient = "repeating-linear-gradient(to right, transparent, transparent #{grid_span - 2}px, " \
@@ -37,12 +38,12 @@ class TimelineRowComponent < ViewComponent::Base
     @debut_markers[@unit.id] || []
   end
 
-  def bar_left(from_year)            = (from_year - @year_min) * YEAR_PX
-  def bar_width(from_year, to_year)  = [((to_year - from_year + 1) * YEAR_PX), YEAR_PX / 2].max
+  def bar_left(from_year)            = (from_year - @year_min) * @year_px
+  def bar_width(from_year, to_year)  = [((to_year - from_year + 1) * @year_px), @year_px / 2].max
 
   def marker_x(marker)
-    (@year_min.zero? ? 0 : (marker[:year] - @year_min)) * YEAR_PX +
-      ((marker[:month] || 1) - 1) * YEAR_PX / 12
+    (@year_min.zero? ? 0 : (marker[:year] - @year_min)) * @year_px +
+      ((marker[:month] || 1) - 1) * @year_px / 12
   end
 
   def debut_marker?(marker)

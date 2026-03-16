@@ -1,7 +1,7 @@
 <% content_for :title, "年表 - メジャーバンド | Vkdby" %>
 
 <%
-  year_px          = 24    # 1年あたりのピクセル幅
+  year_px          = @year_px      # 1年あたりのピクセル幅（24 or 48）
   chart_width      = (@year_max - @year_min + 1) * year_px
   name_col_w       = 176   # w-44 = 11rem = 176px
   grid_span        = year_px * 5   # 5年分のピクセル幅
@@ -11,9 +11,20 @@
 
 <div class="px-0 sm:px-2" data-controller="timeline">
 
-  <div class="mb-4">
-    <h1 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">年表</h1>
-    <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">メジャーデビュー・メジャーで解散したバンドの活動時期</p>
+  <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">年表</h1>
+      <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">メジャーデビュー・メジャーで解散したバンドの活動時期</p>
+    </div>
+    <div class="flex items-center gap-1 text-sm" role="group" aria-label="表示幅の切り替え">
+      <span class="mr-1 text-zinc-500 dark:text-zinc-400 text-xs">表示幅:</span>
+      <%= link_to "標準", timeline_path(zoom: "1"),
+            class: "px-2.5 py-1 rounded border transition-colors #{@zoom == '1' ? 'bg-indigo-600 border-indigo-600 text-white font-medium' : 'border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'}",
+            aria: { current: @zoom == "1" ? "true" : nil } %>
+      <%= link_to "拡大", timeline_path(zoom: "2"),
+            class: "px-2.5 py-1 rounded border transition-colors #{@zoom == '2' ? 'bg-indigo-600 border-indigo-600 text-white font-medium' : 'border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'}",
+            aria: { current: @zoom == "2" ? "true" : nil } %>
+    </div>
   </div>
 
   <!-- 凡例（クリックで表示切替） -->
@@ -58,7 +69,7 @@
         <input type="text"
                placeholder="バンドを追加..."
                autocomplete="off"
-               data-unit-url="<%= timeline_unit_path %>"
+               data-unit-url="<%= timeline_unit_path(zoom: @zoom == '2' ? '2' : nil) %>"
                data-search-url="<%= search_units_path %>"
                class="w-full px-3 py-1.5 text-sm border border-zinc-300 dark:border-zinc-600 rounded
                       bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
@@ -127,7 +138,7 @@
          data-timeline-target="body"
          data-action="scroll->timeline#syncHeader"
          id="timeline-rows">
-      <%= render TimelineRowComponent.with_collection(@units, year_min: @year_min, year_max: @year_max, debut_markers: @debut_markers) %>
+      <%= render TimelineRowComponent.with_collection(@units, year_min: @year_min, year_max: @year_max, debut_markers: @debut_markers, year_px: @year_px) %>
     </div>
 
   </div>
