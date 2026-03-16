@@ -17,7 +17,7 @@
   </div>
 
   <!-- 凡例（クリックで表示切替） -->
-  <div class="flex flex-wrap gap-4 mb-3 text-sm" role="note" aria-label="凡例">
+  <div class="flex flex-wrap items-center gap-4 mb-3 text-sm" role="note" aria-label="凡例">
     <button type="button"
             class="flex items-center gap-2 cursor-pointer select-none transition-opacity"
             data-action="click->timeline#toggleType"
@@ -112,10 +112,12 @@
               </span>
             <% end %>
             <span class="absolute bottom-0 bg-zinc-300 dark:bg-zinc-600 <%= year % 5 == 0 ? 'h-2 w-px' : 'h-1 w-px' %>"
-                  style="left: <%= left %>px;" aria-hidden="true"></span>
+                  style="left: <%= left %>px;"
+                  aria-hidden="true"></span>
           <% end %>
           <span class="absolute bottom-0 h-2 w-px bg-zinc-300 dark:bg-zinc-600"
-                style="left: <%= chart_width %>px;" aria-hidden="true"></span>
+                style="left: <%= chart_width %>px;"
+                aria-hidden="true"></span>
         </div>
       </div>
     </div>

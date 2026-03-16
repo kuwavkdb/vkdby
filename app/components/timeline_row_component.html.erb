@@ -25,7 +25,7 @@
       <% next if from_year > to_year %>
       <div class="absolute rounded transition-opacity"
            style="background-color: <%= bar_color %>; left: <%= bar_left(from_year) %>px; width: <%= bar_width(from_year, to_year) %>px; top: 10px; height: 16px; opacity: 0.85;"
-           data-tooltip="<%= @unit.name %>&#10;<%= period.from %> 〜 <%= period.to.presence || '現在' %>"
+           data-tooltip="<%= @unit.name %>&#10;<%= period.from %> 〜 <%= period.to.presence || '現在' %><%= period.label.present? ? " (#{period.label})" : "" %>"
            data-action="mouseenter->timeline#show mousemove->timeline#move mouseleave->timeline#hide"
            role="img"
            aria-label="<%= @unit.name %> 活動期間: <%= period.from %> 〜 <%= period.to.presence || '現在' %>">

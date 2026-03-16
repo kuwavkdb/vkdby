@@ -43,7 +43,12 @@
           <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">活動時期</dt>
           <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 text-right">
             <% @resource.activity_periods.each do |period| %>
-              <div><%= period.from %> 〜 <%= period.to.presence || '現在' %></div>
+              <div>
+                <%= period.from %> 〜 <%= period.to.presence || '現在' %>
+                <% if period.label.present? %>
+                  <span class="ml-1 text-xs font-normal text-zinc-400 dark:text-zinc-500">(<%= period.label %>)</span>
+                <% end %>
+              </div>
             <% end %>
           </dd>
         </div>

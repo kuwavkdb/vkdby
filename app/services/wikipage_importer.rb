@@ -539,13 +539,14 @@ class WikipageImporter < BaseWikipageImporter
   end
 
   def parse_activity_period(unit)
-    regex = /^\*活動時期\s*(?:…|\.\.\.)\s*(.+)/
+    regex = /^\*活動時期(?:（(.+?)）)?\s*(?:…|\.\.\.)\s*(.+)/
     entries = []
 
     @wiki_content.scan(regex) do |match|
-      value = match[0].strip
+      label = match[0]&.strip
+      value = match[1].strip
       from, to = value.split(/\s*~\s*/, 2)
-      entries << { 'from' => extract_date_only(from), 'to' => extract_date_only(to) }
+      entries << { 'from' => extract_date_only(from), 'to' => extract_date_only(to), 'label' => label.presence }
     end
 
     unit.update!(activity_period: entries) if entries.present?
