@@ -1,7 +1,7 @@
 <% content_for :title, "年表 - メジャーバンド | Vkdby" %>
 
 <%
-  year_px          = 20    # 1年あたりのピクセル幅
+  year_px          = 24    # 1年あたりのピクセル幅
   chart_width      = (@year_max - @year_min + 1) * year_px
   name_col_w       = 176   # w-44 = 11rem = 176px
   grid_span        = year_px * 5   # 5年分のピクセル幅
@@ -9,27 +9,71 @@
   grid_style       = "background-image: repeating-linear-gradient(to right, transparent, transparent #{grid_span - 2}px, rgba(113,113,122,0.35) #{grid_span - 2}px, rgba(113,113,122,0.35) #{grid_span}px); background-size: #{grid_span}px 100%; background-position: #{five_year_offset}px 0;"
 %>
 
-<div class="px-0 sm:px-2">
+<div class="px-0 sm:px-2" data-controller="timeline">
+
   <div class="mb-4">
     <h1 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">年表</h1>
     <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">メジャーデビュー・メジャーで解散したバンドの活動時期</p>
   </div>
 
-  <!-- 凡例 -->
+  <!-- 凡例（クリックで表示切替） -->
   <div class="flex flex-wrap gap-4 mb-3 text-sm" role="note" aria-label="凡例">
-    <div class="flex items-center gap-2">
+    <button type="button"
+            class="flex items-center gap-2 cursor-pointer select-none transition-opacity"
+            data-action="click->timeline#toggleType"
+            data-type="major"
+            aria-pressed="false"
+            title="クリックで表示切替">
       <span class="inline-block w-6 h-4 rounded" style="background-color: #3b82f6;" aria-hidden="true"></span>
       <span class="text-zinc-600 dark:text-zinc-400">メジャー</span>
-    </div>
-    <div class="flex items-center gap-2">
+    </button>
+    <button type="button"
+            class="flex items-center gap-2 cursor-pointer select-none transition-opacity"
+            data-action="click->timeline#toggleType"
+            data-type="major-disbanded"
+            aria-pressed="false"
+            title="クリックで表示切替">
       <span class="inline-block w-6 h-4 rounded" style="background-color: #a855f7;" aria-hidden="true"></span>
       <span class="text-zinc-600 dark:text-zinc-400">メジャーで解散</span>
-    </div>
-
+    </button>
     <div class="flex items-center gap-2">
       <span class="inline-block" style="width: 3px; height: 16px; background-color: #f59e0b; border-radius: 1px;" aria-hidden="true"></span>
       <span class="text-zinc-600 dark:text-zinc-400">メジャーデビュー</span>
     </div>
+    <button type="button"
+            class="flex items-center gap-2 cursor-pointer select-none transition-opacity"
+            data-action="click->timeline#toggleType"
+            data-type="added"
+            aria-pressed="false"
+            title="クリックで表示切替">
+      <span class="inline-block w-6 h-4 rounded" style="background-color: #22c55e;" aria-hidden="true"></span>
+      <span class="text-zinc-600 dark:text-zinc-400">任意追加バンド</span>
+    </button>
+  </div>
+
+  <!-- バンド追加検索 -->
+  <div class="mb-3 relative" data-controller="timeline-search">
+    <div class="flex gap-2">
+      <div class="relative flex-1 max-w-xs">
+        <input type="text"
+               placeholder="バンドを追加..."
+               autocomplete="off"
+               data-unit-url="<%= timeline_unit_path %>"
+               data-search-url="<%= search_units_path %>"
+               class="w-full px-3 py-1.5 text-sm border border-zinc-300 dark:border-zinc-600 rounded
+                      bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
+                      placeholder-zinc-400 dark:placeholder-zinc-500
+                      focus:outline-none focus:ring-2 focus:ring-indigo-500"
+               data-timeline-search-target="input"
+               data-action="input->timeline-search#suggest keydown->timeline-search#keydown">
+        <!-- サジェストドロップダウン -->
+        <ul class="hidden absolute z-20 mt-1 w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700
+                   rounded shadow-lg text-sm max-h-60 overflow-y-auto"
+            data-timeline-search-target="suggestions"
+            role="listbox"></ul>
+      </div>
+    </div>
+    <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">追加したバンドはページをリロードすると消えます</p>
   </div>
 
   <%#
@@ -39,7 +83,8 @@
     - ページ自体が縦スクロール（コンテナに height 制限なし）
     - ヘッダ行は sticky top-16 でビューポートに固定
   %>
-  <div data-controller="timeline" class="rounded border border-zinc-200 dark:border-zinc-700">
+  <div id="timeline-widget"
+       class="rounded border border-zinc-200 dark:border-zinc-700">
 
     <!-- カスタムツールチップ -->
     <div data-timeline-target="tooltip"
@@ -78,63 +123,9 @@
     <!-- データ行（横スクロール + バンド名列固定） -->
     <div class="overflow-x-auto"
          data-timeline-target="body"
-         data-action="scroll->timeline#syncHeader">
-      <% @units.each do |unit| %>
-        <%
-          tag_names = unit.tag_index_items.map { |ti| ti.tag_index.name }
-          has_major           = tag_names.include?('メジャー')
-          has_major_disbanded = tag_names.include?('メジャーで解散')
-          bar_color = has_major_disbanded ? '#a855f7' : '#3b82f6'
-        %>
-        <div class="group flex border-b border-zinc-200 dark:border-zinc-700">
-          <!-- バンド名（横スクロール固定） -->
-          <div class="flex-shrink-0 px-3 py-2 flex items-center
-                      sticky left-0 z-10 bg-zinc-50 dark:bg-zinc-950
-                      group-hover:bg-zinc-100 dark:group-hover:bg-zinc-900
-                      border-r border-zinc-200 dark:border-zinc-700 transition-colors"
-               style="width: <%= name_col_w %>px;">
-            <%= link_to unit.name, profile_path(unit.key),
-                  class: "text-sm font-semibold text-indigo-600 dark:text-indigo-200 hover:underline truncate block w-full",
-                  title: unit.name %>
-          </div>
-          <!-- ガントバー + デビューマーカー -->
-          <div class="relative flex-shrink-0 bg-white dark:bg-zinc-950
-                      group-hover:bg-zinc-50 dark:group-hover:bg-zinc-900 transition-colors"
-               style="width: <%= chart_width %>px; height: 36px; <%= grid_style %>">
-            <%# 活動期間バー %>
-            <% unit.activity_periods.each do |period| %>
-              <% from_year = parse_year(period.from) %>
-              <% next unless from_year %>
-              <% to_year   = parse_year(period.to) || @year_max %>
-              <% from_year = [from_year, @year_min].max %>
-              <% to_year   = [to_year,   @year_max].min %>
-              <% next if from_year > to_year %>
-              <% bar_left  = (from_year - @year_min) * year_px %>
-              <% bar_width = [((to_year - from_year + 1) * year_px), year_px / 2].max %>
-              <div class="absolute rounded transition-opacity"
-                   style="background-color: <%= bar_color %>; left: <%= bar_left %>px; width: <%= bar_width %>px; top: 10px; height: 16px; opacity: 0.85;"
-                   data-tooltip="<%= unit.name %>&#10;<%= period.from %> 〜 <%= period.to.presence || '現在' %>"
-                   data-action="mouseenter->timeline#show mousemove->timeline#move mouseleave->timeline#hide"
-                   role="img"
-                   aria-label="<%= unit.name %> 活動期間: <%= period.from %> 〜 <%= period.to.presence || '現在' %>">
-              </div>
-            <% end %>
-            <%# メジャーデビューマーカー（縦線）※バーの上に重ねる %>
-            <% (@debut_markers[unit.id] || []).each do |marker| %>
-              <% next unless marker[:year] >= @year_min && marker[:year] <= @year_max %>
-              <% mx = (marker[:year] - @year_min) * year_px + year_px / 2 %>
-              <div class="absolute"
-                   style="left: <%= mx %>px; top: 0; width: 12px; height: 36px; transform: translateX(-50%); z-index: 1; cursor: default; display: flex; align-items: center; justify-content: center;"
-                   data-tooltip="<%= unit.name %>&#10;<%= marker[:title] %>（<%= marker[:date] %>）"
-                   data-action="mouseenter->timeline#show mousemove->timeline#move mouseleave->timeline#hide"
-                   role="img"
-                   aria-label="<%= unit.name %> <%= marker[:title] %>: <%= marker[:date] %>">
-                <span style="display: block; width: 6px; height: 28px; background-color: #f59e0b; border-radius: 1px; pointer-events: none;"></span>
-              </div>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
+         data-action="scroll->timeline#syncHeader"
+         id="timeline-rows">
+      <%= render TimelineRowComponent.with_collection(@units, year_min: @year_min, year_max: @year_max, debut_markers: @debut_markers) %>
     </div>
 
   </div>

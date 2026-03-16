@@ -137,6 +137,7 @@ Rails.application.routes.draw do
 
   # Timeline
   get 'timeline', to: 'timeline#index'
+  get 'timeline/unit', to: 'timeline#unit'
 
   # Cross-search
   get 'search', to: 'search#index'
