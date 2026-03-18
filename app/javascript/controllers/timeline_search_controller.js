@@ -98,14 +98,24 @@ export default class extends Controller {
     this.suggestionsTarget.classList.remove("hidden")
   }
 
+  get _zoom() {
+    try {
+      return new URL(this.inputTarget.dataset.unitUrl, window.location.origin).searchParams.get("zoom") || "1"
+    } catch {
+      return "1"
+    }
+  }
+
   async addUnit(key, name, { scroll = true } = {}) {
     this.hideSuggestions()
     this.inputTarget.value = ""
     const unitUrl = this.inputTarget.dataset.unitUrl
     try {
-      const cacheKey = this.constructor.HTML_CACHE_PREFIX + key
+      const cacheKey = this.constructor.HTML_CACHE_PREFIX + this._zoom + "_" + key
       const fetchHtml = async () => {
-        const res = await fetch(`${unitUrl}?key=${encodeURIComponent(key)}`, {
+        const url = new URL(unitUrl, window.location.origin)
+        url.searchParams.set("key", key)
+        const res = await fetch(url.toString(), {
           headers: { "Accept": "text/html" }
         })
         if (!res.ok) throw new Error(`fetch failed: ${res.status}`)
@@ -129,7 +139,7 @@ export default class extends Controller {
           return
         }
       }
-      const rows = document.getElementById("timeline-rows")
+      const rows = document.getElementById("timeline-rows-inner") || document.getElementById("timeline-rows")
       if (!rows) return
       this.addedKeys.add(key)
       this._saveToStorage()
