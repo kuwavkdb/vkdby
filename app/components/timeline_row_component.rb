@@ -20,9 +20,16 @@ class TimelineRowComponent < ViewComponent::Base
   def five_year_offset = (5 - @year_min % 5) % 5 * @year_px
 
   def row_grid_style
-    gradient = "repeating-linear-gradient(to right, transparent, transparent #{grid_span - 2}px, " \
-               "rgba(113,113,122,0.35) #{grid_span - 2}px, rgba(113,113,122,0.35) #{grid_span}px)"
-    "background-image: #{gradient}; background-size: #{grid_span}px 100%; background-position: #{five_year_offset}px 0;"
+    five_year = "repeating-linear-gradient(to right, transparent, transparent #{grid_span - 2}px, " \
+                "rgba(113,113,122,0.35) #{grid_span - 2}px, rgba(113,113,122,0.35) #{grid_span}px)"
+
+    return "background-image: #{five_year}; background-size: #{grid_span}px 100%; background-position: #{five_year_offset}px 0;" unless @year_px > 24
+
+    one_year = "repeating-linear-gradient(to right, transparent, transparent #{@year_px - 1}px, " \
+               "rgba(113,113,122,0.15) #{@year_px - 1}px, rgba(113,113,122,0.15) #{@year_px}px)"
+    "background-image: #{five_year}, #{one_year}; " \
+    "background-size: #{grid_span}px 100%, #{@year_px}px 100%; " \
+    "background-position: #{five_year_offset}px 0, 0 0;"
   end
 
   def tag_names = @unit.tag_index_items.map { |ti| ti.tag_index.name }
@@ -31,15 +38,44 @@ class TimelineRowComponent < ViewComponent::Base
   def row_type       = major_disbanded? ? 'major-disbanded' : 'major'
 
   def earliest_year
-    @unit.activity_periods.filter_map { |p| parse_year(p.from) }.min || 9999
+    @unit.activity_periods.filter_map do |p|
+      y = parse_year(p.from)
+      y + (parse_month(p.from) - 1) / 12.0 if y
+    end.min || 9999
   end
 
   def markers_for_unit
     @debut_markers[@unit.id] || []
   end
 
-  def bar_left(from_year)            = (from_year - @year_min) * @year_px
-  def bar_width(from_year, to_year)  = [((to_year - from_year + 1) * @year_px), @year_px / 2].max
+  def bar_left(from_year, from_month = 1)
+    months_from_start = (from_year - @year_min) * 12 + (from_month - 1)
+    (months_from_start * @year_px / 12.0).round(2)
+  end
+
+  def bar_width(from_year, from_month, to_year, to_month)
+    start_months = (from_year - @year_min) * 12 + (from_month - 1)
+    end_months   = (to_year   - @year_min) * 12 + to_month
+    width = (end_months - start_months) * @year_px / 12.0
+    [width, @year_px / 2.0].max.round(2)
+  end
+
+  def bar_dimensions(period)
+    from_year = parse_year(period.from)
+    return nil unless from_year
+
+    from_month  = parse_month(period.from)
+    to_year     = parse_year(period.to) || @year_max
+    to_month    = period.to.present? ? parse_month(period.to) : 12
+
+    from_year_c = clamp_year(from_year, @year_min, @year_max)
+    to_year_c   = clamp_year(to_year,   @year_min, @year_max)
+    from_month  = 1  if from_year_c > from_year
+    to_month    = 12 if to_year_c < to_year
+    return nil if from_year_c > to_year_c
+
+    { left: bar_left(from_year_c, from_month), width: bar_width(from_year_c, from_month, to_year_c, to_month) }
+  end
 
   def marker_x(marker)
     (@year_min.zero? ? 0 : (marker[:year] - @year_min)) * @year_px +
@@ -56,5 +92,12 @@ class TimelineRowComponent < ViewComponent::Base
     return nil if str.blank?
 
     str.to_s.split('/').first.to_i.then { |y| y >= 1970 ? y : nil }
+  end
+
+  def parse_month(str)
+    return 1 if str.blank?
+
+    parts = str.to_s.split('/')
+    parts.length >= 2 ? parts[1].to_i.clamp(1, 12) : 1
   end
 end

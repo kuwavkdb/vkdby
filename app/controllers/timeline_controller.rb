@@ -29,10 +29,13 @@ class TimelineController < ApplicationController
       year_min = all_years.min || Time.current.year
       year_max = Time.current.year
 
-      # 活動開始年の昇順でソート（同年はかな順）
+      # 活動開始年月の昇順でソート（同年月はかな順）
       units.sort_by! do |unit|
-        earliest = unit.activity_periods.map { |p| parse_year(p.from) }.compact.min || 9999
-        [earliest, unit.name_kana.to_s]
+        earliest = unit.activity_periods.filter_map do |p|
+          y = parse_year(p.from)
+          [y, parse_month(p.from)] if y
+        end.min || [9999, 1]
+        [*earliest, unit.name_kana.to_s]
       end
 
       # 有効なバーが1本も描けないユニットを除外
@@ -120,4 +123,12 @@ class TimelineController < ApplicationController
     str.to_s.split('/').first.to_i.then { |y| y >= 1970 ? y : nil }
   end
   helper_method :parse_year
+
+  def parse_month(str)
+    return 1 if str.blank?
+
+    parts = str.to_s.split('/')
+    parts.length >= 2 ? parts[1].to_i.clamp(1, 12) : 1
+  end
+  helper_method :parse_month
 end
