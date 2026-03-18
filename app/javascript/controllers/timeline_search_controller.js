@@ -139,7 +139,7 @@ export default class extends Controller {
           return
         }
       }
-      const rows = document.getElementById("timeline-rows")
+      const rows = document.getElementById("timeline-rows-inner") || document.getElementById("timeline-rows")
       if (!rows) return
       this.addedKeys.add(key)
       this._saveToStorage()

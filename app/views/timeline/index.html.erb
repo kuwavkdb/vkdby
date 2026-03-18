@@ -1,4 +1,5 @@
 <% content_for :title, "年表 - メジャーバンド | Vkdby" %>
+<% content_for :main_px, "px-2 sm:px-3" %>
 
 <%
   year_px          = @year_px      # 1年あたりのピクセル幅（24 or 48）
@@ -9,7 +10,7 @@
   grid_style       = "background-image: repeating-linear-gradient(to right, transparent, transparent #{grid_span - 2}px, rgba(113,113,122,0.35) #{grid_span - 2}px, rgba(113,113,122,0.35) #{grid_span}px); background-size: #{grid_span}px 100%; background-position: #{five_year_offset}px 0;"
 %>
 
-<div class="px-0 sm:px-2" data-controller="timeline">
+<div data-controller="timeline">
 
   <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
     <div>
@@ -138,7 +139,11 @@
          data-timeline-target="body"
          data-action="scroll->timeline#syncHeader"
          id="timeline-rows">
-      <%= render TimelineRowComponent.with_collection(@units, year_min: @year_min, year_max: @year_max, debut_markers: @debut_markers, year_px: @year_px) %>
+      <%# flex行コンテナは親幅に縮小されるため border-b がチャート全幅まで伸びない。
+          min-width を明示したラッパーで scrollWidth を固定する。 %>
+      <div id="timeline-rows-inner" style="min-width: <%= name_col_w + chart_width %>px;">
+        <%= render TimelineRowComponent.with_collection(@units, year_min: @year_min, year_max: @year_max, debut_markers: @debut_markers, year_px: @year_px) %>
+      </div>
     </div>
 
   </div>
