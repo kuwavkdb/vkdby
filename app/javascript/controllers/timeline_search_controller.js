@@ -150,7 +150,15 @@ export default class extends Controller {
       const startYear = parseFloat(row.dataset.startYear)
       const after = Array.from(rows.children).find(r => parseFloat(r.dataset.startYear) > startYear)
       after ? rows.insertBefore(row, after) : rows.appendChild(row)
-      if (scroll) row.scrollIntoView({ behavior: "smooth", block: "center" })
+      if (scroll) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" })
+        const body = document.getElementById("timeline-rows")
+        if (body) {
+          const bars = body.querySelectorAll("div.absolute.rounded")
+          const minLeft = Math.min(...Array.from(bars).map(b => parseFloat(b.style.left) || Infinity))
+          if (isFinite(minLeft)) body.scrollLeft = Math.max(0, minLeft - 20)
+        }
+      }
       row.dataset.rowType = "added"
       row.querySelectorAll("div.absolute.rounded").forEach(bar => {
         bar.style.backgroundColor = "#22c55e"

@@ -9,6 +9,16 @@ export default class extends Controller {
     const saved = JSON.parse(localStorage.getItem(this.constructor.LEGEND_STORAGE_KEY) || "[]")
     this.hiddenTypes = new Set(saved)
     this._restoreLegend()
+    this._scrollToFirstBar()
+  }
+
+  _scrollToFirstBar() {
+    const bars = this.bodyTarget.querySelectorAll("div.absolute.rounded")
+    if (!bars.length) return
+    const minLeft = Math.min(...Array.from(bars).map(b => parseFloat(b.style.left) || Infinity))
+    if (isFinite(minLeft)) {
+      this.bodyTarget.scrollLeft = Math.max(0, minLeft - 20)
+    }
   }
 
   toggleType(event) {
