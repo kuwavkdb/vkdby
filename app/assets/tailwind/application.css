@@ -61,6 +61,16 @@
     }
   }
 
+  .timeline-added-name-cell {
+    background-color: #dcfce7;
+  }
+
+  @variant dark {
+    .timeline-added-name-cell {
+      background-color: #14532d;
+    }
+  }
+
   .history-row::before {
     content: "↓ ";
     color: #cbd5e1;

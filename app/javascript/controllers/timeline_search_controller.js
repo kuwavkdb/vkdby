@@ -98,9 +98,10 @@ export default class extends Controller {
     this.suggestionsTarget.classList.remove("hidden")
   }
 
-  get _zoom() {
+  get _cacheVersion() {
     try {
-      return new URL(this.inputTarget.dataset.unitUrl, window.location.origin).searchParams.get("zoom") || "1"
+      const params = new URL(this.inputTarget.dataset.unitUrl, window.location.origin).searchParams
+      return `${params.get("zoom") || "1"}_${params.get("ym") || ""}`
     } catch {
       return "1"
     }
@@ -111,7 +112,7 @@ export default class extends Controller {
     this.inputTarget.value = ""
     const unitUrl = this.inputTarget.dataset.unitUrl
     try {
-      const cacheKey = this.constructor.HTML_CACHE_PREFIX + this._zoom + "_" + key
+      const cacheKey = this.constructor.HTML_CACHE_PREFIX + this._cacheVersion + "_" + key
       const fetchHtml = async () => {
         const url = new URL(unitUrl, window.location.origin)
         url.searchParams.set("key", key)
@@ -150,14 +151,27 @@ export default class extends Controller {
       const startYear = parseFloat(row.dataset.startYear)
       const after = Array.from(rows.children).find(r => parseFloat(r.dataset.startYear) > startYear)
       after ? rows.insertBefore(row, after) : rows.appendChild(row)
-      if (scroll) row.scrollIntoView({ behavior: "smooth", block: "center" })
+      if (scroll) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" })
+        requestAnimationFrame(() => {
+          const bars = row.querySelectorAll("div.absolute.rounded")
+          if (!bars.length) return
+          const lefts = Array.from(bars).map(b => {
+            const v = parseFloat(b.style.left)
+            return isNaN(v) ? Infinity : v
+          })
+          const minLeft = Math.min(...lefts)
+          const body = document.getElementById("timeline-rows")
+          if (body && isFinite(minLeft)) body.scrollLeft = Math.max(0, minLeft - 20)
+        })
+      }
       row.dataset.rowType = "added"
       row.querySelectorAll("div.absolute.rounded").forEach(bar => {
         bar.style.backgroundColor = "#22c55e"
       })
       const nameCell = row.querySelector("div[style*='width']")
       if (nameCell) {
-        nameCell.style.backgroundColor = "#dcfce7"
+        nameCell.classList.add("timeline-added-name-cell")
         const btn = document.createElement("button")
         btn.type = "button"
         btn.textContent = "✕"
