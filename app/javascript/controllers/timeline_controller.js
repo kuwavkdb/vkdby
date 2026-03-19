@@ -4,32 +4,11 @@ export default class extends Controller {
   static targets = ["header", "body", "tooltip"]
 
   static LEGEND_STORAGE_KEY = "timeline_hidden_types"
-  static SCROLL_STORAGE_KEY = "timeline_scroll_year"
 
   connect() {
     const saved = JSON.parse(localStorage.getItem(this.constructor.LEGEND_STORAGE_KEY) || "[]")
     this.hiddenTypes = new Set(saved)
     this._restoreLegend()
-    this._boundRestoreScroll = () => this._restoreScrollPosition()
-    document.addEventListener("turbo:load", this._boundRestoreScroll)
-  }
-
-  disconnect() {
-    document.removeEventListener("turbo:load", this._boundRestoreScroll)
-  }
-
-  saveScrollPosition() {
-    const yearPx = parseFloat(this.bodyTarget.dataset.yearPx) || 24
-    const yearOffset = this.bodyTarget.scrollLeft / yearPx
-    sessionStorage.setItem(this.constructor.SCROLL_STORAGE_KEY, yearOffset.toString())
-  }
-
-  _restoreScrollPosition() {
-    const saved = sessionStorage.getItem(this.constructor.SCROLL_STORAGE_KEY)
-    if (saved === null) return
-    sessionStorage.removeItem(this.constructor.SCROLL_STORAGE_KEY)
-    const yearPx = parseFloat(this.bodyTarget.dataset.yearPx) || 24
-    this.bodyTarget.scrollLeft = parseFloat(saved) * yearPx
   }
 
   toggleType(event) {
