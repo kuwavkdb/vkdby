@@ -152,12 +152,17 @@ export default class extends Controller {
       after ? rows.insertBefore(row, after) : rows.appendChild(row)
       if (scroll) {
         row.scrollIntoView({ behavior: "smooth", block: "center" })
-        const body = document.getElementById("timeline-rows")
-        if (body) {
+        requestAnimationFrame(() => {
+          const body = document.getElementById("timeline-rows")
+          if (!body) return
           const bars = body.querySelectorAll("div.absolute.rounded")
-          const minLeft = Math.min(...Array.from(bars).map(b => parseFloat(b.style.left) || Infinity))
+          const lefts = Array.from(bars).map(b => {
+            const v = parseFloat(b.style.left)
+            return isNaN(v) ? Infinity : v
+          })
+          const minLeft = Math.min(...lefts)
           if (isFinite(minLeft)) body.scrollLeft = Math.max(0, minLeft - 20)
-        }
+        })
       }
       row.dataset.rowType = "added"
       row.querySelectorAll("div.absolute.rounded").forEach(bar => {

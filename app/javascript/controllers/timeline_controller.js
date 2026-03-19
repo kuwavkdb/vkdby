@@ -9,13 +9,17 @@ export default class extends Controller {
     const saved = JSON.parse(localStorage.getItem(this.constructor.LEGEND_STORAGE_KEY) || "[]")
     this.hiddenTypes = new Set(saved)
     this._restoreLegend()
-    this._scrollToFirstBar()
+    requestAnimationFrame(() => this._scrollToFirstBar())
   }
 
   _scrollToFirstBar() {
     const bars = this.bodyTarget.querySelectorAll("div.absolute.rounded")
     if (!bars.length) return
-    const minLeft = Math.min(...Array.from(bars).map(b => parseFloat(b.style.left) || Infinity))
+    const lefts = Array.from(bars).map(b => {
+      const v = parseFloat(b.style.left)
+      return isNaN(v) ? Infinity : v
+    })
+    const minLeft = Math.min(...lefts)
     if (isFinite(minLeft)) {
       this.bodyTarget.scrollLeft = Math.max(0, minLeft - 20)
     }
