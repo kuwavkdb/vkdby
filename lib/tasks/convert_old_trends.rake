@@ -90,7 +90,7 @@ namespace :convert do
     puts "\nConversion completed. Imported: #{count}, Skipped: #{skipped_count}"
   end
 
-  # rubocop:disable Metrics/PerceivedComplexity
+  # rubocop:disable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
   def apply_phenomenon(trend, old)
     case old.trend_class
     when 1
@@ -135,5 +135,5 @@ namespace :convert do
       trend.etc_phenomenon = :other
     end
   end
-  # rubocop:enable Metrics/PerceivedComplexity
+  # rubocop:enable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
 end
