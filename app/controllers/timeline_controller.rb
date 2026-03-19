@@ -27,13 +27,7 @@ class TimelineController < ApplicationController
       end.compact
 
       year_min = all_years.min || Time.current.year
-
-      all_end_years = units.flat_map do |unit|
-        unit.activity_periods.filter_map { |p| parse_year(p.to) }
-      end
-      has_active = units.any? { |u| u.activity_periods.any? { |p| p.to.blank? } }
-      last_year   = has_active ? Time.current.year : (all_end_years.max || Time.current.year)
-      year_max    = [((last_year / 10.0).ceil * 10).to_i, Time.current.year].min
+      year_max = Time.current.year
 
       # 活動開始年月の昇順でソート（同年月はかな順）
       units.sort_by! do |unit|
