@@ -94,12 +94,20 @@ namespace :convert do
   def apply_phenomenon(trend, old)
     case old.trend_class
     when 1
-      trend.unit_phenomenon = if old.content&.include?('結成')
+      trend.unit_phenomenon = if old.content&.include?('メジャーデビュー')
+                                :major_debut
+                              elsif old.content&.include?('結成')
                                 :formation
                               elsif old.content&.include?('始動') || old.content&.include?('1st.LIVE')
                                 :first_live
                               elsif old.content&.include?('解禁')
                                 :announcement
+                              elsif old.content&.match?(/再始動|再結成|活動再開/)
+                                :restart
+                              elsif old.content&.match?(/ライブ|LIVE/)
+                                :live
+                              elsif old.content&.match?(/メディア|テレビ|ラジオ/)
+                                :media
                               else
                                 :formation
                               end
