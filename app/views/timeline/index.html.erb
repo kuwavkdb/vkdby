@@ -117,7 +117,8 @@
         <div class="relative flex-shrink-0" style="width: <%= chart_width %>px; height: 32px;">
           <% @year_range.each_with_index do |year, i| %>
             <% left = i * year_px %>
-            <% if year % 5 == 0 %>
+            <% show_label = year % 5 == 0 || year_px > 24 %>
+            <% if show_label %>
               <span class="absolute text-xs text-zinc-500 dark:text-zinc-400 whitespace-nowrap"
                     style="left: <%= left %>px; top: 2px; transform: translateX(-50%);">
                 <%= year %>

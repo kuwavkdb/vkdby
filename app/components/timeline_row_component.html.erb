@@ -17,14 +17,10 @@
        style="width: <%= chart_width %>px; height: 36px; <%= row_grid_style %>">
     <%# 活動期間バー %>
     <% @unit.activity_periods.each do |period| %>
-      <% from_year = parse_year(period.from) %>
-      <% next unless from_year %>
-      <% to_year   = parse_year(period.to) || @year_max %>
-      <% from_year = clamp_year(from_year, @year_min, @year_max) %>
-      <% to_year   = clamp_year(to_year,   @year_min, @year_max) %>
-      <% next if from_year > to_year %>
+      <% dims = bar_dimensions(period) %>
+      <% next unless dims %>
       <div class="absolute rounded transition-opacity"
-           style="background-color: <%= bar_color %>; left: <%= bar_left(from_year) %>px; width: <%= bar_width(from_year, to_year) %>px; top: 10px; height: 16px; opacity: 0.85;"
+           style="background-color: <%= bar_color %>; left: <%= dims[:left] %>px; width: <%= dims[:width] %>px; top: 10px; height: 16px; opacity: 0.85;"
            data-tooltip="<%= @unit.name %>&#10;<%= period.from %> 〜 <%= period.to.presence || '現在' %><%= period.label.present? ? " (#{period.label})" : "" %>"
            data-action="mouseenter->timeline#show mousemove->timeline#move mouseleave->timeline#hide"
            role="img"

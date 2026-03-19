@@ -147,8 +147,8 @@ export default class extends Controller {
       tmp.innerHTML = html.trim()
       const row = tmp.firstElementChild
       if (!row) return
-      const startYear = parseInt(row.dataset.startYear, 10)
-      const after = Array.from(rows.children).find(r => parseInt(r.dataset.startYear, 10) > startYear)
+      const startYear = parseFloat(row.dataset.startYear)
+      const after = Array.from(rows.children).find(r => parseFloat(r.dataset.startYear) > startYear)
       after ? rows.insertBefore(row, after) : rows.appendChild(row)
       if (scroll) row.scrollIntoView({ behavior: "smooth", block: "center" })
       row.dataset.rowType = "added"
