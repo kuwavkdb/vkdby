@@ -26,7 +26,7 @@ class TimelineController < ApplicationController
         unit.activity_periods.map { |p| parse_year(p.from) }
       end.compact
 
-      year_min = ((all_years.min || Time.current.year) / 10) * 10
+      year_min = all_years.min || Time.current.year
 
       all_end_years = units.flat_map do |unit|
         unit.activity_periods.filter_map { |p| parse_year(p.to) }

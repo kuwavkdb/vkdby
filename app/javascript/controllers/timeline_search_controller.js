@@ -98,9 +98,10 @@ export default class extends Controller {
     this.suggestionsTarget.classList.remove("hidden")
   }
 
-  get _zoom() {
+  get _cacheVersion() {
     try {
-      return new URL(this.inputTarget.dataset.unitUrl, window.location.origin).searchParams.get("zoom") || "1"
+      const params = new URL(this.inputTarget.dataset.unitUrl, window.location.origin).searchParams
+      return `${params.get("zoom") || "1"}_${params.get("ym") || ""}`
     } catch {
       return "1"
     }
@@ -111,7 +112,7 @@ export default class extends Controller {
     this.inputTarget.value = ""
     const unitUrl = this.inputTarget.dataset.unitUrl
     try {
-      const cacheKey = this.constructor.HTML_CACHE_PREFIX + this._zoom + "_" + key
+      const cacheKey = this.constructor.HTML_CACHE_PREFIX + this._cacheVersion + "_" + key
       const fetchHtml = async () => {
         const url = new URL(unitUrl, window.location.origin)
         url.searchParams.set("key", key)
