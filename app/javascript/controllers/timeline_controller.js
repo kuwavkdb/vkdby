@@ -4,25 +4,28 @@ export default class extends Controller {
   static targets = ["header", "body", "tooltip"]
 
   static LEGEND_STORAGE_KEY = "timeline_hidden_types"
+  static SCROLL_STORAGE_KEY = "timeline_scroll_year"
 
   connect() {
     const saved = JSON.parse(localStorage.getItem(this.constructor.LEGEND_STORAGE_KEY) || "[]")
     this.hiddenTypes = new Set(saved)
     this._restoreLegend()
-    requestAnimationFrame(() => this._scrollToFirstBar())
+    this._restoreScrollPosition()
   }
 
-  _scrollToFirstBar() {
-    const bars = this.bodyTarget.querySelectorAll("div.absolute.rounded")
-    if (!bars.length) return
-    const lefts = Array.from(bars).map(b => {
-      const v = parseFloat(b.style.left)
-      return isNaN(v) ? Infinity : v
-    })
-    const minLeft = Math.min(...lefts)
-    if (isFinite(minLeft)) {
-      this.bodyTarget.scrollLeft = Math.max(0, minLeft - 20)
-    }
+  saveScrollPosition() {
+    const yearPx = parseFloat(this.bodyTarget.dataset.yearPx) || 24
+    const yearOffset = this.bodyTarget.scrollLeft / yearPx
+    sessionStorage.setItem(this.constructor.SCROLL_STORAGE_KEY, yearOffset.toString())
+  }
+
+  _restoreScrollPosition() {
+    const saved = sessionStorage.getItem(this.constructor.SCROLL_STORAGE_KEY)
+    sessionStorage.removeItem(this.constructor.SCROLL_STORAGE_KEY)
+    if (saved === null) return
+    const yearPx = parseFloat(this.bodyTarget.dataset.yearPx) || 24
+    const scrollLeft = parseFloat(saved) * yearPx
+    requestAnimationFrame(() => { this.bodyTarget.scrollLeft = scrollLeft })
   }
 
   toggleType(event) {

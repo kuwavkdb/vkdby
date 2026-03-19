@@ -153,15 +153,15 @@ export default class extends Controller {
       if (scroll) {
         row.scrollIntoView({ behavior: "smooth", block: "center" })
         requestAnimationFrame(() => {
-          const body = document.getElementById("timeline-rows")
-          if (!body) return
-          const bars = body.querySelectorAll("div.absolute.rounded")
+          const bars = row.querySelectorAll("div.absolute.rounded")
+          if (!bars.length) return
           const lefts = Array.from(bars).map(b => {
             const v = parseFloat(b.style.left)
             return isNaN(v) ? Infinity : v
           })
           const minLeft = Math.min(...lefts)
-          if (isFinite(minLeft)) body.scrollLeft = Math.max(0, minLeft - 20)
+          const body = document.getElementById("timeline-rows")
+          if (body && isFinite(minLeft)) body.scrollLeft = Math.max(0, minLeft - 20)
         })
       }
       row.dataset.rowType = "added"
