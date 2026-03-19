@@ -157,7 +157,7 @@ export default class extends Controller {
       })
       const nameCell = row.querySelector("div[style*='width']")
       if (nameCell) {
-        nameCell.style.backgroundColor = "#dcfce7"
+        nameCell.classList.add("timeline-added-name-cell")
         const btn = document.createElement("button")
         btn.type = "button"
         btn.textContent = "✕"
