@@ -45,6 +45,9 @@ class Trend < ApplicationRecord
     suspend: 7,
     restart: 8,
     limited: 9,
+    major_debut: 10,
+    live: 11,
+    media: 12,
     #    etc: 98,
     unknown: 99,
     other: 100
