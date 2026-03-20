@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
+# rubocop:disable Metrics/ClassLength
 class TimelineController < ApplicationController
   TARGET_TAG_NAMES = %w[メジャー メジャーで解散].freeze
-  CACHE_KEY = 'timeline/major_units'
+  CACHE_KEY = 'timeline/major_units/v2'
   CACHE_TTL = 1.hour
 
   VALID_ZOOMS = { '2' => 48 }.freeze
@@ -49,34 +50,40 @@ class TimelineController < ApplicationController
         end
       end
 
-      # 「メジャーデビュー」Trend を収集し unit_id → [{year:, date:, title:}] のハッシュに変換
+      # unit_phenomenon を持つ Trend を収集し unit_id → [{year:, date:, title:, phenomenon:}] のハッシュに変換
+      # GIN インデックス（units jsonb）を利用して表示対象ユニットの Trend のみ DB で絞り込む
       unit_id_set = units.map(&:id).to_set
-      debut_trends = Trend
-                     .where('title LIKE ?', '%メジャーデビュー%')
-                     .where(active: true)
-                     .select(:id, :date, :title, :units)
+      unit_id_array = unit_id_set.to_a
+      unit_trends = Trend
+                    .where.not(unit_phenomenon: nil)
+                    .where(active: true)
+                    .where(
+                      'units @> ANY(ARRAY[?]::jsonb[])',
+                      unit_id_array.map { |uid| [{ unit_id: uid }].to_json }
+                    )
+                    .select(:id, :date, :title, :units, :unit_phenomenon)
 
-      debut_markers = {}
-      debut_trends.each do |trend|
+      trend_markers = {}
+      unit_trends.each do |trend|
         (trend.units || []).each do |u|
           uid = u['unit_id'].to_i
           next unless unit_id_set.include?(uid)
 
-          (debut_markers[uid] ||= []) << {
+          (trend_markers[uid] ||= []) << {
             year: trend.date.year, month: trend.date.month, date: trend.date.to_s,
-            title: strip_wiki_links(trend.title), debut: trend.title.include?('メジャーデビュー')
+            title: strip_wiki_links(trend.title), phenomenon: trend.unit_phenomenon
           }
         end
       end
 
-      { units:, year_min:, year_max:, debut_markers: }
+      { units:, year_min:, year_max:, trend_markers: }
     end
 
     @units          = @timeline_data[:units]
     @year_min       = @timeline_data[:year_min]
     @year_max       = @timeline_data[:year_max]
     @year_range     = (@year_min..@year_max).to_a
-    @debut_markers  = @timeline_data[:debut_markers]
+    @trend_markers  = @timeline_data[:trend_markers]
   end
   # rubocop:enable Metrics/AbcSize, Metrics/PerceivedComplexity
 
@@ -89,13 +96,16 @@ class TimelineController < ApplicationController
     return head :not_found unless unit
 
     markers = []
-    Trend.where(active: true).select(:id, :date, :title, :units).each do |trend|
+    Trend.where(active: true)
+         .where.not(unit_phenomenon: nil)
+         .where('units @> ?', [{ unit_id: unit.id }].to_json)
+         .select(:id, :date, :title, :units, :unit_phenomenon).each do |trend|
       (trend.units || []).each do |u|
         next unless u['unit_id'].to_i == unit.id
 
         markers << {
           year: trend.date.year, month: trend.date.month, date: trend.date.to_s,
-          title: strip_wiki_links(trend.title), debut: trend.title.include?('メジャーデビュー')
+          title: strip_wiki_links(trend.title), phenomenon: trend.unit_phenomenon
         }
       end
     end
@@ -103,7 +113,7 @@ class TimelineController < ApplicationController
     year_px = VALID_ZOOMS.fetch(params[:zoom].to_s, DEFAULT_YEAR_PX)
     component = TimelineRowComponent.new(
       unit: unit, year_min: year_min, year_max: year_max,
-      debut_markers: { unit.id => markers }, year_px: year_px
+      trend_markers: { unit.id => markers }, year_px: year_px
     )
     render component, layout: false
   end
@@ -132,3 +142,4 @@ class TimelineController < ApplicationController
   end
   helper_method :parse_month
 end
+# rubocop:enable Metrics/ClassLength
