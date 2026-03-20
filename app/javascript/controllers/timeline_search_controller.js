@@ -166,6 +166,8 @@ export default class extends Controller {
         })
       }
       row.dataset.rowType = "added"
+      const hiddenTypes = JSON.parse(localStorage.getItem("timeline_hidden_types") || "[]")
+      if (hiddenTypes.includes("added")) row.classList.add("hidden")
       row.querySelectorAll("div.absolute.rounded").forEach(bar => {
         bar.style.backgroundColor = "#22c55e"
       })
