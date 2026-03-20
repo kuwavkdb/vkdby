@@ -10,8 +10,13 @@ class PersonImporter < BaseWikipageImporter
 
   def self.valid_person?(wikipage)
     return false if ignored?(wikipage)
+    return false if redirect_page?(wikipage)
 
     wikipage.wiki&.include?('{{category 個人')
+  end
+
+  def self.redirect_page?(wikipage)
+    wikipage.wiki.to_s.lines.first&.strip&.match?(/に移動しました/)
   end
 
   protected
@@ -339,9 +344,10 @@ class PersonImporter < BaseWikipageImporter
       name_log_entries = parsed_names
     elsif first_line =~ /^\s*\{\{rb\s+(.+?),\s*(.+?)\}\}(.*)$/
       raw_name = Regexp.last_match(1).strip
-      suffix = Regexp.last_match(3)
-      name = extract_name_from_wiki_link(raw_name) + suffix
       name_kana = Regexp.last_match(2).strip
+      # サフィックスに残存する {{rb name,kana}} を name 部分のみに置換する（gsub が Regexp.last_match を上書きするため先に保存）
+      suffix = Regexp.last_match(3).gsub(/\{\{rb\s+([^,}]+),\s*[^}]+\}\}/) { Regexp.last_match(1) }
+      name = extract_name_from_wiki_link(raw_name) + suffix
 
       parsed_names = [{ name: name, name_kana: name_kana }]
 
