@@ -8,19 +8,19 @@ class TimelineRowComponent < ViewComponent::Base
 
   PHENOMENON_COLORS = {
     'announcement' => '#e879f9',
-    'formation'    => '#22c55e',
-    'first_live'   => '#f97316',
-    'finish'       => '#ef4444',
-    'pending'      => '#71717a',
-    'rename'       => '#a78bfa',
-    'suspend'      => '#94a3b8',
-    'restart'      => '#06b6d4',
-    'limited'      => '#84cc16',
-    'major_debut'  => '#f59e0b',
-    'live'         => '#fb7185',
-    'media'        => '#3b82f6',
-    'unknown'      => '#71717a',
-    'other'        => '#71717a'
+    'formation' => '#22c55e',
+    'first_live' => '#f97316',
+    'finish' => '#ef4444',
+    'pending' => '#71717a',
+    'rename' => '#a78bfa',
+    'suspend' => '#94a3b8',
+    'restart' => '#06b6d4',
+    'limited' => '#84cc16',
+    'major_debut' => '#f59e0b',
+    'live' => '#fb7185',
+    'media' => '#3b82f6',
+    'unknown' => '#71717a',
+    'other' => '#71717a'
   }.freeze
 
   def initialize(unit:, year_min:, year_max:, trend_markers:, year_px: DEFAULT_YEAR_PX)

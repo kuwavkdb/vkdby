@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# rubocop:disable Metrics/ClassLength
 class TimelineController < ApplicationController
   TARGET_TAG_NAMES = %w[メジャー メジャーで解散].freeze
   CACHE_KEY = 'timeline/major_units/v2'
@@ -141,3 +142,4 @@ class TimelineController < ApplicationController
   end
   helper_method :parse_month
 end
+# rubocop:enable Metrics/ClassLength
