@@ -56,6 +56,10 @@ class WikipageImporter < BaseWikipageImporter
     stripped_for_check = first_line.to_s.gsub(/\[\[[^\]]*\]\]/, '')
     if stripped_for_check.include?('→')
       parse_unit_names_from_arrow_line(first_line)
+    elsif (m = first_line.to_s.match(/\[\[([^|\]]*→[^|\]]*)\|[^\]]*\]\](.*)/))
+      # wiki link の display text に → が含まれる場合（例: [[old→new|link]]（kana））
+      # display text と末尾の kana を結合して arrow parser に渡す
+      parse_unit_names_from_arrow_line(m[1].strip + m[2])
     else
       parse_unit_names_from_plain_line(first_line)
     end
