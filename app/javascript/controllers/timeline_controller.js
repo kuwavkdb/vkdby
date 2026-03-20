@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["header", "body", "tooltip", "legendContainer"]
+  static targets = ["header", "body", "tooltip", "legendContainer", "markerLegend", "toggleAllMarkersBtn"]
 
   static LEGEND_STORAGE_KEY = "timeline_hidden_types"
 
@@ -20,11 +20,14 @@ export default class extends Controller {
       this.hiddenTypes = new Set(JSON.parse(raw))
     }
     this._restoreLegend()
+    this._updateToggleAllBtn()
     this._initStickyLegend()
+    this._initRowObserver()
   }
 
   disconnect() {
     this._legendObserver?.disconnect()
+    this._rowObserver?.disconnect()
   }
 
   toggleType(event) {
@@ -40,6 +43,7 @@ export default class extends Controller {
       item.setAttribute("aria-pressed", "true")
     }
     this._applyVisibility(type)
+    this._updateToggleAllBtn()
     localStorage.setItem(this.constructor.LEGEND_STORAGE_KEY, JSON.stringify([...this.hiddenTypes]))
   }
 
@@ -52,6 +56,54 @@ export default class extends Controller {
         btn.setAttribute("aria-pressed", "true")
       }
     })
+  }
+
+  toggleAllMarkers() {
+    const btns = this.markerLegendTarget.querySelectorAll("[data-type]")
+    const types = [...btns].map(b => b.dataset.type)
+    const allHidden = types.every(t => this.hiddenTypes.has(t))
+
+    types.forEach(type => {
+      if (allHidden) {
+        this.hiddenTypes.delete(type)
+      } else {
+        this.hiddenTypes.add(type)
+      }
+      this._applyVisibility(type)
+    })
+
+    btns.forEach(btn => {
+      btn.classList.toggle("opacity-40", !allHidden)
+      btn.classList.toggle("line-through", !allHidden)
+      btn.setAttribute("aria-pressed", allHidden ? "false" : "true")
+    })
+
+    this._updateToggleAllBtn()
+    localStorage.setItem(this.constructor.LEGEND_STORAGE_KEY, JSON.stringify([...this.hiddenTypes]))
+  }
+
+  _updateToggleAllBtn() {
+    if (!this.hasToggleAllMarkersBtnTarget || !this.hasMarkerLegendTarget) return
+    const types = [...this.markerLegendTarget.querySelectorAll("[data-type]")].map(b => b.dataset.type)
+    const allHidden = types.length > 0 && types.every(t => this.hiddenTypes.has(t))
+    this.toggleAllMarkersBtnTarget.textContent = allHidden ? "全表示" : "全非表示"
+  }
+
+  _initRowObserver() {
+    if (!this.hasBodyTarget) return
+    this._rowObserver = new MutationObserver(mutations => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node.nodeType !== Node.ELEMENT_NODE) continue
+          this.hiddenTypes.forEach(type => {
+            node.querySelectorAll(`[data-marker-type='${type}']`).forEach(el => {
+              el.style.display = "none"
+            })
+          })
+        }
+      }
+    })
+    this._rowObserver.observe(this.bodyTarget, { childList: true, subtree: true })
   }
 
   _initStickyLegend() {
@@ -70,7 +122,7 @@ export default class extends Controller {
       row.classList.toggle("hidden", hidden)
     })
     this.bodyTarget.querySelectorAll(`[data-marker-type='${type}']`).forEach(marker => {
-      marker.classList.toggle("hidden", hidden)
+      marker.style.display = hidden ? "none" : ""
     })
   }
 
