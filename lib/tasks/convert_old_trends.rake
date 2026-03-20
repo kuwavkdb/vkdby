@@ -102,17 +102,11 @@ namespace :convert do
                                 :first_live
                               elsif old.content&.include?('解禁')
                                 :announcement
-                              elsif old.content&.match?(/再始動|再結成|活動再開/)
-                                :restart
-                              elsif old.content&.match?(/ライブ|LIVE/)
-                                :live
-                              elsif old.content&.match?(/メディア|テレビ|ラジオ/)
-                                :media
                               else
                                 :formation
                               end
     when 2
-      trend.unit_phenomenon = if old.content&.match?(/活動休止|活動停止|無期限活動休止/)
+      trend.unit_phenomenon = if old.content&.match?(/休止|停止/)
                                 :suspend
                               else
                                 :finish
@@ -121,10 +115,14 @@ namespace :convert do
       trend.unit_phenomenon = :restart
     when 4
       trend.unit_phenomenon = :limited
+    when 5
+      trend.unit_phenomenon = if old.content&.match?(/解散/)
+                                :finish
+                              else
+                                :limited
+                              end
     when 8
       trend.unit_phenomenon = :other
-    when 9
-      trend.unit_phenomenon = :limited
     when 11
       trend.person_phenomenon = :join_member
     when 12
@@ -132,7 +130,21 @@ namespace :convert do
     when 19
       trend.person_phenomenon = :other
     else
-      trend.etc_phenomenon = :other
+      if old.content&.include?('メジャーデビュー')
+        trend.unit_phenomenon = :major_debut
+      elsif old.content&.match?(/再始動|再結成|活動再開/)
+        trend.unit_phenomenon = :restart
+      elsif old.content&.match?(/休止|停止/)
+        trend.unit_phenomenon = :suspend
+      elsif old.content&.match?(/改名|変更/)
+        trend.unit_phenomenon = :rename
+      elsif old.content&.match?(/ライブ|LIVE/)
+        trend.unit_phenomenon = :live
+      elsif old.content&.match?(/メディア|テレビ|ラジオ/)
+        trend.unit_phenomenon = :media
+      else
+        trend.etc_phenomenon = :other
+      end
     end
   end
   # rubocop:enable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
