@@ -489,7 +489,17 @@ class WikipageImporterV2 < WikipageImporter
       name_str = match[1].strip
       next if name_str.empty?
 
-      old_member_key = URI.encode_www_form_component(name_str.encode('EUC-JP'))
+      # "旧名→[[表示名|ページ名]]" 形式: 表示名を name_str、ページ名を old_member_key として取り出す
+      wiki_page_key = nil
+      if name_str.include?('[[')
+        if (m = name_str.match(/\[\[([^|\]]+)\|([^\]]+)\]\]/))
+          wiki_page_key = m[2].strip
+          clean = extract_name_from_wiki_link(name_str)
+          name_str = clean.split('→').last.strip
+        end
+      end
+
+      old_member_key = URI.encode_www_form_component((wiki_page_key || name_str).encode('EUC-JP'))
 
       entries << {
         position: current_pos,
