@@ -20,6 +20,9 @@ ja:
           suspend: 活動休止
           restart: 活動再開
           limited: 期間限定
+          major_debut: メジャーデビュー
+          live: ライブ
+          media: メディア
           etc: その他
           unknown: 不明
           other: その他
