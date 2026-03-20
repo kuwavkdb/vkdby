@@ -9,7 +9,7 @@ namespace :convert do
     count = 0
     skipped_count = 0
 
-    OldTrend.find_each do |old|
+    OldTrend.where(publish: true).find_each do |old|
       # Handle date parsing
       target_date = old.target_date
       day_unknown = false
