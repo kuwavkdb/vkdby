@@ -285,6 +285,11 @@ class PersonImporter < BaseWikipageImporter
     Unit.find_by(old_key: unit_name)
   end
 
+  # String#strip は ASCII 空白のみを除去するため、全角スペース（U+3000）も合わせて除去する
+  def full_strip(str)
+    str.gsub(/\A[\s　]+|[\s　]+\z/, '')
+  end
+
   def extract_name_from_wiki_link(str)
     # Handle [[Display|Link]] or [[Link]]
     if str =~ /\[\[(?:([^|\]]+)\|)?([^\]]+)\]\]/
@@ -318,20 +323,20 @@ class PersonImporter < BaseWikipageImporter
     name_log_entries = []
 
     if first_line&.include?('→')
-      arrow_parts = first_line.split('→').map(&:strip)
+      arrow_parts = first_line.split('→').map { |s| full_strip(s) }
 
       # Extract aliases from the last arrow part (e.g. "新名（よみ）、英語名（えいごな）")
-      last_pieces = arrow_parts.last.to_s.split('、').map(&:strip)
+      last_pieces = arrow_parts.last.to_s.split('、').map { |s| full_strip(s) }
       aliases = parse_alias_parts(last_pieces[1..])
       arrow_parts[-1] = last_pieces.first.to_s if last_pieces.size > 1
 
       parsed_names = arrow_parts.map do |part|
         if part =~ /\{\{rb\s+(.+?),\s*(.+?)\}\}/
-          raw_name = Regexp.last_match(1).strip
-          { name: extract_name_from_wiki_link(raw_name), name_kana: Regexp.last_match(2).strip }
+          raw_name = full_strip(Regexp.last_match(1))
+          { name: extract_name_from_wiki_link(raw_name), name_kana: full_strip(Regexp.last_match(2)) }
         elsif part =~ /^(.+?)\s*[（(](.+)[）)]$/
-          raw_name = Regexp.last_match(1).strip
-          { name: extract_name_from_wiki_link(raw_name), name_kana: Regexp.last_match(2).strip }
+          raw_name = full_strip(Regexp.last_match(1))
+          { name: extract_name_from_wiki_link(raw_name), name_kana: full_strip(Regexp.last_match(2)) }
         else
           { name: extract_name_from_wiki_link(part), name_kana: nil }
         end
