@@ -17,9 +17,11 @@ export default class extends Controller {
     if (this.hiddenTypes.has(type)) {
       this.hiddenTypes.delete(type)
       item.classList.remove("opacity-40", "line-through")
+      item.setAttribute("aria-pressed", "false")
     } else {
       this.hiddenTypes.add(type)
       item.classList.add("opacity-40", "line-through")
+      item.setAttribute("aria-pressed", "true")
     }
     this._applyVisibility(type)
     localStorage.setItem(this.constructor.LEGEND_STORAGE_KEY, JSON.stringify([...this.hiddenTypes]))
@@ -29,7 +31,10 @@ export default class extends Controller {
     this.hiddenTypes.forEach(type => {
       this._applyVisibility(type)
       const btn = this.element.querySelector(`[data-type='${type}']`)
-      if (btn) btn.classList.add("opacity-40", "line-through")
+      if (btn) {
+        btn.classList.add("opacity-40", "line-through")
+        btn.setAttribute("aria-pressed", "true")
+      }
     })
   }
 
