@@ -122,13 +122,13 @@ namespace :convert do
                                 :limited
                               end
     when 8
-      trend.unit_phenomenon = :other
+      trend.unit_phenomenon = :announcement
+    when 19
+      trend.person_phenomenon = :other
     when 11
       trend.person_phenomenon = :join_member
     when 12
       trend.person_phenomenon = :leave_member
-    when 19
-      trend.person_phenomenon = :other
     else
       if old.content&.include?('メジャーデビュー')
         trend.unit_phenomenon = :major_debut
@@ -143,7 +143,7 @@ namespace :convert do
       elsif old.content&.match?(/メディア|テレビ|ラジオ/)
         trend.unit_phenomenon = :media
       else
-        trend.etc_phenomenon = :other
+        trend.unit_phenomenon = :other
       end
     end
   end
