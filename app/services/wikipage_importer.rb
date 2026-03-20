@@ -52,7 +52,9 @@ class WikipageImporter < BaseWikipageImporter
   private
 
   def parse_unit_names_from_first_line(first_line)
-    if first_line&.include?('→')
+    # [[...]] 内の → は名前履歴の区切りではないため、wiki link を除いた文字列で判定する
+    stripped_for_check = first_line.to_s.gsub(/\[\[[^\]]*\]\]/, '')
+    if stripped_for_check.include?('→')
       parse_unit_names_from_arrow_line(first_line)
     else
       parse_unit_names_from_plain_line(first_line)
@@ -90,21 +92,23 @@ class WikipageImporter < BaseWikipageImporter
   end
 
   def parse_name_part(part)
-    if part =~ /\{\{rb\s+(.+?),\s*(.+?)\}\}/
-      { name: extract_name_from_wiki_link(Regexp.last_match(1).strip), name_kana: Regexp.last_match(2).strip }
-    elsif part =~ /^(.+?)\s*[（(](.+)[）)]$/
-      { name: extract_name_from_wiki_link(Regexp.last_match(1).strip), name_kana: Regexp.last_match(2).strip }
+    stripped = extract_name_from_wiki_link(part.to_s)
+    if stripped =~ /\{\{rb\s+(.+?),\s*(.+?)\}\}/
+      { name: Regexp.last_match(1).strip, name_kana: Regexp.last_match(2).strip }
+    elsif stripped =~ /^(.*\S)\s*[（(]([^（(）)]+)[）)]\s*$/
+      { name: Regexp.last_match(1).strip, name_kana: Regexp.last_match(2).strip }
     else
-      { name: extract_name_from_wiki_link(part), name_kana: nil }
+      { name: stripped, name_kana: nil }
     end
   end
 
   def extract_name_and_kana_from_part(part)
-    if part =~ /^\s*\{\{rb\s+(.+?),\s*(.+?)\}\}(.*)$/
-      name = extract_name_from_wiki_link(Regexp.last_match(1).strip) + Regexp.last_match(3)
+    stripped = extract_name_from_wiki_link(part.to_s)
+    if stripped =~ /^\s*\{\{rb\s+(.+?),\s*(.+?)\}\}(.*)$/
+      name = Regexp.last_match(1).strip + Regexp.last_match(3)
       [name, Regexp.last_match(2).strip]
-    elsif part =~ /^(.+?)\s*[（(](.+)[）)]$/
-      [extract_name_from_wiki_link(Regexp.last_match(1).strip), Regexp.last_match(2).strip]
+    elsif stripped =~ /^(.*\S)\s*[（(]([^（(）)]+)[）)]\s*$/
+      [Regexp.last_match(1).strip, Regexp.last_match(2).strip]
     else
       [nil, nil]
     end

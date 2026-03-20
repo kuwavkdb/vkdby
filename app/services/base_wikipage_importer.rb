@@ -199,7 +199,9 @@ class BaseWikipageImporter
     # Handle [[Display|Link]] or [[Link]]
     if str =~ /\[\[(?:([^|\]]+)\|)?([^\]]+)\]\]/
       str.gsub(/\[\[(?:([^|\]]+)\|)?([^\]]+)\]\]/) do
-        Regexp.last_match(1) || Regexp.last_match(2)
+        display = Regexp.last_match(1) || Regexp.last_match(2)
+        # [[old→new|display]] 形式で display text に → が含まれる場合は最後の名前を使う
+        display.split('→').last.strip
       end
     else
       str
