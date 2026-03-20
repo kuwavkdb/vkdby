@@ -435,13 +435,11 @@ class WikipageImporter < BaseWikipageImporter
   def register_old_format_member(unit, part_str, name_str, old_member_key, member_status, order_in_period)
     # rubocop:enable Metrics/ParameterLists
     # "旧名→[[表示名|ページ名]]" 形式: 表示名を name_str、ページ名を old_member_key として取り出す
-    if name_str.include?('[[')
-      if (m = name_str.match(/\[\[([^|\]]+)\|([^\]]+)\]\]/))
-        wiki_page_key = m[2].strip
-        clean = extract_name_from_wiki_link(name_str)
-        name_str = clean.split('→').last.strip
-        old_member_key = wiki_page_key unless old_member_key.present?
-      end
+    if (m = name_str.match(/\[\[([^|\]]+)\|([^\]]+)\]\]/))
+      wiki_page_key = m[2].strip
+      clean = extract_name_from_wiki_link(name_str)
+      name_str = clean.split('→').last.strip
+      old_member_key = wiki_page_key unless old_member_key.present?
     end
 
     if old_member_key.present?

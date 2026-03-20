@@ -491,12 +491,10 @@ class WikipageImporterV2 < WikipageImporter
 
       # "旧名→[[表示名|ページ名]]" 形式: 表示名を name_str、ページ名を old_member_key として取り出す
       wiki_page_key = nil
-      if name_str.include?('[[')
-        if (m = name_str.match(/\[\[([^|\]]+)\|([^\]]+)\]\]/))
-          wiki_page_key = m[2].strip
-          clean = extract_name_from_wiki_link(name_str)
-          name_str = clean.split('→').last.strip
-        end
+      if (m = name_str.match(/\[\[([^|\]]+)\|([^\]]+)\]\]/))
+        wiki_page_key = m[2].strip
+        clean = extract_name_from_wiki_link(name_str)
+        name_str = clean.split('→').last.strip
       end
 
       old_member_key = URI.encode_www_form_component((wiki_page_key || name_str).encode('EUC-JP'))
