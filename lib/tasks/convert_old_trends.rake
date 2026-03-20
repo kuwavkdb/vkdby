@@ -41,7 +41,7 @@ namespace :convert do
         date_obj = Date.parse(clean_date)
       rescue Date::Error
         date_obj = Date.new(1970, 1, 1) # Fallback
-        puts "Invalid date found: #{old.target_date}, defaulted to 1970-01-01"
+        puts "Invalid date found: OldTrend##{old.id} target_date=#{old.target_date}, defaulted to 1970-01-01"
       end
 
       # Base attributes
