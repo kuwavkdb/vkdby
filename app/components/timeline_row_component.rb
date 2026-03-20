@@ -6,12 +6,29 @@ class TimelineRowComponent < ViewComponent::Base
   DEFAULT_YEAR_PX = 24
   NAME_COL_W      = 176
 
-  def initialize(unit:, year_min:, year_max:, debut_markers:, year_px: DEFAULT_YEAR_PX)
+  PHENOMENON_COLORS = {
+    'announcement' => '#e879f9',
+    'formation'    => '#22c55e',
+    'first_live'   => '#f97316',
+    'finish'       => '#ef4444',
+    'pending'      => '#71717a',
+    'rename'       => '#a78bfa',
+    'suspend'      => '#94a3b8',
+    'restart'      => '#06b6d4',
+    'limited'      => '#84cc16',
+    'major_debut'  => '#f59e0b',
+    'live'         => '#fb7185',
+    'media'        => '#3b82f6',
+    'unknown'      => '#71717a',
+    'other'        => '#71717a'
+  }.freeze
+
+  def initialize(unit:, year_min:, year_max:, trend_markers:, year_px: DEFAULT_YEAR_PX)
     super()
     @unit          = unit
     @year_min      = year_min
     @year_max      = year_max
-    @debut_markers = debut_markers
+    @trend_markers = trend_markers
     @year_px       = year_px
   end
 
@@ -45,7 +62,15 @@ class TimelineRowComponent < ViewComponent::Base
   end
 
   def markers_for_unit
-    @debut_markers[@unit.id] || []
+    @trend_markers[@unit.id] || []
+  end
+
+  def marker_color(phenomenon)
+    PHENOMENON_COLORS.fetch(phenomenon.to_s, '#71717a')
+  end
+
+  def major_debut_marker?(marker)
+    marker[:phenomenon].to_s == 'major_debut'
   end
 
   def bar_left(from_year, from_month = 1)
@@ -80,10 +105,6 @@ class TimelineRowComponent < ViewComponent::Base
   def marker_x(marker)
     (@year_min.zero? ? 0 : (marker[:year] - @year_min)) * @year_px +
       ((marker[:month] || 1) - 1) * @year_px / 12
-  end
-
-  def debut_marker?(marker)
-    marker[:debut] || marker[:title].to_s.include?('メジャーデビュー')
   end
 
   def clamp_year(year, min, max) = [[year, min].max, max].min

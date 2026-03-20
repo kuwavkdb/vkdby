@@ -29,42 +29,77 @@
     </div>
   </div>
 
-  <!-- 凡例（クリックで表示切替） -->
-  <div class="flex flex-wrap items-center gap-4 mb-3 text-sm" role="note" aria-label="凡例">
-    <button type="button"
-            class="flex items-center gap-2 cursor-pointer select-none transition-opacity"
-            data-action="click->timeline#toggleType"
-            data-type="major"
-            aria-pressed="false"
-            title="クリックで表示切替">
-      <span class="inline-block w-6 h-4 rounded" style="background-color: #3b82f6;" aria-hidden="true"></span>
-      <span class="text-zinc-600 dark:text-zinc-400">メジャー</span>
-    </button>
-    <button type="button"
-            class="flex items-center gap-2 cursor-pointer select-none transition-opacity"
-            data-action="click->timeline#toggleType"
-            data-type="major-disbanded"
-            aria-pressed="false"
-            title="クリックで表示切替">
-      <span class="inline-block w-6 h-4 rounded" style="background-color: #a855f7;" aria-hidden="true"></span>
-      <span class="text-zinc-600 dark:text-zinc-400">メジャーで解散</span>
-    </button>
-    <div class="flex items-center gap-2">
-      <span class="flex flex-col items-center" style="height: 18px;" aria-hidden="true">
-        <span style="display: block; width: 8px; height: 8px; background-color: #f59e0b; border-radius: 50%; flex-shrink: 0;"></span>
-        <span style="display: block; width: 3px; flex: 1; background-color: #f59e0b;"></span>
-      </span>
-      <span class="text-zinc-600 dark:text-zinc-400">メジャーデビュー</span>
+  <!-- 凡例（クリックで表示切替 / sticky） -->
+  <div class="sticky top-0 z-20 -mx-3 sm:-mx-6 px-3 sm:px-6 pt-2 pb-2 mb-1 bg-white dark:bg-zinc-950 border-b border-zinc-100 dark:border-zinc-800 text-sm space-y-2"
+       data-timeline-target="legendContainer"
+       role="note" aria-label="凡例">
+    <!-- バー色の凡例（行単位で切替） -->
+    <div class="flex flex-wrap items-center gap-4">
+      <button type="button"
+              class="flex items-center gap-2 cursor-pointer select-none transition-opacity"
+              data-action="click->timeline#toggleType"
+              data-type="major"
+              aria-pressed="false"
+              title="クリックで表示切替">
+        <span class="inline-block w-6 h-4 rounded" style="background-color: #3b82f6;" aria-hidden="true"></span>
+        <span class="text-zinc-600 dark:text-zinc-400">メジャー</span>
+      </button>
+      <button type="button"
+              class="flex items-center gap-2 cursor-pointer select-none transition-opacity"
+              data-action="click->timeline#toggleType"
+              data-type="major-disbanded"
+              aria-pressed="false"
+              title="クリックで表示切替">
+        <span class="inline-block w-6 h-4 rounded" style="background-color: #a855f7;" aria-hidden="true"></span>
+        <span class="text-zinc-600 dark:text-zinc-400">メジャーで解散</span>
+      </button>
+      <button type="button"
+              class="flex items-center gap-2 cursor-pointer select-none transition-opacity"
+              data-action="click->timeline#toggleType"
+              data-type="added"
+              aria-pressed="false"
+              title="クリックで表示切替">
+        <span class="inline-block w-6 h-4 rounded" style="background-color: #22c55e;" aria-hidden="true"></span>
+        <span class="text-zinc-600 dark:text-zinc-400">任意追加バンド</span>
+      </button>
     </div>
-    <button type="button"
-            class="flex items-center gap-2 cursor-pointer select-none transition-opacity"
-            data-action="click->timeline#toggleType"
-            data-type="added"
-            aria-pressed="false"
-            title="クリックで表示切替">
-      <span class="inline-block w-6 h-4 rounded" style="background-color: #22c55e;" aria-hidden="true"></span>
-      <span class="text-zinc-600 dark:text-zinc-400">任意追加バンド</span>
-    </button>
+    <!-- マーカー色の凡例（phenomenon 単位で切替） -->
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <%
+        phenomenon_legend = [
+          { key: 'major_debut',  label: 'メジャーデビュー', color: '#f59e0b', debut: true },
+          { key: 'formation',    label: '結成',             color: '#22c55e' },
+          { key: 'finish',       label: '終了',             color: '#ef4444' },
+          { key: 'rename',       label: '改名',             color: '#a78bfa' },
+          { key: 'suspend',      label: '活動休止',         color: '#94a3b8' },
+          { key: 'restart',      label: '活動再開',         color: '#06b6d4' },
+          { key: 'limited',      label: '期間限定',         color: '#84cc16' },
+          { key: 'first_live',   label: '初ライブ',         color: '#f97316' },
+          { key: 'live',         label: 'ライブ',           color: '#fb7185' },
+          { key: 'media',        label: 'メディア',         color: '#3b82f6' },
+          { key: 'announcement', label: 'お知らせ',         color: '#e879f9' },
+          { key: 'other',        label: 'その他',           color: '#71717a' },
+        ]
+      %>
+      <% phenomenon_legend.each do |item| %>
+        <button type="button"
+                class="flex items-center gap-1.5 cursor-pointer select-none transition-opacity"
+                data-action="click->timeline#toggleType"
+                data-type="<%= item[:key] %>"
+                aria-pressed="false"
+                title="クリックで表示切替">
+          <% if item[:debut] %>
+            <span class="flex flex-col items-center flex-shrink-0" style="width: 10px; height: 18px;" aria-hidden="true">
+              <span style="display: block; width: 8px; height: 8px; background-color: <%= item[:color] %>; border-radius: 50%; flex-shrink: 0;"></span>
+              <span style="display: block; width: 3px; flex: 1; background-color: <%= item[:color] %>;"></span>
+            </span>
+          <% else %>
+            <span style="display: block; width: 4px; height: 18px; background-color: <%= item[:color] %>; border-radius: 1px; flex-shrink: 0;" aria-hidden="true"></span>
+          <% end %>
+          <span class="text-zinc-600 dark:text-zinc-400"><%= item[:label] %></span>
+        </button>
+      <% end %>
+    </div>
   </div>
 
   <!-- バンド追加検索 -->
@@ -89,7 +124,7 @@
             role="listbox"></ul>
       </div>
     </div>
-    <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">追加したバンドはページをリロードすると消えます</p>
+    <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">追加したバンドはブラウザに保存され、次回以降も表示されます</p>
   </div>
 
   <%#
@@ -147,7 +182,7 @@
       <%# flex行コンテナは親幅に縮小されるため border-b がチャート全幅まで伸びない。
           min-width を明示したラッパーで scrollWidth を固定する。 %>
       <div id="timeline-rows-inner" style="min-width: <%= name_col_w + chart_width %>px;">
-        <%= render TimelineRowComponent.with_collection(@units, year_min: @year_min, year_max: @year_max, debut_markers: @debut_markers, year_px: @year_px) %>
+        <%= render TimelineRowComponent.with_collection(@units, year_min: @year_min, year_max: @year_max, trend_markers: @trend_markers, year_px: @year_px) %>
       </div>
     </div>
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_09_120107) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_20_085443) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -253,6 +253,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_120107) do
     t.string "via_url"
     t.index ["date"], name: "index_trends_on_date"
     t.index ["people"], name: "index_trends_on_people", using: :gin
+    t.index ["unit_phenomenon"], name: "index_trends_on_unit_phenomenon"
     t.index ["units"], name: "index_trends_on_units", using: :gin
   end
 
