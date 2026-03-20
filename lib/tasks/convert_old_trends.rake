@@ -130,21 +130,21 @@ namespace :convert do
     when 12
       trend.person_phenomenon = :leave_member
     else
-      if old.content&.include?('メジャーデビュー')
-        trend.unit_phenomenon = :major_debut
-      elsif old.content&.match?(/再始動|再結成|活動再開/)
-        trend.unit_phenomenon = :restart
-      elsif old.content&.match?(/休止|停止/)
-        trend.unit_phenomenon = :suspend
-      elsif old.content&.match?(/改名|変更/)
-        trend.unit_phenomenon = :rename
-      elsif old.content&.match?(/ライブ|LIVE/)
-        trend.unit_phenomenon = :live
-      elsif old.content&.match?(/メディア|テレビ|ラジオ/)
-        trend.unit_phenomenon = :media
-      else
-        trend.unit_phenomenon = :other
-      end
+      trend.unit_phenomenon = if old.content&.include?('メジャーデビュー')
+                                :major_debut
+                              elsif old.content&.match?(/再始動|再結成|活動再開/)
+                                :restart
+                              elsif old.content&.match?(/休止|停止/)
+                                :suspend
+                              elsif old.content&.match?(/改名|変更/)
+                                :rename
+                              elsif old.content&.match?(/ライブ|LIVE/)
+                                :live
+                              elsif old.content&.match?(/メディア|テレビ|ラジオ/)
+                                :media
+                              else
+                                :other
+                              end
     end
   end
   # rubocop:enable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
