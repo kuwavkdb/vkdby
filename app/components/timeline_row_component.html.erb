@@ -32,13 +32,14 @@
       <% next unless marker[:year] >= @year_min && marker[:year] <= @year_max %>
       <% is_debut = major_debut_marker?(marker) %>
       <% color = marker_color(marker[:phenomenon]) %>
-      <div class="absolute flex justify-center <%= is_debut ? 'items-start' : 'items-center' %>"
-           data-marker-type="<%= marker[:phenomenon] %>"
-           style="left: <%= marker_x(marker) %>px; top: 0; width: 12px; height: 36px; transform: translateX(-50%); z-index: 1; cursor: default;"
-           data-tooltip="<%= @unit.name %>&#10;<%= marker[:title] %>（<%= marker[:date] %>）"
-           data-action="mouseenter->timeline#show mousemove->timeline#move mouseleave->timeline#hide"
-           role="img"
-           aria-label="<%= @unit.name %> <%= marker[:title] %>: <%= marker[:date] %>">
+      <%= link_to trend_path(marker[:id]),
+            class: "absolute flex justify-center #{is_debut ? 'items-start' : 'items-center'}",
+            "data-marker-type": marker[:phenomenon],
+            style: "left: #{marker_x(marker)}px; top: 0; width: 12px; height: 36px; transform: translateX(-50%); z-index: 1; cursor: pointer;",
+            "data-tooltip": "#{@unit.name}\n#{marker[:title]}（#{marker[:date]}）",
+            "data-action": "mouseenter->timeline#show mousemove->timeline#move mouseleave->timeline#hide",
+            role: "link",
+            "aria-label": "#{@unit.name} #{marker[:title]}: #{marker[:date]}" do %>
         <% if is_debut %>
           <span style="display: flex; flex-direction: column; align-items: center; pointer-events: none; padding-top: 2px; height: 34px;">
             <span style="display: block; width: 10px; height: 10px; background-color: <%= color %>; border-radius: 50%; flex-shrink: 0;"></span>
@@ -47,7 +48,7 @@
         <% else %>
           <span style="display: block; width: 4px; height: 24px; background-color: <%= color %>; border-radius: 1px; pointer-events: none;"></span>
         <% end %>
-      </div>
+      <% end %>
     <% end %>
   </div>
 </div>

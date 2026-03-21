@@ -4,7 +4,7 @@ export default class extends Controller {
   static targets = ["input", "suggestions"]
 
   static STORAGE_KEY = "timeline_added_bands"
-  static HTML_CACHE_PREFIX = "timeline_unit_html_v3_"
+  static HTML_CACHE_PREFIX = "timeline_unit_html_v4_"
 
   connect() {
     this.debounceTimer = null

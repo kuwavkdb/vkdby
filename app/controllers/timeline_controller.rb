@@ -3,7 +3,7 @@
 # rubocop:disable Metrics/ClassLength
 class TimelineController < ApplicationController
   TARGET_TAG_NAMES = %w[メジャー メジャーで解散].freeze
-  CACHE_KEY = 'timeline/major_units/v2'
+  CACHE_KEY = 'timeline/major_units/v3'
   CACHE_TTL = 1.hour
 
   VALID_ZOOMS = { '2' => 48 }.freeze
@@ -70,7 +70,7 @@ class TimelineController < ApplicationController
           next unless unit_id_set.include?(uid)
 
           (trend_markers[uid] ||= []) << {
-            year: trend.date.year, month: trend.date.month, date: trend.date.to_s,
+            id: trend.id, year: trend.date.year, month: trend.date.month, date: trend.date.to_s,
             title: strip_wiki_links(trend.title), phenomenon: trend.unit_phenomenon
           }
         end
@@ -104,7 +104,7 @@ class TimelineController < ApplicationController
         next unless u['unit_id'].to_i == unit.id
 
         markers << {
-          year: trend.date.year, month: trend.date.month, date: trend.date.to_s,
+          id: trend.id, year: trend.date.year, month: trend.date.month, date: trend.date.to_s,
           title: strip_wiki_links(trend.title), phenomenon: trend.unit_phenomenon
         }
       end
