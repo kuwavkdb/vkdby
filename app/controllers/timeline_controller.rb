@@ -1,0 +1,145 @@
+# frozen_string_literal: true
+
+# rubocop:disable Metrics/ClassLength
+class TimelineController < ApplicationController
+  TARGET_TAG_NAMES = %w[メジャー メジャーで解散].freeze
+  CACHE_KEY = 'timeline/major_units/v3'
+  CACHE_TTL = 1.hour
+
+  VALID_ZOOMS = { '2' => 48 }.freeze
+  DEFAULT_YEAR_PX = 24
+
+  # rubocop:disable Metrics/AbcSize, Metrics/PerceivedComplexity
+  def index
+    @year_px = VALID_ZOOMS.fetch(params[:zoom].to_s, DEFAULT_YEAR_PX)
+    @zoom    = @year_px == DEFAULT_YEAR_PX ? '1' : params[:zoom]
+
+    @timeline_data = Rails.cache.fetch(CACHE_KEY, expires_in: CACHE_TTL) do
+      units = Unit.kept
+                  .joins(tag_index_items: :tag_index)
+                  .where(tag_indices: { name: TARGET_TAG_NAMES })
+                  .where.not(activity_period: nil)
+                  .distinct
+                  .preload(tag_index_items: :tag_index)
+                  .to_a
+
+      all_years = units.flat_map do |unit|
+        unit.activity_periods.map { |p| parse_year(p.from) }
+      end.compact
+
+      year_min = all_years.min || Time.current.year
+      year_max = Time.current.year
+
+      # 活動開始年月の昇順でソート（同年月はかな順）
+      units.sort_by! do |unit|
+        earliest = unit.activity_periods.filter_map do |p|
+          y = parse_year(p.from)
+          [y, parse_month(p.from)] if y
+        end.min || [9999, 1]
+        [*earliest, unit.name_kana.to_s]
+      end
+
+      # 有効なバーが1本も描けないユニットを除外
+      units.select! do |unit|
+        unit.activity_periods.any? do |p|
+          fy = parse_year(p.from)
+          next false unless fy
+
+          ty = parse_year(p.to) || year_max
+          [fy, year_min].max <= [ty, year_max].min
+        end
+      end
+
+      # unit_phenomenon を持つ Trend を収集し unit_id → [{year:, date:, title:, phenomenon:}] のハッシュに変換
+      # GIN インデックス（units jsonb）を利用して表示対象ユニットの Trend のみ DB で絞り込む
+      unit_id_set = units.map(&:id).to_set
+      unit_id_array = unit_id_set.to_a
+      unit_trends = Trend
+                    .where.not(unit_phenomenon: nil)
+                    .where(active: true)
+                    .where(
+                      'units @> ANY(ARRAY[?]::jsonb[])',
+                      unit_id_array.map { |uid| [{ unit_id: uid }].to_json }
+                    )
+                    .select(:id, :date, :title, :units, :unit_phenomenon)
+
+      trend_markers = {}
+      unit_trends.each do |trend|
+        (trend.units || []).each do |u|
+          uid = u['unit_id'].to_i
+          next unless unit_id_set.include?(uid)
+
+          (trend_markers[uid] ||= []) << {
+            id: trend.id, year: trend.date.year, month: trend.date.month, date: trend.date.to_s,
+            title: strip_wiki_links(trend.title), phenomenon: trend.unit_phenomenon
+          }
+        end
+      end
+
+      { units:, year_min:, year_max:, trend_markers: }
+    end
+
+    @units          = @timeline_data[:units]
+    @year_min       = @timeline_data[:year_min]
+    @year_max       = @timeline_data[:year_max]
+    @year_range     = (@year_min..@year_max).to_a
+    @trend_markers  = @timeline_data[:trend_markers]
+  end
+  # rubocop:enable Metrics/AbcSize, Metrics/PerceivedComplexity
+
+  def unit
+    cached = Rails.cache.read(CACHE_KEY)
+    year_min = cached&.dig(:year_min) || Time.current.year
+    year_max = cached&.dig(:year_max) || Time.current.year
+
+    unit = Unit.kept.preload(tag_index_items: :tag_index).find_by(key: params[:key])
+    return head :not_found unless unit
+
+    markers = []
+    Trend.where(active: true)
+         .where.not(unit_phenomenon: nil)
+         .where('units @> ?', [{ unit_id: unit.id }].to_json)
+         .select(:id, :date, :title, :units, :unit_phenomenon).each do |trend|
+      (trend.units || []).each do |u|
+        next unless u['unit_id'].to_i == unit.id
+
+        markers << {
+          id: trend.id, year: trend.date.year, month: trend.date.month, date: trend.date.to_s,
+          title: strip_wiki_links(trend.title), phenomenon: trend.unit_phenomenon
+        }
+      end
+    end
+
+    year_px = VALID_ZOOMS.fetch(params[:zoom].to_s, DEFAULT_YEAR_PX)
+    component = TimelineRowComponent.new(
+      unit: unit, year_min: year_min, year_max: year_max,
+      trend_markers: { unit.id => markers }, year_px: year_px
+    )
+    render component, layout: false
+  end
+
+  private
+
+  # Wiki記法リンクをラベルテキストに置換 [[A|B]]→A, [A|B]→A, [[A]]→A
+  def strip_wiki_links(str)
+    str.gsub(/\[{1,2}([^|\]]+)(?:\|[^\]]+)?\]{1,2}/, '\1')
+  end
+  helper_method :strip_wiki_links
+
+  # 1970年未満は不正データとみなして nil を返す
+  def parse_year(str)
+    return nil if str.blank?
+
+    str.to_s.split('/').first.to_i.then { |y| y >= 1970 ? y : nil }
+  end
+  helper_method :parse_year
+
+  def parse_month(str)
+    return 1 if str.blank?
+
+    parts = str.to_s.split('/')
+    parts.length >= 2 ? parts[1].to_i.clamp(1, 12) : 1
+  end
+  helper_method :parse_month
+end
+# rubocop:enable Metrics/ClassLength

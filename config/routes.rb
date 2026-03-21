@@ -45,11 +45,6 @@ Rails.application.routes.draw do
       member do
         patch :undiscard
       end
-      resources :person_logs do
-        collection do
-          patch :reorder
-        end
-      end
     end
 
     resources :trends
@@ -139,6 +134,10 @@ Rails.application.routes.draw do
   # Custom pages
   get '/pages/:key', to: 'custom_pages#show', as: :custom_page,
                      constraints: { key: /[a-z0-9_-]+/ }
+
+  # Timeline
+  get 'timeline', to: 'timeline#index'
+  get 'timeline/unit', to: 'timeline#unit'
 
   # Cross-search
   get 'search', to: 'search#index'

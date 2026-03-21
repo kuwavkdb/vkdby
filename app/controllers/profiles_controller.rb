@@ -41,7 +41,8 @@ class ProfilesController < ApplicationController
 
   def relationship_graph
     unit = Unit.kept.find_by!(key: params[:key])
-    render json: UnitGraphBuilder.new(unit).call
+    track_past = params[:track_past] == '1'
+    render json: UnitGraphBuilder.new(unit, track_past:).call
   rescue ActiveRecord::RecordNotFound
     render json: { nodes: [], edges: [] }, status: :not_found
   end
@@ -59,10 +60,7 @@ class ProfilesController < ApplicationController
   private
 
   def load_person_data
-    @logs = @resource.person_logs.order(:sort_order, :log_date)
-
-    # person_logsが無く、old_historyがある場合はパースして使用
-    @old_history_items = @resource.parse_old_history if @logs.empty? && @resource.old_history.present?
+    @old_history_items = @resource.parse_old_history if @resource.old_history.present?
 
     @trends = Trend.where('people @> ?', [{ person_id: @resource.id }].to_json)
                    .order(date: :desc)
@@ -70,10 +68,7 @@ class ProfilesController < ApplicationController
   end
 
   def load_unit_data
-    # ユニットの履歴を統合 (UnitLog + PersonLog)
-    unit_logs = @resource.unit_logs
-    person_logs = @resource.person_logs.includes(:person)
-    @history = (unit_logs + person_logs).sort_by { |l| [l.log_date.to_s, l.is_a?(PersonLog) ? 1 : 0] }
+    @history = @resource.unit_logs
 
     @trends = Trend.where('units @> ?', [{ unit_id: @resource.id }].to_json)
                    .order(date: :desc)

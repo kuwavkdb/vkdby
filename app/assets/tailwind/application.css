@@ -61,6 +61,16 @@
     }
   }
 
+  .timeline-added-name-cell {
+    background-color: #dcfce7;
+  }
+
+  @variant dark {
+    .timeline-added-name-cell {
+      background-color: #14532d;
+    }
+  }
+
   .history-row::before {
     content: "↓ ";
     color: #cbd5e1;
@@ -84,13 +94,13 @@
   }
 
   .search-input-responsive:focus {
-    width: 16rem; /* 256px */
+    width: 12rem; /* 192px */
     padding-left: 1rem; /* 16px */
   }
 
   @media (min-width: 768px) {
     .search-input-responsive {
-      width: 16rem; /* 256px */
+      width: 12rem; /* 192px */
       padding-left: 1rem; /* 16px */
     }
   }

@@ -52,8 +52,14 @@ class WikipageImporter < BaseWikipageImporter
   private
 
   def parse_unit_names_from_first_line(first_line)
-    if first_line&.include?('→')
+    # [[...]] 内の → は名前履歴の区切りではないため、wiki link を除いた文字列で判定する
+    stripped_for_check = first_line.to_s.gsub(/\[\[[^\]]*\]\]/, '')
+    if stripped_for_check.include?('→')
       parse_unit_names_from_arrow_line(first_line)
+    elsif (m = first_line.to_s.match(/\[\[([^|\]]*→[^|\]]*)\|[^\]]*\]\](.*)/))
+      # wiki link の display text に → が含まれる場合（例: [[old→new|link]]（kana））
+      # display text と末尾の kana を結合して arrow parser に渡す
+      parse_unit_names_from_arrow_line(m[1].strip + m[2])
     else
       parse_unit_names_from_plain_line(first_line)
     end
@@ -90,21 +96,23 @@ class WikipageImporter < BaseWikipageImporter
   end
 
   def parse_name_part(part)
-    if part =~ /\{\{rb\s+(.+?),\s*(.+?)\}\}/
-      { name: extract_name_from_wiki_link(Regexp.last_match(1).strip), name_kana: Regexp.last_match(2).strip }
-    elsif part =~ /^(.+?)\s*[（(](.+)[）)]$/
-      { name: extract_name_from_wiki_link(Regexp.last_match(1).strip), name_kana: Regexp.last_match(2).strip }
+    stripped = extract_name_from_wiki_link(part.to_s)
+    if stripped =~ /\{\{rb\s+(.+?),\s*(.+?)\}\}/
+      { name: Regexp.last_match(1).strip, name_kana: Regexp.last_match(2).strip }
+    elsif stripped =~ /^(.*\S)\s*[（(]([^（(）)]+)[）)]\s*$/
+      { name: Regexp.last_match(1).strip, name_kana: Regexp.last_match(2).strip }
     else
-      { name: extract_name_from_wiki_link(part), name_kana: nil }
+      { name: stripped, name_kana: nil }
     end
   end
 
   def extract_name_and_kana_from_part(part)
-    if part =~ /^\s*\{\{rb\s+(.+?),\s*(.+?)\}\}(.*)$/
-      name = extract_name_from_wiki_link(Regexp.last_match(1).strip) + Regexp.last_match(3)
+    stripped = extract_name_from_wiki_link(part.to_s)
+    if stripped =~ /^\s*\{\{rb\s+(.+?),\s*(.+?)\}\}(.*)$/
+      name = Regexp.last_match(1).strip + Regexp.last_match(3)
       [name, Regexp.last_match(2).strip]
-    elsif part =~ /^(.+?)\s*[（(](.+)[）)]$/
-      [extract_name_from_wiki_link(Regexp.last_match(1).strip), Regexp.last_match(2).strip]
+    elsif stripped =~ /^(.*\S)\s*[（(]([^（(）)]+)[）)]\s*$/
+      [Regexp.last_match(1).strip, Regexp.last_match(2).strip]
     else
       [nil, nil]
     end
@@ -347,7 +355,7 @@ class WikipageImporter < BaseWikipageImporter
       old_member_key = parts[2]
       sns_account = parts[3]
 
-      inline_history = inline_history_text&.strip
+      inline_history = strip_career_plugins(inline_history_text&.strip)
       inline_history = nil if inline_history.blank?
 
       part_str = part_str&.strip
@@ -426,6 +434,14 @@ class WikipageImporter < BaseWikipageImporter
   # rubocop:disable Metrics/ParameterLists
   def register_old_format_member(unit, part_str, name_str, old_member_key, member_status, order_in_period)
     # rubocop:enable Metrics/ParameterLists
+    # "旧名→[[表示名|ページ名]]" 形式: 表示名を name_str、ページ名を old_member_key として取り出す
+    if (m = name_str.match(/\[\[([^|\]]+)\|([^\]]+)\]\]/))
+      wiki_page_key = m[2].strip
+      clean = extract_name_from_wiki_link(name_str)
+      name_str = clean.split('→').last.strip
+      old_member_key = wiki_page_key unless old_member_key.present?
+    end
+
     if old_member_key.present?
       old_member_key = old_member_key.strip
       old_member_key = [name_str, old_member_key].join if old_member_key =~ /^\(/ && old_member_key =~ /\)$/
@@ -539,13 +555,14 @@ class WikipageImporter < BaseWikipageImporter
   end
 
   def parse_activity_period(unit)
-    regex = /^\*活動時期\s*(?:…|\.\.\.)\s*(.+)/
+    regex = /^\*活動時期(?:（(.+?)）)?\s*(?:…|\.\.\.)\s*(.+)/
     entries = []
 
     @wiki_content.scan(regex) do |match|
-      value = match[0].strip
+      label = match[0]&.strip
+      value = match[1].strip
       from, to = value.split(/\s*~\s*/, 2)
-      entries << { 'from' => extract_date_only(from), 'to' => extract_date_only(to) }
+      entries << { 'from' => extract_date_only(from), 'to' => extract_date_only(to), 'label' => label.presence }
     end
 
     unit.update!(activity_period: entries) if entries.present?

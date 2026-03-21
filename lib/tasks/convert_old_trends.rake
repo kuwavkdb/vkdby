@@ -9,7 +9,7 @@ namespace :convert do
     count = 0
     skipped_count = 0
 
-    OldTrend.find_each do |old|
+    OldTrend.where(publish: true).find_each do |old|
       # Handle date parsing
       target_date = old.target_date
       day_unknown = false
@@ -41,7 +41,7 @@ namespace :convert do
         date_obj = Date.parse(clean_date)
       rescue Date::Error
         date_obj = Date.new(1970, 1, 1) # Fallback
-        puts "Invalid date found: #{old.target_date}, defaulted to 1970-01-01"
+        puts "Invalid date found: OldTrend##{old.id} target_date=#{old.target_date}, defaulted to 1970-01-01"
       end
 
       # Base attributes
@@ -90,11 +90,13 @@ namespace :convert do
     puts "\nConversion completed. Imported: #{count}, Skipped: #{skipped_count}"
   end
 
-  # rubocop:disable Metrics/PerceivedComplexity
+  # rubocop:disable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
   def apply_phenomenon(trend, old)
     case old.trend_class
     when 1
-      trend.unit_phenomenon = if old.content&.include?('結成')
+      trend.unit_phenomenon = if old.content&.include?('メジャーデビュー')
+                                :major_debut
+                              elsif old.content&.include?('結成')
                                 :formation
                               elsif old.content&.include?('始動') || old.content&.include?('1st.LIVE')
                                 :first_live
@@ -104,7 +106,7 @@ namespace :convert do
                                 :formation
                               end
     when 2
-      trend.unit_phenomenon = if old.content&.match?(/活動休止|活動停止|無期限活動休止/)
+      trend.unit_phenomenon = if old.content&.match?(/休止|停止/)
                                 :suspend
                               else
                                 :finish
@@ -113,19 +115,37 @@ namespace :convert do
       trend.unit_phenomenon = :restart
     when 4
       trend.unit_phenomenon = :limited
+    when 5
+      trend.unit_phenomenon = if old.content&.match?(/解散/)
+                                :finish
+                              else
+                                :limited
+                              end
     when 8
-      trend.unit_phenomenon = :other
-    when 9
-      trend.unit_phenomenon = :limited
+      trend.unit_phenomenon = :announcement
+    when 19
+      trend.person_phenomenon = :other
     when 11
       trend.person_phenomenon = :join_member
     when 12
       trend.person_phenomenon = :leave_member
-    when 19
-      trend.person_phenomenon = :other
     else
-      trend.etc_phenomenon = :other
+      trend.unit_phenomenon = if old.content&.include?('メジャーデビュー')
+                                :major_debut
+                              elsif old.content&.match?(/再始動|再結成|活動再開/)
+                                :restart
+                              elsif old.content&.match?(/休止|停止/)
+                                :suspend
+                              elsif old.content&.match?(/改名|変更/)
+                                :rename
+                              elsif old.content&.match?(/ライブ|LIVE/)
+                                :live
+                              elsif old.content&.match?(/メディア|テレビ|ラジオ/)
+                                :media
+                              else
+                                :other
+                              end
     end
   end
-  # rubocop:enable Metrics/PerceivedComplexity
+  # rubocop:enable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
 end

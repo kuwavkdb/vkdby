@@ -1,0 +1,201 @@
+<% content_for :title, "年表 - メジャーバンド | Vkdby" %>
+<% content_for :main_px, "px-3 sm:px-6" %>
+<% content_for :main_max_w, "w-full" %>
+
+<%
+  year_px          = @year_px      # 1年あたりのピクセル幅（24 or 48）
+  chart_width      = (@year_max - @year_min + 1) * year_px
+  name_col_w       = 176   # w-44 = 11rem = 176px
+  grid_span        = year_px * 5   # 5年分のピクセル幅
+  five_year_offset = (5 - @year_min % 5) % 5 * year_px  # 最初の5年ラインまでのオフセット
+  grid_style       = "background-image: repeating-linear-gradient(to right, transparent, transparent #{grid_span - 2}px, rgba(113,113,122,0.35) #{grid_span - 2}px, rgba(113,113,122,0.35) #{grid_span}px); background-size: #{grid_span}px 100%; background-position: #{five_year_offset}px 0;"
+%>
+
+<div data-controller="timeline">
+
+  <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">年表</h1>
+      <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">メジャーデビュー・メジャーで解散したバンドの活動時期</p>
+    </div>
+    <div class="flex items-center gap-1 text-sm" role="group" aria-label="表示幅の切り替え">
+      <span class="mr-1 text-zinc-500 dark:text-zinc-400 text-xs">表示幅:</span>
+      <%= link_to "標準", timeline_path(zoom: "1"),
+            class: "px-2.5 py-1 rounded border transition-colors #{@zoom == '1' ? 'bg-indigo-600 border-indigo-600 text-white font-medium' : 'border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'}",
+            aria: { current: @zoom == "1" ? "true" : nil } %>
+      <%= link_to "拡大", timeline_path(zoom: "2"),
+            class: "px-2.5 py-1 rounded border transition-colors #{@zoom == '2' ? 'bg-indigo-600 border-indigo-600 text-white font-medium' : 'border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'}",
+            aria: { current: @zoom == "2" ? "true" : nil } %>
+    </div>
+  </div>
+
+  <!-- 凡例（クリックで表示切替 / sticky） -->
+  <div class="sticky top-0 z-20 -mx-3 sm:-mx-6 px-3 sm:px-6 pt-2 pb-2 mb-1 bg-white dark:bg-zinc-950 border-b border-zinc-100 dark:border-zinc-800 text-sm space-y-2"
+       data-timeline-target="legendContainer"
+       role="note" aria-label="凡例">
+    <!-- バー色の凡例（行単位で切替） -->
+    <div class="flex flex-wrap items-center gap-4">
+      <button type="button"
+              class="flex items-center gap-2 cursor-pointer select-none transition-opacity"
+              data-action="click->timeline#toggleType"
+              data-type="major"
+              aria-pressed="false"
+              title="クリックで表示切替">
+        <span class="inline-block w-6 h-4 rounded" style="background-color: #3b82f6;" aria-hidden="true"></span>
+        <span class="text-zinc-600 dark:text-zinc-400">メジャー</span>
+      </button>
+      <button type="button"
+              class="flex items-center gap-2 cursor-pointer select-none transition-opacity"
+              data-action="click->timeline#toggleType"
+              data-type="major-disbanded"
+              aria-pressed="false"
+              title="クリックで表示切替">
+        <span class="inline-block w-6 h-4 rounded" style="background-color: #a855f7;" aria-hidden="true"></span>
+        <span class="text-zinc-600 dark:text-zinc-400">メジャーで解散</span>
+      </button>
+      <button type="button"
+              class="flex items-center gap-2 cursor-pointer select-none transition-opacity"
+              data-action="click->timeline#toggleType"
+              data-type="added"
+              aria-pressed="false"
+              title="クリックで表示切替">
+        <span class="inline-block w-6 h-4 rounded" style="background-color: #22c55e;" aria-hidden="true"></span>
+        <span class="text-zinc-600 dark:text-zinc-400">任意追加バンド</span>
+      </button>
+      <span class="ml-auto text-xs text-zinc-400 dark:text-zinc-500">選択状態はブラウザに保存されます。</span>
+    </div>
+    <!-- マーカー色の凡例（phenomenon 単位で切替） -->
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2"
+         data-timeline-target="markerLegend">
+      <%
+        phenomenon_legend = [
+          { key: 'major_debut',  label: 'メジャーデビュー', color: '#f59e0b', debut: true },
+          { key: 'formation',    label: '結成',             color: '#22c55e' },
+          { key: 'finish',       label: '終了',             color: '#ef4444' },
+          { key: 'rename',       label: '改名',             color: '#a78bfa' },
+          { key: 'suspend',      label: '活動休止',         color: '#94a3b8' },
+          { key: 'restart',      label: '活動再開',         color: '#06b6d4' },
+          { key: 'limited',      label: '期間限定',         color: '#84cc16' },
+          { key: 'first_live',   label: '初ライブ',         color: '#f97316' },
+          { key: 'live',         label: 'ライブ',           color: '#fb7185' },
+          { key: 'media',        label: 'メディア',         color: '#3b82f6' },
+          { key: 'announcement', label: 'お知らせ',         color: '#e879f9' },
+          { key: 'other',        label: 'その他',           color: '#71717a' },
+        ]
+      %>
+      <button type="button"
+              class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline select-none flex-shrink-0"
+              data-action="click->timeline#toggleAllMarkers"
+              data-timeline-target="toggleAllMarkersBtn">全非表示</button>
+      <span class="text-zinc-300 dark:text-zinc-600 flex-shrink-0" aria-hidden="true">|</span>
+      <% phenomenon_legend.each do |item| %>
+        <button type="button"
+                class="flex items-center gap-1.5 cursor-pointer select-none transition-opacity"
+                data-action="click->timeline#toggleType"
+                data-type="<%= item[:key] %>"
+                aria-pressed="false"
+                title="クリックで表示切替">
+          <% if item[:debut] %>
+            <span class="flex flex-col items-center flex-shrink-0" style="width: 10px; height: 18px;" aria-hidden="true">
+              <span style="display: block; width: 8px; height: 8px; background-color: <%= item[:color] %>; border-radius: 50%; flex-shrink: 0;"></span>
+              <span style="display: block; width: 3px; flex: 1; background-color: <%= item[:color] %>;"></span>
+            </span>
+          <% else %>
+            <span style="display: block; width: 4px; height: 18px; background-color: <%= item[:color] %>; border-radius: 1px; flex-shrink: 0;" aria-hidden="true"></span>
+          <% end %>
+          <span class="text-zinc-600 dark:text-zinc-400"><%= item[:label] %></span>
+        </button>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- バンド追加検索 -->
+  <div class="mb-3 relative" data-controller="timeline-search">
+    <div class="flex gap-2">
+      <div class="relative flex-1 max-w-xs">
+        <input type="text"
+               placeholder="バンドを追加..."
+               autocomplete="off"
+               data-unit-url="<%= timeline_unit_path(zoom: @zoom == '2' ? '2' : nil, ym: @year_min) %>"
+               data-search-url="<%= search_units_path %>"
+               class="w-full px-3 py-1.5 text-sm border border-zinc-300 dark:border-zinc-600 rounded
+                      bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
+                      placeholder-zinc-400 dark:placeholder-zinc-500
+                      focus:outline-none focus:ring-2 focus:ring-indigo-500"
+               data-timeline-search-target="input"
+               data-action="input->timeline-search#suggest keydown->timeline-search#keydown">
+        <!-- サジェストドロップダウン -->
+        <ul class="hidden absolute z-20 mt-1 w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700
+                   rounded shadow-lg text-sm max-h-60 overflow-y-auto"
+            data-timeline-search-target="suggestions"
+            role="listbox"></ul>
+      </div>
+    </div>
+    <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">追加したバンドはブラウザに保存され、次回以降も表示されます</p>
+  </div>
+
+  <%#
+    横スクロール同期:
+    - #timeline-header: overflow-x:hidden + JS で scrollLeft を追随
+    - #timeline-body:   overflow-x:auto  + scroll イベントでヘッダに伝える
+    - ページ自体が縦スクロール（コンテナに height 制限なし）
+    - ヘッダ行は sticky top-16 でビューポートに固定
+  %>
+  <div id="timeline-widget"
+       class="rounded border border-zinc-200 dark:border-zinc-700">
+
+    <!-- カスタムツールチップ -->
+    <div data-timeline-target="tooltip"
+         class="hidden fixed z-50 px-2 py-1 text-sm text-white bg-zinc-800/60 dark:bg-zinc-600/60 rounded shadow-lg pointer-events-none whitespace-pre-wrap max-w-xs backdrop-blur-sm"
+         style="top: 0; left: 0;" role="tooltip"></div>
+
+    <!-- ヘッダー行（縦スクロール固定 + 横スクロール同期） -->
+    <div class="sticky top-0 z-10 border-b border-zinc-200 dark:border-zinc-700 overflow-x-hidden bg-zinc-100 dark:bg-zinc-800"
+         data-timeline-target="header">
+      <div class="flex bg-zinc-100 dark:bg-zinc-800">
+        <!-- コーナーセル -->
+        <div class="flex-shrink-0 px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-300
+                    sticky left-0 z-10 bg-zinc-100 dark:bg-zinc-800 border-r border-zinc-200 dark:border-zinc-700"
+             style="width: <%= name_col_w %>px;">
+          バンド
+        </div>
+        <!-- 年ラベル -->
+        <div class="relative flex-shrink-0" style="width: <%= chart_width %>px; height: 32px;">
+          <% @year_range.each_with_index do |year, i| %>
+            <% left = i * year_px %>
+            <% show_label = year % 5 == 0 || year_px > 24 %>
+            <% if show_label %>
+              <span class="absolute text-xs text-zinc-500 dark:text-zinc-400 whitespace-nowrap"
+                    style="left: <%= left %>px; top: 2px; transform: translateX(-50%);">
+                <%= year %>
+              </span>
+            <% end %>
+            <span class="absolute bottom-0 bg-zinc-300 dark:bg-zinc-600 <%= year % 5 == 0 ? 'h-2 w-px' : 'h-1 w-px' %>"
+                  style="left: <%= left %>px;"
+                  aria-hidden="true"></span>
+          <% end %>
+          <span class="absolute bottom-0 h-2 w-px bg-zinc-300 dark:bg-zinc-600"
+                style="left: <%= chart_width %>px;"
+                aria-hidden="true"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- データ行（横スクロール + バンド名列固定） -->
+    <div class="overflow-x-auto"
+         data-timeline-target="body"
+         data-action="scroll->timeline#syncHeader"
+         id="timeline-rows">
+      <%# flex行コンテナは親幅に縮小されるため border-b がチャート全幅まで伸びない。
+          min-width を明示したラッパーで scrollWidth を固定する。 %>
+      <div id="timeline-rows-inner" style="min-width: <%= name_col_w + chart_width %>px;">
+        <%= render TimelineRowComponent.with_collection(@units, year_min: @year_min, year_max: @year_max, trend_markers: @trend_markers, year_px: @year_px) %>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="mt-3 text-xs text-zinc-400 dark:text-zinc-500">
+    <%= @units.size %> バンド &middot; <%= @year_min %>年〜<%= @year_max %>年
+  </p>
+</div>

@@ -76,6 +76,12 @@ class Unit < ApplicationRecord
     (activity_period || []).map { |h| OpenStruct.new(h) }
   end
 
+  def activity_periods_attributes=(attributes)
+    self.activity_period = attributes.values.reject { |a| a['from'].blank? && a['to'].blank? }.map do |a|
+      { 'from' => a['from'].presence, 'to' => a['to'].presence, 'label' => a['label'].presence }
+    end
+  end
+
   def name_logs_attributes=(attributes)
     self.name_log = attributes.values.map do |attrs|
       next if attrs['name'].blank?
@@ -100,7 +106,12 @@ class Unit < ApplicationRecord
 
   private
 
+  after_commit :expire_timeline_cache
   after_create :link_related_person_logs_and_members
+
+  def expire_timeline_cache
+    Rails.cache.delete(TimelineController::CACHE_KEY)
+  end
 
   def link_related_person_logs_and_members
     return if key.blank?

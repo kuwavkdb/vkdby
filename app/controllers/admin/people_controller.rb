@@ -31,7 +31,6 @@ module Admin
     end
 
     def edit
-      @person_logs = @person.person_logs.order(:log_date)
       @person.links.build # Always add an empty link field for new entries
       @update_logs = UpdateLog.for_person(@person)
                               .includes(:user)
@@ -53,7 +52,7 @@ module Admin
     def update
       if @person.update(person_params)
         record_update_log(@person, action: 'update')
-        redirect_to admin_people_path, notice: 'Person updated successfully.'
+        redirect_to edit_admin_person_path(@person), notice: 'Person updated successfully.'
       else
         render :edit, status: :unprocessable_entity
       end

@@ -36,3 +36,9 @@ application.register("markdown-preview", MarkdownPreviewController)
 
 import UnitGraphController from "controllers/unit_graph_controller"
 application.register("unit-graph", UnitGraphController)
+
+import TimelineController from "controllers/timeline_controller"
+application.register("timeline", TimelineController)
+
+import TimelineSearchController from "controllers/timeline_search_controller"
+application.register("timeline-search", TimelineSearchController)

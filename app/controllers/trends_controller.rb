@@ -2,24 +2,23 @@
 
 class TrendsController < ApplicationController
   def index
-    dates = Trend.pluck(:date)
-    @year_counts = dates.map(&:year).tally
+    @year_counts = Trend.group('EXTRACT(year FROM date)::integer').count
     @years = @year_counts.keys.sort.reverse
 
     if params[:year].present?
       year = params[:year].to_i
       month = params[:month].presence&.to_i
 
-      target_dates = dates.select { |d| d.year == year }
-      @month_counts = target_dates.map(&:month).tally
+      @month_counts = Trend.where('EXTRACT(year FROM date) = ?', year)
+                           .group('EXTRACT(month FROM date)::integer').count
       @months = @month_counts.keys.sort.reverse
 
       start_date = Date.new(year, month || 1, 1)
       end_date = month ? start_date.end_of_month : start_date.end_of_year
 
-      scope = Trend.all.order(date: :desc).where(date: start_date..end_date)
+      scope = Trend.order(date: :desc).where(date: start_date..end_date)
     else
-      scope = Trend.all.order(id: :desc)
+      scope = Trend.order(id: :desc)
     end
 
     @pagy, @trends = pagy(scope, limit: 20)
@@ -52,5 +51,9 @@ class TrendsController < ApplicationController
     scopes << Item.by_artist_key(unit.key) if unit.key.present?
     scopes << Item.by_artist_old_key(unit.old_key) if unit.old_key.present?
     @items = scopes.reduce(:or).order(release_date: :desc).limit(8) if scopes.any?
+
+    @unit_trends = Trend.where('units @> ?', [{ unit_id: unit.id }].to_json)
+                        .where.not(id: @trend.id)
+                        .order(date: :asc)
   end
 end

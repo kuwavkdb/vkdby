@@ -22,7 +22,7 @@ gem 'stimulus-rails'
 gem 'jbuilder'
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
-gem 'bcrypt', '~> 3.1.7'
+gem 'bcrypt', '~> 3.1.22'
 # gem "omniauth"
 # gem "omniauth-google-oauth2"
 # gem "omniauth-rails_csrf_protection"
@@ -65,7 +65,7 @@ end
 
 group :development do
   gem 'ruby-lsp'
-  gem 'solargraph', '~> 0.58.2'
+  gem 'solargraph', '~> 0.58.3'
 
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem 'annotaterb'
@@ -85,5 +85,5 @@ gem 'redis', '>= 4.0.1'
 gem 'discard', '~> 1.4'
 gem 'romaji', '~> 0.3.0'
 
-gem 'pagy', '~> 43.3'
+gem 'pagy', '~> 43.4'
 gem 'redcarpet'

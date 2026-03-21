@@ -67,7 +67,6 @@
                       class: "text-green-600 hover:text-green-900 bg-transparent border-0 cursor-pointer p-0" %>
                 <% end %>
               <% else %>
-                <%= link_to "Logs", admin_person_person_logs_path(person), class: "text-indigo-600 hover:text-indigo-900 mr-4" %>
                 <%= link_to "Edit", edit_admin_person_path(person), class: "text-indigo-600 hover:text-indigo-900 mr-4" %>
                 <% if current_user.super_operator_or_above? %>
                   <%= button_to "Delete", admin_person_path(person), method: :delete,
