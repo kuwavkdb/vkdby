@@ -2,8 +2,7 @@
 
 # rubocop:disable Metrics/ClassLength
 class TimelineController < ApplicationController
-  TARGET_TAG_NAMES = %w[メジャー メジャーで解散].freeze
-  CACHE_KEY = 'timeline/major_units/v3'
+  CACHE_KEY = 'timeline/major_units/v4'
   CACHE_TTL = 1.hour
 
   VALID_ZOOMS = { '2' => 48 }.freeze
@@ -15,9 +14,14 @@ class TimelineController < ApplicationController
     @zoom    = @year_px == DEFAULT_YEAR_PX ? '1' : params[:zoom]
 
     @timeline_data = Rails.cache.fetch(CACHE_KEY, expires_in: CACHE_TTL) do
+      major_debut_unit_ids = Trend
+                             .where(unit_phenomenon: :major_debut, active: true)
+                             .pluck(:units)
+                             .flat_map { |arr| Array(arr).map { |u| u['unit_id'].to_i } }
+                             .uniq
+
       units = Unit.kept
-                  .joins(tag_index_items: :tag_index)
-                  .where(tag_indices: { name: TARGET_TAG_NAMES })
+                  .where(id: major_debut_unit_ids)
                   .where.not(activity_period: nil)
                   .distinct
                   .preload(tag_index_items: :tag_index)
