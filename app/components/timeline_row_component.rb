@@ -49,10 +49,8 @@ class TimelineRowComponent < ViewComponent::Base
     "background-position: #{five_year_offset}px 0, 0 0;"
   end
 
-  def tag_names = @unit.tag_index_items.map { |ti| ti.tag_index.name }
-  def major_disbanded? = tag_names.include?('メジャーで解散')
-  def bar_color      = major_disbanded? ? '#a855f7' : '#3b82f6'
-  def row_type       = major_disbanded? ? 'major-disbanded' : 'major'
+  def bar_color = '#3b82f6'
+  def row_type  = 'major'
 
   def earliest_year
     @unit.activity_periods.filter_map do |p|
