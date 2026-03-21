@@ -6,7 +6,7 @@ class UnitTrendsComponent < ViewComponent::Base
 
   def initialize(trends:, current_trend_id: nil)
     super()
-    @trends          = trends
+    @trends           = trends
     @current_trend_id = current_trend_id
   end
 
