@@ -51,5 +51,9 @@ class TrendsController < ApplicationController
     scopes << Item.by_artist_key(unit.key) if unit.key.present?
     scopes << Item.by_artist_old_key(unit.old_key) if unit.old_key.present?
     @items = scopes.reduce(:or).order(release_date: :desc).limit(8) if scopes.any?
+
+    @unit_trends = Trend.where('units @> ?', [{ unit_id: unit.id }].to_json)
+                        .where.not(id: @trend.id)
+                        .order(date: :asc)
   end
 end

@@ -65,21 +65,49 @@
         <% end %>
       </div>
       
-      <% if @snapshot %>
-        <section class="mt-10">
-          <div class="flex items-center gap-2 mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Members</h2>
-            <% if @snapshot.label.present? && @trend.snapshot_date.blank? %>
-              <span class="text-xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"><%= @snapshot.label %></span>
-            <% end %>
-            <% if @snapshot.current? %>
-              <span class="text-xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400">Current</span>
-            <% end %>
-          </div>
-          <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm">
-            <%= render MemberRowComponent.with_collection(@snapshot.snapshot_people.sort_by(&:sort_order), hide_active: true, hide_status: @snapshot.past?) %>
-          </div>
-        </section>
+      <% if @snapshot || @unit_trends.present? %>
+        <div class="mt-10 grid gap-8 grid-cols-1 md:grid-cols-[1fr_360px] items-start">
+          <% if @snapshot %>
+            <section>
+              <div class="flex items-center gap-2 mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Members</h2>
+                <% if @snapshot.label.present? && @trend.snapshot_date.blank? %>
+                  <span class="text-xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"><%= @snapshot.label %></span>
+                <% end %>
+                <% if @snapshot.current? %>
+                  <span class="text-xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400">Current</span>
+                <% end %>
+              </div>
+              <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm">
+                <%= render MemberRowComponent.with_collection(@snapshot.snapshot_people.sort_by(&:sort_order), hide_active: true, hide_status: @snapshot.past?) %>
+              </div>
+            </section>
+          <% else %>
+            <div></div>
+          <% end %>
+
+          <% if @unit_trends.present? %>
+            <section>
+              <div class="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Trends</h2>
+              </div>
+              <div class="space-y-3">
+                <% @unit_trends.each do |trend| %>
+                  <%= link_to trend_path(trend), class: "flex items-start gap-3 text-sm group" do %>
+                    <div class="shrink-0 w-24 text-slate-600 dark:text-slate-400 font-mono text-sm pt-0.5 font-bold group-hover:text-indigo-500 transition-colors">
+                      <%= trend.date.strftime('%Y/%m/%d') %>
+                    </div>
+                    <div class="grow">
+                      <p class="font-bold text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                        <%= format_wiki_title(trend.title, link: false) %>
+                      </p>
+                    </div>
+                  <% end %>
+                <% end %>
+              </div>
+            </section>
+          <% end %>
+        </div>
       <% end %>
 
       <% if @items.present? %>
