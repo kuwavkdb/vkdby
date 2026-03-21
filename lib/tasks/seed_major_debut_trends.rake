@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-namespace :seed do
+namespace :seed do # rubocop:disable Metrics/BlockLength
   desc '年表CSVから抽出した Trend レコードを登録する（未登録のもののみ）'
-  task major_debut_trends: :environment do
+  task major_debut_trends: :environment do # rubocop:disable Metrics/BlockLength
     # date:       "YYYY/MM/DD" または "YYYY/MM/**"（日不明）または "YYYY/**/**"（月日不明）
     # unit_key:   Unit#key
     # phenomenon: unit_phenomenon の enum キー（省略時は :major_debut）
@@ -104,16 +104,16 @@ namespace :seed do
       { date: '1991/05/**', unit_key: 'baiser',                      phenomenon: :formation, title: '結成' },
       { date: '1991/06/**', unit_key: 'kill-slayd',                  phenomenon: :formation, title: '結成' },
       { date: '1991/06/**', unit_key: 'kuroyume',                    phenomenon: :formation, title: '結成' },
-      { date: '1991/07/05', unit_key: 'die-in-cries',               phenomenon: :formation, title: '結成' },
+      { date: '1991/07/05', unit_key: 'die-in-cries', phenomenon: :formation, title: '結成' },
       { date: '1991/**/**', unit_key: 'a4aba4dea4a4a4bfa4c1',        phenomenon: :finish,    title: '解散' },
       { date: '1991/**/**', unit_key: 'sleep-my-dear',               phenomenon: :formation, title: '結成' },
-      { date: '1991/02/**', unit_key: 'l-arc-en-ciel',              phenomenon: :formation, title: '結成' },
+      { date: '1991/02/**', unit_key: 'l-arc-en-ciel', phenomenon: :formation, title: '結成' },
       { date: '1992/02/14', unit_key: 'penicillin',                  phenomenon: :formation, title: '結成' },
       { date: '1992/07/**', unit_key: 'body',                        phenomenon: :formation, title: '結成' },
       { date: '1992/08/**', unit_key: 'malice-mizer',                phenomenon: :formation, title: '結成' },
       { date: '1992/**/**', unit_key: 'maschera',                    phenomenon: :formation, title: '結成' },
       { date: '1992/10/**', unit_key: 'x-japan',                     phenomenon: :rename,    title: '改名' },
-      { date: '1992/11/**', unit_key: 'fanathikku-kuraishisu',        phenomenon: :formation, title: '結成' },
+      { date: '1992/11/**', unit_key: 'fanathikku-kuraishisu', phenomenon: :formation, title: '結成' },
       { date: '1993/03/**', unit_key: 'vogue',                       phenomenon: :formation, title: '結成' },
       { date: '1993/05/**', unit_key: 'siam-shade',                  phenomenon: :formation, title: '結成' },
       { date: '1993/07/**', unit_key: 'laputa',                      phenomenon: :formation, title: '結成' },
@@ -171,7 +171,7 @@ namespace :seed do
       { date: '2004/01/07', unit_key: 'dasein',                      phenomenon: :finish,    title: '解散' },
       { date: '2004/08/**', unit_key: 'lynch-',                      phenomenon: :formation, title: '結成' },
       { date: '2004/09/05', unit_key: 'laputa',                      phenomenon: :finish,    title: '解散' },
-      { date: '2004/12/23', unit_key: 'jurassic',                    phenomenon: :finish,    title: '解散' },
+      { date: '2004/12/23', unit_key: 'jurassic',                    phenomenon: :finish,    title: '解散' }
     ]
 
     added = 0
@@ -215,13 +215,13 @@ namespace :seed do
       end
 
       trend = Trend.new(
-        date:             parsed_date,
-        day_unknown:      day_unknown,
-        month_unknown:    month_unknown,
-        title:            entry[:title] || 'メジャーデビュー',
-        units:            [{ unit_id: unit.id, name: unit.name }],
-        unit_phenomenon:  phenomenon,
-        active:           true,
+        date: parsed_date,
+        day_unknown: day_unknown,
+        month_unknown: month_unknown,
+        title: entry[:title] || 'メジャーデビュー',
+        units: [{ unit_id: unit.id, name: unit.name }],
+        unit_phenomenon: phenomenon,
+        active: true,
         publish_start_at: Time.current
       )
 
@@ -236,7 +236,7 @@ namespace :seed do
 
     puts "\nDone. added=#{added}, skipped=#{skipped}, errors=#{errors}"
 
-    if added > 0
+    if added.positive?
       cache_key = TimelineController::CACHE_KEY
       Rails.cache.delete(cache_key)
       puts "Cache deleted: #{cache_key}"

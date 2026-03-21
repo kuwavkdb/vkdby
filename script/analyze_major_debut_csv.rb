@@ -9,7 +9,7 @@
 # フォーマット: ,年月日,メジャー列,インディーズ列
 # 対象マーク: × ★ ● ○ △ ▲ □
 
-CSV_DATA = <<~CSV
+CSV_DATA = <<~CSV.freeze
   ,年月日,メジャー,インディーズ
   ,1994/12/**,,☆ [[FANATIC◇CRISIS]]/1st.MiniALBUM
   ,1994/12/10,,☆ [[SIAM SHADE]]/1st.ALBUM
@@ -45,7 +45,7 @@ CSV_DATA = <<~CSV
   ,1992/11/25,,☆ [[L'Arc~en~Ciel]]/1st.SINGLE
   ,1992/11/**,,● [[FANATIC◇CRISIS]]
   ,1992/10/**,□ X→[[X JAPAN]]
-  ,1992/09/**,,● [[KneuKlid Romance]] 
+  ,1992/09/**,,● [[KneuKlid Romance]]#{' '}
   ,1992/08/**,,● [[MALICE MIZER]]
   ,1992/07/**,,☆ [[黒夢]]/1st.ALUBM
   ,1992/07/**,,● [[BODY]]
@@ -151,7 +151,7 @@ CSV_DATA = <<~CSV
   ,2000/10/**,△ [[SHAZNA]]
   ,2000/10/25,,☆ [[S.Q.F]]/1st.MiniALBUM
   ,2000/10/15,× [[BLue-B]]
-  ,2000/09/01,,☆ [[wyse]]/1st.MiniALBUM 
+  ,2000/09/01,,☆ [[wyse]]/1st.MiniALBUM#{' '}
   ,2000/08/23,★ [[CLOUD]]/1st.SINGLE
   ,2000/07/25,× [[賛美歌]]
   ,2000/06/09,,☆ [[ムック]]/1st.SINGLE
@@ -177,7 +177,7 @@ MARK_MAP = {
   '○' => { phenomenon: :restart,     title: '再結成' },
   '△' => { phenomenon: :suspend,     title: '活動休止' },
   '▲' => { phenomenon: :restart,     title: '活動再開' },
-  '□' => { phenomenon: :rename,      title: '改名' },
+  '□' => { phenomenon: :rename,      title: '改名' }
 }.freeze
 
 # セルテキストを解析して { old_key:, phenomenon:, title: } を返す。
@@ -189,7 +189,7 @@ def parse_cell(text)
   mark = MARK_MAP.keys.find { |m| text.start_with?(m) }
   return nil unless mark
 
-  content = text.sub(/\A./, '').strip  # 先頭マーク1文字を除去
+  content = text.sub(/\A./, '').strip # 先頭マーク1文字を除去
 
   # □（改名）は "旧名 → 新名" のうち新名を対象にする
   content = content.split('→').last.strip if mark == '□' && content.include?('→')
@@ -199,12 +199,12 @@ def parse_cell(text)
 
   # wiki記法パース: [[Link|Display]] → Link, [[Link]] → Link
   old_key = if content =~ /\[\[([^|\]]+)\|[^\]]+\]\]/
-    $1.strip
-  elsif content =~ /\[\[([^\]]+)\]\]/
-    $1.strip
-  else
-    content
-  end
+              Regexp.last_match(1).strip
+            elsif content =~ /\[\[([^\]]+)\]\]/
+              Regexp.last_match(1).strip
+            else
+              content
+            end
 
   { old_key:, **MARK_MAP[mark] }
 end
