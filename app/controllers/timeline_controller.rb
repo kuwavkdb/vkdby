@@ -24,7 +24,6 @@ class TimelineController < ApplicationController
                   .where(id: major_debut_unit_ids)
                   .where.not(activity_period: nil)
                   .distinct
-                  .preload(tag_index_items: :tag_index)
                   .to_a
 
       all_years = units.flat_map do |unit|
@@ -96,7 +95,7 @@ class TimelineController < ApplicationController
     year_min = cached&.dig(:year_min) || Time.current.year
     year_max = cached&.dig(:year_max) || Time.current.year
 
-    unit = Unit.kept.preload(tag_index_items: :tag_index).find_by(key: params[:key])
+    unit = Unit.kept.find_by(key: params[:key])
     return head :not_found unless unit
 
     markers = []
