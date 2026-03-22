@@ -107,10 +107,15 @@ class Unit < ApplicationRecord
   private
 
   after_commit :expire_timeline_cache
+  after_commit :expire_sidebar_cache
   after_create :link_related_person_logs_and_members
 
   def expire_timeline_cache
     Rails.cache.delete(TimelineController::CACHE_KEY)
+  end
+
+  def expire_sidebar_cache
+    Rails.cache.delete('sidebar/recently_updated')
   end
 
   def link_related_person_logs_and_members
