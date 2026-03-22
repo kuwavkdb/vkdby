@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["header", "body", "tooltip", "legendContainer", "markerLegend", "toggleAllMarkersBtn"]
+  static targets = ["header", "body", "tooltip", "legendContainer", "markerLegend", "toggleAllMarkersBtn", "shareBtn", "shareBtnLabel"]
 
   static LEGEND_STORAGE_KEY = "timeline_hidden_types"
 
@@ -12,12 +12,20 @@ export default class extends Controller {
   ]
 
   connect() {
-    const raw = localStorage.getItem(this.constructor.LEGEND_STORAGE_KEY)
-    if (raw === null) {
-      this.hiddenTypes = new Set(this.constructor.DEFAULT_HIDDEN_PHENOMENA)
-      localStorage.setItem(this.constructor.LEGEND_STORAGE_KEY, JSON.stringify([...this.hiddenTypes]))
+    const urlHidden = new URLSearchParams(location.search).get("hidden")
+    if (urlHidden !== null) {
+      // URLパラメータあり（共有URL）→ localStorageを触らずURLの値で初期表示
+      this.hiddenTypes = new Set(urlHidden ? urlHidden.split(",").filter(Boolean) : [])
+      this._fromUrl = true
     } else {
-      this.hiddenTypes = new Set(JSON.parse(raw))
+      const raw = localStorage.getItem(this.constructor.LEGEND_STORAGE_KEY)
+      if (raw === null) {
+        this.hiddenTypes = new Set(this.constructor.DEFAULT_HIDDEN_PHENOMENA)
+        localStorage.setItem(this.constructor.LEGEND_STORAGE_KEY, JSON.stringify([...this.hiddenTypes]))
+      } else {
+        this.hiddenTypes = new Set(JSON.parse(raw))
+      }
+      this._fromUrl = false
     }
     this._restoreLegend()
     this._updateToggleAllBtn()
@@ -44,6 +52,8 @@ export default class extends Controller {
     }
     this._applyVisibility(type)
     this._updateToggleAllBtn()
+    // 共有URL由来でも、ユーザーが手動変更した時点からlocalStorageに保存する
+    this._fromUrl = false
     localStorage.setItem(this.constructor.LEGEND_STORAGE_KEY, JSON.stringify([...this.hiddenTypes]))
   }
 
@@ -79,7 +89,52 @@ export default class extends Controller {
     })
 
     this._updateToggleAllBtn()
+    this._fromUrl = false
     localStorage.setItem(this.constructor.LEGEND_STORAGE_KEY, JSON.stringify([...this.hiddenTypes]))
+  }
+
+  async share() {
+    const params = new URLSearchParams(location.search)
+
+    // 凡例: 非表示タイプをパラメータに反映
+    if (this.hiddenTypes.size > 0) {
+      params.set("hidden", [...this.hiddenTypes].join(","))
+    } else {
+      params.delete("hidden")
+    }
+
+    // 追加バンド: localStorageから取得
+    const bands = JSON.parse(localStorage.getItem("timeline_added_bands") || "[]")
+    if (bands.length > 0) {
+      params.set("bands", bands.join(","))
+    } else {
+      params.delete("bands")
+    }
+
+    const url = `${location.origin}${location.pathname}?${params.toString()}`
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ url })
+        return
+      } catch (e) {
+        if (e.name === "AbortError") return  // ユーザーがキャンセル → 何もしない
+        // それ以外（デスクトップで share が使えない等）→ クリップボードにフォールバック
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url)
+      this._flashShareBtn("コピーしました！")
+    } catch (e) {
+      console.error("share copy error:", e)
+    }
+  }
+
+  _flashShareBtn(label) {
+    if (!this.hasShareBtnLabelTarget) return
+    const original = this.shareBtnLabelTarget.textContent
+    this.shareBtnLabelTarget.textContent = label
+    setTimeout(() => { this.shareBtnLabelTarget.textContent = original }, 2000)
   }
 
   _updateToggleAllBtn() {

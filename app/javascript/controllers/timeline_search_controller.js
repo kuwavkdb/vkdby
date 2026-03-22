@@ -4,7 +4,7 @@ export default class extends Controller {
   static targets = ["input", "suggestions"]
 
   static STORAGE_KEY = "timeline_added_bands"
-  static HTML_CACHE_PREFIX = "timeline_unit_html_v4_"
+  static HTML_CACHE_PREFIX = "timeline_unit_html_v5_"
 
   connect() {
     this.debounceTimer = null
@@ -12,7 +12,15 @@ export default class extends Controller {
     this.selectedIndex = -1
     this.handleClickOutside = this._onClickOutside.bind(this)
     document.addEventListener("click", this.handleClickOutside)
-    this._restoreFromStorage()
+
+    const urlBands = new URLSearchParams(location.search).get("bands")
+    if (urlBands !== null) {
+      // URLパラメータあり（共有URL）→ localStorageを上書きせずURLの値で復元
+      const keys = urlBands ? urlBands.split(",").filter(Boolean) : []
+      keys.forEach(key => this.addUnit(key, key, { scroll: false }))
+    } else {
+      this._restoreFromStorage()
+    }
   }
 
   disconnect() {
