@@ -31,7 +31,15 @@ class CustomPage < ApplicationRecord
 
   scope :published, -> { kept.where(active: true) }
 
+  after_commit :expire_sidebar_cache
+
   def protected?
     PROTECTED_KEYS.include?(key)
+  end
+
+  private
+
+  def expire_sidebar_cache
+    Rails.cache.delete('sidebar/recently_updated')
   end
 end
