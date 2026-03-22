@@ -22,5 +22,11 @@ services:
           property: connectionString
       - key: RAILS_MASTER_KEY
         sync: false
+      - key: WEB_CONCURRENCY
+        value: 1
+      - key: RAILS_MAX_THREADS
+        value: 2
+      - key: MALLOC_ARENA_MAX
+        value: 2
     region: singapore
     plan: free # Web service has a free tier.
