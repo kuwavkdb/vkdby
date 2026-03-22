@@ -23,11 +23,6 @@
             <%= markdown(@page.body) %>
           </div>
         </div>
-
-        <%# モバイル: サイドバーをメインコンテンツの下に表示 %>
-        <div class="lg:hidden border-t border-slate-100 dark:border-slate-700 p-5 md:p-8">
-          <%= render 'sidebar' %>
-        </div>
       </div>
 
       <%# PC: サイドバーを右カラムに表示 %>
@@ -35,6 +30,11 @@
         <%= render 'sidebar' %>
       </div>
 
+    </div>
+
+    <%# モバイル: サイドバーをカードの外・別セクションとして表示 %>
+    <div class="lg:hidden px-4 pb-8 mt-4">
+      <%= render 'sidebar' %>
     </div>
   </div>
 </div>
