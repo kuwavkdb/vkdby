@@ -64,28 +64,25 @@
   <% today_birthdays = @birthday_people.select { |p| p.birthday&.month == Date.current.month && p.birthday&.day == Date.current.day } %>
   <% tomorrow_birthdays = @birthday_people.select { |p| p.birthday&.month == (Date.current + 1).month && p.birthday&.day == (Date.current + 1).day } %>
 
-  <% if today_birthdays.any? || tomorrow_birthdays.any? %>
+  <% [today_birthdays, tomorrow_birthdays].each_with_index do |group, i| %>
+    <% next unless group.any? %>
+    <% bday = i == 0 ? Date.current : Date.current + 1 %>
     <div class="bg-white dark:bg-slate-800 shadow rounded-2xl overflow-hidden">
-      <div class="bg-slate-50 dark:bg-slate-900/30 px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+      <div class="bg-slate-50 dark:bg-slate-900/30 px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex items-baseline gap-2">
         <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Birthdays<br><span class="text-xs font-normal">誕生日</span></h2>
+        <%= link_to "(#{bday.month}/#{bday.day})",
+            birthday_date_path(month: bday.month, day: bday.day),
+            class: "text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline" %>
       </div>
       <ul class="divide-y divide-slate-100 dark:divide-slate-700">
-        <% [today_birthdays, tomorrow_birthdays].each_with_index do |group, i| %>
-          <% next unless group.any? %>
-          <% label = i == 0 ? '今日' : '明日' %>
-          <% bday = i == 0 ? Date.current : Date.current + 1 %>
-          <% group.each do |person| %>
-            <li class="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-              </svg>
-              <%= link_to person.name, profile_path(person.key),
-                  class: "flex-1 text-sm text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 truncate transition-colors" %>
-              <%= link_to "#{bday.month}/#{bday.day}",
-                  birthday_date_path(month: bday.month, day: bday.day),
-                  class: "shrink-0 text-xs text-indigo-600 dark:text-indigo-400 hover:underline" %>
-            </li>
-          <% end %>
+        <% group.each do |person| %>
+          <li class="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+            </svg>
+            <%= link_to person.name, profile_path(person.key),
+                class: "flex-1 text-sm text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 truncate transition-colors" %>
+          </li>
         <% end %>
       </ul>
     </div>
