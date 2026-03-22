@@ -1,4 +1,10 @@
 <% content_for :title, "年表 - メジャーバンド | Vkdby" %>
+<% content_for :head do %>
+<style>
+  :root { --timeline-name-col-w: 176px; }
+  @media (max-width: 639px) { :root { --timeline-name-col-w: 117px; } }
+</style>
+<% end %>
 <% content_for :main_px, "px-3 sm:px-6" %>
 <% content_for :main_max_w, "w-full" %>
 
@@ -18,14 +24,26 @@
       <h1 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">年表</h1>
       <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">メジャーデビュー・メジャーで解散したバンドの活動時期</p>
     </div>
-    <div class="flex items-center gap-1 text-sm" role="group" aria-label="表示幅の切り替え">
-      <span class="mr-1 text-zinc-500 dark:text-zinc-400 text-xs">表示幅:</span>
-      <%= link_to "標準", timeline_path(zoom: "1"),
-            class: "px-2.5 py-1 rounded border transition-colors #{@zoom == '1' ? 'bg-indigo-600 border-indigo-600 text-white font-medium' : 'border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'}",
-            aria: { current: @zoom == "1" ? "true" : nil } %>
-      <%= link_to "拡大", timeline_path(zoom: "2"),
-            class: "px-2.5 py-1 rounded border transition-colors #{@zoom == '2' ? 'bg-indigo-600 border-indigo-600 text-white font-medium' : 'border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'}",
-            aria: { current: @zoom == "2" ? "true" : nil } %>
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-1 text-sm" role="group" aria-label="表示幅の切り替え">
+        <span class="mr-1 text-zinc-500 dark:text-zinc-400 text-xs">表示幅:</span>
+        <%= link_to "標準", timeline_path(zoom: "1"),
+              class: "px-2.5 py-1 rounded border transition-colors #{@zoom == '1' ? 'bg-indigo-600 border-indigo-600 text-white font-medium' : 'border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'}",
+              aria: { current: @zoom == "1" ? "true" : nil } %>
+        <%= link_to "拡大", timeline_path(zoom: "2"),
+              class: "px-2.5 py-1 rounded border transition-colors #{@zoom == '2' ? 'bg-indigo-600 border-indigo-600 text-white font-medium' : 'border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'}",
+              aria: { current: @zoom == "2" ? "true" : nil } %>
+      </div>
+      <button type="button"
+              class="flex items-center gap-1.5 px-2.5 py-1 rounded border text-sm border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              data-action="click->timeline#share"
+              data-timeline-target="shareBtn"
+              aria-label="このページを共有">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+        </svg>
+        <span data-timeline-target="shareBtnLabel">共有</span>
+      </button>
     </div>
   </div>
 
@@ -147,7 +165,7 @@
         <!-- コーナーセル -->
         <div class="flex-shrink-0 px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-300
                     sticky left-0 z-10 bg-zinc-100 dark:bg-zinc-800 border-r border-zinc-200 dark:border-zinc-700"
-             style="width: <%= name_col_w %>px;">
+             style="width: var(--timeline-name-col-w, <%= name_col_w %>px);">
           バンド
         </div>
         <!-- 年ラベル -->
@@ -179,7 +197,7 @@
          id="timeline-rows">
       <%# flex行コンテナは親幅に縮小されるため border-b がチャート全幅まで伸びない。
           min-width を明示したラッパーで scrollWidth を固定する。 %>
-      <div id="timeline-rows-inner" style="min-width: <%= name_col_w + chart_width %>px;">
+      <div id="timeline-rows-inner" style="min-width: calc(var(--timeline-name-col-w, <%= name_col_w %>px) + <%= chart_width %>px);">
         <%= render TimelineRowComponent.with_collection(@units, year_min: @year_min, year_max: @year_max, trend_markers: @trend_markers, year_px: @year_px) %>
       </div>
     </div>

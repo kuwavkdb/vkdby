@@ -9,7 +9,7 @@ class YearlyController < ApplicationController
 
   def show
     @year = parse_year_param
-    return redirect_to root_path, alert: '年の形式が正しくありません' unless @year
+    return render_not_found unless @year
 
     @monthly_trend_counts = calculate_monthly_trend_counts(@year)
     @month_unknown_trends = fetch_month_unknown_trends(@year)
@@ -20,7 +20,7 @@ class YearlyController < ApplicationController
 
   def parse_year_param
     year = params[:year].to_i
-    return nil if year <= 0 || year > 9999
+    return nil unless valid_year?(year)
 
     year
   rescue ArgumentError

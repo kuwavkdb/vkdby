@@ -5,6 +5,7 @@ module Admin
     before_action :set_custom_page, only: %i[edit update destroy undiscard]
     before_action :require_super_operator, only: %i[destroy undiscard]
     before_action :deny_if_protected, only: %i[destroy]
+    before_action :deny_if_self_blocking, only: %i[create update]
 
     def index
       @q = params[:q]
@@ -64,6 +65,30 @@ module Admin
       return unless @custom_page.protected?
 
       redirect_to admin_custom_pages_path, alert: "「#{@custom_page.key}」は削除できません。"
+    end
+
+    def deny_if_self_blocking
+      params_key = custom_page_params[:key].presence || @custom_page&.key
+      return unless params_key == Middleware::IpBlocker::CUSTOM_PAGE_KEY
+
+      body = custom_page_params[:body].to_s
+      ips = body.lines.filter_map do |line|
+        line = line.strip
+        next if line.empty? || line.match?(/\A~~.+~~\z/)
+
+        line
+      end
+
+      return unless ips.include?(request.ip)
+
+      alert_msg = "自分自身のIPアドレス（#{request.ip}）がブロック対象に含まれています。保存するとアクセスできなくなります。取り消し線（~~#{request.ip}~~）を付けるか、行を削除してください。"
+      if @custom_page
+        redirect_to edit_admin_custom_page_path(@custom_page), alert: alert_msg
+      else
+        @custom_page = CustomPage.new(custom_page_params)
+        flash.now[:alert] = alert_msg
+        render :new, status: :unprocessable_entity
+      end
     end
 
     def custom_page_params

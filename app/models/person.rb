@@ -74,6 +74,7 @@ class Person < ApplicationRecord
 
   validate :key_immutable, on: :update
   after_create :auto_link_unit_people
+  after_commit :expire_sidebar_cache
 
   def name
     CGI.unescapeHTML(super.to_s).presence
@@ -165,5 +166,9 @@ class Person < ApplicationRecord
     return if key.blank?
 
     UnitPerson.where(person_key: key, person_id: nil).update_all(person_id: id)
+  end
+
+  def expire_sidebar_cache
+    Rails.cache.delete('sidebar/recently_updated')
   end
 end

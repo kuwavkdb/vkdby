@@ -6,7 +6,7 @@
               sticky left-0 z-10 bg-zinc-50 dark:bg-zinc-950
               group-hover:bg-zinc-100 dark:group-hover:bg-zinc-900
               border-r border-zinc-200 dark:border-zinc-700 transition-colors"
-       style="width: <%= TimelineRowComponent::NAME_COL_W %>px;">
+       style="width: var(--timeline-name-col-w, <%= TimelineRowComponent::NAME_COL_W %>px);">
     <%= link_to @unit.name, profile_path(@unit.key),
           class: "text-sm font-semibold text-indigo-600 dark:text-indigo-200 hover:underline truncate block w-full",
           title: @unit.name %>

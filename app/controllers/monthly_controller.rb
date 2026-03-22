@@ -2,6 +2,8 @@
 
 class MonthlyController < ApplicationController
   def show
+    return render_not_found unless valid_year?(params[:year].to_i)
+
     @date = parse_date_params
     return redirect_to root_path, alert: '日付の形式が正しくありません' unless @date
 
