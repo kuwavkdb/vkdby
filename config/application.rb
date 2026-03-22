@@ -26,6 +26,10 @@ module Vkdby
     require_relative '../lib/middleware/euc_jp_url_fixer'
     config.middleware.insert_before 0, Middleware::EucJpUrlFixer
 
+    # Insert IP blocker middleware (runs after EucJpUrlFixer)
+    require_relative '../lib/middleware/ip_blocker'
+    config.middleware.insert_after Middleware::EucJpUrlFixer, Middleware::IpBlocker
+
     # Set default locale to Japanese
     config.i18n.default_locale = :ja
 
