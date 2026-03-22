@@ -4,6 +4,8 @@ class DailyController < ApplicationController
   def show
     @year_agnostic = params[:year].nil?
 
+    return render_not_found if !@year_agnostic && !valid_year?(params[:year].to_i)
+
     @date = parse_date_params
     return redirect_to root_path, alert: '日付の形式が正しくありません' unless @date
 

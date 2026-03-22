@@ -32,4 +32,12 @@ class ApplicationController < ActionController::Base
 
     redirect_to login_path, alert: 'ログインしてください'
   end
+
+  def valid_year?(year)
+    year >= 1970 && year <= Date.today.year + 10
+  end
+
+  def render_not_found
+    render file: Rails.root.join('public/404.html'), status: :not_found, layout: false
+  end
 end
