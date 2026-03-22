@@ -80,7 +80,7 @@ class IpBlockerTest < ActiveSupport::TestCase
 
   private
 
-  def custom_pages(name)
+  def custom_pages(_name)
     CustomPage.find_or_create_by!(key: 'blocking_ip_address') do |p|
       p.title = 'IP Blocker'
       p.active = false
