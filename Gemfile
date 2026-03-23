@@ -82,6 +82,7 @@ end
 
 gem 'redis', '>= 4.0.1'
 
+gem 'rack-attack'
 gem 'discard', '~> 1.4'
 gem 'romaji', '~> 0.3.0'
 
