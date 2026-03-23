@@ -223,6 +223,7 @@ export default class extends Controller {
   }
 
   clearAll() {
+    if (!confirm("追加したバンドをすべて削除しますか？")) return
     const rows = document.getElementById("timeline-rows-inner") || document.getElementById("timeline-rows")
     if (rows) {
       Array.from(rows.querySelectorAll("[data-row-type='added']")).forEach(r => r.remove())
