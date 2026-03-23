@@ -32,6 +32,8 @@ export default class extends Controller {
     this._updateToggleAllBtn()
     this._initStickyLegend()
     this._initRowObserver()
+    const initialZoom = this.hasWidgetTarget ? (this.widgetTarget.dataset.zoom || "1") : "1"
+    this._applyZoom(initialZoom, false)
     this._onPopState = (e) => {
       const zoom = e.state?.zoom || new URLSearchParams(location.search).get("zoom") || "1"
       this._applyZoom(zoom, false)
