@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["input", "suggestions", "modeBtn"]
+  static targets = ["input", "suggestions", "modeBtn", "clearBtn"]
 
   static STORAGE_KEY = "timeline_added_bands"
   static HTML_CACHE_PREFIX = "timeline_unit_html_v6_"
@@ -213,6 +213,24 @@ export default class extends Controller {
 
   _saveToStorage() {
     localStorage.setItem(this.constructor.STORAGE_KEY, JSON.stringify([...this.addedKeys]))
+    this._updateClearBtn()
+  }
+
+  _updateClearBtn() {
+    if (this.hasClearBtnTarget) {
+      this.clearBtnTarget.classList.toggle("hidden", this.addedKeys.size === 0)
+    }
+  }
+
+  clearAll() {
+    const rows = document.getElementById("timeline-rows-inner") || document.getElementById("timeline-rows")
+    if (rows) {
+      Array.from(rows.querySelectorAll("[data-row-type='added']")).forEach(r => r.remove())
+    }
+    const prefix = this._cacheKeyPrefix
+    this.addedKeys.forEach(key => sessionStorage.removeItem(prefix + "_" + key))
+    this.addedKeys.clear()
+    this._saveToStorage()
   }
 
   // キャッシュから HTML を取得。data-start-year がなければ無効とみなしキャッシュ削除
@@ -317,6 +335,7 @@ export default class extends Controller {
     } catch (e) {
       console.error("timeline-search _restoreKeys error:", e)
     }
+    this._updateClearBtn()
   }
 
   _restoreFromStorage() {
