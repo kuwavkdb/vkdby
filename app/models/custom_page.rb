@@ -32,6 +32,7 @@ class CustomPage < ApplicationRecord
   scope :published, -> { kept.where(active: true) }
 
   after_commit :expire_sidebar_cache
+  after_commit :expire_blocked_ips_cache, if: -> { key == Middleware::IpBlocker::CUSTOM_PAGE_KEY }
 
   def protected?
     PROTECTED_KEYS.include?(key)
@@ -41,5 +42,9 @@ class CustomPage < ApplicationRecord
 
   def expire_sidebar_cache
     Rails.cache.delete('sidebar/recently_updated')
+  end
+
+  def expire_blocked_ips_cache
+    Rails.cache.delete(Middleware::IpBlocker::CACHE_KEY)
   end
 end
