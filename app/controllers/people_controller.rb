@@ -23,7 +23,7 @@ class PeopleController < ApplicationController
     quoted_exact = conn.quote(q)
     quoted_prefix = conn.quote("#{q}%")
     people = Person.kept
-                   .where('name ILIKE :q OR name_kana ILIKE :q', q: "%#{q}%")
+                   .where('name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q', q: "%#{q}%")
                    .order(Arel.sql(<<~SQL.squish))
                      CASE
                        WHEN name = #{quoted_exact} OR name_kana = #{quoted_exact} THEN 0
