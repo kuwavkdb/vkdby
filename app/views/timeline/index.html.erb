@@ -177,7 +177,7 @@
           <% @year_range.each_with_index do |year, i| %>
             <% is_decade = year % 10 == 0 %>
             <% is_major  = year % 5 == 0 %>
-            <% color_cls = is_decade ? 'text-zinc-700 dark:text-zinc-200 font-medium' : 'text-zinc-500 dark:text-zinc-400' %>
+            <% color_cls = is_decade ? 'text-zinc-700 dark:text-zinc-200 font-bold' : 'text-zinc-500 dark:text-zinc-400' %>
             <span class="absolute text-xs whitespace-nowrap <%= color_cls %> <%= is_major ? '' : 'timeline-year-label-minor hidden' %>"
                   style="left: calc(var(--year-px) * <%= i %>); top: 2px; transform: translateX(-50%);"
                   <% unless is_major %>aria-hidden="true"<% end %>>
