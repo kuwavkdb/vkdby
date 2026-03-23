@@ -315,7 +315,10 @@ export default class extends Controller {
       }
     }
 
-    if (!uncached.length) return
+    if (!uncached.length) {
+      this._updateClearBtn()
+      return
+    }
 
     // 未キャッシュ分を1リクエストでバッチ取得
     try {
