@@ -3,13 +3,11 @@
 module Middleware
   class IpBlocker
     CUSTOM_PAGE_KEY = 'blocking_ip_address'
-    CACHE_TTL = 5 * 60 # 5 minutes in seconds
+    CACHE_KEY = 'middleware/blocked_ips'
+    CACHE_TTL = 5.minutes
 
     def initialize(app)
       @app = app
-      @mutex = Mutex.new
-      @blocked_ips = nil
-      @cached_at = nil
     end
 
     def call(env)
@@ -28,13 +26,7 @@ module Middleware
     end
 
     def load_blocked_ips
-      @mutex.synchronize do
-        if @cached_at.nil? || (Time.now.to_i - @cached_at) > CACHE_TTL
-          @blocked_ips = fetch_blocked_ips
-          @cached_at = Time.now.to_i
-        end
-        @blocked_ips
-      end
+      Rails.cache.fetch(CACHE_KEY, expires_in: CACHE_TTL) { fetch_blocked_ips }
     end
 
     def fetch_blocked_ips

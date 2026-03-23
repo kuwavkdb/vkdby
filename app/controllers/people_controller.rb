@@ -13,7 +13,7 @@ class PeopleController < ApplicationController
   end
 
   def search
-    q = params[:q].to_s.strip
+    q = params[:q].to_s.strip.first(100)
     if q.length < 2
       render json: []
       return
