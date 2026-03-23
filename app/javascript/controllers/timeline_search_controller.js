@@ -4,7 +4,6 @@ export default class extends Controller {
   static targets = ["input", "suggestions"]
 
   static STORAGE_KEY = "timeline_added_bands"
-  static HTML_CACHE_PREFIX = "timeline_unit_html_v5_"
 
   connect() {
     this.debounceTimer = null
@@ -106,47 +105,23 @@ export default class extends Controller {
     this.suggestionsTarget.classList.remove("hidden")
   }
 
-  get _cacheVersion() {
-    try {
-      const params = new URL(this.inputTarget.dataset.unitUrl, window.location.origin).searchParams
-      return `${params.get("zoom") || "1"}_${params.get("ym") || ""}`
-    } catch {
-      return "1"
-    }
-  }
-
   async addUnit(key, name, { scroll = true } = {}) {
     this.hideSuggestions()
     this.inputTarget.value = ""
     const unitUrl = this.inputTarget.dataset.unitUrl
     try {
-      const cacheKey = this.constructor.HTML_CACHE_PREFIX + this._cacheVersion + "_" + key
-      const fetchHtml = async () => {
+      let html
+      try {
         const url = new URL(unitUrl, window.location.origin)
         url.searchParams.set("key", key)
         const res = await fetch(url.toString(), {
           headers: { "Accept": "text/html" }
         })
         if (!res.ok) throw new Error(`fetch failed: ${res.status}`)
-        return res.text()
-      }
-      let html = sessionStorage.getItem(cacheKey)
-      if (html) {
-        const probe = document.createElement("div")
-        probe.innerHTML = html.trim()
-        if (!probe.firstElementChild?.dataset.startYear) {
-          sessionStorage.removeItem(cacheKey)
-          html = null
-        }
-      }
-      if (!html) {
-        try {
-          html = await fetchHtml()
-          sessionStorage.setItem(cacheKey, html)
-        } catch {
-          alert(`「${name}」の追加に失敗しました`)
-          return
-        }
+        html = await res.text()
+      } catch {
+        alert(`「${name}」の追加に失敗しました`)
+        return
       }
       const rows = document.getElementById("timeline-rows-inner") || document.getElementById("timeline-rows")
       if (!rows) return
@@ -190,7 +165,6 @@ export default class extends Controller {
         btn.addEventListener("click", () => {
           this.addedKeys.delete(key)
           this._saveToStorage()
-          sessionStorage.removeItem(this.constructor.HTML_CACHE_PREFIX + key)
           row.remove()
         })
         nameCell.appendChild(btn)
