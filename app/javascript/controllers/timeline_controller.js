@@ -112,7 +112,6 @@ export default class extends Controller {
     const yearPx = this.constructor.ZOOM_YEAR_PX[zoom] || "24px"
 
     widget.style.setProperty("--year-px", yearPx)
-    widget.style.setProperty("--year-grid-fine-alpha", zoom === "2" ? "0.15" : "0")
     widget.dataset.zoom = zoom
 
     widget.querySelectorAll(".timeline-year-label-minor").forEach(el => {
