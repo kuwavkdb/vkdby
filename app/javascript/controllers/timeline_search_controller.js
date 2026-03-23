@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["input", "suggestions"]
+  static targets = ["input", "suggestions", "modeBtn", "clearBtn"]
 
   static STORAGE_KEY = "timeline_added_bands"
   static HTML_CACHE_PREFIX = "timeline_unit_html_v6_"
@@ -10,6 +10,7 @@ export default class extends Controller {
     this.debounceTimer = null
     this.addedKeys = new Set()
     this.selectedIndex = -1
+    this.mode = "band"
     this.handleClickOutside = this._onClickOutside.bind(this)
     document.addEventListener("click", this.handleClickOutside)
 
@@ -65,29 +66,48 @@ export default class extends Controller {
     }
   }
 
+  setMode(event) {
+    const btn = event.currentTarget
+    this.mode = btn.dataset.mode
+    this.inputTarget.value = ""
+    this.hideSuggestions()
+    this.inputTarget.placeholder = this.mode === "person" ? "人物を検索..." : "バンドを追加..."
+    this.modeBtnTargets.forEach(b => {
+      const active = b.dataset.mode === this.mode
+      b.classList.toggle("bg-indigo-600", active)
+      b.classList.toggle("text-white", active)
+      b.classList.toggle("font-medium", active)
+      b.classList.toggle("text-zinc-600", !active)
+      b.classList.toggle("dark:text-zinc-400", !active)
+      b.setAttribute("aria-pressed", active ? "true" : "false")
+    })
+  }
+
   async fetchSuggestions(q) {
-    const searchUrl = this.inputTarget.dataset.searchUrl
+    const searchUrl = this.mode === "person"
+      ? this.inputTarget.dataset.personSearchUrl
+      : this.inputTarget.dataset.searchUrl
     try {
       const res = await fetch(`${searchUrl}?q=${encodeURIComponent(q)}`, {
         headers: { "Accept": "application/json" }
       })
       if (!res.ok) return
-      const units = await res.json()
-      this.renderSuggestions(units)
+      const results = await res.json()
+      this.renderSuggestions(results)
     } catch (e) {
       console.error("timeline-search fetchSuggestions error:", e)
     }
   }
 
-  renderSuggestions(units) {
+  renderSuggestions(results) {
     this.selectedIndex = -1
-    if (!units.length) {
+    if (!results.length) {
       this.hideSuggestions()
       return
     }
 
-    this.suggestionsTarget.innerHTML = units.map(u => {
-      const already = this.addedKeys.has(u.key)
+    this.suggestionsTarget.innerHTML = results.map(u => {
+      const already = this.mode === "band" && this.addedKeys.has(u.key)
       const cls = already ? "opacity-50 cursor-default" : "cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700"
       const badge = already ? `<span class="text-xs text-zinc-400 whitespace-nowrap">追加済み</span>` : ""
       return `<li data-key="${this.esc(u.key)}" class="px-3 py-2 flex items-center justify-between gap-2 ${cls}">
@@ -96,14 +116,38 @@ export default class extends Controller {
     }).join("")
 
     this.suggestionsTarget.querySelectorAll("li[data-key]").forEach(li => {
-      if (!this.addedKeys.has(li.dataset.key)) {
+      if (this.mode === "person" || !this.addedKeys.has(li.dataset.key)) {
         li.addEventListener("click", () => {
           const name = li.querySelector("span").textContent.trim()
-          this.addUnit(li.dataset.key, name)
+          if (this.mode === "person") {
+            this.addPersonUnits(li.dataset.key, name)
+          } else {
+            this.addUnit(li.dataset.key, name)
+          }
         })
       }
     })
     this.suggestionsTarget.classList.remove("hidden")
+  }
+
+  async addPersonUnits(personKey, personName) {
+    this.hideSuggestions()
+    this.inputTarget.value = ""
+    try {
+      const baseUrl = this.inputTarget.dataset.personUnitsBaseUrl
+      const res = await fetch(`${baseUrl}/${encodeURIComponent(personKey)}/units`, {
+        headers: { "Accept": "application/json" }
+      })
+      if (!res.ok) throw new Error(`fetch failed: ${res.status}`)
+      const { unit_keys } = await res.json()
+      const newKeys = unit_keys.filter(k => !this.addedKeys.has(k))
+      if (!newKeys.length) return
+      await this._restoreKeys(newKeys)
+      this._saveToStorage()
+    } catch (e) {
+      console.error("timeline-search addPersonUnits error:", e)
+      alert(`「${personName}」の関連バンドの追加に失敗しました`)
+    }
   }
 
   get _cacheKeyPrefix() {
@@ -169,6 +213,25 @@ export default class extends Controller {
 
   _saveToStorage() {
     localStorage.setItem(this.constructor.STORAGE_KEY, JSON.stringify([...this.addedKeys]))
+    this._updateClearBtn()
+  }
+
+  _updateClearBtn() {
+    if (this.hasClearBtnTarget) {
+      this.clearBtnTarget.classList.toggle("hidden", this.addedKeys.size === 0)
+    }
+  }
+
+  clearAll() {
+    if (!confirm("追加したバンドをすべて削除しますか？")) return
+    const rows = document.getElementById("timeline-rows-inner") || document.getElementById("timeline-rows")
+    if (rows) {
+      Array.from(rows.querySelectorAll("[data-row-type='added']")).forEach(r => r.remove())
+    }
+    const prefix = this._cacheKeyPrefix
+    this.addedKeys.forEach(key => sessionStorage.removeItem(prefix + "_" + key))
+    this.addedKeys.clear()
+    this._saveToStorage()
   }
 
   // キャッシュから HTML を取得。data-start-year がなければ無効とみなしキャッシュ削除
@@ -253,7 +316,10 @@ export default class extends Controller {
       }
     }
 
-    if (!uncached.length) return
+    if (!uncached.length) {
+      this._updateClearBtn()
+      return
+    }
 
     // 未キャッシュ分を1リクエストでバッチ取得
     try {
@@ -273,6 +339,7 @@ export default class extends Controller {
     } catch (e) {
       console.error("timeline-search _restoreKeys error:", e)
     }
+    this._updateClearBtn()
   }
 
   _restoreFromStorage() {
