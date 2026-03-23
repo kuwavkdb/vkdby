@@ -14,13 +14,13 @@
   <!-- ガントバー + Trendマーカー -->
   <div class="relative flex-shrink-0 bg-white dark:bg-zinc-950
               group-hover:bg-zinc-50 dark:group-hover:bg-zinc-900 transition-colors"
-       style="width: <%= chart_width %>px; height: 36px; <%= row_grid_style %>">
+       style="width: calc(var(--year-px) * <%= chart_width_factor %>); height: 36px; <%= row_grid_style %>">
     <%# 活動期間バー %>
     <% @unit.activity_periods.each do |period| %>
       <% dims = bar_dimensions(period) %>
       <% next unless dims %>
       <div class="absolute rounded transition-opacity"
-           style="background-color: <%= bar_color %>; left: <%= dims[:left] %>px; width: <%= dims[:width] %>px; top: 10px; height: 16px; opacity: 0.85;"
+           style="background-color: <%= bar_color %>; left: calc(var(--year-px) * <%= dims[:left] %>); width: calc(var(--year-px) * <%= dims[:width] %>); top: 10px; height: 16px; opacity: 0.85;"
            data-tooltip="<%= @unit.name %>&#10;<%= period.from %> 〜 <%= period.to.presence || '現在' %><%= period.label.present? ? " (#{period.label})" : "" %>"
            data-action="mouseenter->timeline#show mousemove->timeline#move mouseleave->timeline#hide"
            role="img"
@@ -35,7 +35,7 @@
       <%= link_to trend_path(marker[:id]),
             class: "absolute flex justify-center #{is_debut ? 'items-start' : 'items-center'}",
             "data-marker-type": marker[:phenomenon],
-            style: "left: #{marker_x(marker)}px; top: 0; width: 12px; height: 36px; transform: translateX(-50%); z-index: 1; cursor: pointer;",
+            style: "left: calc(var(--year-px) * #{marker_x_factor(marker)}); top: 0; width: 12px; height: 36px; transform: translateX(-50%); z-index: 1; cursor: pointer;",
             "data-tooltip": "#{@unit.name}\n#{marker[:title]}（#{marker[:date]}）",
             "data-action": "mouseenter->timeline#show mousemove->timeline#move mouseleave->timeline#hide",
             role: "link",

@@ -92,7 +92,7 @@ class TimelineController < ApplicationController
 
   def unit
     cached = Rails.cache.read(CACHE_KEY)
-    year_min = cached&.dig(:year_min) || Time.current.year
+    year_min = params[:ym].to_i.positive? ? params[:ym].to_i : (cached&.dig(:year_min) || Time.current.year)
     year_max = cached&.dig(:year_max) || Time.current.year
 
     unit = Unit.kept.find_by(key: params[:key])
@@ -113,10 +113,9 @@ class TimelineController < ApplicationController
       end
     end
 
-    year_px = VALID_ZOOMS.fetch(params[:zoom].to_s, DEFAULT_YEAR_PX)
     component = TimelineRowComponent.new(
       unit: unit, year_min: year_min, year_max: year_max,
-      trend_markers: { unit.id => markers }, year_px: year_px
+      trend_markers: { unit.id => markers }
     )
     render component, layout: false
   end

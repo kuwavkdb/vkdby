@@ -3,8 +3,7 @@
 class TimelineRowComponent < ViewComponent::Base
   with_collection_parameter :unit
 
-  DEFAULT_YEAR_PX = 24
-  NAME_COL_W      = 176
+  NAME_COL_W = 176
 
   PHENOMENON_COLORS = {
     'announcement' => '#e879f9',
@@ -23,30 +22,31 @@ class TimelineRowComponent < ViewComponent::Base
     'other' => '#71717a'
   }.freeze
 
-  def initialize(unit:, year_min:, year_max:, trend_markers:, year_px: DEFAULT_YEAR_PX)
+  def initialize(unit:, year_min:, year_max:, trend_markers:)
     super()
     @unit          = unit
     @year_min      = year_min
     @year_max      = year_max
     @trend_markers = trend_markers
-    @year_px       = year_px
   end
 
-  def chart_width      = (@year_max - @year_min + 1) * @year_px
-  def grid_span        = @year_px * 5
-  def five_year_offset = (5 - @year_min % 5) % 5 * @year_px
+  # バー領域の幅係数（年数）
+  def chart_width_factor = @year_max - @year_min + 1
 
+  # 最初の5年グリッドまでのオフセット係数（年数）
+  def five_year_offset_factor = (5 - @year_min % 5) % 5
+
+  # グリッド背景: CSS変数 --year-px に依存、1年グリッドは --year-grid-fine-alpha で制御
   def row_grid_style
-    five_year = "repeating-linear-gradient(to right, transparent, transparent #{grid_span - 2}px, " \
-                "rgba(113,113,122,0.35) #{grid_span - 2}px, rgba(113,113,122,0.35) #{grid_span}px)"
-
-    return "background-image: #{five_year}; background-size: #{grid_span}px 100%; background-position: #{five_year_offset}px 0;" unless @year_px > 24
-
-    one_year = "repeating-linear-gradient(to right, transparent, transparent #{@year_px - 1}px, " \
-               "rgba(113,113,122,0.15) #{@year_px - 1}px, rgba(113,113,122,0.15) #{@year_px}px)"
+    offset    = five_year_offset_factor
+    five_year = 'repeating-linear-gradient(to right, transparent, transparent calc(var(--year-px) * 5 - 2px), ' \
+                'rgba(113,113,122,0.35) calc(var(--year-px) * 5 - 2px), rgba(113,113,122,0.35) calc(var(--year-px) * 5))'
+    one_year  = 'repeating-linear-gradient(to right, transparent, transparent calc(var(--year-px) - 1px), ' \
+                'rgba(113,113,122,var(--year-grid-fine-alpha,0)) calc(var(--year-px) - 1px), ' \
+                'rgba(113,113,122,var(--year-grid-fine-alpha,0)) var(--year-px))'
     "background-image: #{five_year}, #{one_year}; " \
-    "background-size: #{grid_span}px 100%, #{@year_px}px 100%; " \
-    "background-position: #{five_year_offset}px 0, 0 0;"
+    'background-size: calc(var(--year-px) * 5) 100%, var(--year-px) 100%; ' \
+    "background-position: calc(var(--year-px) * #{offset}) 0, 0 0;"
   end
 
   def bar_color = '#3b82f6'
@@ -71,16 +71,18 @@ class TimelineRowComponent < ViewComponent::Base
     marker[:phenomenon].to_s == 'major_debut'
   end
 
-  def bar_left(from_year, from_month = 1)
+  # バー左端の係数（年数単位、year_px を乗じると px になる）
+  def bar_left_factor(from_year, from_month = 1)
     months_from_start = (from_year - @year_min) * 12 + (from_month - 1)
-    (months_from_start * @year_px / 12.0).round(2)
+    (months_from_start / 12.0).round(4)
   end
 
-  def bar_width(from_year, from_month, to_year, to_month)
+  # バー幅の係数（年数単位）
+  def bar_width_factor(from_year, from_month, to_year, to_month)
     start_months = (from_year - @year_min) * 12 + (from_month - 1)
     end_months   = (to_year   - @year_min) * 12 + to_month
-    width = (end_months - start_months) * @year_px / 12.0
-    [width, @year_px / 2.0].max.round(2)
+    factor = (end_months - start_months) / 12.0
+    [factor, 0.5].max.round(4)
   end
 
   def bar_dimensions(period)
@@ -97,12 +99,12 @@ class TimelineRowComponent < ViewComponent::Base
     to_month    = 12 if to_year_c < to_year
     return nil if from_year_c > to_year_c
 
-    { left: bar_left(from_year_c, from_month), width: bar_width(from_year_c, from_month, to_year_c, to_month) }
+    { left: bar_left_factor(from_year_c, from_month), width: bar_width_factor(from_year_c, from_month, to_year_c, to_month) }
   end
 
-  def marker_x(marker)
-    (@year_min.zero? ? 0 : (marker[:year] - @year_min)) * @year_px +
-      ((marker[:month] || 1) - 1) * @year_px / 12
+  # マーカー位置の係数（年数単位）
+  def marker_x_factor(marker)
+    ((marker[:year] - @year_min) + ((marker[:month] || 1) - 1) / 12.0).round(4)
   end
 
   def clamp_year(year, min, max) = [[year, min].max, max].min
