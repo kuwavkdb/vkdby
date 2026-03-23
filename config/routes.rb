@@ -103,7 +103,14 @@ Rails.application.routes.draw do
   get '/index/:index_group', to: 'indices#index', as: :indices_group
   get '/index/show/:id', to: 'indices#show', as: :index_show
 
-  resources :people, param: :key, only: %i[index show], constraints: { key: %r{[^/]+} }
+  resources :people, param: :key, only: %i[index show], constraints: { key: %r{[^/]+} } do
+    collection do
+      get :search
+    end
+    member do
+      get :units
+    end
+  end
   resources :units, param: :key, only: %i[index show], constraints: { key: %r{[^/]+} } do
     collection do
       get :search
@@ -137,7 +144,8 @@ Rails.application.routes.draw do
 
   # Timeline
   get 'timeline', to: 'timeline#index'
-  get 'timeline/unit', to: 'timeline#unit'
+  get 'timeline/unit',  to: 'timeline#unit'
+  get 'timeline/units', to: 'timeline#units'
 
   # Cross-search
   get 'search', to: 'search#index'

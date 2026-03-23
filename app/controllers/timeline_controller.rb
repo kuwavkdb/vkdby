@@ -92,7 +92,7 @@ class TimelineController < ApplicationController
 
   def unit
     cached = Rails.cache.read(CACHE_KEY)
-    year_min = cached&.dig(:year_min) || Time.current.year
+    year_min = params[:ym].to_i.positive? ? params[:ym].to_i : (cached&.dig(:year_min) || Time.current.year)
     year_max = cached&.dig(:year_max) || Time.current.year
 
     unit = Unit.kept.find_by(key: params[:key])
@@ -113,15 +113,64 @@ class TimelineController < ApplicationController
       end
     end
 
-    year_px = VALID_ZOOMS.fetch(params[:zoom].to_s, DEFAULT_YEAR_PX)
     component = TimelineRowComponent.new(
       unit: unit, year_min: year_min, year_max: year_max,
-      trend_markers: { unit.id => markers }, year_px: year_px
+      trend_markers: { unit.id => markers }
     )
     render component, layout: false
   end
 
+  def units
+    keys = Array(params[:keys]).first(20)
+    return render json: {} if keys.empty?
+
+    cached = Rails.cache.read(CACHE_KEY)
+    year_min = params[:ym].to_i.positive? ? params[:ym].to_i : (cached&.dig(:year_min) || Time.current.year)
+    year_max = cached&.dig(:year_max) || Time.current.year
+
+    units = Unit.kept.where(key: keys)
+    return render json: {} if units.empty?
+
+    trend_markers = fetch_trend_markers(units.map(&:id))
+
+    result = {}
+    units.each do |u|
+      component = TimelineRowComponent.new(
+        unit: u, year_min: year_min, year_max: year_max,
+        trend_markers: { u.id => trend_markers[u.id] || [] }
+      )
+      result[u.key] = render_to_string(component, layout: false)
+    end
+
+    render json: result
+  end
+
   private
+
+  def fetch_trend_markers(unit_ids)
+    unit_id_set = unit_ids.to_set
+    markers = {}
+    Trend
+      .where(active: true)
+      .where.not(unit_phenomenon: nil)
+      .where(
+        'units @> ANY(ARRAY[?]::jsonb[])',
+        unit_ids.map { |uid| [{ unit_id: uid }].to_json }
+      )
+      .select(:id, :date, :title, :units, :unit_phenomenon)
+      .each do |trend|
+        (trend.units || []).each do |u|
+          uid = u['unit_id'].to_i
+          next unless unit_id_set.include?(uid)
+
+          (markers[uid] ||= []) << {
+            id: trend.id, year: trend.date.year, month: trend.date.month, date: trend.date.to_s,
+            title: strip_wiki_links(trend.title), phenomenon: trend.unit_phenomenon
+          }
+        end
+      end
+    markers
+  end
 
   # Wiki記法リンクをラベルテキストに置換 [[A|B]]→A, [A|B]→A, [[A]]→A
   def strip_wiki_links(str)

@@ -1,9 +1,10 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["header", "body", "tooltip", "legendContainer", "markerLegend", "toggleAllMarkersBtn", "shareBtn", "shareBtnLabel"]
+  static targets = ["header", "body", "tooltip", "legendContainer", "markerLegend", "toggleAllMarkersBtn", "shareBtn", "shareBtnLabel", "widget", "zoomBtn"]
 
   static LEGEND_STORAGE_KEY = "timeline_hidden_types"
+  static ZOOM_YEAR_PX = { "1": "24px", "2": "48px" }
 
   // major_debut 以外はデフォルト非表示（初回訪問時のみ適用）
   static DEFAULT_HIDDEN_PHENOMENA = [
@@ -31,11 +32,19 @@ export default class extends Controller {
     this._updateToggleAllBtn()
     this._initStickyLegend()
     this._initRowObserver()
+    const initialZoom = this.hasWidgetTarget ? (this.widgetTarget.dataset.zoom || "1") : "1"
+    this._applyZoom(initialZoom, false)
+    this._onPopState = (e) => {
+      const zoom = e.state?.zoom || new URLSearchParams(location.search).get("zoom") || "1"
+      this._applyZoom(zoom, false)
+    }
+    window.addEventListener("popstate", this._onPopState)
   }
 
   disconnect() {
     this._legendObserver?.disconnect()
     this._rowObserver?.disconnect()
+    window.removeEventListener("popstate", this._onPopState)
   }
 
   toggleType(event) {
@@ -91,6 +100,50 @@ export default class extends Controller {
     this._updateToggleAllBtn()
     this._fromUrl = false
     localStorage.setItem(this.constructor.LEGEND_STORAGE_KEY, JSON.stringify([...this.hiddenTypes]))
+  }
+
+  setZoom(event) {
+    this._applyZoom(event.currentTarget.dataset.zoomValue, true)
+  }
+
+  _applyZoom(zoom, pushState) {
+    if (!this.hasWidgetTarget) return
+    const widget = this.widgetTarget
+    const yearPx = this.constructor.ZOOM_YEAR_PX[zoom] || "24px"
+
+    widget.style.setProperty("--year-px", yearPx)
+    widget.dataset.zoom = zoom
+
+    widget.querySelectorAll(".timeline-year-label-minor").forEach(el => {
+      el.classList.toggle("hidden", zoom !== "2")
+      el.toggleAttribute("aria-hidden", zoom !== "2")
+    })
+
+    if (this.hasZoomBtnTarget) {
+      this.zoomBtnTargets.forEach(btn => {
+        const active = btn.dataset.zoomValue === zoom
+        btn.classList.toggle("bg-indigo-600", active)
+        btn.classList.toggle("border-indigo-600", active)
+        btn.classList.toggle("text-white", active)
+        btn.classList.toggle("font-medium", active)
+        btn.classList.toggle("border-zinc-300", !active)
+        btn.classList.toggle("dark:border-zinc-600", !active)
+        btn.classList.toggle("text-zinc-600", !active)
+        btn.classList.toggle("dark:text-zinc-400", !active)
+        btn.setAttribute("aria-current", active ? "true" : "false")
+      })
+    }
+
+    if (pushState) {
+      const params = new URLSearchParams(location.search)
+      if (zoom === "1") {
+        params.delete("zoom")
+      } else {
+        params.set("zoom", zoom)
+      }
+      const qs = params.toString()
+      history.pushState({ zoom }, "", `${location.pathname}${qs ? "?" + qs : ""}`)
+    }
   }
 
   async share() {

@@ -23,13 +23,23 @@ class UnitsController < ApplicationController
   end
 
   def search
-    q = params[:q].to_s.strip
+    q = params[:q].to_s.strip.first(100)
     if q.length < 2
       render json: []
       return
     end
 
+    conn = ActiveRecord::Base.connection
+    quoted_exact = conn.quote(q)
+    quoted_prefix = conn.quote("#{q}%")
     units = Unit.kept.where('name ILIKE :q OR name_kana ILIKE :q', q: "%#{q}%")
+                .order(Arel.sql(<<~SQL.squish))
+                  CASE
+                    WHEN name = #{quoted_exact} OR name_kana = #{quoted_exact} THEN 0
+                    WHEN name ILIKE #{quoted_prefix} OR name_kana ILIKE #{quoted_prefix} THEN 1
+                    ELSE 2
+                  END
+                SQL
                 .order(name_kana: :asc)
                 .limit(10)
                 .pluck(:name, :name_kana, :key)

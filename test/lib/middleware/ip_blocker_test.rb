@@ -14,7 +14,7 @@ class IpBlockerTest < ActiveSupport::TestCase
     page.update!(body: "192.168.1.100\n10.0.0.1\n")
 
     # キャッシュをクリア
-    @middleware.instance_variable_set(:@cached_at, nil)
+    Rails.cache.delete(Middleware::IpBlocker::CACHE_KEY)
 
     env = { 'REMOTE_ADDR' => '192.168.1.100', 'PATH_INFO' => '/', 'REQUEST_METHOD' => 'GET' }
     status, _headers, _body = @middleware.call(env)
@@ -25,7 +25,7 @@ class IpBlockerTest < ActiveSupport::TestCase
     page = custom_pages(:blocking_ip_address)
     page.update!(body: "192.168.1.100\n")
 
-    @middleware.instance_variable_set(:@cached_at, nil)
+    Rails.cache.delete(Middleware::IpBlocker::CACHE_KEY)
 
     env = { 'REMOTE_ADDR' => '10.0.0.1', 'PATH_INFO' => '/', 'REQUEST_METHOD' => 'GET' }
     status, _headers, _body = @middleware.call(env)
@@ -36,7 +36,7 @@ class IpBlockerTest < ActiveSupport::TestCase
     page = custom_pages(:blocking_ip_address)
     page.update!(body: "~~192.168.1.100~~\n10.0.0.1\n")
 
-    @middleware.instance_variable_set(:@cached_at, nil)
+    Rails.cache.delete(Middleware::IpBlocker::CACHE_KEY)
 
     env = { 'REMOTE_ADDR' => '192.168.1.100', 'PATH_INFO' => '/', 'REQUEST_METHOD' => 'GET' }
     status, _headers, _body = @middleware.call(env)
@@ -47,7 +47,7 @@ class IpBlockerTest < ActiveSupport::TestCase
     page = custom_pages(:blocking_ip_address)
     page.update!(body: "~~192.168.1.100~~\n10.0.0.1\n")
 
-    @middleware.instance_variable_set(:@cached_at, nil)
+    Rails.cache.delete(Middleware::IpBlocker::CACHE_KEY)
 
     env = { 'REMOTE_ADDR' => '10.0.0.1', 'PATH_INFO' => '/', 'REQUEST_METHOD' => 'GET' }
     status, _headers, _body = @middleware.call(env)
@@ -57,7 +57,7 @@ class IpBlockerTest < ActiveSupport::TestCase
   test 'カスタムページが存在しない場合は通過する' do
     CustomPage.where(key: 'blocking_ip_address').destroy_all
 
-    @middleware.instance_variable_set(:@cached_at, nil)
+    Rails.cache.delete(Middleware::IpBlocker::CACHE_KEY)
 
     env = { 'REMOTE_ADDR' => '192.168.1.100', 'PATH_INFO' => '/', 'REQUEST_METHOD' => 'GET' }
     status, _headers, _body = @middleware.call(env)
@@ -71,7 +71,7 @@ class IpBlockerTest < ActiveSupport::TestCase
     end
     page.update!(body: "192.168.1.100\n", active: false)
 
-    @middleware.instance_variable_set(:@cached_at, nil)
+    Rails.cache.delete(Middleware::IpBlocker::CACHE_KEY)
 
     env = { 'REMOTE_ADDR' => '192.168.1.100', 'PATH_INFO' => '/', 'REQUEST_METHOD' => 'GET' }
     status, _headers, _body = @middleware.call(env)
