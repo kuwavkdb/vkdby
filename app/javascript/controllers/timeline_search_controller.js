@@ -17,7 +17,7 @@ export default class extends Controller {
     if (urlBands !== null) {
       // URLパラメータあり（共有URL）→ localStorageを上書きせずURLの値で復元
       const keys = urlBands ? urlBands.split(",").filter(Boolean) : []
-      keys.forEach(key => this.addUnit(key, key, { scroll: false }))
+      this._restoreKeys(keys)
     } else {
       this._restoreFromStorage()
     }
@@ -115,28 +115,19 @@ export default class extends Controller {
     }
   }
 
+  // ユーザー操作による1件追加
   async addUnit(key, name, { scroll = true } = {}) {
     this.hideSuggestions()
     this.inputTarget.value = ""
     const unitUrl = this.inputTarget.dataset.unitUrl
     try {
       const cacheKey = this._cacheKeyPrefix + "_" + key
-      let html = sessionStorage.getItem(cacheKey)
-      if (html) {
-        const probe = document.createElement("div")
-        probe.innerHTML = html.trim()
-        if (!probe.firstElementChild?.dataset.startYear) {
-          sessionStorage.removeItem(cacheKey)
-          html = null
-        }
-      }
+      let html = this._getValidCache(cacheKey)
       if (!html) {
         try {
           const url = new URL(unitUrl, window.location.origin)
           url.searchParams.set("key", key)
-          const res = await fetch(url.toString(), {
-            headers: { "Accept": "text/html" }
-          })
+          const res = await fetch(url.toString(), { headers: { "Accept": "text/html" } })
           if (!res.ok) throw new Error(`fetch failed: ${res.status}`)
           html = await res.text()
           sessionStorage.setItem(cacheKey, html)
@@ -145,53 +136,9 @@ export default class extends Controller {
           return
         }
       }
-      const rows = document.getElementById("timeline-rows-inner") || document.getElementById("timeline-rows")
-      if (!rows) return
       this.addedKeys.add(key)
       this._saveToStorage()
-      const tmp = document.createElement("div")
-      tmp.innerHTML = html.trim()
-      const row = tmp.firstElementChild
-      if (!row) return
-      const startYear = parseFloat(row.dataset.startYear)
-      const after = Array.from(rows.children).find(r => parseFloat(r.dataset.startYear) > startYear)
-      after ? rows.insertBefore(row, after) : rows.appendChild(row)
-      if (scroll) {
-        row.scrollIntoView({ behavior: "smooth", block: "center" })
-        requestAnimationFrame(() => {
-          const bars = row.querySelectorAll("div.absolute.rounded")
-          if (!bars.length) return
-          const lefts = Array.from(bars).map(b => {
-            const v = parseFloat(b.style.left)
-            return isNaN(v) ? Infinity : v
-          })
-          const minLeft = Math.min(...lefts)
-          const body = document.getElementById("timeline-rows")
-          if (body && isFinite(minLeft)) body.scrollLeft = Math.max(0, minLeft - 20)
-        })
-      }
-      row.dataset.rowType = "added"
-      const hiddenTypes = JSON.parse(localStorage.getItem("timeline_hidden_types") || "[]")
-      if (hiddenTypes.includes("added")) row.classList.add("hidden")
-      row.querySelectorAll("div.absolute.rounded").forEach(bar => {
-        bar.style.backgroundColor = "#22c55e"
-      })
-      const nameCell = row.querySelector("div[style*='width']")
-      if (nameCell) {
-        nameCell.classList.add("timeline-added-name-cell")
-        const btn = document.createElement("button")
-        btn.type = "button"
-        btn.textContent = "✕"
-        btn.setAttribute("aria-label", "行を削除")
-        btn.className = "flex-shrink-0 ml-1 text-xs text-zinc-400 hover:text-red-500 leading-none"
-        btn.addEventListener("click", () => {
-          this.addedKeys.delete(key)
-          this._saveToStorage()
-          sessionStorage.removeItem(this._cacheKeyPrefix + "_" + key)
-          row.remove()
-        })
-        nameCell.appendChild(btn)
-      }
+      this._insertRow(key, html, { scroll })
     } catch (e) {
       console.error("timeline-search addUnit error:", e)
     }
@@ -224,8 +171,112 @@ export default class extends Controller {
     localStorage.setItem(this.constructor.STORAGE_KEY, JSON.stringify([...this.addedKeys]))
   }
 
+  // キャッシュから HTML を取得。data-start-year がなければ無効とみなしキャッシュ削除
+  _getValidCache(cacheKey) {
+    const html = sessionStorage.getItem(cacheKey)
+    if (!html) return null
+    const probe = document.createElement("div")
+    probe.innerHTML = html.trim()
+    if (!probe.firstElementChild?.dataset.startYear) {
+      sessionStorage.removeItem(cacheKey)
+      return null
+    }
+    return html
+  }
+
+  // DOM への行挿入・スタイル適用・削除ボタン付与
+  _insertRow(key, html, { scroll = false } = {}) {
+    const rows = document.getElementById("timeline-rows-inner") || document.getElementById("timeline-rows")
+    if (!rows) return
+    const tmp = document.createElement("div")
+    tmp.innerHTML = html.trim()
+    const row = tmp.firstElementChild
+    if (!row) return
+
+    const startYear = parseFloat(row.dataset.startYear)
+    const after = Array.from(rows.children).find(r => parseFloat(r.dataset.startYear) > startYear)
+    after ? rows.insertBefore(row, after) : rows.appendChild(row)
+
+    if (scroll) {
+      row.scrollIntoView({ behavior: "smooth", block: "center" })
+      requestAnimationFrame(() => {
+        const bars = row.querySelectorAll("div.absolute.rounded")
+        if (!bars.length) return
+        const lefts = Array.from(bars).map(b => {
+          const v = parseFloat(b.style.left)
+          return isNaN(v) ? Infinity : v
+        })
+        const minLeft = Math.min(...lefts)
+        const body = document.getElementById("timeline-rows")
+        if (body && isFinite(minLeft)) body.scrollLeft = Math.max(0, minLeft - 20)
+      })
+    }
+
+    row.dataset.rowType = "added"
+    const hiddenTypes = JSON.parse(localStorage.getItem("timeline_hidden_types") || "[]")
+    if (hiddenTypes.includes("added")) row.classList.add("hidden")
+    row.querySelectorAll("div.absolute.rounded").forEach(bar => {
+      bar.style.backgroundColor = "#22c55e"
+    })
+
+    const nameCell = row.querySelector("div[style*='width']")
+    if (nameCell) {
+      nameCell.classList.add("timeline-added-name-cell")
+      const btn = document.createElement("button")
+      btn.type = "button"
+      btn.textContent = "✕"
+      btn.setAttribute("aria-label", "行を削除")
+      btn.className = "flex-shrink-0 ml-1 text-xs text-zinc-400 hover:text-red-500 leading-none"
+      btn.addEventListener("click", () => {
+        this.addedKeys.delete(key)
+        this._saveToStorage()
+        sessionStorage.removeItem(this._cacheKeyPrefix + "_" + key)
+        row.remove()
+      })
+      nameCell.appendChild(btn)
+    }
+  }
+
+  // キーの配列を復元（共有URL・localStorage 両方から使用）
+  async _restoreKeys(keys) {
+    if (!keys.length) return
+
+    // キャッシュ済みをまず即挿入
+    const uncached = []
+    for (const key of keys) {
+      const html = this._getValidCache(this._cacheKeyPrefix + "_" + key)
+      if (html) {
+        this.addedKeys.add(key)
+        this._insertRow(key, html)
+      } else {
+        uncached.push(key)
+      }
+    }
+
+    if (!uncached.length) return
+
+    // 未キャッシュ分を1リクエストでバッチ取得
+    try {
+      const unitsUrl = this.inputTarget.dataset.unitsUrl
+      const url = new URL(unitsUrl, window.location.origin)
+      uncached.forEach(key => url.searchParams.append("keys[]", key))
+      const res = await fetch(url.toString(), { headers: { "Accept": "application/json" } })
+      if (!res.ok) return
+      const htmlMap = await res.json()
+      for (const key of uncached) {
+        const html = htmlMap[key]
+        if (!html) continue
+        sessionStorage.setItem(this._cacheKeyPrefix + "_" + key, html)
+        this.addedKeys.add(key)
+        this._insertRow(key, html)
+      }
+    } catch (e) {
+      console.error("timeline-search _restoreKeys error:", e)
+    }
+  }
+
   _restoreFromStorage() {
     const saved = JSON.parse(localStorage.getItem(this.constructor.STORAGE_KEY) || "[]")
-    saved.forEach(key => this.addUnit(key, key, { scroll: false }))
+    this._restoreKeys(saved)
   }
 }

@@ -32,6 +32,8 @@ export default class extends Controller {
     this._updateToggleAllBtn()
     this._initStickyLegend()
     this._initRowObserver()
+    const initialZoom = this.hasWidgetTarget ? (this.widgetTarget.dataset.zoom || "1") : "1"
+    this._applyZoom(initialZoom, false)
     this._onPopState = (e) => {
       const zoom = e.state?.zoom || new URLSearchParams(location.search).get("zoom") || "1"
       this._applyZoom(zoom, false)
@@ -110,7 +112,6 @@ export default class extends Controller {
     const yearPx = this.constructor.ZOOM_YEAR_PX[zoom] || "24px"
 
     widget.style.setProperty("--year-px", yearPx)
-    widget.style.setProperty("--year-grid-fine-alpha", zoom === "2" ? "0.15" : "0")
     widget.dataset.zoom = zoom
 
     widget.querySelectorAll(".timeline-year-label-minor").forEach(el => {
