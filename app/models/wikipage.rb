@@ -25,7 +25,7 @@
 #
 class Wikipage < ApplicationRecord
   def vkdb_url
-    encoded = URI.encode_www_form_component(name.encode('EUC-JP'))
+    encoded = URI.encode_www_form_component(name.gsub('/', '%2F').encode('EUC-JP'))
     "https://www.vkdb.jp/#{encoded}.html"
   end
 end
