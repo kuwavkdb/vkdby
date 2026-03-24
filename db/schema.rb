@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_24_112135) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_24_120912) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -362,6 +362,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_24_112135) do
     t.string "status", default: "pending", null: false
     t.datetime "updated_at", null: false
     t.bigint "wikipage_id", null: false
+    t.index ["status"], name: "index_wiki_page_imports_on_status"
     t.index ["wikipage_id"], name: "index_wiki_page_imports_on_wikipage_id", unique: true
   end
 
