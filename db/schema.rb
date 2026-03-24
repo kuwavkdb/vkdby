@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_24_120912) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_24_143450) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -357,6 +357,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_24_120912) do
     t.bigint "import_target_id"
     t.string "import_target_type"
     t.datetime "last_imported_at"
+    t.boolean "manually_set", default: false, null: false
     t.text "note"
     t.string "page_type"
     t.string "status", default: "pending", null: false

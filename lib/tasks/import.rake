@@ -89,47 +89,72 @@ namespace :import do
 
   desc 'Import people from Wikipages'
   task people: :environment do
+    manual_mode = ENV['MANUAL'] == '1'
     puts 'Starting person import from Wikipages...'
+    puts 'Mode: MANUAL (page_type=person の手動設定済みページのみ)' if manual_mode
     count = 0
     skipped = 0
 
-    query = Wikipage.all
-    if ENV['ID']
-      query = query.where(id: ENV['ID'])
-      puts "Targeting single ID: #{ENV['ID']}"
-    elsif ENV['START']
-      query = query.where('id >= ?', ENV['START'])
-      puts "Starting from ID: #{ENV['START']}"
+    if manual_mode
+      query = WikiPageImport.manually_set.where(page_type: 'person').includes(:wikipage)
+    else
+      query = Wikipage.all
+      if ENV['ID']
+        query = query.where(id: ENV['ID'])
+        puts "Targeting single ID: #{ENV['ID']}"
+      elsif ENV['START']
+        query = query.where('id >= ?', ENV['START'])
+        puts "Starting from ID: #{ENV['START']}"
+      end
     end
 
     limit = ENV['LIMIT']&.to_i
     puts "Limit: #{limit}" if limit
 
-    query.find_each.with_index do |wp, _index|
-      break if limit && count >= limit
+    if manual_mode
+      query.find_each do |wpi|
+        break if limit && count >= limit
 
-      if PersonImporter.ignored?(wp)
-        skipped += 1
-        update_wiki_page_import_as_skipped(wp, note: 'ignored')
-        next
-      elsif PersonImporter.valid_person?(wp)
+        wp = wpi.wikipage
+        unless wp
+          puts "[SKIP] WikiPageImport##{wpi.id}: wikipage not found"
+          next
+        end
+
         PersonImporter.import(wp)
         count += 1
+        puts "[IMPORTED] #{wp.title} (ID: #{wp.id})"
+
         person = Person.find_by(old_wiki_id: wp.id)
         update_wiki_page_import_as_imported(wp, page_type: 'person', target: person)
-      else
-        skipped += 1
-        # ユニット候補はunits_v2タスクで処理済みのためスキップ対象外
-        unless WikipageImporter.valid_unit?(wp)
-          update_wiki_page_import_as_skipped(wp, note: 'not a unit or person')
-          puts format_skip_log(wp) if wp.title.present?
+      end
+    else
+      query.find_each.with_index do |wp, _index|
+        break if limit && count >= limit
+
+        if PersonImporter.ignored?(wp)
+          skipped += 1
+          update_wiki_page_import_as_skipped(wp, note: 'ignored')
+          next
+        elsif PersonImporter.valid_person?(wp)
+          PersonImporter.import(wp)
+          count += 1
+          person = Person.find_by(old_wiki_id: wp.id)
+          update_wiki_page_import_as_imported(wp, page_type: 'person', target: person)
+        else
+          skipped += 1
+          # ユニット候補はunits_v2タスクで処理済みのためスキップ対象外
+          unless WikipageImporter.valid_unit?(wp)
+            update_wiki_page_import_as_skipped(wp, note: 'not a unit or person')
+            puts format_skip_log(wp) if wp.title.present?
+          end
         end
       end
     end
 
     puts 'Import complete!'
     puts "  Imported: #{count} people"
-    puts "  Skipped:  #{skipped} pages"
+    puts "  Skipped:  #{skipped} pages" unless manual_mode
   end
 
   desc 'Reset all imported data'

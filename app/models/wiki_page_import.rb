@@ -11,6 +11,7 @@
 #  import_target_type :string
 #  import_target_id   :bigint
 #  note               :text
+#  manually_set       :boolean          not null, default(false)
 #  created_at         :datetime         not null
 #  updated_at         :datetime         not null
 #  wikipage_id        :bigint           not null
@@ -34,8 +35,9 @@ class WikiPageImport < ApplicationRecord
   validates :status, inclusion: { in: STATUSES }
   validates :page_type, inclusion: { in: PAGE_TYPES }, allow_nil: true
 
-  scope :pending,  -> { where(status: 'pending') }
-  scope :imported, -> { where(status: 'imported') }
-  scope :skipped,  -> { where(status: 'skipped') }
-  scope :error,    -> { where(status: 'error') }
+  scope :pending,       -> { where(status: 'pending') }
+  scope :imported,      -> { where(status: 'imported') }
+  scope :skipped,       -> { where(status: 'skipped') }
+  scope :error,         -> { where(status: 'error') }
+  scope :manually_set,  -> { where(manually_set: true) }
 end

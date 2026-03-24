@@ -87,8 +87,12 @@ Rails.application.routes.draw do
     end
 
     resources :wiki_page_imports, only: %i[index] do
+      member do
+        patch :update_page_type
+      end
       collection do
         patch :bulk_ignore
+        patch :bulk_update_page_type
       end
     end
   end
