@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_20_085443) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_24_112135) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -352,6 +352,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_20_085443) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  create_table "wiki_page_imports", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "import_target_id"
+    t.string "import_target_type"
+    t.datetime "last_imported_at"
+    t.text "note"
+    t.string "page_type"
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "wikipage_id", null: false
+    t.index ["wikipage_id"], name: "index_wiki_page_imports_on_wikipage_id", unique: true
+  end
+
   create_table "wikipages", force: :cascade do |t|
     t.string "category"
     t.datetime "created_at", precision: nil, null: false
@@ -380,4 +393,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_20_085443) do
   add_foreign_key "unit_people", "units"
   add_foreign_key "unit_snapshots", "units"
   add_foreign_key "update_logs", "users"
+  add_foreign_key "wiki_page_imports", "wikipages"
 end
