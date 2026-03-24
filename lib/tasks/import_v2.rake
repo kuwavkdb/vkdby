@@ -25,6 +25,7 @@ namespace :import do
 
       if WikipageImporter.ignored?(wp)
         skipped += 1
+        update_wiki_page_import_as_skipped(wp, note: 'ignored')
         next
       elsif WikipageImporter.valid_unit?(wp)
         # ID指定時: インポート前に既存の関連レコードを削除
@@ -46,6 +47,7 @@ namespace :import do
         # 作成されたスナップショット数をカウント
         unit = Unit.find_by(old_wiki_id: wp.id)
         snapshots_created += unit.unit_snapshots.count if unit
+        update_wiki_page_import_as_imported(wp, page_type: 'unit', target: unit)
       else
         skipped += 1
         puts format_skip_log(wp) if wp.title.present? && !PersonImporter.valid_person?(wp)

@@ -18,6 +18,21 @@ def extract_categories(wikipage)
   categories
 end
 
+def update_wiki_page_import_as_imported(wikipage, page_type:, target:)
+  wpi = WikiPageImport.find_or_create_by!(wikipage_id: wikipage.id)
+  wpi.update!(
+    status: 'imported',
+    page_type: page_type,
+    import_target: target,
+    last_imported_at: Time.current
+  )
+end
+
+def update_wiki_page_import_as_skipped(wikipage, note:)
+  wpi = WikiPageImport.find_or_create_by!(wikipage_id: wikipage.id)
+  wpi.update!(status: 'skipped', note: note) if wpi.status == 'pending'
+end
+
 def format_skip_log(wikipage)
   base_log = "[SKIPPED] #{wikipage.title} (ID: #{wikipage.id})"
 
@@ -95,13 +110,16 @@ namespace :import do
 
       if PersonImporter.ignored?(wp)
         skipped += 1
-        # Silent skip for ignored pages
+        update_wiki_page_import_as_skipped(wp, note: 'ignored')
         next
       elsif PersonImporter.valid_person?(wp)
         PersonImporter.import(wp)
         count += 1
+        person = Person.find_by(old_wiki_id: wp.id)
+        update_wiki_page_import_as_imported(wp, page_type: 'person', target: person)
       else
         skipped += 1
+        update_wiki_page_import_as_skipped(wp, note: 'not a unit or person')
         # ユニット候補の場合はログ出力しない
         puts format_skip_log(wp) if wp.title.present? && !WikipageImporter.valid_unit?(wp)
       end
