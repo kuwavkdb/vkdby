@@ -34,8 +34,8 @@ class WikiPageImport < ApplicationRecord
   validates :status, inclusion: { in: STATUSES }
   validates :page_type, inclusion: { in: PAGE_TYPES }, allow_nil: true
 
-  scope :pending,  -> { where(status: "pending") }
-  scope :imported, -> { where(status: "imported") }
-  scope :skipped,  -> { where(status: "skipped") }
-  scope :error,    -> { where(status: "error") }
+  scope :pending,  -> { where(status: 'pending') }
+  scope :imported, -> { where(status: 'imported') }
+  scope :skipped,  -> { where(status: 'skipped') }
+  scope :error,    -> { where(status: 'error') }
 end
