@@ -119,9 +119,11 @@ namespace :import do
         update_wiki_page_import_as_imported(wp, page_type: 'person', target: person)
       else
         skipped += 1
-        update_wiki_page_import_as_skipped(wp, note: 'not a unit or person')
-        # ユニット候補の場合はログ出力しない
-        puts format_skip_log(wp) if wp.title.present? && !WikipageImporter.valid_unit?(wp)
+        # ユニット候補はunits_v2タスクで処理済みのためスキップ対象外
+        unless WikipageImporter.valid_unit?(wp)
+          update_wiki_page_import_as_skipped(wp, note: 'not a unit or person')
+          puts format_skip_log(wp) if wp.title.present?
+        end
       end
     end
 

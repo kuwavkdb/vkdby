@@ -85,6 +85,8 @@ Rails.application.routes.draw do
         post :restore
       end
     end
+
+    resources :wiki_page_imports, only: %i[index]
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   root 'custom_pages#index_page'
