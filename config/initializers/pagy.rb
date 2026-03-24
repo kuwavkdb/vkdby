@@ -3,4 +3,4 @@
 require 'pagy/toolbox/helpers/support/series'
 
 # Pagy initializer
-Pagy.options[:limit] = 60
+Pagy::OPTIONS[:limit] = 60
