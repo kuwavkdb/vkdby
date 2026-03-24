@@ -6,6 +6,9 @@
 - `/release-pr` スキルはリリース専用。機能修正・バグ修正には使わない
 - `develop` および `main` への直接 push は禁止。必ずブランチを切って PR を作成すること
 
+## データ操作の禁止事項
+- `wikipages` テーブルは読み取り専用として扱う。明示的な指示がない限り、更新・削除・挿入を行ってはいけない
+
 ## コマンド実行
 - Rails コマンドは必ず `bundle exec` をつける（例: `bundle exec rails db:migrate`）
 - `db:rollback` は**危険**。実行前に必ず `db:migrate:status` でロールバック対象を確認し、ユーザーに確認を求めること。
