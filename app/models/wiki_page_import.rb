@@ -26,7 +26,7 @@
 #
 
 class WikiPageImport < ApplicationRecord
-  STATUSES = %w[pending imported skipped error].freeze
+  STATUSES = %w[pending imported skipped deferred error].freeze
   PAGE_TYPES = %w[unit person other].freeze
 
   belongs_to :wikipage
@@ -38,6 +38,7 @@ class WikiPageImport < ApplicationRecord
   scope :pending,       -> { where(status: 'pending') }
   scope :imported,      -> { where(status: 'imported') }
   scope :skipped,       -> { where(status: 'skipped') }
+  scope :deferred,      -> { where(status: 'deferred') }
   scope :error,         -> { where(status: 'error') }
   scope :manually_set,  -> { where(manually_set: true) }
 end
