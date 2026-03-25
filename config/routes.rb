@@ -93,6 +93,7 @@ Rails.application.routes.draw do
       collection do
         patch :bulk_ignore
         patch :bulk_update_page_type
+        patch :bulk_set_deferred
       end
     end
   end
