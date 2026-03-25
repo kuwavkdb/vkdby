@@ -93,9 +93,13 @@
                             class="text-xs rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-1 pr-6"
                             aria-label="<%= wpi.wikipage&.title %> の page_type">
                       <option value="" <%= 'selected' if wpi.page_type.nil? %>>--</option>
-                      <option value="unit"   <%= 'selected' if wpi.page_type == 'unit' %>>unit</option>
-                      <option value="person" <%= 'selected' if wpi.page_type == 'person' %>>person</option>
-                      <option value="other"  <%= 'selected' if wpi.page_type == 'other' %>>other</option>
+                      <option value="unit"        <%= 'selected' if wpi.page_type == 'unit' %>>unit</option>
+                      <option value="person"      <%= 'selected' if wpi.page_type == 'person' %>>person</option>
+                      <option value="live_house"  <%= 'selected' if wpi.page_type == 'live_house' %>>live_house</option>
+                      <option value="custom_page" <%= 'selected' if wpi.page_type == 'custom_page' %>>custom_page</option>
+                      <option value="omnibus"     <%= 'selected' if wpi.page_type == 'omnibus' %>>omnibus</option>
+                      <option value="moved"       <%= 'selected' if wpi.page_type == 'moved' %>>moved</option>
+                      <option value="other"       <%= 'selected' if wpi.page_type == 'other' %>>other</option>
                     </select>
                     <button type="button"
                             onclick="submitRowPageType(<%= wpi.id %>)"
@@ -121,6 +125,10 @@
             <option value="">-- page_type --</option>
             <option value="unit">unit</option>
             <option value="person">person</option>
+            <option value="live_house">live_house</option>
+            <option value="custom_page">custom_page</option>
+            <option value="omnibus">omnibus</option>
+            <option value="moved">moved</option>
             <option value="other">other</option>
           </select>
           <button type="button"
@@ -179,9 +187,12 @@
                           class="text-xs rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-1 pr-6"
                           aria-label="<%= wpi.wikipage&.title %> の page_type">
                     <option value="" <%= 'selected' if wpi.page_type.nil? %>>--</option>
-                    <option value="unit"   <%= 'selected' if wpi.page_type == 'unit' %>>unit</option>
-                    <option value="person" <%= 'selected' if wpi.page_type == 'person' %>>person</option>
-                    <option value="other"  <%= 'selected' if wpi.page_type == 'other' %>>other</option>
+                    <option value="unit"        <%= 'selected' if wpi.page_type == 'unit' %>>unit</option>
+                    <option value="person"      <%= 'selected' if wpi.page_type == 'person' %>>person</option>
+                    <option value="live_house"  <%= 'selected' if wpi.page_type == 'live_house' %>>live_house</option>
+                    <option value="custom_page" <%= 'selected' if wpi.page_type == 'custom_page' %>>custom_page</option>
+                    <option value="omnibus"     <%= 'selected' if wpi.page_type == 'omnibus' %>>omnibus</option>
+                    <option value="other"       <%= 'selected' if wpi.page_type == 'other' %>>other</option>
                   </select>
                   <button type="button"
                           onclick="submitRowPageType(<%= wpi.id %>)"
@@ -241,9 +252,13 @@
                             class="text-xs rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-1 pr-6"
                             aria-label="<%= wpi.wikipage&.title %> の page_type">
                       <option value="" <%= 'selected' if wpi.page_type.nil? %>>--</option>
-                      <option value="unit"   <%= 'selected' if wpi.page_type == 'unit' %>>unit</option>
-                      <option value="person" <%= 'selected' if wpi.page_type == 'person' %>>person</option>
-                      <option value="other"  <%= 'selected' if wpi.page_type == 'other' %>>other</option>
+                      <option value="unit"        <%= 'selected' if wpi.page_type == 'unit' %>>unit</option>
+                      <option value="person"      <%= 'selected' if wpi.page_type == 'person' %>>person</option>
+                      <option value="live_house"  <%= 'selected' if wpi.page_type == 'live_house' %>>live_house</option>
+                      <option value="custom_page" <%= 'selected' if wpi.page_type == 'custom_page' %>>custom_page</option>
+                      <option value="omnibus"     <%= 'selected' if wpi.page_type == 'omnibus' %>>omnibus</option>
+                      <option value="moved"       <%= 'selected' if wpi.page_type == 'moved' %>>moved</option>
+                      <option value="other"       <%= 'selected' if wpi.page_type == 'other' %>>other</option>
                     </select>
                     <button type="button"
                             onclick="submitRowPageType(<%= wpi.id %>)"
@@ -278,6 +293,10 @@
             <option value="">-- page_type --</option>
             <option value="unit">unit</option>
             <option value="person">person</option>
+            <option value="live_house">live_house</option>
+            <option value="custom_page">custom_page</option>
+            <option value="omnibus">omnibus</option>
+            <option value="moved">moved</option>
             <option value="other">other</option>
           </select>
           <button type="button"
