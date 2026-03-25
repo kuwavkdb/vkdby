@@ -74,7 +74,8 @@
                 <td class="px-4 py-4">
                   <input type="checkbox" name="ids[]" value="<%= wpi.id %>" class="row-check rounded border-gray-300 dark:border-gray-600" aria-label="<%= wpi.wikipage&.title %> を選択">
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"><%= wpi.wikipage_id %></td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 cursor-pointer select-none"
+                    onclick="this.closest('tr').querySelector('.row-check').click()"><%= wpi.wikipage_id %></td>
                 <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100"><%= wpi.wikipage&.title %></td>
                 <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                   <% if wpi.wikipage %>
@@ -233,7 +234,8 @@
                 <td class="px-4 py-4">
                   <input type="checkbox" name="ids[]" value="<%= wpi.id %>" class="row-check rounded border-gray-300 dark:border-gray-600" aria-label="<%= wpi.wikipage&.title %> を選択">
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"><%= wpi.wikipage_id %></td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 cursor-pointer select-none"
+                    onclick="this.closest('tr').querySelector('.row-check').click()"><%= wpi.wikipage_id %></td>
                 <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100"><%= wpi.wikipage&.title %></td>
                 <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                   <% if wpi.wikipage %>
