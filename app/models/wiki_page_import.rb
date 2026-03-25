@@ -27,7 +27,7 @@
 
 class WikiPageImport < ApplicationRecord
   STATUSES = %w[pending imported skipped deferred error].freeze
-  PAGE_TYPES = %w[unit person other].freeze
+  PAGE_TYPES = %w[unit person live_house custom_page omnibus moved office_label other].freeze
 
   belongs_to :wikipage
   belongs_to :import_target, polymorphic: true, optional: true
