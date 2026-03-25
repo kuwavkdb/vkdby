@@ -99,8 +99,9 @@
                       <option value="live_house"  <%= 'selected' if wpi.page_type == 'live_house' %>>live_house</option>
                       <option value="custom_page" <%= 'selected' if wpi.page_type == 'custom_page' %>>custom_page</option>
                       <option value="omnibus"     <%= 'selected' if wpi.page_type == 'omnibus' %>>omnibus</option>
-                      <option value="moved"       <%= 'selected' if wpi.page_type == 'moved' %>>moved</option>
-                      <option value="other"       <%= 'selected' if wpi.page_type == 'other' %>>other</option>
+                      <option value="moved"        <%= 'selected' if wpi.page_type == 'moved' %>>moved</option>
+                      <option value="office_label" <%= 'selected' if wpi.page_type == 'office_label' %>>office_label</option>
+                      <option value="other"        <%= 'selected' if wpi.page_type == 'other' %>>other</option>
                     </select>
                     <button type="button"
                             onclick="submitRowPageType(<%= wpi.id %>)"
@@ -130,6 +131,7 @@
             <option value="custom_page">custom_page</option>
             <option value="omnibus">omnibus</option>
             <option value="moved">moved</option>
+            <option value="office_label">office_label</option>
             <option value="other">other</option>
           </select>
           <button type="button"
@@ -259,8 +261,9 @@
                       <option value="live_house"  <%= 'selected' if wpi.page_type == 'live_house' %>>live_house</option>
                       <option value="custom_page" <%= 'selected' if wpi.page_type == 'custom_page' %>>custom_page</option>
                       <option value="omnibus"     <%= 'selected' if wpi.page_type == 'omnibus' %>>omnibus</option>
-                      <option value="moved"       <%= 'selected' if wpi.page_type == 'moved' %>>moved</option>
-                      <option value="other"       <%= 'selected' if wpi.page_type == 'other' %>>other</option>
+                      <option value="moved"        <%= 'selected' if wpi.page_type == 'moved' %>>moved</option>
+                      <option value="office_label" <%= 'selected' if wpi.page_type == 'office_label' %>>office_label</option>
+                      <option value="other"        <%= 'selected' if wpi.page_type == 'other' %>>other</option>
                     </select>
                     <button type="button"
                             onclick="submitRowPageType(<%= wpi.id %>)"
@@ -299,6 +302,7 @@
             <option value="custom_page">custom_page</option>
             <option value="omnibus">omnibus</option>
             <option value="moved">moved</option>
+            <option value="office_label">office_label</option>
             <option value="other">other</option>
           </select>
           <button type="button"
