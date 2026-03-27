@@ -46,7 +46,7 @@ def format_skip_log(wikipage)
   end
 end
 
-namespace :import do
+namespace :import do # rubocop:disable Metrics/BlockLength
   desc 'Import units from Wikipages'
   task units: :environment do
     puts 'Starting unit import from Wikipages...'
