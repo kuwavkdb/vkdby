@@ -37,6 +37,7 @@ class Person < ApplicationRecord
   include Discard::Model
   include WikiParser
   has_many :links, as: :linkable, dependent: :destroy
+  has_many :wiki_page_imports, as: :import_target
   has_many :unit_people
   has_many :units, through: :unit_people
   has_many :person_logs

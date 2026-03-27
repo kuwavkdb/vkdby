@@ -43,6 +43,18 @@ module Admin
       end
     end
 
+    def set_deferred
+      wpi = WikiPageImport.find(params[:id])
+      wpi.update!(status: 'deferred', updated_at: Time.current)
+      redirect_back_or_to admin_wiki_page_imports_path, notice: '保留にしました'
+    end
+
+    def set_ignored
+      wpi = WikiPageImport.find(params[:id])
+      wpi.update!(note: 'ignored', updated_at: Time.current)
+      redirect_back_or_to admin_wiki_page_imports_path, notice: '除外しました'
+    end
+
     def update_page_type
       wpi = WikiPageImport.find(params[:id])
       page_type = params[:page_type].presence

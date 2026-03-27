@@ -32,6 +32,7 @@ module Admin
 
     def edit
       @person.links.build # Always add an empty link field for new entries
+      @wiki_page_imports = @person.wiki_page_imports.includes(:wikipage).order(updated_at: :desc)
       @update_logs = UpdateLog.for_person(@person)
                               .includes(:user)
                               .order(created_at: :desc)

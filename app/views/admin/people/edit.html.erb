@@ -13,6 +13,7 @@
       <div>
         <%= render "links_form", person: @person %>
         <%= render "admin/sections/list", sectionable: @person, sections: @person.sections.with_discarded.order(:sort_order) %>
+        <%= render "admin/wiki_page_imports/import_target_panel", wiki_page_imports: @wiki_page_imports %>
       </div>
     </div>
   </div>
