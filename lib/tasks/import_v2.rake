@@ -3,7 +3,18 @@
 namespace :import do
   desc 'Import units with snapshots from Wikipages (V2)'
   task units_v2: :environment do
-    manual_mode = ENV['MANUAL'] == '1'
+    mode = ENV['MODE']
+    manual_mode = mode == 'MANUAL'
+
+    unless manual_mode || mode == 'ALL' || ENV['ID'] || ENV['START']
+      puts 'Error: 実行条件を指定してください。'
+      puts '  MODE=ALL       全件対象'
+      puts '  MODE=MANUAL    手動仕訳済みページのみ'
+      puts '  ID=<id>        指定 ID のみ'
+      puts '  START=<id>     指定 ID 以降'
+      exit 1
+    end
+
     puts 'Starting unit import with snapshots from Wikipages (V2)...'
     puts 'Mode: MANUAL (page_type=unit の手動設定済みページのみ)' if manual_mode
     count = 0
@@ -95,6 +106,6 @@ namespace :import do
     puts 'Import complete!'
     puts "  Imported: #{count} units"
     puts "  Snapshots created: #{snapshots_created}"
-    puts "  Skipped:  #{skipped} pages" unless manual_mode
+    puts "  Skipped:  #{skipped} pages" unless manual_mode || ENV['ID']
   end
 end
