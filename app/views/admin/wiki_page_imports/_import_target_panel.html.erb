@@ -1,4 +1,5 @@
 <% if wiki_page_imports.any? %>
+  <% any_deferred_or_ignored = wiki_page_imports.any? { |wpi| wpi.status == 'deferred' || wpi.note == 'ignored' } %>
   <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-4 mb-4">
     <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Wiki Page Imports</h3>
     <div class="space-y-2">
@@ -33,5 +34,15 @@
         </div>
       <% end %>
     </div>
+
+    <% if any_deferred_or_ignored %>
+      <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+        <%= button_to "#{import_target.name} を論理削除する",
+              polymorphic_path([:admin, import_target]),
+              method: :delete,
+              class: "w-full px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400",
+              onclick: "return confirm('#{import_target.name} を論理削除します。よろしいですか？')" %>
+      </div>
+    <% end %>
   </div>
 <% end %>

@@ -62,8 +62,11 @@ module Admin
         wpi.update!(page_type: nil, manually_set: false)
         redirect_back_or_to admin_wiki_page_imports_path, notice: '手動仕訳をキャンセルしました'
       elsif WikiPageImport::PAGE_TYPES.include?(page_type)
-        wpi.update!(page_type: page_type, manually_set: true)
-        redirect_back_or_to admin_wiki_page_imports_path, notice: "page_type を #{page_type} に設定しました"
+        attrs = { page_type: page_type, manually_set: true }
+        attrs[:status] = 'skipped' if wpi.status == 'deferred'
+        attrs[:note] = nil if wpi.note == 'ignored'
+        wpi.update!(attrs)
+        redirect_back_or_to admin_wiki_page_imports_path, notice: "page_type を #{WikiPageImport::PAGE_TYPE_LABELS[page_type]} に設定しました"
       else
         redirect_to admin_wiki_page_imports_path, alert: '無効な page_type です'
       end

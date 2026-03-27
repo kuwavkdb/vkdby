@@ -17,7 +17,7 @@
         <%= render "new_member_form", unit: @unit, unit_person: @unit_person %>
         <%= render "links_form", unit: @unit %>
         <%= render "admin/sections/list", sectionable: @unit, sections: @unit.sections.with_discarded.order(:sort_order) %>
-        <%= render "admin/wiki_page_imports/import_target_panel", wiki_page_imports: @wiki_page_imports %>
+        <%= render "admin/wiki_page_imports/import_target_panel", wiki_page_imports: @wiki_page_imports, import_target: @unit %>
       </div>
     </div>
   </div>
