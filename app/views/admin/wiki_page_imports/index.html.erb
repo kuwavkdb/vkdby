@@ -1,7 +1,7 @@
 <div class="container mx-auto px-4 py-8">
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-      Wiki Page Imports（<%= @show_manually_set ? "手動仕訳済み - #{@ms_page_type}" : @show_deferred ? 'Deferred' : @show_ignored ? 'Ignored' : 'スキップ済み' %>）
+      Wiki Page Imports（<%= @show_manually_set ? "手動仕訳済み - #{WikiPageImport::PAGE_TYPE_LABELS[@ms_page_type]}" : @show_deferred ? '保留' : @show_ignored ? '除外済み' : 'スキップ済み' %>）
     </h1>
     <div class="flex items-center gap-2">
       <span class="text-sm text-gray-500 dark:text-gray-400"><%= @pagy.count %> 件</span>
@@ -20,11 +20,11 @@
     <% end %>
     <%= link_to admin_wiki_page_imports_path(show_deferred: 1),
           class: "px-4 py-2 text-sm font-medium rounded-t-md border border-b-0 #{@show_deferred ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100' : 'bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}" do %>
-      Deferred
+      保留
     <% end %>
     <%= link_to admin_wiki_page_imports_path(show_ignored: 1),
           class: "px-4 py-2 text-sm font-medium rounded-t-md border border-b-0 #{@show_ignored ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100' : 'bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}" do %>
-      Ignored
+      除外済み
     <% end %>
   </div>
 
@@ -84,14 +84,9 @@
                             class="text-xs rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-1 pr-6"
                             aria-label="<%= wpi.wikipage&.title %> の page_type">
                       <option value="" <%= 'selected' if wpi.page_type.nil? %>>--</option>
-                      <option value="unit"        <%= 'selected' if wpi.page_type == 'unit' %>>unit</option>
-                      <option value="person"      <%= 'selected' if wpi.page_type == 'person' %>>person</option>
-                      <option value="live_house"  <%= 'selected' if wpi.page_type == 'live_house' %>>live_house</option>
-                      <option value="custom_page" <%= 'selected' if wpi.page_type == 'custom_page' %>>custom_page</option>
-                      <option value="omnibus"     <%= 'selected' if wpi.page_type == 'omnibus' %>>omnibus</option>
-                      <option value="moved"        <%= 'selected' if wpi.page_type == 'moved' %>>moved</option>
-                      <option value="office_label" <%= 'selected' if wpi.page_type == 'office_label' %>>office_label</option>
-                      <option value="other"        <%= 'selected' if wpi.page_type == 'other' %>>other</option>
+                      <% WikiPageImport::PAGE_TYPES.each do |pt| %>
+                        <option value="<%= pt %>" <%= 'selected' if wpi.page_type == pt %>><%= WikiPageImport::PAGE_TYPE_LABELS[pt] %></option>
+                      <% end %>
                     </select>
                     <button type="button"
                             onclick="submitRowPageType(<%= wpi.id %>)"
@@ -115,14 +110,9 @@
                   class="text-sm rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-1.5 pr-8"
                   aria-label="一括設定する page_type">
             <option value="">-- page_type --</option>
-            <option value="unit">unit</option>
-            <option value="person">person</option>
-            <option value="live_house">live_house</option>
-            <option value="custom_page">custom_page</option>
-            <option value="omnibus">omnibus</option>
-            <option value="moved">moved</option>
-            <option value="office_label">office_label</option>
-            <option value="other">other</option>
+            <% WikiPageImport::PAGE_TYPES.each do |pt| %>
+              <option value="<%= pt %>"><%= WikiPageImport::PAGE_TYPE_LABELS[pt] %></option>
+            <% end %>
           </select>
           <button type="button"
                   onclick="submitBulkPageType()"
@@ -135,11 +125,11 @@
           <button type="button"
                   onclick="submitBulkDeferred()"
                   class="px-4 py-2 text-sm bg-purple-500 text-white rounded-md hover:bg-purple-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-400">
-            選択した項目を deferred にする
+            選択した項目を保留にする
           </button>
-          <%= f.submit '選択した項目を ignored にする',
+          <%= f.submit '選択した項目を除外する',
                 class: "px-4 py-2 text-sm bg-yellow-500 text-white rounded-md hover:bg-yellow-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-yellow-400",
-                onclick: "return confirm('選択した項目を ignored にします。よろしいですか？')" %>
+                onclick: "return confirm('選択した項目を除外します。よろしいですか？')" %>
         </div>
       </div>
     <% end %>
@@ -180,12 +170,9 @@
                           class="text-xs rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-1 pr-6"
                           aria-label="<%= wpi.wikipage&.title %> の page_type">
                     <option value="" <%= 'selected' if wpi.page_type.nil? %>>--</option>
-                    <option value="unit"        <%= 'selected' if wpi.page_type == 'unit' %>>unit</option>
-                    <option value="person"      <%= 'selected' if wpi.page_type == 'person' %>>person</option>
-                    <option value="live_house"  <%= 'selected' if wpi.page_type == 'live_house' %>>live_house</option>
-                    <option value="custom_page" <%= 'selected' if wpi.page_type == 'custom_page' %>>custom_page</option>
-                    <option value="omnibus"     <%= 'selected' if wpi.page_type == 'omnibus' %>>omnibus</option>
-                    <option value="other"       <%= 'selected' if wpi.page_type == 'other' %>>other</option>
+                    <% WikiPageImport::PAGE_TYPES.each do |pt| %>
+                      <option value="<%= pt %>" <%= 'selected' if wpi.page_type == pt %>><%= WikiPageImport::PAGE_TYPE_LABELS[pt] %></option>
+                    <% end %>
                   </select>
                   <button type="button"
                           onclick="submitRowPageType(<%= wpi.id %>)"
@@ -209,7 +196,7 @@
       <% WikiPageImport::PAGE_TYPES.each do |pt| %>
         <%= link_to admin_wiki_page_imports_path(manually_set: 1, ms_page_type: pt),
               class: "px-3 py-1.5 text-xs font-medium rounded-md border #{@ms_page_type == pt ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}" do %>
-          <%= pt %>
+          <%= WikiPageImport::PAGE_TYPE_LABELS[pt] %>
         <% end %>
       <% end %>
     </div>
@@ -256,14 +243,9 @@
                             class="text-xs rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-1 pr-6"
                             aria-label="<%= wpi.wikipage&.title %> の page_type">
                       <option value="" <%= 'selected' if wpi.page_type.nil? %>>--</option>
-                      <option value="unit"        <%= 'selected' if wpi.page_type == 'unit' %>>unit</option>
-                      <option value="person"      <%= 'selected' if wpi.page_type == 'person' %>>person</option>
-                      <option value="live_house"  <%= 'selected' if wpi.page_type == 'live_house' %>>live_house</option>
-                      <option value="custom_page" <%= 'selected' if wpi.page_type == 'custom_page' %>>custom_page</option>
-                      <option value="omnibus"     <%= 'selected' if wpi.page_type == 'omnibus' %>>omnibus</option>
-                      <option value="moved"        <%= 'selected' if wpi.page_type == 'moved' %>>moved</option>
-                      <option value="office_label" <%= 'selected' if wpi.page_type == 'office_label' %>>office_label</option>
-                      <option value="other"        <%= 'selected' if wpi.page_type == 'other' %>>other</option>
+                      <% WikiPageImport::PAGE_TYPES.each do |pt| %>
+                        <option value="<%= pt %>" <%= 'selected' if wpi.page_type == pt %>><%= WikiPageImport::PAGE_TYPE_LABELS[pt] %></option>
+                      <% end %>
                     </select>
                     <button type="button"
                             onclick="submitRowPageType(<%= wpi.id %>)"
@@ -296,14 +278,9 @@
                   class="text-sm rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-1.5 pr-8"
                   aria-label="一括設定する page_type">
             <option value="">-- page_type --</option>
-            <option value="unit">unit</option>
-            <option value="person">person</option>
-            <option value="live_house">live_house</option>
-            <option value="custom_page">custom_page</option>
-            <option value="omnibus">omnibus</option>
-            <option value="moved">moved</option>
-            <option value="office_label">office_label</option>
-            <option value="other">other</option>
+            <% WikiPageImport::PAGE_TYPES.each do |pt| %>
+              <option value="<%= pt %>"><%= WikiPageImport::PAGE_TYPE_LABELS[pt] %></option>
+            <% end %>
           </select>
           <button type="button"
                   onclick="submitBulkPageType()"
@@ -358,7 +335,7 @@
         alert('項目が選択されていません');
         return;
       }
-      if (!confirm('選択した項目を deferred にします。よろしいですか？')) return;
+      if (!confirm('選択した項目を保留にします。よろしいですか？')) return;
       var form = document.getElementById('bulk-deferred-form');
       form.querySelectorAll('input[name="ids[]"]').forEach(function(el) { el.remove(); });
       checked.forEach(function(cb) {

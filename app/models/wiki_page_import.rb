@@ -28,6 +28,16 @@
 class WikiPageImport < ApplicationRecord
   STATUSES = %w[pending imported skipped deferred error].freeze
   PAGE_TYPES = %w[unit person live_house custom_page omnibus moved office_label other].freeze
+  PAGE_TYPE_LABELS = {
+    'unit'         => 'ユニット',
+    'person'       => '人物',
+    'live_house'   => 'ライブハウス',
+    'custom_page'  => 'カスタムページ',
+    'omnibus'      => 'オムニバス',
+    'moved'        => '移動',
+    'office_label' => '事務所/レーベル',
+    'other'        => 'その他'
+  }.freeze
 
   belongs_to :wikipage
   belongs_to :import_target, polymorphic: true, optional: true
