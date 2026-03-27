@@ -1,7 +1,7 @@
 <div class="container mx-auto px-4 py-8">
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-      Wiki Page Imports（<%= @show_manually_set ? '手動仕訳済み' : @show_deferred ? 'Deferred' : @show_ignored ? 'Ignored' : 'スキップ済み' %>）
+      Wiki Page Imports（<%= @show_manually_set ? "手動仕訳済み - #{@ms_page_type}" : @show_deferred ? 'Deferred' : @show_ignored ? 'Ignored' : 'スキップ済み' %>）
     </h1>
     <div class="flex items-center gap-2">
       <span class="text-sm text-gray-500 dark:text-gray-400"><%= @pagy.count %> 件</span>
@@ -204,6 +204,16 @@
 
   <%# 手動仕訳済み一覧 %>
   <% else %>
+    <%# page_type サブタブ %>
+    <div class="flex flex-wrap gap-1 mb-4">
+      <% WikiPageImport::PAGE_TYPES.each do |pt| %>
+        <%= link_to admin_wiki_page_imports_path(manually_set: 1, ms_page_type: pt),
+              class: "px-3 py-1.5 text-xs font-medium rounded-md border #{@ms_page_type == pt ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}" do %>
+          <%= pt %>
+        <% end %>
+      <% end %>
+    </div>
+
     <%= form_with url: bulk_ignore_admin_wiki_page_imports_path, method: :patch do |f| %>
       <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg mb-4">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">

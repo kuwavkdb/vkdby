@@ -8,9 +8,10 @@ module Admin
       @show_manually_set = params[:manually_set] == '1'
       @show_deferred     = params[:show_deferred] == '1'
       @show_ignored      = params[:show_ignored] == '1'
+      @ms_page_type      = @show_manually_set ? (params[:ms_page_type].presence || 'unit') : nil
 
       scope = if @show_manually_set
-                WikiPageImport.manually_set.where.not(status: 'imported').includes(:wikipage).order(updated_at: :desc)
+                WikiPageImport.manually_set.where.not(status: 'imported').where(page_type: @ms_page_type).includes(:wikipage).order(updated_at: :desc)
               elsif @show_deferred
                 WikiPageImport.deferred.includes(:wikipage).order(updated_at: :desc)
               elsif @show_ignored
