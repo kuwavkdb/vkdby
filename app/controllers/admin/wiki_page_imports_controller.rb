@@ -9,15 +9,15 @@ module Admin
       @show_deferred     = params[:show_deferred] == '1'
       @show_ignored      = params[:show_ignored] == '1'
 
-      if @show_manually_set
-        scope = WikiPageImport.manually_set.where.not(status: 'imported').includes(:wikipage).order(updated_at: :desc)
-      elsif @show_deferred
-        scope = WikiPageImport.deferred.includes(:wikipage).order(updated_at: :desc)
-      elsif @show_ignored
-        scope = WikiPageImport.skipped.where(manually_set: false, note: 'ignored').includes(:wikipage).order(updated_at: :desc)
-      else
-        scope = WikiPageImport.skipped.where(manually_set: false).where.not(note: 'ignored').includes(:wikipage).order(updated_at: :desc)
-      end
+      scope = if @show_manually_set
+                WikiPageImport.manually_set.where.not(status: 'imported').includes(:wikipage).order(updated_at: :desc)
+              elsif @show_deferred
+                WikiPageImport.deferred.includes(:wikipage).order(updated_at: :desc)
+              elsif @show_ignored
+                WikiPageImport.skipped.where(manually_set: false, note: 'ignored').includes(:wikipage).order(updated_at: :desc)
+              else
+                WikiPageImport.skipped.where(manually_set: false).where.not(note: 'ignored').includes(:wikipage).order(updated_at: :desc)
+              end
 
       @pagy, @wiki_page_imports = pagy(scope, limit: 50)
     end
