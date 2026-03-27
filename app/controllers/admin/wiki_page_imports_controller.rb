@@ -9,6 +9,7 @@ module Admin
       @show_deferred     = params[:show_deferred] == '1'
       @show_ignored      = params[:show_ignored] == '1'
       @ms_page_type      = @show_manually_set ? (params[:ms_page_type].presence || 'unit') : nil
+      @q                 = params[:q].presence
 
       scope = if @show_manually_set
                 WikiPageImport.manually_set.where.not(status: 'imported').where(page_type: @ms_page_type).includes(:wikipage).order(updated_at: :desc)
@@ -17,7 +18,9 @@ module Admin
               elsif @show_ignored
                 WikiPageImport.skipped.where(manually_set: false, note: 'ignored').includes(:wikipage).order(updated_at: :desc)
               else
-                WikiPageImport.skipped.where(manually_set: false).where.not(note: 'ignored').includes(:wikipage).order(updated_at: :desc)
+                base = WikiPageImport.skipped.where(manually_set: false).where.not(note: 'ignored')
+                base = base.joins(:wikipage).where('wikipages.name LIKE ?', "#{@q}%") if @q
+                base.includes(:wikipage).order(updated_at: :desc)
               end
 
       @pagy, @wiki_page_imports = pagy(scope, limit: 50)
