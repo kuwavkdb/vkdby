@@ -7,15 +7,16 @@ module Admin
     def index
       @show_manually_set = params[:manually_set] == '1'
       @show_deferred     = params[:show_deferred] == '1'
-      @include_ignored   = params[:include_ignored] == '1'
+      @show_ignored      = params[:show_ignored] == '1'
 
       if @show_manually_set
         scope = WikiPageImport.manually_set.where.not(status: 'imported').includes(:wikipage).order(updated_at: :desc)
       elsif @show_deferred
         scope = WikiPageImport.deferred.includes(:wikipage).order(updated_at: :desc)
+      elsif @show_ignored
+        scope = WikiPageImport.skipped.where(manually_set: false, note: 'ignored').includes(:wikipage).order(updated_at: :desc)
       else
-        scope = WikiPageImport.skipped.where(manually_set: false).includes(:wikipage).order(updated_at: :desc)
-        scope = scope.where.not(note: 'ignored') unless @include_ignored
+        scope = WikiPageImport.skipped.where(manually_set: false).where.not(note: 'ignored').includes(:wikipage).order(updated_at: :desc)
       end
 
       @pagy, @wiki_page_imports = pagy(scope, limit: 50)
