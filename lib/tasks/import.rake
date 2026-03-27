@@ -46,7 +46,7 @@ def format_skip_log(wikipage)
   end
 end
 
-namespace :import do
+namespace :import do # rubocop:disable Metrics/BlockLength
   desc 'Import units from Wikipages'
   task units: :environment do
     puts 'Starting unit import from Wikipages...'
@@ -89,7 +89,18 @@ namespace :import do
 
   desc 'Import people from Wikipages'
   task people: :environment do
-    manual_mode = ENV['MANUAL'] == '1'
+    mode = ENV['MODE']
+    manual_mode = mode == 'MANUAL'
+
+    unless manual_mode || mode == 'ALL' || ENV['ID'] || ENV['START']
+      puts 'Error: 実行条件を指定してください。'
+      puts '  MODE=ALL       全件対象'
+      puts '  MODE=MANUAL    手動仕訳済みページのみ'
+      puts '  ID=<id>        指定 ID のみ'
+      puts '  START=<id>     指定 ID 以降'
+      exit 1
+    end
+
     puts 'Starting person import from Wikipages...'
     puts 'Mode: MANUAL (page_type=person の手動設定済みページのみ)' if manual_mode
     count = 0
@@ -154,7 +165,7 @@ namespace :import do
 
     puts 'Import complete!'
     puts "  Imported: #{count} people"
-    puts "  Skipped:  #{skipped} pages" unless manual_mode
+    puts "  Skipped:  #{skipped} pages" unless manual_mode || ENV['ID']
   end
 
   desc 'Reset all imported data'
