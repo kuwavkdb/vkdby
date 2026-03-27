@@ -9,6 +9,7 @@ module Admin
       @show_deferred     = params[:show_deferred] == '1'
       @show_ignored      = params[:show_ignored] == '1'
       @ms_page_type      = @show_manually_set ? (params[:ms_page_type].presence || 'unit') : nil
+      @q                 = params[:q].presence
 
       scope = if @show_manually_set
                 WikiPageImport.manually_set.where.not(status: 'imported').where(page_type: @ms_page_type).includes(:wikipage).order(updated_at: :desc)
@@ -17,7 +18,9 @@ module Admin
               elsif @show_ignored
                 WikiPageImport.skipped.where(manually_set: false, note: 'ignored').includes(:wikipage).order(updated_at: :desc)
               else
-                WikiPageImport.skipped.where(manually_set: false).where.not(note: 'ignored').includes(:wikipage).order(updated_at: :desc)
+                base = WikiPageImport.skipped.where(manually_set: false).where.not(note: 'ignored')
+                base = base.joins(:wikipage).where('wikipages.name LIKE ?', "#{@q}%") if @q
+                base.includes(:wikipage).order(updated_at: :desc)
               end
 
       @pagy, @wiki_page_imports = pagy(scope, limit: 50)
@@ -43,6 +46,18 @@ module Admin
       end
     end
 
+    def set_deferred
+      wpi = WikiPageImport.find(params[:id])
+      wpi.update!(status: 'deferred', updated_at: Time.current)
+      redirect_back_or_to admin_wiki_page_imports_path, notice: '保留にしました'
+    end
+
+    def set_ignored
+      wpi = WikiPageImport.find(params[:id])
+      wpi.update!(note: 'ignored', updated_at: Time.current)
+      redirect_back_or_to admin_wiki_page_imports_path, notice: '除外しました'
+    end
+
     def update_page_type
       wpi = WikiPageImport.find(params[:id])
       page_type = params[:page_type].presence
@@ -50,8 +65,11 @@ module Admin
         wpi.update!(page_type: nil, manually_set: false)
         redirect_back_or_to admin_wiki_page_imports_path, notice: '手動仕訳をキャンセルしました'
       elsif WikiPageImport::PAGE_TYPES.include?(page_type)
-        wpi.update!(page_type: page_type, manually_set: true)
-        redirect_back_or_to admin_wiki_page_imports_path, notice: "page_type を #{page_type} に設定しました"
+        attrs = { page_type: page_type, manually_set: true }
+        attrs[:status] = 'skipped' if wpi.status == 'deferred'
+        attrs[:note] = nil if wpi.note == 'ignored'
+        wpi.update!(attrs)
+        redirect_back_or_to admin_wiki_page_imports_path, notice: "page_type を #{WikiPageImport::PAGE_TYPE_LABELS[page_type]} に設定しました"
       else
         redirect_to admin_wiki_page_imports_path, alert: '無効な page_type です'
       end

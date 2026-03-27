@@ -1,0 +1,48 @@
+<% if wiki_page_imports.any? %>
+  <% any_deferred_or_ignored = wiki_page_imports.any? { |wpi| wpi.status == 'deferred' || wpi.note == 'ignored' } %>
+  <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-4 mb-4">
+    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Wiki Page Imports</h3>
+    <div class="space-y-2">
+      <% wiki_page_imports.each do |wpi| %>
+        <div class="flex items-center justify-between gap-2 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium shrink-0
+              <%= wpi.status == 'imported'  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                  wpi.status == 'skipped'   ? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' :
+                  wpi.status == 'deferred'  ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
+                  wpi.status == 'error'     ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                                              'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' %>">
+              <%= wpi.status %>
+            </span>
+            <% if wpi.note == 'ignored' %>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 shrink-0">除外済み</span>
+            <% end %>
+            <span class="text-sm text-gray-700 dark:text-gray-300 truncate"><%= wpi.wikipage&.title %></span>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <% unless wpi.status == 'deferred' %>
+              <%= button_to '保留', set_deferred_admin_wiki_page_import_path(wpi), method: :patch,
+                    class: "px-2 py-1 text-xs bg-purple-500 text-white rounded hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-400",
+                    onclick: "return confirm('この wiki page import を保留にします。よろしいですか？')" %>
+            <% end %>
+            <% unless wpi.note == 'ignored' %>
+              <%= button_to '除外', set_ignored_admin_wiki_page_import_path(wpi), method: :patch,
+                    class: "px-2 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400",
+                    onclick: "return confirm('この wiki page import を除外します。よろしいですか？')" %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <% if any_deferred_or_ignored %>
+      <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+        <%= button_to "#{import_target.name} を論理削除する",
+              polymorphic_path([:admin, import_target]),
+              method: :delete,
+              class: "w-full px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400",
+              onclick: "return confirm('#{import_target.name} を論理削除します。よろしいですか？')" %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
