@@ -32,11 +32,11 @@
     <% if @unit.activity_periods.present? %>
       <div class="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
         <% @unit.activity_periods.each do |period| %>
-          <div>
-            <%= period.from %> 〜 <%= period.to.presence || '現在' %>
+          <div class="flex items-baseline gap-2">
             <% if period.label.present? %>
-              <span class="text-zinc-400 dark:text-zinc-500">(<%= period.label %>)</span>
+              <span class="text-zinc-400 dark:text-zinc-500 shrink-0"><%= period.label %></span>
             <% end %>
+            <span class="whitespace-nowrap"><%= period.from %> 〜 <%= period.to.presence || '現在' %></span>
           </div>
         <% end %>
       </div>
