@@ -28,9 +28,13 @@ def update_wiki_page_import_as_imported(wikipage, page_type:, target:)
   )
 end
 
-def update_wiki_page_import_as_skipped(wikipage, note:)
+def update_wiki_page_import_as_skipped(wikipage, note:, page_type: nil)
   wpi = WikiPageImport.find_or_create_by!(wikipage_id: wikipage.id)
-  wpi.update!(status: 'skipped', note: note) if wpi.status == 'pending'
+  return unless wpi.status == 'pending'
+
+  attrs = { status: 'skipped', note: note }
+  attrs[:page_type] = page_type if page_type
+  wpi.update!(attrs)
 end
 
 def format_skip_log(wikipage)
