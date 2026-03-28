@@ -4,12 +4,14 @@ namespace :import do
   desc 'Import units with snapshots from Wikipages (V2)'
   task units_v2: :environment do
     mode = ENV['MODE']
-    manual_mode = mode == 'MANUAL'
+    manual_mode  = mode == 'MANUAL'
+    skipped_mode = mode == 'SKIPPED'
 
-    unless manual_mode || mode == 'ALL' || ENV['ID'] || ENV['START']
+    unless manual_mode || skipped_mode || mode == 'ALL' || ENV['ID'] || ENV['START']
       puts 'Error: 実行条件を指定してください。'
       puts '  MODE=ALL       全件対象'
       puts '  MODE=MANUAL    手動仕訳済みページのみ'
+      puts '  MODE=SKIPPED   スキップ済みページのみ再処理'
       puts '  ID=<id>        指定 ID のみ'
       puts '  START=<id>     指定 ID 以降'
       exit 1
@@ -17,12 +19,15 @@ namespace :import do
 
     puts 'Starting unit import with snapshots from Wikipages (V2)...'
     puts 'Mode: MANUAL (page_type=unit の手動設定済みページのみ)' if manual_mode
+    puts 'Mode: SKIPPED (スキップ済みページのみ再処理)' if skipped_mode
     count = 0
     skipped = 0
     snapshots_created = 0
 
     if manual_mode
       query = WikiPageImport.manually_set.where(page_type: 'unit').includes(:wikipage)
+    elsif skipped_mode
+      query = WikiPageImport.skipped.includes(:wikipage)
     else
       query = Wikipage.all
       if ENV['ID']
@@ -37,7 +42,7 @@ namespace :import do
     limit = ENV['LIMIT']&.to_i
     puts "Limit: #{limit}" if limit
 
-    if manual_mode
+    if manual_mode || skipped_mode
       query.find_each do |wpi|
         break if limit && count >= limit
 
@@ -47,17 +52,7 @@ namespace :import do
           next
         end
 
-        # ID指定時: インポート前に既存の関連レコードを削除
-        if ENV['ID']
-          existing_unit = Unit.find_by(old_wiki_id: wp.id)
-          if existing_unit
-            sections_count = existing_unit.sections.count
-            links_count = existing_unit.links.count
-            existing_unit.sections.destroy_all
-            existing_unit.links.destroy_all
-            puts "  Pre-delete: #{sections_count} sections, #{links_count} links (#{existing_unit.name})"
-          end
-        end
+        next if skipped_mode && !WikipageImporter.valid_unit?(wp)
 
         WikipageImporterV2.import(wp)
         count += 1
@@ -107,6 +102,6 @@ namespace :import do
     puts 'Import complete!'
     puts "  Imported: #{count} units"
     puts "  Snapshots created: #{snapshots_created}"
-    puts "  Skipped:  #{skipped} pages" unless manual_mode || ENV['ID']
+    puts "  Skipped:  #{skipped} pages" unless manual_mode || skipped_mode || ENV['ID']
   end
 end

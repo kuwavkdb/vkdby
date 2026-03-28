@@ -91,12 +91,18 @@ Wikipageからユニット（Unit）データと、日付付きメンバーセ�
 **使用方法**:
 ```bash
 # 全件インポート
-PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2
+MODE=ALL PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2
+
+# 手動仕訳済みページのみ（page_type=unit かつ manually_set=true）
+MODE=MANUAL PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2
+
+# スキップ済みページを再処理（valid_unit? を再判定してインポート）
+MODE=SKIPPED PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2
 
 # パラメータ指定
 ID=6555 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2       # 特定IDのみ
 START=5000 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2    # ID 5000以降
-LIMIT=10 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2      # 最大10件まで
+LIMIT=10 MODE=ALL PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2  # 最大10件まで
 ```
 
 **インポート対象**:
