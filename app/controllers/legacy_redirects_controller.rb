@@ -3,7 +3,7 @@
 class LegacyRedirectsController < ApplicationController
   def show
     old_key = params[:old_key]
-    encoded_old_key = URI.encode_www_form_component(old_key)
+    encoded_old_key = URI.encode_www_form_component(old_key.gsub('+', ' '))
 
     # Try to find Unit by old_key
     if (unit = Unit.find_by(old_key: old_key) || Unit.find_by(old_key: encoded_old_key))
