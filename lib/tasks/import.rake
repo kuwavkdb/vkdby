@@ -30,7 +30,7 @@ end
 
 def update_wiki_page_import_as_skipped(wikipage, note:, page_type: nil)
   wpi = WikiPageImport.find_or_create_by!(wikipage_id: wikipage.id)
-  return unless wpi.status == 'pending'
+  return unless wpi.status == 'pending' || (page_type.present? && wpi.page_type.nil?)
 
   attrs = { status: 'skipped', note: note }
   attrs[:page_type] = page_type if page_type
