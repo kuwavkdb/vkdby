@@ -99,6 +99,7 @@ namespace :import do
         else
           skipped += 1
           puts format_skip_log(wp) if wp.title.present? && !PersonImporter.valid_person?(wp)
+          update_wiki_page_import_as_skipped(wp, note: nil, page_type: 'moved') if wp.wiki.to_s.lines.first(3).any? { |line| line.include?('移動しました') }
         end
       end
     end
