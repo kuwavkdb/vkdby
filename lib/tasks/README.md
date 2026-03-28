@@ -113,6 +113,42 @@ LIMIT=10 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2      # 
 - 日付がない（ラベルのみの）セクションはスキップされます
 
 
+### 2-3. import:moved - 移動ページのインポート
+
+`wiki_page_imports` の `status=skipped, page_type=moved` なページを対象に、`units` テーブルへ移動先情報を持つレコードを作成します。
+
+**使用方法**:
+```bash
+# 通常実行
+bundle exec rails import:moved
+
+# ドライランモード（DB への書き込みなしで結果を確認）
+DRYRUN=1 bundle exec rails import:moved
+```
+
+**処理内容**:
+
+wiki カラムの内容に応じて以下の3パターンで処理します。
+
+| 条件 | 処理 |
+|---|---|
+| `[[XXXX]]` または `[[表示名\|XXXX]]` が存在する | `units` または `people` を `old_key=XXXX` で検索し、移動先 Unit を作成 → `imported` に更新 |
+| `{{include ...}}` が存在する（wiki link なし） | 対象外のためスルー（ステータス変更なし） |
+| どちらでもない | `note='not moved'` で `skipped` のまま更新 |
+
+**作成される Unit レコード**:
+- `unit_type: moved`
+- `destination_key`: 移動先の Unit / Person の `key`
+- `key` / `old_key`: 移動元ページ名から生成
+
+**移動先が見つからない場合**:
+- `note='destination not found'` で更新（`status` は `skipped` のまま）
+
+**リダイレクト**:
+- `/{key}` にアクセスすると `destination_key` のページへ 301 リダイレクトされます
+
+---
+
 ### 3. import:reset - インポートデータの初期化
 
 インポートされたデータを全て削除し、データベースを初期状態（インポート前）に戻します。

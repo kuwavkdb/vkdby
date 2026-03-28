@@ -5,6 +5,11 @@ class ProfilesController < ApplicationController
     @resource = Unit.kept.includes(:links).find_by(key: params[:key]) ||
                 Person.kept.includes(:links).find_by!(key: params[:key])
 
+    if @resource.is_a?(Unit) && @resource.destination_key.present?
+      redirect_to profile_path(@resource.destination_key), status: :moved_permanently
+      return
+    end
+
     @links = @resource.links.where(active: true).order(:sort_order)
 
     @resource.is_a?(Person) ? load_person_data : load_unit_data
