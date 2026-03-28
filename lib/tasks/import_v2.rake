@@ -27,7 +27,7 @@ namespace :import do
     if manual_mode
       query = WikiPageImport.manually_set.where(page_type: 'unit').includes(:wikipage)
     elsif skipped_mode
-      query = WikiPageImport.skipped.includes(:wikipage)
+      query = WikiPageImport.skipped.where(page_type: [nil, 'unit']).includes(:wikipage)
     else
       query = Wikipage.all
       if ENV['ID']
