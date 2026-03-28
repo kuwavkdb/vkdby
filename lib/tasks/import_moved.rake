@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+MOVED_WIKI_LINK_RE = /\[\[(?:[^|\]]+\|)?([^\]]+)\]\]/
+MOVED_INCLUDE_RE   = /\{\{include\s+/i
+
 namespace :import do
   desc 'Import moved pages from WikiPageImports (page_type=moved)'
   task moved: :environment do
@@ -11,9 +14,6 @@ namespace :import do
     skipped_no_dest = 0
     skipped_not_moved = 0
     skipped_include = 0
-
-    WIKI_LINK_RE = /\[\[(?:[^\|\]]+\|)?([^\]]+)\]\]/
-    INCLUDE_RE   = /\{\{include\s+/i
 
     scope = WikiPageImport.where(status: 'skipped', page_type: 'moved').includes(:wikipage)
     total = scope.count
@@ -28,7 +28,7 @@ namespace :import do
 
       wiki = wp.wiki.to_s
 
-      if (m = wiki.match(WIKI_LINK_RE))
+      if (m = wiki.match(MOVED_WIKI_LINK_RE))
         destination_name = m[1].strip
         destination = Unit.find_by(old_key: destination_name) ||
                       Person.find_by(old_key: destination_name)
@@ -74,7 +74,7 @@ namespace :import do
         puts "[IMPORTED] #{wp.title} (ID: #{wp.id}) → #{destination.key} (key: #{unique_key})"
         count += 1
 
-      elsif wiki.match?(INCLUDE_RE)
+      elsif wiki.match?(MOVED_INCLUDE_RE)
         puts "[SKIP/INCLUDE] #{wp.title} (ID: #{wp.id})"
         skipped_include += 1
 
