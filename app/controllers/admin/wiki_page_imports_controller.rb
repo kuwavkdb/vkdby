@@ -8,6 +8,10 @@ module Admin
       @show_manually_set = params[:manually_set] == '1'
       @show_deferred     = params[:show_deferred] == '1'
       @show_ignored      = params[:show_ignored] == '1'
+      @show_pending          = params[:show_pending] == '1'
+      @show_error            = params[:show_error] == '1'
+      @show_imported         = params[:show_imported] == '1'
+      @show_imported_ignored = params[:show_imported_ignored] == '1'
       @ms_page_type      = @show_manually_set ? (params[:ms_page_type].presence || 'unit') : nil
       @q                 = params[:q].presence
 
@@ -17,6 +21,14 @@ module Admin
                 WikiPageImport.deferred.includes(:wikipage).order(updated_at: :desc)
               elsif @show_ignored
                 WikiPageImport.skipped.where(manually_set: false, note: 'ignored').includes(:wikipage).order(updated_at: :desc)
+              elsif @show_pending
+                WikiPageImport.pending.includes(:wikipage).order(updated_at: :desc)
+              elsif @show_error
+                WikiPageImport.error.includes(:wikipage).order(updated_at: :desc)
+              elsif @show_imported
+                WikiPageImport.imported.where.not(note: 'ignored').includes(:wikipage, :import_target).order(updated_at: :desc)
+              elsif @show_imported_ignored
+                WikiPageImport.imported.where(note: 'ignored').includes(:wikipage, :import_target).order(updated_at: :desc)
               else
                 base = WikiPageImport.skipped.where(manually_set: false).where.not(note: 'ignored')
                 base = base.joins(:wikipage).where('wikipages.name LIKE ?', "#{@q}%") if @q
