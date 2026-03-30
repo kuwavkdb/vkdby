@@ -1,7 +1,15 @@
 <div class="container mx-auto px-4 py-8">
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-      Wiki Page Imports（<%= @show_manually_set ? "手動仕訳済み - #{WikiPageImport::PAGE_TYPE_LABELS[@ms_page_type]}" : @show_deferred ? '保留' : @show_ignored ? '除外済み' : 'スキップ済み' %>）
+      Wiki Page Imports（<%= if @show_manually_set then "手動仕訳済み - #{WikiPageImport::PAGE_TYPE_LABELS[@ms_page_type]}"
+                             elsif @show_deferred  then '保留'
+                             elsif @show_ignored   then '除外済み'
+                             elsif @show_pending          then '未処理'
+                             elsif @show_error            then 'エラー'
+                             elsif @show_imported         then '取込済み'
+                             elsif @show_imported_ignored then '取込済み（除外）'
+                             else 'スキップ済み'
+                             end %>）
     </h1>
     <div class="flex items-center gap-2">
       <span class="text-sm text-gray-500 dark:text-gray-400"><%= @pagy.count %> 件</span>
@@ -11,7 +19,7 @@
   <%# タブナビゲーション %>
   <div class="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-700">
     <%= link_to admin_wiki_page_imports_path,
-          class: "px-4 py-2 text-sm font-medium rounded-t-md border border-b-0 #{!@show_manually_set && !@show_deferred && !@show_ignored ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100' : 'bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}" do %>
+          class: "px-4 py-2 text-sm font-medium rounded-t-md border border-b-0 #{!@show_manually_set && !@show_deferred && !@show_ignored && !@show_pending && !@show_error && !@show_imported && !@show_imported_ignored ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100' : 'bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}" do %>
       スキップ済み
     <% end %>
     <%= link_to admin_wiki_page_imports_path(manually_set: 1),
@@ -25,6 +33,22 @@
     <%= link_to admin_wiki_page_imports_path(show_ignored: 1),
           class: "px-4 py-2 text-sm font-medium rounded-t-md border border-b-0 #{@show_ignored ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100' : 'bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}" do %>
       除外済み
+    <% end %>
+    <%= link_to admin_wiki_page_imports_path(show_pending: 1),
+          class: "px-4 py-2 text-sm font-medium rounded-t-md border border-b-0 #{@show_pending ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100' : 'bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}" do %>
+      未処理
+    <% end %>
+    <%= link_to admin_wiki_page_imports_path(show_error: 1),
+          class: "px-4 py-2 text-sm font-medium rounded-t-md border border-b-0 #{@show_error ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100' : 'bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}" do %>
+      エラー
+    <% end %>
+    <%= link_to admin_wiki_page_imports_path(show_imported: 1),
+          class: "px-4 py-2 text-sm font-medium rounded-t-md border border-b-0 #{@show_imported ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100' : 'bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}" do %>
+      取込済み
+    <% end %>
+    <%= link_to admin_wiki_page_imports_path(show_imported_ignored: 1),
+          class: "px-4 py-2 text-sm font-medium rounded-t-md border border-b-0 #{@show_imported_ignored ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100' : 'bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}" do %>
+      取込済み（除外）
     <% end %>
   </div>
 
@@ -41,7 +65,7 @@
   <% end %>
 
   <%# スキップ済み一覧用フォーム（bulk_ignore / bulk_set_deferred 兼用） %>
-  <% if !@show_manually_set && !@show_deferred && !@show_ignored %>
+  <% if !@show_manually_set && !@show_deferred && !@show_ignored && !@show_pending && !@show_error && !@show_imported && !@show_imported_ignored %>
     <%= form_with url: admin_wiki_page_imports_path, method: :get, class: "mb-4 flex items-center gap-2" do |sf| %>
       <%= sf.text_field :q, value: @q, placeholder: "NAME 前方一致で検索…",
             class: "text-sm rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-1.5 px-3 w-64",
@@ -145,8 +169,8 @@
       </div>
     <% end %>
 
-  <%# Deferred / Ignored 一覧（読み取り専用） %>
-  <% elsif @show_deferred || @show_ignored %>
+  <%# Deferred / Ignored / Pending / Error / Imported 一覧（読み取り専用） %>
+  <% elsif @show_deferred || @show_ignored || @show_pending || @show_error || @show_imported || @show_imported_ignored %>
     <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg mb-4">
       <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead class="bg-gray-50 dark:bg-gray-700">
@@ -163,7 +187,15 @@
           <% @wiki_page_imports.each do |wpi| %>
             <tr>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"><%= wpi.wikipage_id %></td>
-              <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100"><%= wpi.wikipage&.title %></td>
+              <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                <% if (@show_imported || @show_imported_ignored) && wpi.import_target&.key.present? %>
+                  <%= link_to "/#{wpi.import_target.key}", class: "hover:text-indigo-500 hover:underline" do %>
+                    <%= wpi.wikipage&.title.presence || '（タイトルなし）' %>
+                  <% end %>
+                <% else %>
+                  <%= wpi.wikipage&.title.presence || '（タイトルなし）' %>
+                <% end %>
+              </td>
               <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                 <% if wpi.wikipage %>
                   <%= link_to wpi.wikipage.vkdb_url, target: "_blank", rel: "noopener", class: "group flex items-center gap-1 hover:text-indigo-500 transition-colors" do %>
