@@ -529,6 +529,7 @@ class WikipageImporterV2 < WikipageImporter
     sort_order = options[:sort_order]
 
     # パートをパース
+    part_str = part_str&.sub(/^!/, '')
     part_enum = parse_part(part_str)
     support = part_str&.include?('サポート') || part_str&.include?('sup') || false
     cleaned_part_alias = extract_name_from_wiki_link(part_str)&.gsub(/サポート|sup/i, '')&.strip
@@ -541,7 +542,7 @@ class WikipageImporterV2 < WikipageImporter
 
     snapshot.snapshot_people.create!(
       person: person,
-      person_name: person ? nil : name_str,
+      person_name: name_str,
       person_key: person&.key,
       old_person_key: old_member_key,
       part: part_enum,
