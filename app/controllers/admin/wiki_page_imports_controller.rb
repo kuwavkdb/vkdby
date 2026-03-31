@@ -42,9 +42,9 @@ module Admin
       ids = Array(params[:ids]).map(&:to_i).reject(&:zero?)
       if ids.any?
         WikiPageImport.where(id: ids).update_all(status: 'deferred', updated_at: Time.current)
-        redirect_to admin_wiki_page_imports_path, notice: "#{ids.size} 件を保留にしました"
+        redirect_back_or_to admin_wiki_page_imports_path, notice: "#{ids.size} 件を保留にしました"
       else
-        redirect_to admin_wiki_page_imports_path, alert: '項目が選択されていません'
+        redirect_back_or_to admin_wiki_page_imports_path, alert: '項目が選択されていません'
       end
     end
 
@@ -52,9 +52,9 @@ module Admin
       ids = Array(params[:ids]).map(&:to_i).reject(&:zero?)
       if ids.any?
         WikiPageImport.where(id: ids).update_all(note: 'ignored', updated_at: Time.current)
-        redirect_to admin_wiki_page_imports_path, notice: "#{ids.size} 件を除外しました"
+        redirect_back_or_to admin_wiki_page_imports_path, notice: "#{ids.size} 件を除外しました"
       else
-        redirect_to admin_wiki_page_imports_path, alert: '項目が選択されていません'
+        redirect_back_or_to admin_wiki_page_imports_path, alert: '項目が選択されていません'
       end
     end
 
