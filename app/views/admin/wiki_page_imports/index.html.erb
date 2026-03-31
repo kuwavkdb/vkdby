@@ -169,12 +169,18 @@
       </div>
     <% end %>
 
-  <%# Deferred / Ignored / Pending / Error / Imported 一覧（読み取り専用） %>
+  <%# Deferred / Ignored / Pending / Error / Imported 一覧 %>
   <% elsif @show_deferred || @show_ignored || @show_pending || @show_error || @show_imported || @show_imported_ignored %>
+    <%= form_with url: bulk_revert_admin_wiki_page_imports_path, method: :patch, id: "revert-form" do %>
     <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg mb-4">
       <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead class="bg-gray-50 dark:bg-gray-700">
           <tr>
+            <% if @show_imported %>
+              <th class="px-4 py-3">
+                <input type="checkbox" id="check_all" class="rounded border-gray-300 dark:border-gray-600" onclick="document.querySelectorAll('.row-check').forEach(c => c.checked = this.checked)" aria-label="すべて選択">
+              </th>
+            <% end %>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ID</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Title</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
@@ -186,7 +192,13 @@
         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
           <% @wiki_page_imports.each do |wpi| %>
             <tr>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"><%= wpi.wikipage_id %></td>
+              <% if @show_imported %>
+                <td class="px-4 py-4">
+                  <input type="checkbox" name="ids[]" value="<%= wpi.id %>" class="row-check rounded border-gray-300 dark:border-gray-600" aria-label="<%= wpi.wikipage&.title %> を選択">
+                </td>
+              <% end %>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400<%= ' cursor-pointer select-none' if @show_imported %>"
+                  <%= "onclick=\"this.closest('tr').querySelector('.row-check').click()\"".html_safe if @show_imported %>><%= wpi.wikipage_id %></td>
               <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                 <% if (@show_imported || @show_imported_ignored) && wpi.import_target&.key.present? %>
                   <%= link_to "/#{wpi.import_target.key}", class: "hover:text-indigo-500 hover:underline" do %>
@@ -231,6 +243,17 @@
         </tbody>
       </table>
     </div>
+
+    <% if @show_imported %>
+      <div class="sticky bottom-0 z-10 flex items-center justify-end bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 shadow-md">
+        <button type="submit"
+                onclick="return confirmRevert()"
+                class="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 cursor-pointer">
+          選択した項目を取込前に戻す
+        </button>
+      </div>
+    <% end %>
+    <% end %>  <%# /form_with %>
 
   <%# 手動仕訳済み一覧 %>
   <% else %>
@@ -347,6 +370,15 @@
   <% end %>
 
   <script>
+    function confirmRevert() {
+      var checked = document.querySelectorAll('.row-check:checked');
+      if (checked.length === 0) {
+        alert('項目が選択されていません');
+        return false;
+      }
+      return confirm('選択した ' + checked.length + ' 件のインポート済みデータを削除し、取込前の状態に戻します。この操作は取り消せません。よろしいですか？');
+    }
+
     function submitRowPageType(id) {
       document.getElementById('pt-value-' + id).value = document.getElementById('pt-select-' + id).value;
       document.getElementById('pt-form-' + id).requestSubmit();

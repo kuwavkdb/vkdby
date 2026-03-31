@@ -87,6 +87,30 @@ module Admin
       end
     end
 
+    def bulk_revert
+      ids = Array(params[:ids]).map(&:to_i).reject(&:zero?)
+      if ids.empty?
+        redirect_to admin_wiki_page_imports_path(show_imported: 1), alert: '項目が選択されていません'
+        return
+      end
+
+      wpis = WikiPageImport.where(id: ids, status: 'imported')
+      reverted = 0
+      ActiveRecord::Base.transaction do
+        wpis.each do |wpi|
+          wpi.import_target&.destroy!
+          wpi.update!(
+            status: 'pending',
+            import_target_type: nil,
+            import_target_id: nil,
+            last_imported_at: nil
+          )
+          reverted += 1
+        end
+      end
+      redirect_to admin_wiki_page_imports_path(show_imported: 1), notice: "#{reverted} 件を取込前の状態に戻しました"
+    end
+
     def bulk_update_page_type
       ids = Array(params[:ids]).map(&:to_i).reject(&:zero?)
       page_type = params[:page_type].presence
