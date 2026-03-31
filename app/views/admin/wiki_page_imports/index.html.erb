@@ -253,17 +253,35 @@
         </button>
       </div>
     <% elsif @show_pending %>
-      <div class="sticky bottom-0 z-10 flex items-center justify-end gap-2 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 shadow-md">
-        <button type="button"
-                onclick="submitBulkDeferred()"
-                class="px-4 py-2 text-sm bg-purple-500 text-white rounded-md hover:bg-purple-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-400">
-          選択した項目を保留にする
-        </button>
-        <button type="button"
-                onclick="submitBulkIgnore()"
-                class="px-4 py-2 text-sm bg-yellow-500 text-white rounded-md hover:bg-yellow-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-yellow-400">
-          選択した項目を除外する
-        </button>
+      <div class="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 shadow-md">
+        <div class="flex items-center gap-2">
+          <label class="text-sm text-gray-600 dark:text-gray-400">一括設定:</label>
+          <select id="bulk-pt-select"
+                  class="text-sm rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-1.5 pr-8"
+                  aria-label="一括設定する page_type">
+            <option value="">-- page_type --</option>
+            <% WikiPageImport::PAGE_TYPES.each do |pt| %>
+              <option value="<%= pt %>"><%= WikiPageImport::PAGE_TYPE_LABELS[pt] %></option>
+            <% end %>
+          </select>
+          <button type="button"
+                  onclick="submitBulkPageType()"
+                  class="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer">
+            選択した項目の page_type を設定
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button"
+                  onclick="submitBulkDeferred()"
+                  class="px-4 py-2 text-sm bg-purple-500 text-white rounded-md hover:bg-purple-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-400">
+            選択した項目を保留にする
+          </button>
+          <button type="button"
+                  onclick="submitBulkIgnore()"
+                  class="px-4 py-2 text-sm bg-yellow-500 text-white rounded-md hover:bg-yellow-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            選択した項目を除外する
+          </button>
+        </div>
       </div>
     <% end %>
 
@@ -349,7 +367,7 @@
         </table>
       </div>
 
-      <div class="sticky bottom-0 z-10 flex flex-wrap items-center gap-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 shadow-md">
+      <div class="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 shadow-md">
         <div class="flex items-center gap-2">
           <label class="text-sm text-gray-600 dark:text-gray-400">一括設定:</label>
           <select id="bulk-pt-select"
@@ -364,6 +382,18 @@
                   onclick="submitBulkPageType()"
                   class="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer">
             選択した項目の page_type を設定
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button"
+                  onclick="submitBulkDeferred()"
+                  class="px-4 py-2 text-sm bg-purple-500 text-white rounded-md hover:bg-purple-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-400">
+            選択した項目を保留にする
+          </button>
+          <button type="button"
+                  onclick="submitBulkIgnore()"
+                  class="px-4 py-2 text-sm bg-yellow-500 text-white rounded-md hover:bg-yellow-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            選択した項目を除外する
           </button>
         </div>
       </div>

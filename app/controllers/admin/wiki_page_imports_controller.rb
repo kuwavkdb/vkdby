@@ -51,7 +51,8 @@ module Admin
     def bulk_ignore
       ids = Array(params[:ids]).map(&:to_i).reject(&:zero?)
       if ids.any?
-        WikiPageImport.where(id: ids).update_all(note: 'ignored', updated_at: Time.current)
+        # manually_set をクリアしないと除外タブ（manually_set: false が条件）に表示されない
+        WikiPageImport.where(id: ids).update_all(note: 'ignored', manually_set: false, updated_at: Time.current)
         # pending レコードは status も skipped に変更しないと除外タブに表示されない
         WikiPageImport.where(id: ids, status: 'pending').update_all(status: 'skipped', updated_at: Time.current)
         redirect_back_or_to admin_wiki_page_imports_path, notice: "#{ids.size} 件を除外しました"
@@ -80,7 +81,7 @@ module Admin
         redirect_back_or_to admin_wiki_page_imports_path, notice: '手動仕訳をキャンセルしました'
       elsif WikiPageImport::PAGE_TYPES.include?(page_type)
         attrs = { page_type: page_type, manually_set: true }
-        attrs[:status] = 'skipped' if wpi.status == 'deferred'
+        attrs[:status] = 'skipped' if wpi.status == 'deferred' || wpi.status == 'pending'
         attrs[:note] = nil if wpi.note == 'ignored'
         wpi.update!(attrs)
         redirect_back_or_to admin_wiki_page_imports_path, notice: "page_type を #{WikiPageImport::PAGE_TYPE_LABELS[page_type]} に設定しました"
@@ -123,6 +124,7 @@ module Admin
         redirect_back_or_to admin_wiki_page_imports_path, notice: "#{ids.size} 件の手動仕訳をキャンセルしました"
       elsif WikiPageImport::PAGE_TYPES.include?(page_type)
         WikiPageImport.where(id: ids).update_all(page_type: page_type, manually_set: true, updated_at: Time.current)
+        WikiPageImport.where(id: ids, status: 'pending').update_all(status: 'skipped', updated_at: Time.current)
         redirect_back_or_to admin_wiki_page_imports_path, notice: "#{ids.size} 件の page_type を #{page_type} に設定しました"
       else
         redirect_to admin_wiki_page_imports_path, alert: 'page_type を選択してください'
