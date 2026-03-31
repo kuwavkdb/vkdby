@@ -171,6 +171,19 @@
 
   <%# Deferred / Ignored / Pending / Error / Imported 一覧 %>
   <% elsif @show_deferred || @show_ignored || @show_pending || @show_error || @show_imported || @show_imported_ignored %>
+    <% if @show_imported %>
+      <%= form_with url: admin_wiki_page_imports_path, method: :get, class: "mb-4 flex items-center gap-2" do |sf| %>
+        <%= sf.hidden_field :show_imported, value: '1' %>
+        <%= sf.text_field :q, value: @q, placeholder: "タイトルでキーワード検索…",
+              class: "text-sm rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-1.5 px-3 w-64",
+              aria: { label: "タイトルキーワード検索" } %>
+        <%= sf.submit "検索", class: "px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 cursor-pointer" %>
+        <% if @q %>
+          <%= link_to "クリア", admin_wiki_page_imports_path(show_imported: 1),
+                class: "px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600" %>
+        <% end %>
+      <% end %>
+    <% end %>
     <% show_checkboxes = @show_imported || @show_pending %>
     <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg mb-4">
       <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">

@@ -26,7 +26,9 @@ module Admin
               elsif @show_error
                 WikiPageImport.error.includes(:wikipage).order(updated_at: :desc)
               elsif @show_imported
-                WikiPageImport.imported.where.not(note: 'ignored').includes(:wikipage, :import_target).order(updated_at: :desc)
+                base = WikiPageImport.imported.where.not(note: 'ignored')
+                base = base.joins(:wikipage).where('wikipages.title LIKE ?', "%#{@q}%") if @q
+                base.includes(:wikipage, :import_target).order(updated_at: :desc)
               elsif @show_imported_ignored
                 WikiPageImport.imported.where(note: 'ignored').includes(:wikipage, :import_target).order(updated_at: :desc)
               else
