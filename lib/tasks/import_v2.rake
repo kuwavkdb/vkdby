@@ -6,12 +6,14 @@ namespace :import do
     mode = ENV['MODE']
     manual_mode  = mode == 'MANUAL'
     skipped_mode = mode == 'SKIPPED'
+    reload_mode  = mode == 'RELOAD'
 
-    unless manual_mode || skipped_mode || mode == 'ALL' || ENV['ID'] || ENV['START']
+    unless manual_mode || skipped_mode || reload_mode || mode == 'ALL' || ENV['ID'] || ENV['START']
       puts 'Error: 実行条件を指定してください。'
       puts '  MODE=ALL       全件対象'
       puts '  MODE=MANUAL    手動仕訳済みページのみ'
       puts '  MODE=SKIPPED   スキップ済みページのみ再処理'
+      puts '  MODE=RELOAD    インポート済みの全Unitを再取り込み'
       puts '  ID=<id>        指定 ID のみ'
       puts '  START=<id>     指定 ID 以降'
       exit 1
@@ -20,6 +22,7 @@ namespace :import do
     puts 'Starting unit import with snapshots from Wikipages (V2)...'
     puts 'Mode: MANUAL (page_type=unit の手動設定済みページのみ)' if manual_mode
     puts 'Mode: SKIPPED (スキップ済みページのみ再処理)' if skipped_mode
+    puts 'Mode: RELOAD (インポート済みの全Unitを再取り込み)' if reload_mode
     count = 0
     skipped = 0
     snapshots_created = 0
@@ -28,6 +31,8 @@ namespace :import do
       query = WikiPageImport.manually_set.where(page_type: 'unit').includes(:wikipage)
     elsif skipped_mode
       query = WikiPageImport.skipped.where(page_type: [nil, 'unit']).includes(:wikipage)
+    elsif reload_mode
+      query = WikiPageImport.imported.where(page_type: 'unit').includes(:wikipage)
     else
       query = Wikipage.all
       if ENV['ID']
@@ -42,7 +47,7 @@ namespace :import do
     limit = ENV['LIMIT']&.to_i
     puts "Limit: #{limit}" if limit
 
-    if manual_mode || skipped_mode
+    if manual_mode || skipped_mode || reload_mode
       query.find_each do |wpi|
         break if limit && count >= limit
 
@@ -53,6 +58,17 @@ namespace :import do
         end
 
         next if skipped_mode && !WikipageImporter.valid_unit?(wp)
+
+        if reload_mode
+          existing_unit = Unit.find_by(old_wiki_id: wp.id)
+          if existing_unit
+            sections_count = existing_unit.sections.count
+            links_count = existing_unit.links.count
+            existing_unit.sections.destroy_all
+            existing_unit.links.destroy_all
+            puts "  Pre-delete: #{sections_count} sections, #{links_count} links (#{existing_unit.name})"
+          end
+        end
 
         WikipageImporterV2.import(wp)
         count += 1
@@ -102,6 +118,6 @@ namespace :import do
     puts 'Import complete!'
     puts "  Imported: #{count} units"
     puts "  Snapshots created: #{snapshots_created}"
-    puts "  Skipped:  #{skipped} pages" unless manual_mode || skipped_mode || ENV['ID']
+    puts "  Skipped:  #{skipped} pages" unless manual_mode || skipped_mode || reload_mode || ENV['ID']
   end
 end
