@@ -99,6 +99,9 @@ MODE=MANUAL PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2
 # スキップ済みページを再処理（valid_unit? を再判定してインポート）
 MODE=SKIPPED PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2
 
+# インポート済みの全Unitを再取り込み（sections/links/snapshots を再作成）
+MODE=RELOAD PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2
+
 # パラメータ指定
 ID=6555 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2       # 特定IDのみ
 START=5000 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2    # ID 5000以降
@@ -113,6 +116,12 @@ LIMIT=10 MODE=ALL PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v
 - `!!メンバー（yyyy/mm/dd）` - 例: `!!メンバー（2023/04/15）`
 - `!!メンバー（yyyy年mm月dd日）` - 例: `!!メンバー（2023年4月15日）`
 - `!!メンバー（ラベル）` - 例: `!!メンバー（結成時）` ※日付なしのため、スナップショットは作成されません
+
+**MODE=RELOAD の動作**:
+- `wiki_page_imports` の `status=imported, page_type=unit` なページを対象に再インポート
+- インポート前に既存の `sections` / `links` を削除してから再作成
+- スナップショット（`unit_snapshots` / `snapshot_people`）はインポーター内部で削除・再作成
+- `LIMIT` オプションと組み合わせ可能
 
 **注意**:
 - 既存のスナップショットがある場合はスキップされます

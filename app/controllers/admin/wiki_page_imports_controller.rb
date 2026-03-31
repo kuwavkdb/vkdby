@@ -40,33 +40,28 @@ module Admin
 
     def bulk_set_deferred
       ids = Array(params[:ids]).map(&:to_i).reject(&:zero?)
-      if ids.any?
-        WikiPageImport.where(id: ids).update_all(status: 'deferred', updated_at: Time.current)
-        redirect_to admin_wiki_page_imports_path, notice: "#{ids.size} 件を保留にしました"
-      else
-        redirect_to admin_wiki_page_imports_path, alert: '項目が選択されていません'
-      end
+      return redirect_back_or_to admin_wiki_page_imports_path, alert: '項目が選択されていません' if ids.empty?
+
+      WikiPageImport.where(id: ids).update_all(status: 'deferred', updated_at: Time.current)
+      redirect_back_or_to admin_wiki_page_imports_path, notice: "#{ids.size} 件を保留にしました"
     end
 
     def bulk_ignore
       ids = Array(params[:ids]).map(&:to_i).reject(&:zero?)
-      if ids.any?
-        WikiPageImport.where(id: ids).update_all(note: 'ignored', updated_at: Time.current)
-        redirect_to admin_wiki_page_imports_path, notice: "#{ids.size} 件を除外しました"
-      else
-        redirect_to admin_wiki_page_imports_path, alert: '項目が選択されていません'
-      end
+      return redirect_back_or_to admin_wiki_page_imports_path, alert: '項目が選択されていません' if ids.empty?
+
+      WikiPageImport.where(id: ids).update_all(note: 'ignored', manually_set: false, updated_at: Time.current)
+      WikiPageImport.where(id: ids, status: 'pending').update_all(status: 'skipped', updated_at: Time.current)
+      redirect_back_or_to admin_wiki_page_imports_path, notice: "#{ids.size} 件を除外しました"
     end
 
     def set_deferred
-      wpi = WikiPageImport.find(params[:id])
-      wpi.update!(status: 'deferred', updated_at: Time.current)
+      WikiPageImport.find(params[:id]).update!(status: 'deferred', updated_at: Time.current)
       redirect_back_or_to admin_wiki_page_imports_path, notice: '保留にしました'
     end
 
     def set_ignored
-      wpi = WikiPageImport.find(params[:id])
-      wpi.update!(note: 'ignored', updated_at: Time.current)
+      WikiPageImport.find(params[:id]).update!(note: 'ignored', updated_at: Time.current)
       redirect_back_or_to admin_wiki_page_imports_path, notice: '除外しました'
     end
 
@@ -78,13 +73,27 @@ module Admin
         redirect_back_or_to admin_wiki_page_imports_path, notice: '手動仕訳をキャンセルしました'
       elsif WikiPageImport::PAGE_TYPES.include?(page_type)
         attrs = { page_type: page_type, manually_set: true }
-        attrs[:status] = 'skipped' if wpi.status == 'deferred'
+        attrs[:status] = 'skipped' if %w[deferred pending].include?(wpi.status)
         attrs[:note] = nil if wpi.note == 'ignored'
         wpi.update!(attrs)
         redirect_back_or_to admin_wiki_page_imports_path, notice: "page_type を #{WikiPageImport::PAGE_TYPE_LABELS[page_type]} に設定しました"
       else
         redirect_to admin_wiki_page_imports_path, alert: '無効な page_type です'
       end
+    end
+
+    def bulk_revert
+      ids = Array(params[:ids]).map(&:to_i).reject(&:zero?)
+      return redirect_to admin_wiki_page_imports_path(show_imported: 1), alert: '項目が選択されていません' if ids.empty?
+
+      wpis = WikiPageImport.where(id: ids, status: 'imported')
+      ActiveRecord::Base.transaction do
+        wpis.each do |wpi|
+          wpi.import_target&.destroy!
+          wpi.update!(status: 'pending', import_target_type: nil, import_target_id: nil, last_imported_at: nil)
+        end
+      end
+      redirect_to admin_wiki_page_imports_path(show_imported: 1), notice: "#{wpis.size} 件を取込前の状態に戻しました"
     end
 
     def bulk_update_page_type
@@ -97,6 +106,7 @@ module Admin
         redirect_back_or_to admin_wiki_page_imports_path, notice: "#{ids.size} 件の手動仕訳をキャンセルしました"
       elsif WikiPageImport::PAGE_TYPES.include?(page_type)
         WikiPageImport.where(id: ids).update_all(page_type: page_type, manually_set: true, updated_at: Time.current)
+        WikiPageImport.where(id: ids, status: 'pending').update_all(status: 'skipped', updated_at: Time.current)
         redirect_back_or_to admin_wiki_page_imports_path, notice: "#{ids.size} 件の page_type を #{page_type} に設定しました"
       else
         redirect_to admin_wiki_page_imports_path, alert: 'page_type を選択してください'

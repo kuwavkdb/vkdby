@@ -96,6 +96,7 @@ Rails.application.routes.draw do
         patch :bulk_ignore
         patch :bulk_update_page_type
         patch :bulk_set_deferred
+        patch :bulk_revert
       end
     end
   end

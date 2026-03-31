@@ -169,12 +169,18 @@
       </div>
     <% end %>
 
-  <%# Deferred / Ignored / Pending / Error / Imported 一覧（読み取り専用） %>
+  <%# Deferred / Ignored / Pending / Error / Imported 一覧 %>
   <% elsif @show_deferred || @show_ignored || @show_pending || @show_error || @show_imported || @show_imported_ignored %>
+    <% show_checkboxes = @show_imported || @show_pending %>
     <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg mb-4">
       <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead class="bg-gray-50 dark:bg-gray-700">
           <tr>
+            <% if show_checkboxes %>
+              <th class="px-4 py-3">
+                <input type="checkbox" id="check_all" class="rounded border-gray-300 dark:border-gray-600" onclick="document.querySelectorAll('.row-check').forEach(c => c.checked = this.checked)" aria-label="すべて選択">
+              </th>
+            <% end %>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ID</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Title</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
@@ -186,7 +192,13 @@
         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
           <% @wiki_page_imports.each do |wpi| %>
             <tr>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"><%= wpi.wikipage_id %></td>
+              <% if show_checkboxes %>
+                <td class="px-4 py-4">
+                  <input type="checkbox" value="<%= wpi.id %>" class="row-check rounded border-gray-300 dark:border-gray-600" aria-label="<%= wpi.wikipage&.title %> を選択">
+                </td>
+              <% end %>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400<%= ' cursor-pointer select-none' if show_checkboxes %>"
+                  <%= "onclick=\"this.closest('tr').querySelector('.row-check').click()\"".html_safe if show_checkboxes %>><%= wpi.wikipage_id %></td>
               <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                 <% if (@show_imported || @show_imported_ignored) && wpi.import_target&.key.present? %>
                   <%= link_to "/#{wpi.import_target.key}", class: "hover:text-indigo-500 hover:underline" do %>
@@ -231,6 +243,47 @@
         </tbody>
       </table>
     </div>
+
+    <% if @show_imported %>
+      <div class="sticky bottom-0 z-10 flex items-center justify-end bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 shadow-md">
+        <button type="button"
+                onclick="submitBulkRevert()"
+                class="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 cursor-pointer">
+          選択した項目を取込前に戻す
+        </button>
+      </div>
+    <% elsif @show_pending %>
+      <div class="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 shadow-md">
+        <div class="flex items-center gap-2">
+          <label class="text-sm text-gray-600 dark:text-gray-400">一括設定:</label>
+          <select id="bulk-pt-select"
+                  class="text-sm rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-1.5 pr-8"
+                  aria-label="一括設定する page_type">
+            <option value="">-- page_type --</option>
+            <% WikiPageImport::PAGE_TYPES.each do |pt| %>
+              <option value="<%= pt %>"><%= WikiPageImport::PAGE_TYPE_LABELS[pt] %></option>
+            <% end %>
+          </select>
+          <button type="button"
+                  onclick="submitBulkPageType()"
+                  class="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer">
+            選択した項目の page_type を設定
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button"
+                  onclick="submitBulkDeferred()"
+                  class="px-4 py-2 text-sm bg-purple-500 text-white rounded-md hover:bg-purple-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-400">
+            選択した項目を保留にする
+          </button>
+          <button type="button"
+                  onclick="submitBulkIgnore()"
+                  class="px-4 py-2 text-sm bg-yellow-500 text-white rounded-md hover:bg-yellow-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            選択した項目を除外する
+          </button>
+        </div>
+      </div>
+    <% end %>
 
   <%# 手動仕訳済み一覧 %>
   <% else %>
@@ -314,7 +367,7 @@
         </table>
       </div>
 
-      <div class="sticky bottom-0 z-10 flex flex-wrap items-center gap-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 shadow-md">
+      <div class="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 shadow-md">
         <div class="flex items-center gap-2">
           <label class="text-sm text-gray-600 dark:text-gray-400">一括設定:</label>
           <select id="bulk-pt-select"
@@ -329,6 +382,18 @@
                   onclick="submitBulkPageType()"
                   class="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer">
             選択した項目の page_type を設定
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button"
+                  onclick="submitBulkDeferred()"
+                  class="px-4 py-2 text-sm bg-purple-500 text-white rounded-md hover:bg-purple-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-400">
+            選択した項目を保留にする
+          </button>
+          <button type="button"
+                  onclick="submitBulkIgnore()"
+                  class="px-4 py-2 text-sm bg-yellow-500 text-white rounded-md hover:bg-yellow-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            選択した項目を除外する
           </button>
         </div>
       </div>
@@ -346,49 +411,66 @@
                 id: "bulk-deferred-form", class: "hidden" do %>
   <% end %>
 
+  <%# bulk_ignore 専用フォーム（未処理タブから使用） %>
+  <%= form_with url: bulk_ignore_admin_wiki_page_imports_path, method: :patch,
+                id: "bulk-ignore-form", class: "hidden" do %>
+  <% end %>
+
+  <%# bulk_revert 専用フォーム（取込済みタブから使用） %>
+  <%= form_with url: bulk_revert_admin_wiki_page_imports_path, method: :patch,
+                id: "bulk-revert-form", class: "hidden" do %>
+  <% end %>
+
   <script>
+    function collectCheckedIds(formId) {
+      var checked = document.querySelectorAll('.row-check:checked');
+      if (checked.length === 0) {
+        alert('項目が選択されていません');
+        return null;
+      }
+      var form = document.getElementById(formId);
+      form.querySelectorAll('input[name="ids[]"]').forEach(function(el) { el.remove(); });
+      checked.forEach(function(cb) {
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'ids[]';
+        input.value = cb.value;
+        form.appendChild(input);
+      });
+      return checked.length;
+    }
+
+    function submitBulkRevert() {
+      var count = collectCheckedIds('bulk-revert-form');
+      if (!count) return;
+      if (!confirm('選択した ' + count + ' 件のインポート済みデータを削除し、取込前の状態に戻します。この操作は取り消せません。よろしいですか？')) return;
+      document.getElementById('bulk-revert-form').requestSubmit();
+    }
+
+    function submitBulkIgnore() {
+      var count = collectCheckedIds('bulk-ignore-form');
+      if (!count) return;
+      if (!confirm('選択した ' + count + ' 件を除外します。よろしいですか？')) return;
+      document.getElementById('bulk-ignore-form').requestSubmit();
+    }
+
     function submitRowPageType(id) {
       document.getElementById('pt-value-' + id).value = document.getElementById('pt-select-' + id).value;
       document.getElementById('pt-form-' + id).requestSubmit();
     }
 
     function submitBulkPageType() {
-      var checked = document.querySelectorAll('.row-check:checked');
-      if (checked.length === 0) {
-        alert('項目が選択されていません');
-        return;
-      }
-      var pageType = document.getElementById('bulk-pt-select').value;
-      var form = document.getElementById('bulk-pt-form');
-      form.querySelectorAll('input[name="ids[]"]').forEach(function(el) { el.remove(); });
-      checked.forEach(function(cb) {
-        var input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'ids[]';
-        input.value = cb.value;
-        form.appendChild(input);
-      });
-      document.getElementById('bulk-pt-page-type').value = pageType;
-      form.requestSubmit();
+      var count = collectCheckedIds('bulk-pt-form');
+      if (!count) return;
+      document.getElementById('bulk-pt-page-type').value = document.getElementById('bulk-pt-select').value;
+      document.getElementById('bulk-pt-form').requestSubmit();
     }
 
     function submitBulkDeferred() {
-      var checked = document.querySelectorAll('.row-check:checked');
-      if (checked.length === 0) {
-        alert('項目が選択されていません');
-        return;
-      }
-      if (!confirm('選択した項目を保留にします。よろしいですか？')) return;
-      var form = document.getElementById('bulk-deferred-form');
-      form.querySelectorAll('input[name="ids[]"]').forEach(function(el) { el.remove(); });
-      checked.forEach(function(cb) {
-        var input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'ids[]';
-        input.value = cb.value;
-        form.appendChild(input);
-      });
-      form.requestSubmit();
+      var count = collectCheckedIds('bulk-deferred-form');
+      if (!count) return;
+      if (!confirm('選択した ' + count + ' 件を保留にします。よろしいですか？')) return;
+      document.getElementById('bulk-deferred-form').requestSubmit();
     }
   </script>
 
