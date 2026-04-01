@@ -2,7 +2,8 @@
 
 module Admin
   class CustomPagesController < Admin::BaseController
-    before_action :set_custom_page, only: %i[edit update destroy undiscard]
+    before_action :set_custom_page, only: %i[edit update destroy undiscard upload_image]
+    before_action :require_admin, only: %i[upload_image]
     before_action :require_super_operator, only: %i[destroy undiscard]
     before_action :deny_if_protected, only: %i[destroy]
     before_action :deny_if_self_blocking, only: %i[create update]
@@ -53,6 +54,14 @@ module Admin
     def undiscard
       @custom_page.undiscard
       redirect_to admin_custom_pages_path, notice: 'ページを復元しました。'
+    end
+
+    def upload_image
+      image = params[:image]
+      raise ActionController::BadRequest, 'Invalid file type' unless image&.content_type&.start_with?('image/')
+
+      @custom_page.images.attach(image)
+      render json: { url: url_for(@custom_page.images.last) }
     end
 
     private

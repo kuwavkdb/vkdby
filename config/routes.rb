@@ -68,17 +68,21 @@ Rails.application.routes.draw do
     resources :custom_pages do
       member do
         patch :undiscard
+        post :upload_image
       end
     end
 
     resources :sections, only: %i[new create edit update destroy] do
       member do
         patch :undiscard
+        post :upload_image
       end
       collection do
         patch :reorder
       end
     end
+
+    resources :images, only: %i[index show destroy]
 
     resources :update_logs, only: [] do
       member do
