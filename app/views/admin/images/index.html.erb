@@ -1,0 +1,75 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold mb-4 md:mb-0 dark:text-white">画像管理</h1>
+    <div class="flex items-center space-x-4">
+      <%= form_with url: admin_images_path, method: :get, local: true, class: "flex" do |f| %>
+        <%= f.text_field :q, value: params[:q], placeholder: "ファイル名で検索...",
+              class: "rounded-l-md border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" %>
+        <%= f.submit "検索",
+              class: "px-4 py-2 bg-white text-gray-700 border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-50 cursor-pointer dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600" %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
+  </div>
+
+  <% if @attachments.empty? %>
+    <p class="text-gray-500 dark:text-gray-400">画像はまだありません。</p>
+  <% else %>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <% @attachments.each do |attachment| %>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden flex flex-col">
+          <%= link_to admin_image_path(attachment), class: "aspect-square bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden block hover:opacity-80 transition-opacity" do %>
+            <%= image_tag url_for(attachment),
+                  alt: attachment.blob.filename.to_s,
+                  class: "w-full h-full object-cover",
+                  loading: "lazy" %>
+          <% end %>
+          <div class="p-2 flex flex-col gap-1 flex-1">
+            <p class="text-xs text-gray-700 dark:text-gray-300 break-all leading-tight" title="<%= attachment.blob.filename %>">
+              <%= attachment.blob.filename %>
+            </p>
+            <% record = attachment.record %>
+            <% if record %>
+              <% record_label = record.is_a?(CustomPage) ? record.title : record.name %>
+              <% record_edit_path = record.is_a?(CustomPage) ? edit_admin_custom_page_path(record) : edit_admin_section_path(record) %>
+              <p class="text-xs text-gray-400 dark:text-gray-500 truncate" title="<%= record_label %>">
+                <span class="inline-block px-1 rounded text-xs mr-1 <%= record.is_a?(CustomPage) ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' %>">
+                  <%= record.is_a?(CustomPage) ? 'ページ' : 'セクション' %>
+                </span>
+                <%= link_to record_label, record_edit_path,
+                      class: "hover:text-indigo-600 dark:hover:text-indigo-400" %>
+              </p>
+            <% end %>
+            <p class="text-xs text-gray-400 dark:text-gray-500">
+              <%= number_to_human_size(attachment.blob.byte_size) %>
+            </p>
+            <div class="mt-auto pt-1 flex items-center gap-2">
+              <%= link_to url_for(attachment),
+                    class: "text-xs text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200",
+                    target: "_blank",
+                    rel: "noopener noreferrer" do %>
+                <span class="sr-only">新しいタブで開く（<%= attachment.blob.filename %>）</span>
+                開く
+              <% end %>
+              <% if current_user.super_operator_or_above? %>
+                <%= button_to "削除",
+                      admin_image_path(attachment, q: params[:q]),
+                      method: :delete,
+                      form_class: "inline",
+                      onclick: "return confirm('この画像を削除しますか？Markdownから参照している場合は表示されなくなります。')",
+                      class: "text-xs text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 bg-transparent border-0 cursor-pointer p-0 ml-auto" %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="mt-6">
+    <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
+  </div>
+</div>

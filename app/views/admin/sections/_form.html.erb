@@ -20,11 +20,36 @@
           class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
   </div>
 
-  <div data-controller="markdown-preview">
+  <div data-controller="markdown-preview"
+       <%= "data-markdown-preview-upload-url-value=\"#{upload_image_admin_section_path(section)}\"".html_safe if section.persisted? && current_user.admin? %>>
     <div class="flex justify-between items-baseline mb-1">
       <%= form.label :markdown, "Markdown テキスト", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
       <p class="text-xs text-gray-500 dark:text-gray-400">Markdownが入力されている場合はそちらを優先表示します</p>
     </div>
+    <% if section.persisted? && current_user.admin? %>
+      <div class="mb-2 flex items-center gap-3">
+        <input type="file"
+               accept="image/*"
+               class="hidden"
+               aria-hidden="true"
+               data-markdown-preview-target="imageInput"
+               data-action="change->markdown-preview#uploadImage">
+        <button type="button"
+                class="inline-flex items-center gap-1 px-3 py-1 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                data-action="click->markdown-preview#selectImage"
+                aria-label="画像をアップロードしてMarkdownに挿入">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          画像をアップロード
+        </button>
+        <span class="text-xs text-gray-500 dark:text-gray-400"
+              data-markdown-preview-target="uploadStatus"
+              aria-live="polite"></span>
+      </div>
+    <% else %>
+      <p class="mb-2 text-xs text-gray-400 dark:text-gray-500">画像のアップロードは保存後に利用できます</p>
+    <% end %>
     <div class="mt-1 grid grid-cols-2 gap-4">
       <div>
         <%= form.text_area :markdown, rows: 15,

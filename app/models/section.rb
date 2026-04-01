@@ -21,6 +21,7 @@ class Section < ApplicationRecord
   include Discard::Model
 
   belongs_to :sectionable, polymorphic: true
+  has_many_attached :images
 
   validates :name, presence: true
 end
