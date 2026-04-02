@@ -26,7 +26,7 @@
 #
 
 class WikiPageImport < ApplicationRecord
-  STATUSES = %w[pending imported skipped deferred error].freeze
+  STATUSES = %w[pending imported skipped deferred error ignored].freeze
   PAGE_TYPES = %w[unit person live_house custom_page omnibus moved office_label other].freeze
   PAGE_TYPE_LABELS = {
     'unit' => 'ユニット',
@@ -50,5 +50,6 @@ class WikiPageImport < ApplicationRecord
   scope :skipped,       -> { where(status: 'skipped') }
   scope :deferred,      -> { where(status: 'deferred') }
   scope :error,         -> { where(status: 'error') }
+  scope :ignored,       -> { where(status: 'ignored') }
   scope :manually_set,  -> { where(manually_set: true) }
 end

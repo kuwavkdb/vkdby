@@ -95,6 +95,7 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
         patch :update_page_type
         patch :set_deferred
         patch :set_ignored
+        patch :exclude
       end
       collection do
         patch :bulk_ignore

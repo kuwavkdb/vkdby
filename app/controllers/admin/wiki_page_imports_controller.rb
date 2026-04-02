@@ -12,6 +12,7 @@ module Admin
       @show_error            = params[:show_error] == '1'
       @show_imported         = params[:show_imported] == '1'
       @show_imported_ignored = params[:show_imported_ignored] == '1'
+      @show_post_excluded    = params[:show_post_excluded] == '1'
       @ms_page_type      = @show_manually_set ? (params[:ms_page_type].presence || 'unit') : nil
       @q                 = params[:q].presence
 
@@ -26,9 +27,13 @@ module Admin
               elsif @show_error
                 WikiPageImport.error.includes(:wikipage).order(updated_at: :desc)
               elsif @show_imported
-                WikiPageImport.imported.where.not(note: 'ignored').includes(:wikipage, :import_target).order(updated_at: :desc)
+                scope = WikiPageImport.imported.where.not(note: 'ignored').order(updated_at: :desc)
+                scope = scope.joins(:wikipage).where('wikipages.name LIKE ?', "#{@q}%") if @q
+                scope.includes(:wikipage).preload(:import_target)
               elsif @show_imported_ignored
                 WikiPageImport.imported.where(note: 'ignored').includes(:wikipage, :import_target).order(updated_at: :desc)
+              elsif @show_post_excluded
+                WikiPageImport.ignored.includes(:wikipage).order(updated_at: :desc)
               else
                 base = WikiPageImport.skipped.where(manually_set: false).where.not(note: 'ignored')
                 base = base.joins(:wikipage).where('wikipages.name LIKE ?', "#{@q}%") if @q
@@ -63,6 +68,21 @@ module Admin
     def set_ignored
       WikiPageImport.find(params[:id]).update!(note: 'ignored', updated_at: Time.current)
       redirect_back_or_to admin_wiki_page_imports_path, notice: '除外しました'
+    end
+
+    def exclude
+      wpi = WikiPageImport.find(params[:id])
+      ActiveRecord::Base.transaction do
+        wpi.import_target&.destroy!
+        wpi.update!(
+          status: 'ignored',
+          import_target_type: nil,
+          import_target_id: nil,
+          last_imported_at: nil,
+          updated_at: Time.current
+        )
+      end
+      redirect_back_or_to admin_wiki_page_imports_path(show_imported_ignored: 1), notice: '除外しました（取込先を削除しました）'
     end
 
     def update_page_type
