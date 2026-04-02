@@ -1,41 +1,22 @@
 # frozen_string_literal: true
 
 module Admin
-  class WikiPageImportsController < Admin::BaseController
+  class WikiPageImportsController < Admin::BaseController # rubocop:disable Metrics/ClassLength
     before_action :require_admin
 
     def index
-      @show_manually_set = params[:manually_set] == '1'
-      @show_deferred     = params[:show_deferred] == '1'
-      @show_ignored      = params[:show_ignored] == '1'
+      @show_manually_set     = params[:manually_set] == '1'
+      @show_deferred         = params[:show_deferred] == '1'
+      @show_ignored          = params[:show_ignored] == '1'
       @show_pending          = params[:show_pending] == '1'
       @show_error            = params[:show_error] == '1'
       @show_imported         = params[:show_imported] == '1'
       @show_imported_ignored = params[:show_imported_ignored] == '1'
-      @ms_page_type      = @show_manually_set ? (params[:ms_page_type].presence || 'unit') : nil
-      @q                 = params[:q].presence
+      @show_post_excluded    = params[:show_post_excluded] == '1'
+      @ms_page_type          = @show_manually_set ? (params[:ms_page_type].presence || 'unit') : nil
+      @q                     = params[:q].presence
 
-      scope = if @show_manually_set
-                WikiPageImport.manually_set.where.not(status: 'imported').where(page_type: @ms_page_type).includes(:wikipage).order(updated_at: :desc)
-              elsif @show_deferred
-                WikiPageImport.deferred.includes(:wikipage).order(updated_at: :desc)
-              elsif @show_ignored
-                WikiPageImport.skipped.where(manually_set: false, note: 'ignored').includes(:wikipage).order(updated_at: :desc)
-              elsif @show_pending
-                WikiPageImport.pending.includes(:wikipage).order(updated_at: :desc)
-              elsif @show_error
-                WikiPageImport.error.includes(:wikipage).order(updated_at: :desc)
-              elsif @show_imported
-                WikiPageImport.imported.where.not(note: 'ignored').includes(:wikipage, :import_target).order(updated_at: :desc)
-              elsif @show_imported_ignored
-                WikiPageImport.imported.where(note: 'ignored').includes(:wikipage, :import_target).order(updated_at: :desc)
-              else
-                base = WikiPageImport.skipped.where(manually_set: false).where.not(note: 'ignored')
-                base = base.joins(:wikipage).where('wikipages.name LIKE ?', "#{@q}%") if @q
-                base.includes(:wikipage).order(updated_at: :desc)
-              end
-
-      @pagy, @wiki_page_imports = pagy(scope, limit: 50)
+      @pagy, @wiki_page_imports = pagy(index_scope, limit: 50)
     end
 
     def bulk_set_deferred
@@ -63,6 +44,21 @@ module Admin
     def set_ignored
       WikiPageImport.find(params[:id]).update!(note: 'ignored', updated_at: Time.current)
       redirect_back_or_to admin_wiki_page_imports_path, notice: '除外しました'
+    end
+
+    def exclude
+      wpi = WikiPageImport.find(params[:id])
+      ActiveRecord::Base.transaction do
+        wpi.import_target&.destroy!
+        wpi.update!(
+          status: 'ignored',
+          import_target_type: nil,
+          import_target_id: nil,
+          last_imported_at: nil,
+          updated_at: Time.current
+        )
+      end
+      redirect_back_or_to admin_wiki_page_imports_path(show_imported_ignored: 1), notice: '除外しました（取込先を削除しました）'
     end
 
     def update_page_type
@@ -111,6 +107,42 @@ module Admin
       else
         redirect_to admin_wiki_page_imports_path, alert: 'page_type を選択してください'
       end
+    end
+
+    private
+
+    def index_scope
+      if @show_manually_set
+        WikiPageImport.manually_set.where.not(status: 'imported').where(page_type: @ms_page_type).includes(:wikipage).order(updated_at: :desc)
+      elsif @show_deferred
+        WikiPageImport.deferred.includes(:wikipage).order(updated_at: :desc)
+      elsif @show_ignored
+        WikiPageImport.skipped.where(manually_set: false, note: 'ignored').includes(:wikipage).order(updated_at: :desc)
+      elsif @show_pending
+        WikiPageImport.pending.includes(:wikipage).order(updated_at: :desc)
+      elsif @show_error
+        WikiPageImport.error.includes(:wikipage).order(updated_at: :desc)
+      elsif @show_imported
+        imported_scope
+      elsif @show_imported_ignored
+        WikiPageImport.imported.where(note: 'ignored').includes(:wikipage, :import_target).order(updated_at: :desc)
+      elsif @show_post_excluded
+        WikiPageImport.ignored.includes(:wikipage).order(updated_at: :desc)
+      else
+        skipped_scope
+      end
+    end
+
+    def imported_scope
+      scope = WikiPageImport.imported.where.not(note: 'ignored').order(updated_at: :desc)
+      scope = scope.joins(:wikipage).where('wikipages.name LIKE ?', "#{@q}%") if @q
+      scope.includes(:wikipage).preload(:import_target)
+    end
+
+    def skipped_scope
+      base = WikiPageImport.skipped.where(manually_set: false).where.not(note: 'ignored')
+      base = base.joins(:wikipage).where('wikipages.name LIKE ?', "#{@q}%") if @q
+      base.includes(:wikipage).order(updated_at: :desc)
     end
   end
 end
