@@ -9,5 +9,17 @@
     <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
       <%= render "form", custom_page: @custom_page %>
     </div>
+
+    <% if current_user.super_operator_or_above? %>
+      <div class="mt-8 border border-red-300 rounded-lg p-4 dark:border-red-700">
+        <h2 class="text-lg font-semibold text-red-700 dark:text-red-400 mb-3">危険な操作</h2>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">このカスタムページを論理削除します。削除後も一覧画面から復元できます。</p>
+        <%= button_to "このカスタムページを削除する", admin_custom_page_path(@custom_page), method: :delete,
+            onclick: "return confirm('「#{@custom_page.title}」を削除しますか？\\nこの操作は取り消せますが、慎重に行ってください。')",
+            form: { class: "inline-block" },
+            class: "inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2",
+            aria: { label: "このカスタムページを削除する" } %>
+      </div>
+    <% end %>
   </div>
 </div>
