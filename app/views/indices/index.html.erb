@@ -1,15 +1,35 @@
-<div class="container mx-auto px-4 py-8">
-  <h1 class="text-2xl font-bold mb-6"><%= @group_name %></h1>
-
-  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-    <% @indices.each do |index| %>
-      <%= link_to index_show_path(index.id), class: "block p-4 bg-white shadow rounded-lg hover:shadow-md transition-shadow text-center text-lg font-medium text-gray-800" do %>
-        <%= index.name %>
+<div class="flex justify-center min-h-screen p-0 md:p-8">
+  <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
+    <div class="mb-6">
+      <%= link_to indices_groups_path,
+            class: "inline-flex items-center gap-1 text-sm font-bold text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+        </svg>
+        グループ一覧に戻る
       <% end %>
+    </div>
+
+    <header class="mb-8">
+      <h1 class="text-3xl font-black text-slate-800 dark:text-slate-100">
+        <%= @group_name %>
+      </h1>
+      <p class="mt-1 text-sm text-slate-400 dark:text-slate-500 font-bold"><%= @indices.count %> indices</p>
+    </header>
+
+    <% if @indices.any? %>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <% @indices.each do |index| %>
+          <%= link_to index_show_path(index.id),
+                class: "group block bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:scale-[1.02] transition-all text-center font-black text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" do %>
+            <%= index.name %>
+          <% end %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="py-20 text-center">
+        <p class="text-slate-400 dark:text-slate-500 font-bold">このグループにはインデックスがありません。</p>
+      </div>
     <% end %>
   </div>
-
-  <% if @indices.empty? %>
-    <p class="text-gray-500 mt-4">このグループにはインデックスがありません。</p>
-  <% end %>
 </div>
