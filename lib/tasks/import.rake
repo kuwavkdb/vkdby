@@ -183,9 +183,9 @@ namespace :import do # rubocop:disable Metrics/BlockLength
   end
 
   desc 'Revert Units that are actually person pages (issue #555 pattern1): update wiki_page_imports then delete Units'
-  task revert_person_units: :environment do # rubocop:disable Metrics/BlockLength
+  task revert_person_units: :environment do
     # unit_people=0 かつ unit_snapshots=0 で {{category 個人 を含む Unit（48件）
-    PERSON_UNIT_IDS = [
+    person_unit_ids = [
       56, 64, 79, 266, 317, 318, 335, 336, 337, 339, 349, 350, 351, 358, 370, 372, 374, 388,
       414, 437, 440, 443, 452, 468, 471, 480, 519, 882, 922, 982, 1001, 1174, 1202, 1388, 1440,
       1452, 1565, 1578, 1603, 1604, 1646, 1713, 1774, 1801, 1899, 2032, 2397, 2426
@@ -200,7 +200,7 @@ namespace :import do # rubocop:disable Metrics/BlockLength
     errors  = 0
 
     ActiveRecord::Base.transaction do
-      PERSON_UNIT_IDS.each do |unit_id|
+      person_unit_ids.each do |unit_id|
         unit = Unit.find_by(id: unit_id)
         unless unit
           puts "[SKIP] Unit##{unit_id}: not found"
@@ -236,7 +236,7 @@ namespace :import do # rubocop:disable Metrics/BlockLength
       rescue StandardError => e
         puts "[ERROR] Unit##{unit_id}: #{e.message}"
         errors += 1
-        raise ActiveRecord::Rollback if !dry_run
+        raise ActiveRecord::Rollback unless dry_run
       end
 
       raise ActiveRecord::Rollback if dry_run
@@ -246,7 +246,7 @@ namespace :import do # rubocop:disable Metrics/BlockLength
     puts dry_run ? 'Dry run complete!' : 'Revert complete!'
     puts "  Updated wiki_page_imports: #{updated}"
     puts "  Deleted Units:             #{deleted}"
-    puts "  Errors:                    #{errors}" if errors > 0
+    puts "  Errors:                    #{errors}" if errors.positive?
   end
 
   desc 'Reset all imported data'
