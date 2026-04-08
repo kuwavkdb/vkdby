@@ -94,12 +94,14 @@ namespace :import do # rubocop:disable Metrics/BlockLength
   desc 'Import people from Wikipages'
   task people: :environment do
     mode = ENV['MODE']
-    manual_mode = mode == 'MANUAL'
+    manual_mode  = mode == 'MANUAL'
+    skipped_mode = mode == 'SKIPPED'
 
-    unless manual_mode || mode == 'ALL' || ENV['ID'] || ENV['START']
+    unless manual_mode || skipped_mode || mode == 'ALL' || ENV['ID'] || ENV['START']
       puts 'Error: 実行条件を指定してください。'
       puts '  MODE=ALL       全件対象'
       puts '  MODE=MANUAL    手動仕訳済みページのみ'
+      puts '  MODE=SKIPPED   スキップ済みページのみ再処理'
       puts '  ID=<id>        指定 ID のみ'
       puts '  START=<id>     指定 ID 以降'
       exit 1
@@ -107,11 +109,14 @@ namespace :import do # rubocop:disable Metrics/BlockLength
 
     puts 'Starting person import from Wikipages...'
     puts 'Mode: MANUAL (page_type=person の手動設定済みページのみ)' if manual_mode
+    puts 'Mode: SKIPPED (スキップ済みページのみ再処理)' if skipped_mode
     count = 0
     skipped = 0
 
     if manual_mode
       query = WikiPageImport.manually_set.where(page_type: 'person').includes(:wikipage)
+    elsif skipped_mode
+      query = WikiPageImport.skipped.where(page_type: [nil, 'person']).includes(:wikipage)
     else
       query = Wikipage.all
       if ENV['ID']
@@ -126,13 +131,18 @@ namespace :import do # rubocop:disable Metrics/BlockLength
     limit = ENV['LIMIT']&.to_i
     puts "Limit: #{limit}" if limit
 
-    if manual_mode
+    if manual_mode || skipped_mode
       query.find_each do |wpi|
         break if limit && count >= limit
 
         wp = wpi.wikipage
         unless wp
           puts "[SKIP] WikiPageImport##{wpi.id}: wikipage not found"
+          next
+        end
+
+        if skipped_mode && !PersonImporter.valid_person?(wp)
+          puts "[SKIP] #{wp.title} (ID: #{wp.id}): valid_person? returned false"
           next
         end
 
@@ -169,7 +179,74 @@ namespace :import do # rubocop:disable Metrics/BlockLength
 
     puts 'Import complete!'
     puts "  Imported: #{count} people"
-    puts "  Skipped:  #{skipped} pages" unless manual_mode || ENV['ID']
+    puts "  Skipped:  #{skipped} pages" unless manual_mode || skipped_mode || ENV['ID']
+  end
+
+  desc 'Revert Units that are actually person pages (issue #555 pattern1): update wiki_page_imports then delete Units'
+  task revert_person_units: :environment do
+    # unit_people=0 かつ unit_snapshots=0 で {{category 個人 を含む Unit（48件）
+    person_unit_ids = [
+      56, 64, 79, 266, 317, 318, 335, 336, 337, 339, 349, 350, 351, 358, 370, 372, 374, 388,
+      414, 437, 440, 443, 452, 468, 471, 480, 519, 882, 922, 982, 1001, 1174, 1202, 1388, 1440,
+      1452, 1565, 1578, 1603, 1604, 1646, 1713, 1774, 1801, 1899, 2032, 2397, 2426
+    ].freeze
+
+    dry_run = ENV['DRY_RUN'] != 'false'
+    puts dry_run ? 'Mode: DRY RUN (実際には変更しません。DRY_RUN=false で本実行)' : 'Mode: 本実行'
+    puts
+
+    updated = 0
+    deleted = 0
+    errors  = 0
+
+    ActiveRecord::Base.transaction do
+      person_unit_ids.each do |unit_id|
+        unit = Unit.find_by(id: unit_id)
+        unless unit
+          puts "[SKIP] Unit##{unit_id}: not found"
+          next
+        end
+
+        wpi = WikiPageImport.find_by(import_target: unit)
+        unless wpi
+          puts "[WARN] Unit##{unit_id} (#{unit.name}): wiki_page_import not found"
+          errors += 1
+          next
+        end
+
+        sections_count     = unit.sections.count
+        tag_items_count    = TagIndexItem.where(indexable: unit).count
+
+        puts "[TARGET] Unit##{unit_id} (#{unit.name}) wpi##{wpi.id} " \
+             "sections=#{sections_count} tag_items=#{tag_items_count}"
+
+        unless dry_run
+          # 1. wiki_page_imports を先に更新（削除前に意図を記録）
+          wpi.update!(status: 'skipped', page_type: 'person', manually_set: true)
+          updated += 1
+
+          # 2. 関連データを削除してから Unit を削除
+          unit.sections.destroy_all
+          TagIndexItem.where(indexable: unit).destroy_all
+          unit.destroy!
+          deleted += 1
+
+          puts "  -> updated wpi##{wpi.id}, deleted Unit##{unit_id}"
+        end
+      rescue StandardError => e
+        puts "[ERROR] Unit##{unit_id}: #{e.message}"
+        errors += 1
+        raise ActiveRecord::Rollback unless dry_run
+      end
+
+      raise ActiveRecord::Rollback if dry_run
+    end
+
+    puts
+    puts dry_run ? 'Dry run complete!' : 'Revert complete!'
+    puts "  Updated wiki_page_imports: #{updated}"
+    puts "  Deleted Units:             #{deleted}"
+    puts "  Errors:                    #{errors}" if errors.positive?
   end
 
   desc 'Reset all imported data'
