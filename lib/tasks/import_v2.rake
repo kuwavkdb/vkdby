@@ -86,6 +86,18 @@ namespace :import do
           skipped += 1
           update_wiki_page_import_as_skipped(wp, note: 'ignored')
           next
+        elsif moved_page?(wp)
+          skipped += 1
+          update_wiki_page_import_as_skipped(wp, note: 'moved', page_type: 'moved')
+          next
+        elsif include_only?(wp)
+          skipped += 1
+          update_wiki_page_import_as_skipped(wp, note: 'include only', page_type: 'other')
+          next
+        elsif PersonImporter.valid_person?(wp)
+          skipped += 1
+          update_wiki_page_import_as_skipped(wp, note: 'person', page_type: 'person')
+          next
         elsif WikipageImporter.valid_unit?(wp)
           # ID指定時: インポート前に既存の関連レコードを削除
           if ENV['ID']
@@ -109,8 +121,8 @@ namespace :import do
           update_wiki_page_import_as_imported(wp, page_type: 'unit', target: unit)
         else
           skipped += 1
-          puts format_skip_log(wp) if wp.title.present? && !PersonImporter.valid_person?(wp)
-          update_wiki_page_import_as_skipped(wp, note: nil, page_type: 'moved') if wp.wiki.to_s.lines.first(3).any? { |line| line.include?('移動しました') }
+          puts format_skip_log(wp) if wp.title.present?
+          update_wiki_page_import_as_skipped(wp, note: 'not a unit or person')
         end
       end
     end
