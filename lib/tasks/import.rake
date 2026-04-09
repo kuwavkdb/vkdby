@@ -6,10 +6,10 @@ SKIP_LOG_CATEGORIES = [
   'オムニバス'
 ].freeze
 
-# コメント行・区切り行を除いた実質的な内容行を返す
+# コメント行・区切り行・リスト行を除いた実質的な内容行を返す
 def effective_lines(wikipage)
   wikipage.wiki.to_s.lines
-          .reject { |l| l.strip.empty? || l.start_with?('//') || l.strip == '----' }
+          .reject { |l| l.strip.empty? || l.start_with?('//') || l.start_with?('*') || l.strip == '----' }
 end
 
 # リダイレクト・移動ページかどうかを判定する
