@@ -6,6 +6,33 @@ SKIP_LOG_CATEGORIES = [
   'オムニバス'
 ].freeze
 
+# コメント行・区切り行・リスト行を除いた実質的な内容行を返す
+def effective_lines(wikipage)
+  wikipage.wiki.to_s.lines
+          .reject { |l| l.strip.empty? || l.start_with?('//') || l.start_with?('*') || l.strip == '----' }
+end
+
+# リダイレクト・移動ページかどうかを判定する
+# 「に移動しました」を含む行がある、または全有効行が「→ [[」で始まる場合に true
+def moved_page?(wikipage)
+  lines = effective_lines(wikipage)
+  return false if lines.empty?
+
+  moved_keyword = "\u306b\u79fb\u52d5\u3057\u307e\u3057\u305f" # に移動しました
+  return true if lines.any? { |l| l.include?(moved_keyword) }
+
+  # 全有効行が → [[ で始まる（ページ全体がリダイレクトのみ）
+  lines.all? { |l| l.match?(/^\u2192\s*\[\[/) }
+end
+
+# {{include ...}} のみで構成されるページかどうかを判定する
+def include_only?(wikipage)
+  lines = effective_lines(wikipage)
+  return false if lines.empty?
+
+  lines.all? { |l| l.match?(/\A\{\{include\s+/i) }
+end
+
 def extract_categories(wikipage)
   return [] if wikipage.wiki.blank?
 
@@ -160,6 +187,14 @@ namespace :import do # rubocop:disable Metrics/BlockLength
         if PersonImporter.ignored?(wp)
           skipped += 1
           update_wiki_page_import_as_skipped(wp, note: 'ignored')
+          next
+        elsif moved_page?(wp)
+          skipped += 1
+          update_wiki_page_import_as_skipped(wp, note: 'moved', page_type: 'moved')
+          next
+        elsif include_only?(wp)
+          skipped += 1
+          update_wiki_page_import_as_skipped(wp, note: 'include only', page_type: 'other')
           next
         elsif PersonImporter.valid_person?(wp)
           PersonImporter.import(wp)
