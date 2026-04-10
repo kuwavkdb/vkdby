@@ -40,7 +40,6 @@ class Person < ApplicationRecord
   has_many :wiki_page_imports, as: :import_target
   has_many :unit_people
   has_many :units, through: :unit_people
-  has_many :person_logs
   has_many :tag_index_items, as: :indexable, dependent: :destroy
   has_many :tag_indices, through: :tag_index_items
   has_many :sections, as: :sectionable, dependent: :destroy
