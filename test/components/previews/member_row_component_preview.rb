@@ -34,5 +34,4 @@ class MemberRowComponentPreview < ViewComponent::Preview
     )
     render(MemberRowComponent.new(member: member, hide_active: true))
   end
-
 end
