@@ -86,5 +86,5 @@ gem 'discard', '~> 1.4'
 gem 'rack-attack'
 gem 'romaji', '~> 0.3.0'
 
-gem 'pagy', '~> 43.4'
+gem 'pagy', '~> 43.5'
 gem 'redcarpet'
