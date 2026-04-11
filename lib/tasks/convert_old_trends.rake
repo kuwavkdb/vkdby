@@ -5,6 +5,7 @@ namespace :convert do
   task old_trends: :environment do
     puts 'Start converting OldTrend to Trend...'
     Trend.delete_all
+    ActiveRecord::Base.connection.execute('ALTER SEQUENCE trends_id_seq RESTART WITH 1')
 
     count = 0
     skipped_count = 0
