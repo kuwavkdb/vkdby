@@ -34,6 +34,9 @@ class TrendsController < ApplicationController
     unit_ids = @trend.units.map { |u| u['unit_id'] }
     @related_units = Unit.where(id: unit_ids).index_by(&:id)
 
+    person_ids = (@trend.people || []).map { |p| p['person_id'] }.compact
+    @related_people = Person.where(id: person_ids).index_by(&:id) if person_ids.any?
+
     return unless unit_ids.size == 1
 
     unit = @related_units.values.first

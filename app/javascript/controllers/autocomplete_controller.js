@@ -25,10 +25,14 @@ export default class extends Controller {
     }
   }
 
+  generateUid() {
+    return Math.random().toString(36).slice(2, 11)
+  }
+
   loadExistingItems() {
     try {
       const data = JSON.parse(this.hiddenFieldTarget.value || '[]')
-      return data
+      return data.map(item => ({ ...item, _uid: this.generateUid() }))
     } catch (e) {
       return []
     }
@@ -125,14 +129,14 @@ export default class extends Controller {
 
     const filtered = items.filter(item => !selectedIds.includes(item.id))
 
-    const isUnitsField = this.fieldNameValue === 'units'
+    const supportsUnregistered = this.fieldNameValue === 'units' || this.fieldNameValue === 'people'
     const currentQuery = query || this.inputTarget.value.trim()
 
-    // units フィールドの場合、既に同名の未登録アイテムが追加済みか確認
-    const alreadyAddedAsUnregistered = isUnitsField &&
-      this.selectedItems.some(item => item.unit_id == null && item.name === currentQuery)
+    // units/people フィールドの場合、既に同名の未登録アイテムが追加済みか確認
+    const alreadyAddedAsUnregistered = supportsUnregistered &&
+      this.selectedItems.some(item => item[idField] == null && item.name === currentQuery)
 
-    const showUnregisteredOption = isUnitsField && currentQuery.length >= 2 && !alreadyAddedAsUnregistered
+    const showUnregisteredOption = supportsUnregistered && currentQuery.length >= 2 && !alreadyAddedAsUnregistered
 
     if (filtered.length === 0 && !showUnregisteredOption) {
       this.hideResults()
@@ -170,10 +174,10 @@ export default class extends Controller {
     const key = event.currentTarget.dataset.key || ''
 
     if (this.fieldNameValue === 'artists') {
-      this.selectedItems.push({ unit_id: id, name, key })
+      this.selectedItems.push({ unit_id: id, name, key, _uid: this.generateUid() })
     } else {
       const idField = this.fieldNameValue === 'people' ? 'person_id' : 'unit_id'
-      this.selectedItems.push({ [idField]: id, name })
+      this.selectedItems.push({ [idField]: id, name, _uid: this.generateUid() })
     }
 
     this.updateHiddenField()
@@ -186,7 +190,7 @@ export default class extends Controller {
     const name = event.currentTarget.dataset.name
     if (!name) return
 
-    this.selectedItems.push({ name })
+    this.selectedItems.push({ name, _uid: this.generateUid() })
     this.updateHiddenField()
     this.renderSelectedItems()
     this.inputTarget.value = ''
@@ -194,21 +198,18 @@ export default class extends Controller {
   }
 
   removeItem(event) {
-    const el = event.currentTarget
-
-    if (el.dataset.unregistered) {
-      const name = el.dataset.name
-      this.selectedItems = this.selectedItems.filter(item =>
-        !(item.unit_id == null && item.name === name)
-      )
-    } else {
-      const id = parseInt(el.dataset.id)
-      const idField = this.fieldNameValue === 'people' ? 'person_id' : 'unit_id'
-      this.selectedItems = this.selectedItems.filter(item => item[idField] !== id)
-    }
-
+    const uid = event.currentTarget.dataset.uid
+    this.selectedItems = this.selectedItems.filter(item => item._uid !== uid)
     this.updateHiddenField()
     this.renderSelectedItems()
+  }
+
+  renameItem(event) {
+    const uid = event.currentTarget.dataset.uid
+    const newName = event.currentTarget.value
+    const item = this.selectedItems.find(item => item._uid === uid)
+    if (item) item.name = newName
+    this.updateHiddenField()
   }
 
   renderSelectedItems() {
@@ -216,30 +217,40 @@ export default class extends Controller {
     const colorClass = this.fieldNameValue === 'people'
       ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
       : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200'
+    const inputColorClass = this.fieldNameValue === 'people'
+      ? 'text-green-800 dark:text-green-200'
+      : 'text-indigo-800 dark:text-indigo-200'
 
     this.selectedTarget.innerHTML = this.selectedItems.map(item => {
       const isUnregistered = item[idField] == null
-      const removeAttrs = isUnregistered
-        ? `data-unregistered="true" data-name="${this.escapeHtml(item.name)}"`
-        : `data-id="${item[idField]}"`
-      const label = isUnregistered
-        ? `${this.escapeHtml(item.name)}<span class="ml-1 text-xs opacity-60">(未登録)</span>`
-        : this.escapeHtml(item.name)
+      const nameSize = Math.max(4, item.name ? item.name.length : 4)
+      const unregisteredLabel = isUnregistered
+        ? `<span class="ml-1 text-xs opacity-50">(未登録)</span>`
+        : ''
 
       return `
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm ${colorClass}">
-          ${label}
+        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${colorClass}">
+          <input type="text"
+                 value="${this.escapeHtml(item.name || '')}"
+                 size="${nameSize}"
+                 data-action="input->autocomplete#renameItem"
+                 data-uid="${item._uid}"
+                 class="bg-transparent border-none outline-none text-sm font-medium ${inputColorClass} min-w-[4ch]"
+                 aria-label="表示名">
+          ${unregisteredLabel}
           <button type="button"
                   data-action="click->autocomplete#removeItem"
-                  ${removeAttrs}
-                  class="ml-2 hover:opacity-75">×</button>
+                  data-uid="${item._uid}"
+                  class="ml-1 hover:opacity-75" aria-label="削除">×</button>
         </span>
       `
     }).join('')
   }
 
   updateHiddenField() {
-    this.hiddenFieldTarget.value = JSON.stringify(this.selectedItems)
+    // _uid はクライアント専用のため保存しない
+    const cleanItems = this.selectedItems.map(({ _uid, ...item }) => item)
+    this.hiddenFieldTarget.value = JSON.stringify(cleanItems)
   }
 
   showResults() {
