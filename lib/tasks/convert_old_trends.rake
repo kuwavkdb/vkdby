@@ -146,6 +146,9 @@ namespace :convert do
                                 :other
                               end
     end
+
+    # trend_class によらず「死去」が含まれる場合は passed_away を優先
+    trend.person_phenomenon = :passed_away if old.content&.include?('死去')
   end
   # rubocop:enable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
 end
