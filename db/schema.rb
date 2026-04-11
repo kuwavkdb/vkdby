@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_01_113800) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_10_145632) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -144,29 +144,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_01_113800) do
     t.index ["name"], name: "index_people_on_name", opclass: :gin_trgm_ops, using: :gin
     t.index ["name_kana"], name: "index_people_on_name_kana", opclass: :gin_trgm_ops, using: :gin
     t.index ["old_key"], name: "index_people_on_old_key", unique: true
-  end
-
-  create_table "person_logs", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "log_date"
-    t.integer "log_type"
-    t.string "name"
-    t.integer "part"
-    t.bigint "person_id", null: false
-    t.integer "phenomenon", null: false
-    t.string "phenomenon_alias"
-    t.text "quote_text"
-    t.integer "sort_order"
-    t.string "source_url"
-    t.text "text"
-    t.bigint "unit_id"
-    t.string "unit_key"
-    t.string "unit_name"
-    t.string "unit_url"
-    t.datetime "updated_at", null: false
-    t.index ["person_id", "sort_order"], name: "index_person_logs_on_person_id_and_sort_order"
-    t.index ["person_id"], name: "index_person_logs_on_person_id"
-    t.index ["unit_id"], name: "index_person_logs_on_unit_id"
   end
 
   create_table "release_schedules", force: :cascade do |t|
@@ -415,8 +392,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_01_113800) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "person_logs", "people"
-  add_foreign_key "person_logs", "units"
   add_foreign_key "snapshot_people", "people"
   add_foreign_key "snapshot_people", "unit_snapshots"
   add_foreign_key "tag_index_items", "tag_indices"

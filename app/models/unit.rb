@@ -37,7 +37,6 @@ class Unit < ApplicationRecord
   has_many :unit_people
   has_many :people, through: :unit_people
   has_many :unit_logs, dependent: :destroy
-  has_many :person_logs, dependent: :destroy
   has_many :tag_index_items, as: :indexable, dependent: :destroy
   has_many :tag_indices, through: :tag_index_items
   has_many :sections, as: :sectionable, dependent: :destroy
@@ -109,7 +108,6 @@ class Unit < ApplicationRecord
 
   after_commit :expire_timeline_cache
   after_commit :expire_sidebar_cache
-  after_create :link_related_person_logs_and_members
 
   def expire_timeline_cache
     Rails.cache.delete(TimelineController::CACHE_KEY)
@@ -117,29 +115,5 @@ class Unit < ApplicationRecord
 
   def expire_sidebar_cache
     Rails.cache.delete('sidebar/recently_updated')
-  end
-
-  def link_related_person_logs_and_members
-    return if key.blank?
-
-    logs = PersonLog.where(unit_key: key)
-    return if logs.empty?
-
-    logs.update_all(unit_id: id)
-
-    logs.includes(:person).order(:log_date).each do |log|
-      next unless log.person
-
-      member = unit_people.find_or_initialize_by(person: log.person)
-
-      # Determine part
-      target_part = log.part
-      member.part = target_part if UnitPerson.parts.keys.include?(target_part)
-
-      # Set default status if new record
-      member.status ||= :active
-
-      member.save!
-    end
   end
 end

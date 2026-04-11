@@ -167,7 +167,7 @@ wiki カラムの内容に応じて以下の3パターンで処理します。
 ### 3. import:reset - インポートデータの初期化
 
 インポートされたデータを全て削除し、データベースを初期状態（インポート前）に戻します。
-`UnitPerson`, `PersonLog`, `UnitLog`, `TagIndexItem`, `Link`, `Person`, `Unit`, `TagIndex` (一部) が削除されます。
+`UnitPerson`, `UnitLog`, `TagIndexItem`, `Link`, `Person`, `Unit`, `TagIndex` (一部) が削除されます。
 
 **使用方法**:
 ```bash

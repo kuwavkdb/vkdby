@@ -225,9 +225,6 @@ namespace :import do # rubocop:disable Metrics/BlockLength
       puts 'Deleting UnitPeople...'
       UnitPerson.delete_all
 
-      puts 'Deleting PersonLogs...'
-      PersonLog.delete_all
-
       puts 'Deleting UnitLogs...'
       UnitLog.delete_all
 
