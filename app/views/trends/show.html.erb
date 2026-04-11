@@ -29,6 +29,18 @@
         <% end %>
         <span><%= format_wiki_title(@trend.title, link: false) %></span>
       </h1>
+      <% if @trend.people.present? %>
+        <div class="mt-2 flex flex-wrap items-center gap-1">
+          <% @trend.people.each do |person_data| %>
+            <% person = @related_people&.dig(person_data['person_id']) %>
+            <% if person %>
+              <%= link_to person.name, profile_path(person.key), class: "px-2 py-0.5 rounded text-sm font-medium bg-white/60 text-zinc-800 hover:bg-white/80 transition-colors border border-white/40" %>
+            <% elsif person_data['name'].present? %>
+              <span class="px-2 py-0.5 rounded text-sm font-medium bg-white/40 text-zinc-800 border border-white/30"><%= person_data['name'] %></span>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
     </div>
     <div class="p-5 md:p-8">
 
