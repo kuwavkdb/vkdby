@@ -68,9 +68,9 @@ namespace :convert do
       person = Person.find_by(old_wiki_id: old.wikipage_id)
 
       if unit
-        trend.units = [{ unit_id: unit.id, unit_name: unit.name }]
+        trend.units = [{ unit_id: unit.id, name: unit.name }]
       elsif person
-        trend.people = [{ person_id: person.id, person_name: person.name }]
+        trend.people = [{ person_id: person.id, name: person.name }]
       elsif old.target_name.present?
         trend.units = [{ name: old.target_name }]
       end
