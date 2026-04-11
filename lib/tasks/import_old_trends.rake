@@ -5,7 +5,7 @@ namespace :import do
   task old_trends: :environment do
     require 'date'
 
-    file_path = Rails.root.join('trends_all_20260320.sql')
+    file_path = Rails.root.join('vkdb_dump/trends_all_20260411.sql')
     unless File.exist?(file_path)
       puts "File not found: #{file_path}"
       exit
