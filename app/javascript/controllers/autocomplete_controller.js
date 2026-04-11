@@ -79,7 +79,7 @@ export default class extends Controller {
   }
 
   get resultItems() {
-    return Array.from(this.resultsTarget.querySelectorAll('[data-id]'))
+    return Array.from(this.resultsTarget.querySelectorAll('[data-id], [data-unregistered]'))
   }
 
   highlightItem() {
@@ -109,31 +109,37 @@ export default class extends Controller {
       if (!response.ok) throw new Error('Search failed')
 
       const data = await response.json()
-      this.displayResults(data)
+      this.displayResults(data, query)
     } catch (error) {
       console.error('Autocomplete error:', error)
     }
   }
 
-  displayResults(items) {
+  displayResults(items, query) {
     this.activeIndex = -1
 
-    if (items.length === 0) {
-      this.hideResults()
-      return
-    }
-
     const idField = this.fieldNameValue === 'people' ? 'person_id' : 'unit_id'
-    const selectedIds = this.selectedItems.map(item => item[idField])
+    const selectedIds = this.selectedItems
+      .filter(item => item[idField] != null)
+      .map(item => item[idField])
 
     const filtered = items.filter(item => !selectedIds.includes(item.id))
 
-    if (filtered.length === 0) {
+    const isUnitsField = this.fieldNameValue === 'units'
+    const currentQuery = query || this.inputTarget.value.trim()
+
+    // units フィールドの場合、既に同名の未登録アイテムが追加済みか確認
+    const alreadyAddedAsUnregistered = isUnitsField &&
+      this.selectedItems.some(item => item.unit_id == null && item.name === currentQuery)
+
+    const showUnregisteredOption = isUnitsField && currentQuery.length >= 2 && !alreadyAddedAsUnregistered
+
+    if (filtered.length === 0 && !showUnregisteredOption) {
       this.hideResults()
       return
     }
 
-    this.resultsTarget.innerHTML = filtered
+    const registeredHtml = filtered
       .map(item => `
         <div class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
              data-action="click->autocomplete#selectItem"
@@ -145,6 +151,16 @@ export default class extends Controller {
         </div>
       `).join('')
 
+    const unregisteredHtml = showUnregisteredOption
+      ? `<div class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-t border-gray-100 dark:border-gray-700"
+               data-action="click->autocomplete#addUnregisteredItem"
+               data-unregistered="true"
+               data-name="${this.escapeHtml(currentQuery)}">
+            <div class="text-sm text-gray-500 dark:text-gray-400">「${this.escapeHtml(currentQuery)}」を未登録として追加</div>
+          </div>`
+      : ''
+
+    this.resultsTarget.innerHTML = registeredHtml + unregisteredHtml
     this.showResults()
   }
 
@@ -166,11 +182,30 @@ export default class extends Controller {
     this.hideResults()
   }
 
-  removeItem(event) {
-    const id = parseInt(event.currentTarget.dataset.id)
-    const idField = this.fieldNameValue === 'people' ? 'person_id' : 'unit_id'
+  addUnregisteredItem(event) {
+    const name = event.currentTarget.dataset.name
+    if (!name) return
 
-    this.selectedItems = this.selectedItems.filter(item => item[idField] !== id)
+    this.selectedItems.push({ name })
+    this.updateHiddenField()
+    this.renderSelectedItems()
+    this.inputTarget.value = ''
+    this.hideResults()
+  }
+
+  removeItem(event) {
+    const el = event.currentTarget
+
+    if (el.dataset.unregistered) {
+      const name = el.dataset.name
+      this.selectedItems = this.selectedItems.filter(item =>
+        !(item.unit_id == null && item.name === name)
+      )
+    } else {
+      const id = parseInt(el.dataset.id)
+      const idField = this.fieldNameValue === 'people' ? 'person_id' : 'unit_id'
+      this.selectedItems = this.selectedItems.filter(item => item[idField] !== id)
+    }
 
     this.updateHiddenField()
     this.renderSelectedItems()
@@ -182,15 +217,25 @@ export default class extends Controller {
       ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
       : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200'
 
-    this.selectedTarget.innerHTML = this.selectedItems.map(item => `
-      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm ${colorClass}">
-        ${this.escapeHtml(item.name)}
-        <button type="button"
-                data-action="click->autocomplete#removeItem"
-                data-id="${item[idField]}"
-                class="ml-2 hover:opacity-75">×</button>
-      </span>
-    `).join('')
+    this.selectedTarget.innerHTML = this.selectedItems.map(item => {
+      const isUnregistered = item[idField] == null
+      const removeAttrs = isUnregistered
+        ? `data-unregistered="true" data-name="${this.escapeHtml(item.name)}"`
+        : `data-id="${item[idField]}"`
+      const label = isUnregistered
+        ? `${this.escapeHtml(item.name)}<span class="ml-1 text-xs opacity-60">(未登録)</span>`
+        : this.escapeHtml(item.name)
+
+      return `
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm ${colorClass}">
+          ${label}
+          <button type="button"
+                  data-action="click->autocomplete#removeItem"
+                  ${removeAttrs}
+                  class="ml-2 hover:opacity-75">×</button>
+        </span>
+      `
+    }).join('')
   }
 
   updateHiddenField() {
