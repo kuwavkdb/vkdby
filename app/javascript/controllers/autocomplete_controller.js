@@ -13,6 +13,7 @@ export default class extends Controller {
     this.activeIndex = -1
     this.handleClickOutside = this.handleClickOutside.bind(this)
     document.addEventListener('click', this.handleClickOutside)
+    this.renderSelectedItems()
   }
 
   disconnect() {
@@ -209,7 +210,13 @@ export default class extends Controller {
     const newName = event.currentTarget.value
     const item = this.selectedItems.find(item => item._uid === uid)
     if (item) item.name = newName
+    event.currentTarget.style.width = `${Math.max(6, newName.length)}ch`
     this.updateHiddenField()
+  }
+
+  preventRemoveFocus(event) {
+    // × クリック時に input へフォーカスが移らないようにする
+    event.preventDefault()
   }
 
   renderSelectedItems() {
@@ -217,31 +224,31 @@ export default class extends Controller {
     const colorClass = this.fieldNameValue === 'people'
       ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
       : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200'
-    const inputColorClass = this.fieldNameValue === 'people'
-      ? 'text-green-800 dark:text-green-200'
-      : 'text-indigo-800 dark:text-indigo-200'
-
     this.selectedTarget.innerHTML = this.selectedItems.map(item => {
       const isUnregistered = item[idField] == null
-      const nameSize = Math.max(4, item.name ? item.name.length : 4)
+      const nameWidth = Math.max(6, (item.name || '').length)
       const unregisteredLabel = isUnregistered
-        ? `<span class="ml-1 text-xs opacity-50">(未登録)</span>`
+        ? `<span class="text-xs opacity-50 select-none">(未登録)</span>`
         : ''
 
       return `
-        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${colorClass}">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${colorClass}">
           <input type="text"
                  value="${this.escapeHtml(item.name || '')}"
-                 size="${nameSize}"
+                 style="width: ${nameWidth}ch"
                  data-action="input->autocomplete#renameItem"
                  data-uid="${item._uid}"
-                 class="bg-transparent border-none outline-none text-sm font-medium ${inputColorClass} min-w-[4ch]"
+                 class="bg-transparent rounded px-1 -mx-1 outline-none min-w-[6ch] transition-all cursor-text
+                        hover:bg-black/10 dark:hover:bg-white/10
+                        focus:bg-white dark:focus:bg-gray-700 focus:text-gray-900 dark:focus:text-gray-100 focus:shadow-[0_0_0_2px_currentColor] focus:rounded"
+                 title="クリックして表示名を編集"
                  aria-label="表示名">
           ${unregisteredLabel}
           <button type="button"
-                  data-action="click->autocomplete#removeItem"
+                  data-action="mousedown->autocomplete#preventRemoveFocus click->autocomplete#removeItem"
                   data-uid="${item._uid}"
-                  class="ml-1 hover:opacity-75" aria-label="削除">×</button>
+                  class="opacity-40 hover:opacity-100 hover:text-red-500 dark:hover:text-red-400 leading-none transition-all flex-shrink-0"
+                  aria-label="削除">×</button>
         </span>
       `
     }).join('')
