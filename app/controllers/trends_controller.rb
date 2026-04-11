@@ -37,10 +37,11 @@ class TrendsController < ApplicationController
     person_ids = (@trend.people || []).map { |p| p['person_id'] }.compact
     @related_people = Person.where(id: person_ids).index_by(&:id) if person_ids.any?
 
-    return unless unit_ids.size == 1
+    first_unit_id = @trend.units.first&.dig('unit_id')
+    @unit = @related_units[first_unit_id]
+    return unless @unit
 
-    unit = @related_units.values.first
-    return unless unit
+    unit = @unit
 
     candidate_date = @trend.snapshot_date || @trend.date
     @snapshot = unit.unit_snapshots
