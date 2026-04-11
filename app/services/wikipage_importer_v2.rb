@@ -29,7 +29,14 @@ class WikipageImporterV2 < WikipageImporter
     return unless unit
 
     # 既存のスナップショットを削除し、再作成する
-    unit.unit_snapshots.destroy_all
+    # SnapshotPerson は Discard::Model を持つため default_scope { kept } が適用される。
+    # destroy_all の cascade では discarded レコードが除外され FK 制約違反になるため、
+    # with_discarded で全レコードを明示的に削除してから unit_snapshots を消す。
+    snapshot_ids = unit.unit_snapshots.pluck(:id)
+    if snapshot_ids.any?
+      SnapshotPerson.with_discarded.where(unit_snapshot_id: snapshot_ids).delete_all
+      unit.unit_snapshots.delete_all
+    end
 
     # 日付付きメンバーセクションを抽出
     dated_sections = extract_dated_member_sections
@@ -522,6 +529,7 @@ class WikipageImporterV2 < WikipageImporter
     sort_order = options[:sort_order]
 
     # パートをパース
+    part_str = part_str&.sub(/^!/, '')
     part_enum = parse_part(part_str)
     support = part_str&.include?('サポート') || part_str&.include?('sup') || false
     cleaned_part_alias = extract_name_from_wiki_link(part_str)&.gsub(/サポート|sup/i, '')&.strip
@@ -534,7 +542,7 @@ class WikipageImporterV2 < WikipageImporter
 
     snapshot.snapshot_people.create!(
       person: person,
-      person_name: person ? nil : name_str,
+      person_name: name_str,
       person_key: person&.key,
       old_person_key: old_member_key,
       part: part_enum,

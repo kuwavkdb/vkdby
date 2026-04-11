@@ -2,8 +2,9 @@
 
 module Admin
   class SectionsController < Admin::BaseController
-    before_action :set_section, only: %i[edit update destroy undiscard]
+    before_action :set_section, only: %i[edit update destroy undiscard upload_image]
     before_action :set_sectionable
+    before_action :require_admin, only: %i[upload_image]
 
     def new
       @section = @sectionable.sections.build
@@ -40,6 +41,14 @@ module Admin
       @section.undiscard
       record_update_log(@section, action: 'undiscard')
       redirect_to sectionable_edit_path, notice: 'セクションを復元しました。'
+    end
+
+    def upload_image
+      image = params[:image]
+      raise ActionController::BadRequest, 'Invalid file type' unless image&.content_type&.start_with?('image/')
+
+      @section.images.attach(image)
+      render json: { url: url_for(@section.images.last) }
     end
 
     def reorder

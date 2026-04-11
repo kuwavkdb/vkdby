@@ -5,6 +5,7 @@ namespace :convert do
   task old_trends: :environment do
     puts 'Start converting OldTrend to Trend...'
     Trend.delete_all
+    ActiveRecord::Base.connection.execute('ALTER SEQUENCE trends_id_seq RESTART WITH 1')
 
     count = 0
     skipped_count = 0
@@ -68,9 +69,9 @@ namespace :convert do
       person = Person.find_by(old_wiki_id: old.wikipage_id)
 
       if unit
-        trend.units = [{ unit_id: unit.id, unit_name: unit.name }]
+        trend.units = [{ unit_id: unit.id, name: unit.name }]
       elsif person
-        trend.people = [{ person_id: person.id, person_name: person.name }]
+        trend.people = [{ person_id: person.id, name: person.name }]
       elsif old.target_name.present?
         trend.units = [{ name: old.target_name }]
       end
@@ -146,6 +147,9 @@ namespace :convert do
                                 :other
                               end
     end
+
+    # trend_class によらず「死去」が含まれる場合は passed_away を優先
+    trend.person_phenomenon = :passed_away if old.content&.include?('死去')
   end
   # rubocop:enable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
 end

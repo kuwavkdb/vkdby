@@ -3,7 +3,7 @@
 source 'https://rubygems.org'
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem 'rails', '~> 8.1.2'
+gem 'rails', '>= 8.1.2.1', '~> 8.1.2'
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem 'propshaft'
 # Use pg as the database for Active Record
@@ -86,5 +86,5 @@ gem 'discard', '~> 1.4'
 gem 'rack-attack'
 gem 'romaji', '~> 0.3.0'
 
-gem 'pagy', '~> 43.4'
+gem 'pagy', '~> 43.5'
 gem 'redcarpet'

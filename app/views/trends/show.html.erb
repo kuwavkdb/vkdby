@@ -29,6 +29,18 @@
         <% end %>
         <span><%= format_wiki_title(@trend.title, link: false) %></span>
       </h1>
+      <% if @trend.people.present? %>
+        <div class="mt-2 flex flex-wrap items-center gap-1">
+          <% @trend.people.each do |person_data| %>
+            <% person = @related_people&.dig(person_data['person_id']) %>
+            <% if person %>
+              <%= link_to person.name, profile_path(person.key), class: "px-2 py-0.5 rounded text-sm font-medium bg-white/60 text-zinc-800 hover:bg-white/80 transition-colors border border-white/40" %>
+            <% elsif person_data['name'].present? %>
+              <span class="px-2 py-0.5 rounded text-sm font-medium bg-white/40 text-zinc-800 border border-white/30"><%= person_data['name'] %></span>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
     </div>
     <div class="p-5 md:p-8">
 
@@ -41,8 +53,9 @@
               <%= twitter_embed(@trend.quote_url, @trend.quote) %>
             </div>
           <% else %>
-            <blockquote class="mt-8 border-l-4 border-indigo-500 pl-4 py-1 bg-slate-50 dark:bg-slate-800/50 rounded-r-lg">
-              <div class="text-lg italic text-slate-700 dark:text-slate-300">
+            <blockquote class="mt-8 relative pl-10 pr-4 py-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+              <span class="absolute top-2 left-3 text-5xl leading-none text-indigo-300 dark:text-indigo-600 font-serif select-none" aria-hidden="true">&ldquo;</span>
+              <div class="text-base italic text-slate-700 dark:text-slate-300">
                 <%= simple_format(@trend.quote) %>
               </div>
               <% if @trend.quote_title.present? || @trend.quote_url.present? %>
@@ -70,7 +83,9 @@
           <% if @snapshot %>
             <section>
               <div class="flex items-center gap-2 mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
-                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Members</h2>
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <% if @trend.units.size > 1 %><%= @unit.name %> <% end %>Members
+                </h2>
                 <% if @snapshot.label.present? && @trend.snapshot_date.blank? %>
                   <span class="text-xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"><%= @snapshot.label %></span>
                 <% end %>

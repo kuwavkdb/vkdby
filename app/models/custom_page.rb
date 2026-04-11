@@ -22,6 +22,8 @@
 class CustomPage < ApplicationRecord
   include Discard::Model
 
+  has_many_attached :images
+
   # 削除不可のページkey一覧（ルートとして使用されるなど、システム上必須のページ）
   PROTECTED_KEYS = %w[index].freeze
 

@@ -12,8 +12,15 @@
       <% if @resource.birthday.present? %>
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
           <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Birthday</dt>
-          <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100">
-            <%= link_to @resource.birthday_display, birthday_date_path(month: @resource.birthday.month, day: @resource.birthday.day), class: "hover:text-amber-600 dark:hover:text-amber-400 transition-colors" %>
+          <dd class="flex flex-wrap justify-end items-center gap-0.5">
+            <% badge_class = "inline-block bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded text-xs font-bold hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors border border-amber-200 dark:border-amber-700" %>
+            <% if @resource.birth_year.present? %>
+              <%= link_to @resource.birth_year.to_s, yearly_path(year: @resource.birth_year), class: badge_class %>
+              <span class="text-xs font-bold text-zinc-400 dark:text-zinc-500 px-1">/</span>
+            <% end %>
+            <%= link_to birthday_date_path(month: @resource.birthday.month, day: @resource.birthday.day), class: badge_class do %>
+              <%= @resource.birthday.month %><span class="px-1">/</span><%= @resource.birthday.day %>
+            <% end %>
           </dd>
         </div>
       <% end %>
@@ -39,16 +46,12 @@
       <% end %>
 
       <% if @resource.activity_periods.present? %>
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
+        <div class="flex flex-col border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
           <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">活動時期</dt>
-          <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 text-right">
+          <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 grid gap-x-3 justify-end" style="grid-template-columns: auto auto">
             <% @resource.activity_periods.each do |period| %>
-              <div>
-                <%= period.from %> 〜 <%= period.to.presence || '現在' %>
-                <% if period.label.present? %>
-                  <span class="ml-1 text-xs font-normal text-zinc-400 dark:text-zinc-500">(<%= period.label %>)</span>
-                <% end %>
-              </div>
+              <span class="text-xs font-normal text-zinc-600 dark:text-zinc-300 text-right self-center"><%= period.label %></span>
+              <span class="whitespace-nowrap font-mono text-sm"><%= period.from %><span class="text-[0.6rem] text-zinc-400 dark:text-zinc-500">〜</span><%= period.to.presence || '現在' %></span>
             <% end %>
           </dd>
         </div>

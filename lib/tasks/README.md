@@ -91,12 +91,21 @@ Wikipageからユニット（Unit）データと、日付付きメンバーセ�
 **使用方法**:
 ```bash
 # 全件インポート
-PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2
+MODE=ALL PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2
+
+# 手動仕訳済みページのみ（page_type=unit かつ manually_set=true）
+MODE=MANUAL PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2
+
+# スキップ済みページを再処理（valid_unit? を再判定してインポート）
+MODE=SKIPPED PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2
+
+# インポート済みの全Unitを再取り込み（sections/links/snapshots を再作成）
+MODE=RELOAD PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2
 
 # パラメータ指定
 ID=6555 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2       # 特定IDのみ
 START=5000 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2    # ID 5000以降
-LIMIT=10 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2      # 最大10件まで
+LIMIT=10 MODE=ALL PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2  # 最大10件まで
 ```
 
 **インポート対象**:
@@ -108,15 +117,57 @@ LIMIT=10 PATH=/opt/homebrew/opt/ruby/bin:$PATH bin/rails import:units_v2      # 
 - `!!メンバー（yyyy年mm月dd日）` - 例: `!!メンバー（2023年4月15日）`
 - `!!メンバー（ラベル）` - 例: `!!メンバー（結成時）` ※日付なしのため、スナップショットは作成されません
 
+**MODE=RELOAD の動作**:
+- `wiki_page_imports` の `status=imported, page_type=unit` なページを対象に再インポート
+- インポート前に既存の `sections` / `links` を削除してから再作成
+- スナップショット（`unit_snapshots` / `snapshot_people`）はインポーター内部で削除・再作成
+- `LIMIT` オプションと組み合わせ可能
+
 **注意**:
 - 既存のスナップショットがある場合はスキップされます
 - 日付がない（ラベルのみの）セクションはスキップされます
 
 
+### 2-3. import:moved - 移動ページのインポート
+
+`wiki_page_imports` の `status=skipped, page_type=moved` なページを対象に、`units` テーブルへ移動先情報を持つレコードを作成します。
+
+**使用方法**:
+```bash
+# 通常実行
+bundle exec rails import:moved
+
+# ドライランモード（DB への書き込みなしで結果を確認）
+DRYRUN=1 bundle exec rails import:moved
+```
+
+**処理内容**:
+
+wiki カラムの内容に応じて以下の3パターンで処理します。
+
+| 条件 | 処理 |
+|---|---|
+| `[[XXXX]]` または `[[表示名\|XXXX]]` が存在する | `units` または `people` を `old_key=XXXX` で検索し、移動先 Unit を作成 → `imported` に更新 |
+| `{{include ...}}` が存在する（wiki link なし） | 対象外のためスルー（ステータス変更なし） |
+| どちらでもない | `note='not moved'` で `skipped` のまま更新 |
+
+**作成される Unit レコード**:
+- `unit_type: moved`
+- `destination_key`: 移動先の Unit / Person の `key`
+- `key` / `old_key`: 移動元ページ名から生成
+
+**移動先が見つからない場合**:
+- `note='destination not found'` で更新（`status` は `skipped` のまま）
+
+**リダイレクト**:
+- `/{key}` にアクセスすると `destination_key` のページへ 301 リダイレクトされます
+
+---
+
 ### 3. import:reset - インポートデータの初期化
 
 インポートされたデータを全て削除し、データベースを初期状態（インポート前）に戻します。
-`UnitPerson`, `PersonLog`, `UnitLog`, `TagIndexItem`, `Link`, `Person`, `Unit`, `TagIndex` (一部) が削除されます。
+`UnitPerson`, `UnitLog`, `TagIndexItem`, `Link`, `Person`, `Unit`, `TagIndex` (一部) が削除されます。
 
 **使用方法**:
 ```bash

@@ -40,6 +40,7 @@ module Admin
       @unit_person = @unit.unit_people.build(period: 1, order_in_period: (@unit_people.last&.order_in_period || 0) + 1)
       @unit_snapshots = @unit.unit_snapshots.includes(snapshot_people: :person).order(snapshot_date: :desc)
       @unit.links.build # Build an empty link for the form
+      @wiki_page_imports = @unit.wiki_page_imports.includes(:wikipage).order(updated_at: :desc)
       @update_logs = UpdateLog.for_unit(@unit)
                               .includes(:user)
                               .order(created_at: :desc)

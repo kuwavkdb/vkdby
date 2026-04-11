@@ -5,7 +5,7 @@ set -e
 # PostgreSQL 17のパスを設定
 PSQL="/opt/homebrew/opt/postgresql@17/bin/psql"
 DB_NAME="vkdby_development"
-SRC_SQL="release_schedule_all_20260201.sql"
+SRC_SQL="./vkdb_dump/release_schedule_all_20260411.sql"
 TMP_SQL="/tmp/release_schedule_inserts.sql"
 
 echo "=== MySQLダンプからPostgreSQLへのデータ移行 (release_schedule) ==="

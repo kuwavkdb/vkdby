@@ -13,6 +13,7 @@ export default class extends Controller {
     this.activeIndex = -1
     this.handleClickOutside = this.handleClickOutside.bind(this)
     document.addEventListener('click', this.handleClickOutside)
+    this.renderSelectedItems()
   }
 
   disconnect() {
@@ -25,10 +26,14 @@ export default class extends Controller {
     }
   }
 
+  generateUid() {
+    return Math.random().toString(36).slice(2, 11)
+  }
+
   loadExistingItems() {
     try {
       const data = JSON.parse(this.hiddenFieldTarget.value || '[]')
-      return data
+      return data.map(item => ({ ...item, _uid: this.generateUid() }))
     } catch (e) {
       return []
     }
@@ -79,7 +84,7 @@ export default class extends Controller {
   }
 
   get resultItems() {
-    return Array.from(this.resultsTarget.querySelectorAll('[data-id]'))
+    return Array.from(this.resultsTarget.querySelectorAll('[data-id], [data-unregistered]'))
   }
 
   highlightItem() {
@@ -109,31 +114,37 @@ export default class extends Controller {
       if (!response.ok) throw new Error('Search failed')
 
       const data = await response.json()
-      this.displayResults(data)
+      this.displayResults(data, query)
     } catch (error) {
       console.error('Autocomplete error:', error)
     }
   }
 
-  displayResults(items) {
+  displayResults(items, query) {
     this.activeIndex = -1
 
-    if (items.length === 0) {
-      this.hideResults()
-      return
-    }
-
     const idField = this.fieldNameValue === 'people' ? 'person_id' : 'unit_id'
-    const selectedIds = this.selectedItems.map(item => item[idField])
+    const selectedIds = this.selectedItems
+      .filter(item => item[idField] != null)
+      .map(item => item[idField])
 
     const filtered = items.filter(item => !selectedIds.includes(item.id))
 
-    if (filtered.length === 0) {
+    const supportsUnregistered = this.fieldNameValue === 'units' || this.fieldNameValue === 'people'
+    const currentQuery = query || this.inputTarget.value.trim()
+
+    // units/people フィールドの場合、既に同名の未登録アイテムが追加済みか確認
+    const alreadyAddedAsUnregistered = supportsUnregistered &&
+      this.selectedItems.some(item => item[idField] == null && item.name === currentQuery)
+
+    const showUnregisteredOption = supportsUnregistered && currentQuery.length >= 2 && !alreadyAddedAsUnregistered
+
+    if (filtered.length === 0 && !showUnregisteredOption) {
       this.hideResults()
       return
     }
 
-    this.resultsTarget.innerHTML = filtered
+    const registeredHtml = filtered
       .map(item => `
         <div class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
              data-action="click->autocomplete#selectItem"
@@ -145,6 +156,16 @@ export default class extends Controller {
         </div>
       `).join('')
 
+    const unregisteredHtml = showUnregisteredOption
+      ? `<div class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-t border-gray-100 dark:border-gray-700"
+               data-action="click->autocomplete#addUnregisteredItem"
+               data-unregistered="true"
+               data-name="${this.escapeHtml(currentQuery)}">
+            <div class="text-sm text-gray-500 dark:text-gray-400">「${this.escapeHtml(currentQuery)}」を未登録として追加</div>
+          </div>`
+      : ''
+
+    this.resultsTarget.innerHTML = registeredHtml + unregisteredHtml
     this.showResults()
   }
 
@@ -154,10 +175,10 @@ export default class extends Controller {
     const key = event.currentTarget.dataset.key || ''
 
     if (this.fieldNameValue === 'artists') {
-      this.selectedItems.push({ unit_id: id, name, key })
+      this.selectedItems.push({ unit_id: id, name, key, _uid: this.generateUid() })
     } else {
       const idField = this.fieldNameValue === 'people' ? 'person_id' : 'unit_id'
-      this.selectedItems.push({ [idField]: id, name })
+      this.selectedItems.push({ [idField]: id, name, _uid: this.generateUid() })
     }
 
     this.updateHiddenField()
@@ -166,14 +187,36 @@ export default class extends Controller {
     this.hideResults()
   }
 
-  removeItem(event) {
-    const id = parseInt(event.currentTarget.dataset.id)
-    const idField = this.fieldNameValue === 'people' ? 'person_id' : 'unit_id'
+  addUnregisteredItem(event) {
+    const name = event.currentTarget.dataset.name
+    if (!name) return
 
-    this.selectedItems = this.selectedItems.filter(item => item[idField] !== id)
-
+    this.selectedItems.push({ name, _uid: this.generateUid() })
     this.updateHiddenField()
     this.renderSelectedItems()
+    this.inputTarget.value = ''
+    this.hideResults()
+  }
+
+  removeItem(event) {
+    const uid = event.currentTarget.dataset.uid
+    this.selectedItems = this.selectedItems.filter(item => item._uid !== uid)
+    this.updateHiddenField()
+    this.renderSelectedItems()
+  }
+
+  renameItem(event) {
+    const uid = event.currentTarget.dataset.uid
+    const newName = event.currentTarget.value
+    const item = this.selectedItems.find(item => item._uid === uid)
+    if (item) item.name = newName
+    event.currentTarget.style.width = `${Math.max(6, newName.length)}ch`
+    this.updateHiddenField()
+  }
+
+  preventRemoveFocus(event) {
+    // × クリック時に input へフォーカスが移らないようにする
+    event.preventDefault()
   }
 
   renderSelectedItems() {
@@ -181,20 +224,40 @@ export default class extends Controller {
     const colorClass = this.fieldNameValue === 'people'
       ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
       : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200'
+    this.selectedTarget.innerHTML = this.selectedItems.map(item => {
+      const isUnregistered = item[idField] == null
+      const nameWidth = Math.max(6, (item.name || '').length)
+      const unregisteredLabel = isUnregistered
+        ? `<span class="text-xs opacity-50 select-none">(未登録)</span>`
+        : ''
 
-    this.selectedTarget.innerHTML = this.selectedItems.map(item => `
-      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm ${colorClass}">
-        ${this.escapeHtml(item.name)}
-        <button type="button"
-                data-action="click->autocomplete#removeItem"
-                data-id="${item[idField]}"
-                class="ml-2 hover:opacity-75">×</button>
-      </span>
-    `).join('')
+      return `
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${colorClass}">
+          <input type="text"
+                 value="${this.escapeHtml(item.name || '')}"
+                 style="width: ${nameWidth}ch"
+                 data-action="input->autocomplete#renameItem"
+                 data-uid="${item._uid}"
+                 class="bg-transparent rounded px-1 -mx-1 outline-none min-w-[6ch] transition-all cursor-text
+                        hover:bg-black/10 dark:hover:bg-white/10
+                        focus:bg-white dark:focus:bg-gray-700 focus:text-gray-900 dark:focus:text-gray-100 focus:shadow-[0_0_0_2px_currentColor] focus:rounded"
+                 title="クリックして表示名を編集"
+                 aria-label="表示名">
+          ${unregisteredLabel}
+          <button type="button"
+                  data-action="mousedown->autocomplete#preventRemoveFocus click->autocomplete#removeItem"
+                  data-uid="${item._uid}"
+                  class="opacity-40 hover:opacity-100 hover:text-red-500 dark:hover:text-red-400 leading-none transition-all flex-shrink-0"
+                  aria-label="削除">×</button>
+        </span>
+      `
+    }).join('')
   }
 
   updateHiddenField() {
-    this.hiddenFieldTarget.value = JSON.stringify(this.selectedItems)
+    // _uid はクライアント専用のため保存しない
+    const cleanItems = this.selectedItems.map(({ _uid, ...item }) => item)
+    this.hiddenFieldTarget.value = JSON.stringify(cleanItems)
   }
 
   showResults() {
