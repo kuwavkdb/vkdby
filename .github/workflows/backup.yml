@@ -26,7 +26,7 @@ jobs:
         run: |
           TIMESTAMP=$(date -u +"%Y%m%d_%H%M%S")
           FILENAME="vkdby_${TIMESTAMP}.dump"
-          pg_dump --format=custom --no-acl --no-owner "$DATABASE_URL" -f "$FILENAME"
+          /usr/lib/postgresql/18/bin/pg_dump --format=custom --no-acl --no-owner "$DATABASE_URL" -f "$FILENAME"
           echo "BACKUP_FILE=$FILENAME" >> "$GITHUB_ENV"
 
       - name: Upload backup artifact
