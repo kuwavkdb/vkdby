@@ -1,0 +1,30 @@
+name: Database Backup
+
+on:
+  schedule:
+    - cron: '0 20 * * 0' # 毎週月曜 JST 05:00 (= UTC 日曜 20:00)
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y postgresql-client
+
+      - name: Run pg_dump
+        env:
+          DATABASE_URL: ${{ secrets.RENDER_DATABASE_URL }}
+        run: |
+          TIMESTAMP=$(date -u +"%Y%m%d_%H%M%S")
+          FILENAME="vkdby_${TIMESTAMP}.dump"
+          pg_dump --format=custom --no-acl --no-owner "$DATABASE_URL" -f "$FILENAME"
+          echo "BACKUP_FILE=$FILENAME" >> "$GITHUB_ENV"
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ env.BACKUP_FILE }}
+          path: ${{ env.BACKUP_FILE }}
+          retention-days: 180
