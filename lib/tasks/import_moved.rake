@@ -85,9 +85,10 @@ namespace :import do
 
         if destination
           unless dryrun
+            encoded_old_key = URI.encode_www_form_component(wp.name.encode('EUC-JP'))
             current_aliases = destination[:aliases] || []
             already_added   = current_aliases.any? { |a| a['name'] == wp.title }
-            destination.update!(aliases: current_aliases + [{ 'name' => wp.title, 'kana' => '' }]) unless already_added
+            destination.update!(aliases: current_aliases + [{ 'name' => wp.title, 'kana' => '', 'old_key' => encoded_old_key }]) unless already_added
             wpi.update!(status: 'imported', import_target: destination)
           end
           puts "[IMPORTED/INCLUDE] #{wp.title} (ID: #{wp.id}) → #{destination.key} (alias 追加)"
