@@ -87,9 +87,7 @@ namespace :import do
           unless dryrun
             current_aliases = destination[:aliases] || []
             already_added   = current_aliases.any? { |a| a['name'] == wp.title }
-            unless already_added
-              destination.update!(aliases: current_aliases + [{ 'name' => wp.title, 'kana' => '' }])
-            end
+            destination.update!(aliases: current_aliases + [{ 'name' => wp.title, 'kana' => '' }]) unless already_added
             wpi.update!(status: 'imported', import_target: destination)
           end
           puts "[IMPORTED/INCLUDE] #{wp.title} (ID: #{wp.id}) → #{destination.key} (alias 追加)"
