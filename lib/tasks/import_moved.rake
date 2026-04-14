@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 MOVED_WIKI_LINK_RE = /\[\[(?:[^|\]]+\|)?([^\]]+)\]\]/
-MOVED_INCLUDE_RE   = /\{\{include\s+/i
+MOVED_INCLUDE_RE   = /\{\{include\s+([^}|]+?)(?:\s*\|[^}]*)?\s*\}\}/i
 
 namespace :import do
   desc 'Import moved pages from WikiPageImports (page_type=moved)'
@@ -13,7 +13,6 @@ namespace :import do
     count = 0
     skipped_no_dest = 0
     skipped_not_moved = 0
-    skipped_include = 0
 
     scope = WikiPageImport.where(status: 'skipped', page_type: 'moved').includes(:wikipage)
     total = scope.count
@@ -74,9 +73,32 @@ namespace :import do
         puts "[IMPORTED] #{wp.title} (ID: #{wp.id}) → #{destination.key} (key: #{unique_key})"
         count += 1
 
-      elsif wiki.match?(MOVED_INCLUDE_RE)
-        puts "[SKIP/INCLUDE] #{wp.title} (ID: #{wp.id})"
-        skipped_include += 1
+      elsif (m = wiki.match(MOVED_INCLUDE_RE))
+        include_name = m[1].strip
+        destination  = Unit.find_by(old_key: include_name) ||
+                       Person.find_by(old_key: include_name)
+
+        unless destination
+          encoded = URI.encode_www_form_component(include_name.encode('EUC-JP'))
+          destination = Unit.find_by(old_key: encoded) || Person.find_by(old_key: encoded)
+        end
+
+        if destination
+          unless dryrun
+            current_aliases = destination[:aliases] || []
+            already_added   = current_aliases.any? { |a| a['name'] == wp.title }
+            unless already_added
+              destination.update!(aliases: current_aliases + [{ 'name' => wp.title, 'kana' => '' }])
+            end
+            wpi.update!(status: 'imported', import_target: destination)
+          end
+          puts "[IMPORTED/INCLUDE] #{wp.title} (ID: #{wp.id}) → #{destination.key} (alias 追加)"
+          count += 1
+        else
+          wpi.update!(note: 'destination not found') unless dryrun
+          puts "[NOT FOUND/INCLUDE] #{wp.title} (ID: #{wp.id}) → '#{include_name}'"
+          skipped_no_dest += 1
+        end
 
       else
         wpi.update!(status: 'skipped', note: 'not moved') unless dryrun
@@ -89,7 +111,6 @@ namespace :import do
     puts "  Imported:              #{count}"
     puts "  Destination not found: #{skipped_no_dest}"
     puts "  Not moved:             #{skipped_not_moved}"
-    puts "  Include (skipped):     #{skipped_include}"
   end
 end
 
