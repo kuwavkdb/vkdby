@@ -6,7 +6,9 @@ class LegacyRedirectsController < ApplicationController
     encoded_old_key = URI.encode_www_form_component(old_key.gsub('+', ' '))
 
     # Try to find Unit by old_key
-    if (unit = Unit.find_by(old_key: old_key) || Unit.find_by(old_key: encoded_old_key))
+    if (unit = Unit.find_by(old_key: old_key) || Unit.find_by(old_key: encoded_old_key) ||
+               Unit.where('aliases @> ?', [{ old_key: old_key }].to_json).first ||
+               Unit.where('aliases @> ?', [{ old_key: encoded_old_key }].to_json).first)
       new_url = profile_url(unit.key)
       response.headers['Link'] = "<#{new_url}>; rel=\"canonical\""
       redirect_to new_url, status: :moved_permanently
@@ -14,7 +16,9 @@ class LegacyRedirectsController < ApplicationController
     end
 
     # Fallback: Try to find Person by old_key
-    if (person = Person.find_by(old_key: old_key) || Person.find_by(old_key: encoded_old_key))
+    if (person = Person.find_by(old_key: old_key) || Person.find_by(old_key: encoded_old_key) ||
+                 Person.where('aliases @> ?', [{ old_key: old_key }].to_json).first ||
+                 Person.where('aliases @> ?', [{ old_key: encoded_old_key }].to_json).first)
       new_url = profile_url(person.key)
       response.headers['Link'] = "<#{new_url}>; rel=\"canonical\""
       redirect_to new_url, status: :moved_permanently

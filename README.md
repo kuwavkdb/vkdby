@@ -50,6 +50,34 @@ bundle exec annotaterb models
 bin/rails test
 ```
 
+## バックアップ
+
+### 自動バックアップ
+
+本番環境（Render.com）のデータベースバックアップは2段階で管理しています。
+
+| 種類 | 保持期間 | 仕組み |
+|------|----------|--------|
+| Render.com 自動バックアップ | 7日間 | Render Basic プランに付属 |
+| GitHub Actions バックアップ | 180日間 | 週次（毎週月曜 JST 05:00）で `pg_dump` を実行し Artifact として保存 |
+
+### 手動実行
+
+GitHub Actions の **Database Backup** ワークフローを `workflow_dispatch` で手動実行できます。
+
+```bash
+gh workflow run backup.yml --repo kuwavkdb/vkdby
+```
+
+### バックアップからの復元
+
+1. GitHub → Actions → Database Backup → 対象の実行 → Artifacts からダンプファイルをダウンロード
+2. ローカルに復元:
+
+```bash
+pg_restore --no-owner --no-acl -d <接続先DB> vkdby_YYYYMMDD_HHMMSS.dump
+```
+
 ## 注意事項
 - サーバー起動後は `http://127.0.0.1:3000` でアクセス可能です。
 - `bin/rails` 等を直接叩くとシステム Ruby が呼ばれてエラーになる可能性があるため、上記のように明示的にパスを通した実行を強く推奨します。

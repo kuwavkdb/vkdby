@@ -115,7 +115,7 @@ module Admin
       params.require(:unit).permit(:name, :name_kana, :key, :status, :unit_type, :old_key, :note,
                                    links_attributes: %i[id text url active sort_order _destroy],
                                    name_logs_attributes: %i[name name_kana],
-                                   aliases_attributes: %i[name kana],
+                                   aliases_attributes: %i[name kana old_key],
                                    activity_periods_attributes: %i[from to label])
     end
   end
