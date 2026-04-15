@@ -113,6 +113,55 @@ namespace :import do
   end
 end
 
+namespace :import do
+  desc 'Backfill old_key into aliases registered by import:moved before old_key support was added'
+  task backfill_alias_old_key: :environment do
+    dryrun = ENV['DRYRUN'] == '1'
+
+    puts 'Starting alias old_key backfill...'
+    puts 'Mode: DRYRUN (DB への書き込みは行いません)' if dryrun
+
+    backfilled = 0
+    skipped    = 0
+
+    scope = WikiPageImport.where(status: 'imported', page_type: 'moved')
+                          .where.not(import_target_type: nil)
+                          .includes(:wikipage)
+    total = scope.count
+    puts "Target WikiPageImports: #{total}"
+
+    scope.find_each do |wpi|
+      wp          = wpi.wikipage
+      target      = wpi.import_target
+      next unless wp && target
+
+      title           = wp.title
+      encoded_old_key = URI.encode_www_form_component(wp.name.encode('EUC-JP'))
+
+      current_aliases = target[:aliases] || []
+      idx = current_aliases.index { |a| a['name'] == title && a['old_key'].blank? }
+
+      unless idx
+        puts "[SKIP] #{title} (WikiPageImport##{wpi.id}) → old_key 補完済み or alias なし"
+        skipped += 1
+        next
+      end
+
+      unless dryrun
+        current_aliases[idx] = current_aliases[idx].merge('old_key' => encoded_old_key)
+        target.update!(aliases: current_aliases)
+      end
+
+      puts "[BACKFILLED] #{title} (WikiPageImport##{wpi.id}) → #{target.key} の alias に old_key を補完"
+      backfilled += 1
+    end
+
+    puts dryrun ? 'Dryrun complete!' : 'Backfill complete!'
+    puts "  Backfilled: #{backfilled}"
+    puts "  Skipped:    #{skipped}"
+  end
+end
+
 def resolve_moved_key(base_key, current_id = nil)
   return base_key unless Unit.where(key: base_key).where.not(id: current_id).exists?
 
