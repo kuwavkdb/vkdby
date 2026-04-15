@@ -53,7 +53,6 @@ if unit
   unit.unit_logs.find_or_create_by!(log_date: '2020/01/01', phenomenon: :announcement, text: '結成発表（公式Xにて）')
   unit.unit_logs.find_or_create_by!(log_date: '2020/02/01', phenomenon: :first_live, text: '渋谷公会堂にて初ライブを開催')
 
-  # Existing PersonLogs for this unit's people will be integrated automatically
 end
 
 puts 'Done seeding links and logs.'
