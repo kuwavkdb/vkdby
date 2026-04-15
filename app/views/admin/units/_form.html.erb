@@ -82,7 +82,7 @@
     <div class="space-y-4">
       <%
         aliases_for_form = unit.aliases
-        aliases_for_form << OpenStruct.new(name: "", kana: "")
+        aliases_for_form << OpenStruct.new(name: "", kana: "", old_key: "")
       %>
       <%= form.fields_for :aliases, aliases_for_form do |alias_form| %>
         <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
@@ -94,9 +94,13 @@
             <%= alias_form.label :kana, "よみ", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
             <%= alias_form.text_field :kana, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
           </div>
+          <div class="flex-1 w-full">
+            <%= alias_form.label :old_key, "旧キー (old_key)", class: "block text-xs font-medium text-gray-500 dark:text-gray-400" %>
+            <%= alias_form.text_field :old_key, class: "mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400" %>
+          </div>
         </div>
       <% end %>
-      <div class="text-xs text-gray-500">※名前を空にすると保存時に削除されます</div>
+      <div class="text-xs text-gray-500">※名前を空にすると保存時に削除されます。旧キーはインポート時に自動設定されます。</div>
     </div>
   </div>
 
