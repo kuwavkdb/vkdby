@@ -8,6 +8,8 @@ class WikipageImporter < BaseWikipageImporter
     new(wikipage).import
   end
 
+  KNOWN_PART_KEYWORDS = %w[vocal guitar bass drums keyboard dj].freeze
+
   def self.valid_unit?(wikipage)
     return false if ignored?(wikipage)
     return false if wikipage.wiki.blank?
@@ -15,8 +17,12 @@ class WikipageImporter < BaseWikipageImporter
     # Check for member section or specific category that indicates a unit
     # Simple check: has {{member...}} tag or !Part... line
     has_member_plugin = wikipage.wiki.match?(/\{\{member2?\s+.*?\}\}/m)
-    # Support both formats: !Part… [[Name]] and ![[Name]]… Part
-    has_old_member_format = wikipage.wiki.match?(/^!([^…]+)…\s*\[\[/) || wikipage.wiki.match?(/^!\[\[.+?\]\]\s*…/)
+    # Support formats: !Part… [[Name]], ![[Name]]… Part, !Part… PlainName, !PlainName… Part
+    parts_pattern = "(#{KNOWN_PART_KEYWORDS.join('|')})"
+    has_old_member_format = wikipage.wiki.match?(/^!([^…]+)…\s*\[\[/) ||
+                            wikipage.wiki.match?(/^!\[\[.+?\]\]\s*…/) ||
+                            wikipage.wiki.match?(/^!#{parts_pattern}\s*…/i) ||
+                            wikipage.wiki.match?(/^![^…\[\n]+…\s*#{parts_pattern}\b/i)
 
     has_member_plugin || has_old_member_format
   end
@@ -181,7 +187,7 @@ class WikipageImporter < BaseWikipageImporter
     unit.name = unit_name
     unit.name_kana = unit_name_kana
     unit.name_log = name_log_entries if name_log_entries.present?
-    unit[:aliases] = unit_aliases if unit_aliases.any?
+    unit[:aliases] = unit_aliases
     unit.old_key = encoded_old_key
     unit.old_wiki_id = @wikipage.id
     unit.old_wiki_text = @original_content
@@ -381,9 +387,10 @@ class WikipageImporter < BaseWikipageImporter
     # 1. !Part… [[Name]]
     # 2. ![[Name]]… Part
     # 3. !Part… PlainName (no wiki link)
+    # 4. !PlainName… Part (reversed plain text — swapped in register_old_format_member)
     old_member_regex1 = /^!([^…\n]+)…\s*\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/
     old_member_regex2 = /^!\[\[([^|\]\n]+)(?:\|([^\]\n]+))?\]\]\s*…\s*([^…\n\r]+)/
-    old_member_regex3 = /^!([^…\n]+)…[^\S\n]*([^\[\s\n][^\n]*)/
+    old_member_regex3 = /^!(?!\[\[)([^…\n]+)…[^\S\n]*([^\[\s\n][^\n]*)/
 
     @wiki_content.scan(old_member_regex1) do |match|
       match_data = Regexp.last_match
@@ -434,6 +441,13 @@ class WikipageImporter < BaseWikipageImporter
   # rubocop:disable Metrics/ParameterLists
   def register_old_format_member(unit, part_str, name_str, old_member_key, member_status, order_in_period)
     # rubocop:enable Metrics/ParameterLists
+    # Detect reversed order: !Name… Part (e.g. !山田… Vocal)
+    cleaned_part = part_str.to_s.sub(/^!/, '').strip.downcase
+    cleaned_name = name_str.to_s.strip.downcase
+    if !KNOWN_PART_KEYWORDS.include?(cleaned_part) && KNOWN_PART_KEYWORDS.include?(cleaned_name)
+      part_str, name_str = name_str, part_str
+    end
+
     # "旧名→[[表示名|ページ名]]" 形式: 表示名を name_str、ページ名を old_member_key として取り出す
     if (m = name_str.match(/\[\[([^|\]]+)\|([^\]]+)\]\]/))
       wiki_page_key = m[2].strip

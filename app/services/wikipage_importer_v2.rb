@@ -440,8 +440,8 @@ class WikipageImporterV2 < WikipageImporter
 
   def collect_old_format_entries(entries, separator_index)
     old_member_regex1 = /^!([^…\n]+)…\s*\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/
-    old_member_regex2 = /^!\[\[([^|\]\n]+)(?:\|([^\]\n]+))?\]\]…([^…\n]+)/
-    old_member_regex3 = /^!([^…\n]+)…[^\S\n]*([^\[\s\n][^\n]*)/
+    old_member_regex2 = /^!\[\[([^|\]\n]+)(?:\|([^\]\n]+))?\]\]\s*…\s*([^…\n]+)/
+    old_member_regex3 = /^!(?!\[\[)([^…\n]+)…[^\S\n]*([^\[\s\n][^\n]*)/
 
     @wiki_content.scan(old_member_regex1) do |match|
       match_data = Regexp.last_match
@@ -495,6 +495,13 @@ class WikipageImporterV2 < WikipageImporter
       part_str = match[0].strip
       name_str = match[1].strip
       next if name_str.empty?
+
+      # 逆順検出: !Name… Part (e.g. !山田… Vocal)
+      cleaned_part = part_str.sub(/^!/, '').strip.downcase
+      cleaned_name = name_str.strip.downcase
+      if !KNOWN_PART_KEYWORDS.include?(cleaned_part) && KNOWN_PART_KEYWORDS.include?(cleaned_name)
+        part_str, name_str = name_str, part_str
+      end
 
       # "旧名→[[表示名|ページ名]]" 形式: 表示名を name_str、ページ名を old_member_key として取り出す
       wiki_page_key = nil
