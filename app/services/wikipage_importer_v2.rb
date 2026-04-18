@@ -438,7 +438,7 @@ class WikipageImporterV2 < WikipageImporter
     URI.encode_www_form_component(key.encode('EUC-JP'))
   end
 
-  def collect_old_format_entries(entries, separator_index)
+  def collect_old_format_entries(entries, separator_index) # rubocop:disable Metrics/AbcSize
     old_member_regex1 = /^!([^…\n]+)…\s*\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/
     old_member_regex2 = /^!\[\[([^|\]\n]+)(?:\|([^\]\n]+))?\]\]\s*…\s*([^…\n]+)/
     old_member_regex3 = /^!(?!\[\[)([^…\n]+)…[^\S\n]*([^\[\s\n][^\n]*)/
@@ -499,9 +499,7 @@ class WikipageImporterV2 < WikipageImporter
       # 逆順検出: !Name… Part (e.g. !山田… Vocal)
       cleaned_part = part_str.sub(/^!/, '').strip.downcase
       cleaned_name = name_str.strip.downcase
-      if !KNOWN_PART_KEYWORDS.include?(cleaned_part) && KNOWN_PART_KEYWORDS.include?(cleaned_name)
-        part_str, name_str = name_str, part_str
-      end
+      part_str, name_str = name_str, part_str if !KNOWN_PART_KEYWORDS.include?(cleaned_part) && KNOWN_PART_KEYWORDS.include?(cleaned_name)
 
       # "旧名→[[表示名|ページ名]]" 形式: 表示名を name_str、ページ名を old_member_key として取り出す
       wiki_page_key = nil

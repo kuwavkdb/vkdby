@@ -444,9 +444,7 @@ class WikipageImporter < BaseWikipageImporter
     # Detect reversed order: !Name… Part (e.g. !山田… Vocal)
     cleaned_part = part_str.to_s.sub(/^!/, '').strip.downcase
     cleaned_name = name_str.to_s.strip.downcase
-    if !KNOWN_PART_KEYWORDS.include?(cleaned_part) && KNOWN_PART_KEYWORDS.include?(cleaned_name)
-      part_str, name_str = name_str, part_str
-    end
+    part_str, name_str = name_str, part_str if !KNOWN_PART_KEYWORDS.include?(cleaned_part) && KNOWN_PART_KEYWORDS.include?(cleaned_name)
 
     # "旧名→[[表示名|ページ名]]" 形式: 表示名を name_str、ページ名を old_member_key として取り出す
     if (m = name_str.match(/\[\[([^|\]]+)\|([^\]]+)\]\]/))
