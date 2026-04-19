@@ -17,7 +17,7 @@ class SearchController < ApplicationController
       @units = Unit.kept.where('name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q', q: search_pattern)
                    .order(relevance_order, updated_at: :desc)
                    .limit(15)
-      @people = Person.kept.where('name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q', q: search_pattern)
+      @people = Person.kept.where('name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q OR old_history ILIKE :q', q: search_pattern)
                       .order(relevance_order, updated_at: :desc)
                       .limit(15)
     else
