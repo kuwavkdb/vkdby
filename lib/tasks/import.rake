@@ -78,8 +78,10 @@ def format_skip_log(wikipage)
 end
 
 namespace :import do # rubocop:disable Metrics/BlockLength
-  desc 'Import units from Wikipages'
+  # DEPRECATED: Use import:units_v2 instead.
+  desc '[DEPRECATED] Import units from Wikipages. Use import:units_v2 instead.'
   task units: :environment do
+    warn '[DEPRECATED] import:units is deprecated. Use import:units_v2 instead.'
     puts 'Starting unit import from Wikipages...'
     count = 0
     skipped = 0
