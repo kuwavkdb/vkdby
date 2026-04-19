@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
 class PeopleController < ApplicationController
+  KANA_INDEX_GROUP_ID = 2
+
   def index
-    @tag_indices = TagIndex.where(index_group_id: 2).ordered
+    @tag_indices = TagIndex.where(index_group_id: KANA_INDEX_GROUP_ID).ordered
     @tag_person_counts = TagIndexItem.where(tag_index_id: @tag_indices.select(:id), indexable_type: 'Person')
                                      .group(:tag_index_id)
                                      .count
