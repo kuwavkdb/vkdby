@@ -15,7 +15,7 @@ module Admin
               end
       if @q.present?
         scope = scope.where(
-          'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
+          'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q OR old_history ILIKE :q',
           q: "%#{@q}%"
         )
       end
