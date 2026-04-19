@@ -12,7 +12,7 @@ class PeopleController < ApplicationController
     scope = Person.kept.where.not(key: [nil, '']).order(updated_at: :desc)
     if params[:q].present?
       scope = scope.where(
-        'name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q OR old_history ILIKE :q',
+        'people.name ILIKE :q OR people.name_kana ILIKE :q OR people.name_log::text ILIKE :q OR people.aliases::text ILIKE :q OR people.old_history ILIKE :q',
         q: "%#{params[:q]}%"
       )
     end
