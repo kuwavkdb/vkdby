@@ -10,7 +10,7 @@ class UnitsController < ApplicationController
     scope = Unit.kept.order(updated_at: :desc)
     if params[:q].present?
       scope = scope.where(
-        'name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
+        'units.name ILIKE :q OR units.name_kana ILIKE :q OR units.name_log::text ILIKE :q OR units.aliases::text ILIKE :q',
         q: "%#{params[:q]}%"
       )
     end
