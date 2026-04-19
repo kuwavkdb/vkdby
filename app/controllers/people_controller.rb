@@ -2,12 +2,21 @@
 
 class PeopleController < ApplicationController
   def index
+    @tag_indices = TagIndex.where(index_group_id: 2).ordered
+    @tag_person_counts = TagIndexItem.where(tag_index_id: @tag_indices.select(:id), indexable_type: 'Person')
+                                     .group(:tag_index_id)
+                                     .count
+
     scope = Person.kept.where.not(key: [nil, '']).order(updated_at: :desc)
     if params[:q].present?
       scope = scope.where(
         'name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q OR old_history ILIKE :q',
         q: "%#{params[:q]}%"
       )
+    end
+    if params[:tag_id].present?
+      scope = scope.joins(:tag_indices).where(tag_indices: { id: params[:tag_id] })
+      scope = scope.reorder(name_kana: :asc)
     end
     @pagy, @people = pagy(scope, limit: 60)
   end
