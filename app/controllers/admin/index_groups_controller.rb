@@ -25,11 +25,13 @@ module Admin
       if @index_group.id.zero?
         base_scope = TagIndex.where(index_group_id: nil)
         base_scope = base_scope.where('name LIKE ?', "%#{params[:q]}%") if params[:q].present?
+        base_scope = filter_by_active(base_scope)
         @indices = base_scope.order(:name)
         @groups = IndexGroup.ordered
       else
         indices_scope = @index_group.tag_indices
         indices_scope = indices_scope.where('name LIKE ?', "%#{params[:q]}%") if params[:q].present?
+        indices_scope = filter_by_active(indices_scope)
         @indices = indices_scope.ordered
       end
     end
@@ -81,6 +83,14 @@ module Admin
 
     def index_group_params
       params.require(:index_group).permit(:name, :sort_order, :active, :units_filter_order, :people_filter_order)
+    end
+
+    def filter_by_active(scope)
+      case params[:active]
+      when 'true'  then scope.where(active: true)
+      when 'false' then scope.where(active: false)
+      else scope
+      end
     end
   end
 end
