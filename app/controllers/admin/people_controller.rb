@@ -104,6 +104,7 @@ module Admin
       params.require(:person).permit(
         :name, :name_kana, :birthday, :birth_year, :blood, :hometown, :status, :old_history, :note,
         parts: [],
+        tag_index_ids: [],
         links_attributes: %i[id text url active _destroy],
         name_logs_attributes: %i[name name_kana],
         aliases_attributes: %i[name kana old_key]

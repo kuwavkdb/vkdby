@@ -1,0 +1,61 @@
+<%
+  all_tags     = TagIndex.active.includes(:index_group).order(:order_in_group)
+  grouped      = all_tags.group_by(&:index_group)
+  groups_order = IndexGroup.active.ordered
+  current_ids  = record.tag_index_ids.to_set
+  obj_name     = form.object_name
+%>
+
+<div>
+  <h3 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">タグ</h3>
+
+  <%# 空配列送信用（全チェックを外したときに tag_index_ids が送られるようにする） %>
+  <input type="hidden" name="<%= obj_name %>[tag_index_ids][]" value="">
+
+  <% if all_tags.empty? %>
+    <p class="text-sm text-gray-400 dark:text-gray-500">利用可能なタグがありません</p>
+  <% else %>
+    <div class="space-y-4">
+      <%# グループ所属タグ（グループの sort_order 順） %>
+      <% groups_order.each do |group| %>
+        <% tags_in_group = grouped[group]&.sort_by { |t| t.order_in_group || Float::INFINITY } %>
+        <% next if tags_in_group.blank? %>
+        <div>
+          <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1"><%= group.name %></p>
+          <div class="flex flex-wrap gap-3">
+            <% tags_in_group.each do |tag| %>
+              <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                <input type="checkbox"
+                       name="<%= obj_name %>[tag_index_ids][]"
+                       value="<%= tag.id %>"
+                       <%= 'checked' if current_ids.include?(tag.id) %>
+                       class="form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600">
+                <span class="text-sm text-gray-700 dark:text-gray-300"><%= tag.name %></span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <%# グループ未所属タグ %>
+      <% ungrouped = grouped[nil]&.sort_by { |t| t.order_in_group || Float::INFINITY } %>
+      <% if ungrouped.present? %>
+        <div>
+          <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">グループなし</p>
+          <div class="flex flex-wrap gap-3">
+            <% ungrouped.each do |tag| %>
+              <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                <input type="checkbox"
+                       name="<%= obj_name %>[tag_index_ids][]"
+                       value="<%= tag.id %>"
+                       <%= 'checked' if current_ids.include?(tag.id) %>
+                       class="form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600">
+                <span class="text-sm text-gray-700 dark:text-gray-300"><%= tag.name %></span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
