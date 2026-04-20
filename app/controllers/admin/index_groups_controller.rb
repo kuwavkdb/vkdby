@@ -80,7 +80,7 @@ module Admin
     end
 
     def index_group_params
-      params.require(:index_group).permit(:name, :sort_order, :active)
+      params.require(:index_group).permit(:name, :sort_order, :active, :units_filter_order, :people_filter_order)
     end
   end
 end
