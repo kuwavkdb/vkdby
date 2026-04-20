@@ -11,6 +11,8 @@
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Active</th>
+          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Units Filter</th>
+          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">People Filter</th>
           <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
         </tr>
       </thead>
@@ -26,6 +28,12 @@
                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>
               <% end %>
             </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">
+              <%= group.units_filter_order.present? ? group.units_filter_order : "-" %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">
+              <%= group.people_filter_order.present? ? group.people_filter_order : "-" %>
+            </td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
               <%= link_to "Edit", edit_admin_index_group_path(group), class: "text-indigo-600 hover:text-indigo-900" %>
             </td>
@@ -36,6 +44,8 @@
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><%= link_to "未分類 (Unassigned)", admin_index_group_path(0), class: "text-indigo-600 hover:text-indigo-900" %></td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">-</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">-</td>
           <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"></td>
         </tr>
       </tbody>

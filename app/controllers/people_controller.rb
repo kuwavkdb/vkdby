@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
 class PeopleController < ApplicationController
-  KANA_INDEX_GROUP_ID = 2
-
   def index
-    @tag_indices = TagIndex.where(index_group_id: KANA_INDEX_GROUP_ID).ordered
-    @tag_person_counts = TagIndexItem.where(tag_index_id: @tag_indices.select(:id), indexable_type: 'Person')
+    @filter_groups = IndexGroup.for_people.includes(tag_indices: :items)
+    all_tag_index_ids = @filter_groups.flat_map { |g| g.tag_indices.map(&:id) }
+    @tag_person_counts = TagIndexItem.where(tag_index_id: all_tag_index_ids, indexable_type: 'Person')
                                      .group(:tag_index_id)
                                      .count
 
@@ -16,8 +15,11 @@ class PeopleController < ApplicationController
         q: "%#{params[:q]}%"
       )
     end
-    if params[:tag_id].present?
-      scope = scope.joins(:tag_indices).where(tag_indices: { id: params[:tag_id] })
+    @selected_tag_ids = params[:tag_ids]&.to_unsafe_h&.transform_values(&:presence)&.compact || {}
+    if @selected_tag_ids.any?
+      @selected_tag_ids.each_value do |tag_id|
+        scope = scope.where(id: Person.joins(:tag_indices).where(tag_indices: { id: tag_id }).select(:id))
+      end
       scope = scope.reorder(name_kana: :asc)
     end
     @pagy, @people = pagy(scope, limit: 60)

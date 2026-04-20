@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_19_013851) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_20_105114) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -67,7 +67,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_19_013851) do
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.string "name", null: false
+    t.integer "people_filter_order"
     t.integer "sort_order", default: 0, null: false
+    t.integer "units_filter_order"
     t.datetime "updated_at", null: false
   end
 
