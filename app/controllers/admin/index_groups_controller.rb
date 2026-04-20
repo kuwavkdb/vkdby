@@ -87,9 +87,9 @@ module Admin
 
     def filter_by_active(scope)
       case params[:active]
-      when 'true'  then scope.where(active: true)
       when 'false' then scope.where(active: false)
-      else scope
+      when 'all'   then scope
+      else              scope.where(active: true)
       end
     end
   end
