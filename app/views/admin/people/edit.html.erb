@@ -16,6 +16,10 @@
         <%= render "admin/wiki_page_imports/import_target_panel", wiki_page_imports: @wiki_page_imports, import_target: @person %>
       </div>
     </div>
+
+    <div class="mt-6">
+      <%= render "tags_form", person: @person %>
+    </div>
   </div>
 
   <%= render "admin/shared/update_logs", update_logs: @update_logs %>
