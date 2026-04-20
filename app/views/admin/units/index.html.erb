@@ -11,6 +11,13 @@
     </div>
   </div>
 
+  <% if @tag_index %>
+    <div class="mb-4 px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-md flex items-center justify-between text-sm">
+      <span class="text-indigo-800">タグ「<strong><%= @tag_index.name %></strong>」でフィルター中</span>
+      <%= link_to "フィルター解除", admin_units_path, class: "text-indigo-600 hover:text-indigo-800 underline" %>
+    </div>
+  <% end %>
+
   <div class="flex space-x-2 mb-4">
     <%= link_to "通常", admin_units_path(q: params[:q]),
         class: "px-3 py-1 rounded text-sm #{params[:discarded].blank? ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>

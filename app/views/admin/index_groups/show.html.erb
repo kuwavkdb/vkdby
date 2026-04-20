@@ -67,7 +67,7 @@
               <% end %>
             </div>
             <div class="flex items-center gap-4">
-              <span class="text-sm text-gray-500">Items: <%= index.items.count %></span>
+              <%= link_to "Items: #{index.items.count}", admin_units_path(tag_index_id: index.id), class: "text-sm text-indigo-600 hover:text-indigo-800 hover:underline" %>
               <%= button_to index.active? ? "非表示" : "表示", admin_tag_index_path(index, tag_index: { active: !index.active? }), method: :patch, class: "text-xs px-2 py-1 rounded border #{index.active? ? 'text-red-600 border-red-200 hover:bg-red-50' : 'text-blue-600 border-blue-200 hover:bg-blue-50'}" %>
             </div>
           </li>
@@ -121,7 +121,7 @@
               <% end %>
             </div>
             <div class="flex items-center gap-4">
-              <span class="text-sm text-gray-500">Items: <%= index.items.count %></span>
+              <%= link_to "Items: #{index.items.count}", admin_units_path(tag_index_id: index.id), class: "text-sm text-indigo-600 hover:text-indigo-800 hover:underline" %>
               <%= button_to index.active? ? "非表示" : "表示", admin_tag_index_path(index, tag_index: { active: !index.active? }), method: :patch, class: "text-xs px-2 py-1 rounded border #{index.active? ? 'text-red-600 border-red-200 hover:bg-red-50' : 'text-blue-600 border-blue-200 hover:bg-blue-50'}" %>
             </div>
           </li>

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Admin
-  class UnitsController < Admin::BaseController
+  class UnitsController < Admin::BaseController # rubocop:disable Metrics/ClassLength
     include LoggableLinkChanges
 
     before_action :set_unit, only: %i[show edit update destroy undiscard]
@@ -9,6 +9,7 @@ module Admin
 
     def index
       @q = params[:q]
+      @tag_index_id = params[:tag_index_id]
       @show_discarded = params[:discarded]
       scope = case @show_discarded
               when 'only' then Unit.discarded
@@ -20,6 +21,10 @@ module Admin
           'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
           q: "%#{@q}%"
         )
+      end
+      if @tag_index_id.present?
+        @tag_index = TagIndex.find_by(id: @tag_index_id)
+        scope = scope.joins(:tag_index_items).where(tag_index_items: { tag_index_id: @tag_index_id })
       end
       @pagy, @units = pagy(scope.order(updated_at: :desc))
     end
