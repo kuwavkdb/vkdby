@@ -10,7 +10,7 @@ module Admin
     def index
       @q = params[:q]
       @tag_index_id = params[:tag_index_id]
-      @show_discarded = params[:discarded]
+      @show_discarded = @tag_index_id.present? ? 'all' : params[:discarded]
       scope = case @show_discarded
               when 'only' then Unit.discarded
               when 'all'  then Unit.with_discarded
