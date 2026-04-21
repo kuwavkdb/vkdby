@@ -9,12 +9,12 @@
         <% @weekly_trends.each do |trend| %>
           <li>
             <%= link_to trend_path(trend),
-                class: "flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors #{'font-bold text-indigo-600 dark:text-indigo-400' if trend.date == Date.current}" do %>
-              <span class="<%= trend.date == Date.current ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500' %> tabular-nums text-xs w-16 shrink-0">
+                class: "flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors #{'font-bold' if trend.date == Date.current}" do %>
+              <span class="text-slate-400 dark:text-slate-500 tabular-nums text-xs w-10 shrink-0">
                 <%= trend.date.strftime('%-m/%-d') %>
               </span>
-              <span class="<%= trend.date == Date.current ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-600 dark:text-slate-300' %> truncate">
-                <%= trend.date == Date.current ? '今日' : trend.date.strftime('%A').then { |d| %w[日 月 火 水 木 金 土][trend.date.wday] + '曜日' } %>
+              <span class="text-slate-600 dark:text-slate-300 leading-snug">
+                <%= format_wiki_title(trend.title.sub(/[（(][^）)]*[）)]\z/u, '').rstrip, link: false) %>
               </span>
             <% end %>
           </li>

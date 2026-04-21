@@ -23,7 +23,7 @@ class CustomPagesController < ApplicationController
     ttl = Time.current.end_of_day - Time.current
 
     @weekly_trends = Rails.cache.fetch("sidebar/weekly_trends/#{today}", expires_in: ttl) do
-      Trend.where(date: (today - 7)..(today + 7)).order(:date).to_a
+      Trend.where(date: (today - 7)..(today + 7)).order(date: :desc).to_a
     end
 
     @recently_updated = Rails.cache.fetch('sidebar/recently_updated', expires_in: 10.minutes) do
