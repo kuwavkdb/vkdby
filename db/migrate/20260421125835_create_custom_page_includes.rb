@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateCustomPageIncludes < ActiveRecord::Migration[8.1]
   def change
     create_table :custom_page_includes do |t|
