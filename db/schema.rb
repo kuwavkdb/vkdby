@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_20_105114) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_21_125835) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -41,6 +41,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_105114) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "custom_page_includes", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "section_name", null: false
+    t.bigint "source_custom_page_id", null: false
+    t.bigint "target_custom_page_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["source_custom_page_id"], name: "index_custom_page_includes_on_source_custom_page_id"
+    t.index ["target_custom_page_id"], name: "index_custom_page_includes_on_target_custom_page_id"
   end
 
   create_table "custom_pages", force: :cascade do |t|
@@ -395,6 +405,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_105114) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "custom_page_includes", "custom_pages", column: "source_custom_page_id"
+  add_foreign_key "custom_page_includes", "custom_pages", column: "target_custom_page_id"
   add_foreign_key "snapshot_people", "people"
   add_foreign_key "snapshot_people", "unit_snapshots"
   add_foreign_key "tag_index_items", "tag_indices"

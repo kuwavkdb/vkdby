@@ -67,8 +67,9 @@ module Admin
         type = params[:sectionable_type]
         id   = params[:sectionable_id]
         @sectionable = case type
-                       when 'Unit'   then Unit.find(id)
-                       when 'Person' then Person.find(id)
+                       when 'Unit'       then Unit.find(id)
+                       when 'Person'     then Person.find(id)
+                       when 'CustomPage' then CustomPage.with_discarded.find(id)
                        else raise ActionController::BadRequest, 'Invalid sectionable_type'
                        end
       end
@@ -80,8 +81,9 @@ module Admin
 
     def sectionable_edit_path
       case @sectionable
-      when Unit   then edit_admin_unit_path(@sectionable)
-      when Person then edit_admin_person_path(@sectionable)
+      when Unit       then edit_admin_unit_path(@sectionable)
+      when Person     then edit_admin_person_path(@sectionable)
+      when CustomPage then edit_admin_custom_page_path(@sectionable)
       end
     end
 
