@@ -20,7 +20,7 @@
         </div>
         <div class="p-5 md:p-8">
           <div class="markdown-content max-w-none">
-            <%= markdown(@page.body) %>
+            <%= markdown(@page.body, sectionable: @page) %>
           </div>
         </div>
       </div>

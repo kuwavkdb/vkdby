@@ -9,5 +9,11 @@
     <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
       <%= render "form", custom_page: @custom_page %>
     </div>
+
+    <div class="mt-6">
+      <%= render "admin/sections/list",
+            sectionable: @custom_page,
+            sections: @custom_page.sections.with_discarded.order(sort_order: :asc, id: :asc) %>
+    </div>
   </div>
 </div>

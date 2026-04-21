@@ -45,8 +45,10 @@ module ApplicationHelper
     false
   end
 
-  def markdown(text)
+  def markdown(text, sectionable: nil)
     return '' if text.blank?
+
+    text = expand_include_macros(text, sectionable:)
 
     renderer = Redcarpet::Render::HTML.new(
       hard_wrap: true,
@@ -58,5 +60,32 @@ module ApplicationHelper
                             fenced_code_blocks: true,
                             strikethrough: true,
                             no_intra_emphasis: true).render(text).html_safe
+  end
+
+  private
+
+  # {{include key,セクション名}}       → CustomPage (key指定)
+  # {{include unit:ID,セクション名}}   → Unit (ID指定)
+  # {{include person:ID,セクション名}} → Person (ID指定)
+  # {{include ,セクション名}}          → 自身のページ (key省略・カンマあり)
+  # {{include セクション名}}           → 自身のページ (key省略・カンマなし)
+  def expand_include_macros(text, sectionable: nil)
+    text.gsub(/\{\{include\s+(?:([a-z0-9_:-]*),)?(.+?)\}\}/) do
+      identifier = Regexp.last_match(1)&.strip
+      section_name = Regexp.last_match(2).strip
+
+      owner = if identifier.nil? || identifier.empty?
+                sectionable
+              elsif identifier.start_with?('unit:')
+                Unit.find_by(id: identifier.delete_prefix('unit:'))
+              elsif identifier.start_with?('person:')
+                Person.find_by(id: identifier.delete_prefix('person:'))
+              else
+                CustomPage.published.find_by(key: identifier)
+              end
+
+      section = owner&.sections&.kept&.find_by(name: section_name)
+      section&.markdown.presence || section&.wiki_text.presence || ''
+    end
   end
 end
