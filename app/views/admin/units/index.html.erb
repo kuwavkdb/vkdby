@@ -4,6 +4,7 @@
     <div class="flex items-center space-x-4">
       <%= form_with url: admin_units_path, method: :get, local: true, class: "flex" do |f| %>
         <%= f.hidden_field :discarded, value: params[:discarded] %>
+        <%= f.hidden_field :unit_type, value: params[:unit_type] %>
         <%= f.text_field :q, value: params[:q], placeholder: "Search by name or key...", class: "rounded-l-md border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" %>
         <%= f.submit "Search", class: "px-4 py-2 bg-white text-gray-700 border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-50 cursor-pointer" %>
       <% end %>
@@ -20,7 +21,9 @@
 
   <div class="flex space-x-2 mb-4">
     <%= link_to "通常", admin_units_path(q: params[:q]),
-        class: "px-3 py-1 rounded text-sm #{params[:discarded].blank? ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+        class: "px-3 py-1 rounded text-sm #{params[:discarded].blank? && params[:unit_type].blank? ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+    <%= link_to "moved のみ", admin_units_path(q: params[:q], unit_type: "moved"),
+        class: "px-3 py-1 rounded text-sm #{params[:unit_type] == 'moved' ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
     <%= link_to "削除済みのみ", admin_units_path(q: params[:q], discarded: "only"),
         class: "px-3 py-1 rounded text-sm #{params[:discarded] == 'only' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
     <%= link_to "全件", admin_units_path(q: params[:q], discarded: "all"),
