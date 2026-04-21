@@ -11,11 +11,17 @@ module Admin
       @q = params[:q]
       @tag_index_id = params[:tag_index_id]
       @show_discarded = @tag_index_id.present? ? 'all' : params[:discarded]
+      @unit_type_filter = params[:unit_type]
       scope = case @show_discarded
               when 'only' then Unit.discarded
               when 'all'  then Unit.with_discarded
               else             Unit.kept
               end
+      if @unit_type_filter == 'moved'
+        scope = scope.where(unit_type: :moved)
+      elsif @show_discarded.blank? && @tag_index_id.blank?
+        scope = scope.where.not(unit_type: :moved)
+      end
       if @q.present?
         scope = scope.where(
           'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
