@@ -26,6 +26,11 @@ class CustomPagesController < ApplicationController
       Trend.where(date: (today - 7)..(today + 7)).order(date: :desc).to_a
     end
 
+    unit_ids   = @weekly_trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
+    person_ids = @weekly_trends.flat_map { |t| t.people&.map { |p| p['person_id'] } }.compact.uniq
+    @weekly_trend_units   = Unit.where(id: unit_ids).index_by(&:id)
+    @weekly_trend_people  = Person.where(id: person_ids).index_by(&:id)
+
     @recently_updated = Rails.cache.fetch('sidebar/recently_updated', expires_in: 10.minutes) do
       pages   = CustomPage.published.order(updated_at: :desc).limit(10).to_a
       units   = Unit.kept.order(updated_at: :desc).limit(10).to_a

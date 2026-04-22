@@ -9,12 +9,33 @@
         <% @weekly_trends.each do |trend| %>
           <li>
             <%= link_to trend_path(trend),
-                class: "flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors #{'font-bold' if trend.date == Date.current}" do %>
-              <span class="text-slate-400 dark:text-slate-500 tabular-nums text-xs w-10 shrink-0">
-                <%= trend.date.strftime('%-m/%-d') %>
+                class: "flex items-start gap-2 px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors #{'font-bold' if trend.date == Date.current}" do %>
+              <span class="text-slate-600 dark:text-slate-300 tabular-nums text-xs w-10 shrink-0 pt-0.5 leading-tight text-center">
+                <span class="block text-slate-400 dark:text-slate-500"><%= trend.date.strftime('%Y') %></span>
+                <span class="block text-sm"><%= trend.date.strftime('%-m/%d') %></span>
               </span>
-              <span class="text-slate-600 dark:text-slate-300 leading-snug">
+              <span class="text-slate-800 dark:text-slate-100 leading-snug min-w-0">
+                <% if trend.units.present? %>
+                  <span class="flex flex-wrap gap-1 mb-1">
+                    <% trend.units.each do |u| %>
+                      <% unit = @weekly_trend_units[u['unit_id']] %>
+                      <span class="inline-block px-1.5 py-0.5 rounded text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600">
+                        <%= unit&.name || u['name'] %>
+                      </span>
+                    <% end %>
+                  </span>
+                <% end %>
                 <%= format_wiki_title(trend.title.sub(/[（(][^）)]*[）)]\z/u, '').rstrip, link: false) %>
+                <% if trend.people.present? %>
+                  <span class="flex flex-wrap gap-1 mt-1">
+                    <% trend.people.each do |p| %>
+                      <% person = @weekly_trend_people[p['person_id']] %>
+                      <span class="inline-block px-1.5 py-0.5 rounded text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                        <%= person&.name || p['name'] %>
+                      </span>
+                    <% end %>
+                  </span>
+                <% end %>
               </span>
             <% end %>
           </li>
@@ -23,6 +44,11 @@
         <li class="px-4 py-3 text-sm text-slate-400 dark:text-slate-500">データなし</li>
       <% end %>
     </ul>
+    <div class="px-4 py-2 border-t border-slate-100 dark:border-slate-700 text-right">
+      <%= link_to trends_path, class: "text-xs text-indigo-600 dark:text-indigo-400 hover:underline" do %>
+        もっと見る →
+      <% end %>
+    </div>
   </div>
 
   <%# Recently Updated %>
