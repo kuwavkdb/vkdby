@@ -24,4 +24,17 @@ class Section < ApplicationRecord
   has_many_attached :images
 
   validates :name, presence: true
+
+  after_commit :expire_including_pages_cache, on: %i[create update destroy]
+
+  private
+
+  def expire_including_pages_cache
+    return unless sectionable.is_a?(CustomPage)
+
+    CustomPageInclude
+      .where(target_custom_page: sectionable, section_name: name)
+      .includes(:source_custom_page)
+      .each { |rel| rel.source_custom_page.expire_cache }
+  end
 end

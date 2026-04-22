@@ -2,20 +2,24 @@
 
 class UnitsController < ApplicationController
   def index
-    @tag_indices = TagIndex.where(index_group_id: 1).ordered
-    @tag_unit_counts = TagIndexItem.where(tag_index_id: @tag_indices.select(:id), indexable_type: 'Unit')
+    @filter_groups = IndexGroup.for_units.includes(tag_indices: :items)
+    all_tag_index_ids = @filter_groups.flat_map { |g| g.tag_indices.map(&:id) }
+    @tag_unit_counts = TagIndexItem.where(tag_index_id: all_tag_index_ids, indexable_type: 'Unit')
                                    .group(:tag_index_id)
                                    .count
 
-    scope = Unit.kept.order(updated_at: :desc)
+    scope = Unit.kept.where.not(name: [nil, '']).order(updated_at: :desc)
     if params[:q].present?
       scope = scope.where(
-        'name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
+        'units.name ILIKE :q OR units.name_kana ILIKE :q OR units.name_log::text ILIKE :q OR units.aliases::text ILIKE :q',
         q: "%#{params[:q]}%"
       )
     end
-    if params[:tag_id].present?
-      scope = scope.joins(:tag_indices).where(tag_indices: { id: params[:tag_id] })
+    @selected_tag_ids = params[:tag_ids]&.to_unsafe_h&.transform_values(&:presence)&.compact || {}
+    if @selected_tag_ids.any?
+      @selected_tag_ids.each_value do |tag_id|
+        scope = scope.where(id: Unit.joins(:tag_indices).where(tag_indices: { id: tag_id }).select(:id))
+      end
       scope = scope.reorder(name_kana: :asc)
     end
 

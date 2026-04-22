@@ -17,8 +17,10 @@ class TrendsController < ApplicationController
       end_date = month ? start_date.end_of_month : start_date.end_of_year
 
       scope = Trend.order(date: :desc).where(date: start_date..end_date)
-    else
+    elsif params[:sort] == 'update'
       scope = Trend.order(id: :desc)
+    else
+      scope = Trend.order(date: :desc)
     end
 
     @pagy, @trends = pagy(scope, limit: 20)

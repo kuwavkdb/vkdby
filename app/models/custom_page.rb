@@ -23,6 +23,9 @@ class CustomPage < ApplicationRecord
   include Discard::Model
 
   has_many_attached :images
+  has_many :sections, as: :sectionable, dependent: :destroy
+  has_many :custom_page_includes, foreign_key: :source_custom_page_id, dependent: :destroy, inverse_of: :source_custom_page
+  has_many :included_by, class_name: 'CustomPageInclude', foreign_key: :target_custom_page_id, dependent: :destroy, inverse_of: :target_custom_page
 
   # 削除不可のページkey一覧（ルートとして使用されるなど、システム上必須のページ）
   PROTECTED_KEYS = %w[index].freeze
@@ -30,17 +33,65 @@ class CustomPage < ApplicationRecord
   validates :key, presence: true, uniqueness: true,
                   format: { with: /\A[a-z0-9_-]+\z/, message: '半角英数字・アンダースコア・ハイフンのみ使用可' }
   validates :title, presence: true
+  validate :no_circular_includes, if: :body_changed?
 
   scope :published, -> { kept.where(active: true) }
 
   after_commit :expire_sidebar_cache
   after_commit :expire_blocked_ips_cache, if: -> { key == Middleware::IpBlocker::CUSTOM_PAGE_KEY }
+  after_save :rebuild_include_relations, if: :saved_change_to_body?
 
   def protected?
     PROTECTED_KEYS.include?(key)
   end
 
+  def expire_cache
+    # 現時点ではページ固有のキャッシュはないが、将来的な拡張に備えたフック
+    # サイドバーキャッシュも念のため削除
+    Rails.cache.delete('sidebar/recently_updated')
+  end
+
+  def rebuild_include_relations
+    custom_page_includes.delete_all
+    body.to_s.scan(/\{\{include\s+([a-z0-9_-]+),(.+?)\}\}/) do |page_key, section_name|
+      target = CustomPage.find_by(key: page_key.strip)
+      next unless target
+
+      custom_page_includes.create!(
+        target_custom_page: target,
+        section_name: section_name.strip
+      )
+    end
+  end
+
   private
+
+  def no_circular_includes
+    return if body.blank?
+
+    keys_in_body = body.scan(/\{\{include\s+([a-z0-9_-]+),/).flatten.map(&:strip).uniq
+    return if keys_in_body.empty?
+
+    # このページの key が、インクルード先のページから（直接・間接を問わず）参照されていないか確認
+    keys_in_body.each do |target_key|
+      target_page = CustomPage.find_by(key: target_key)
+      next unless target_page
+
+      errors.add(:body, "循環インクルードが検出されました（#{target_key} → #{key} のパスが存在します）") if reachable_from?(target_page, self, visited: Set.new)
+    end
+  end
+
+  # target_page から辿ってベースページ（base）に到達できるか確認（循環参照検出）
+  def reachable_from?(current_page, base, visited:)
+    return false if visited.include?(current_page.id)
+
+    visited.add(current_page.id)
+    current_page.custom_page_includes.includes(:target_custom_page).each do |rel|
+      return true if rel.target_custom_page_id == base.id
+      return true if reachable_from?(rel.target_custom_page, base, visited:)
+    end
+    false
+  end
 
   def expire_sidebar_cache
     Rails.cache.delete('sidebar/recently_updated')

@@ -32,16 +32,32 @@
       <% end %>
     </div>
 
-    <% if @tag_indices.present? %>
-      <div class="mb-8 flex flex-wrap gap-1 justify-center">
-        <%= link_to units_path(q: params[:q]), class: "px-2 py-1 rounded-lg text-sm font-bold transition-all #{params[:tag_id].blank? ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600'}" do %>
-          ALL
-        <% end %>
-        <% @tag_indices.each do |tag| %>
-          <%= link_to units_path(tag_id: tag.id, q: params[:q]), class: "px-2 py-1 rounded-lg text-sm font-bold transition-all #{params[:tag_id].to_s == tag.id.to_s ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600'}" do %>
-            <%= tag.name %>
-            <span class="ml-1 opacity-70 text-xs font-normal">(<%= @tag_unit_counts[tag.id] || 0 %>)</span>
-          <% end %>
+    <% if @filter_groups.present? %>
+      <div class="mb-8 space-y-2">
+        <% @filter_groups.each do |group| %>
+          <div class="flex flex-wrap gap-1">
+            <%
+              current_tag_ids = @selected_tag_ids
+              group_selected = current_tag_ids[group.id.to_s].present?
+              clear_params = current_tag_ids.except(group.id.to_s)
+            %>
+            <% unless [1, 2].include?(group.id) %>
+              <span class="py-1 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide self-center"><%= group.name %> :</span>
+            <% end %>
+            <%= link_to units_path(q: params[:q], tag_ids: clear_params), class: "px-2 py-1 rounded-lg text-sm font-bold transition-all #{group_selected ? 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600' : 'bg-indigo-600 text-white shadow-md'}" do %>
+              ALL
+            <% end %>
+            <% group.tag_indices.active.ordered.each do |tag| %>
+              <%
+                new_tag_ids = current_tag_ids.merge(group.id.to_s => tag.id.to_s)
+                is_selected = current_tag_ids[group.id.to_s].to_s == tag.id.to_s
+              %>
+              <%= link_to units_path(q: params[:q], tag_ids: new_tag_ids), class: "px-2 py-1 rounded-lg text-sm font-bold transition-all #{is_selected ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600'}" do %>
+                <%= tag.name.sub(/\A[^\/]*\//, '') %>
+                <span class="ml-1 opacity-70 text-xs font-normal">(<%= @tag_unit_counts[tag.id] || 0 %>)</span>
+              <% end %>
+            <% end %>
+          </div>
         <% end %>
       </div>
     <% end %>

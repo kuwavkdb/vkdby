@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Admin
-  class UnitsController < Admin::BaseController
+  class UnitsController < Admin::BaseController # rubocop:disable Metrics/ClassLength
     include LoggableLinkChanges
 
     before_action :set_unit, only: %i[show edit update destroy undiscard]
@@ -9,17 +9,28 @@ module Admin
 
     def index
       @q = params[:q]
-      @show_discarded = params[:discarded]
+      @tag_index_id = params[:tag_index_id]
+      @show_discarded = @tag_index_id.present? ? 'all' : params[:discarded]
+      @unit_type_filter = params[:unit_type]
       scope = case @show_discarded
               when 'only' then Unit.discarded
               when 'all'  then Unit.with_discarded
               else             Unit.kept
               end
+      if @unit_type_filter == 'moved'
+        scope = scope.where(unit_type: :moved)
+      elsif @show_discarded.blank? && @tag_index_id.blank?
+        scope = scope.where.not(unit_type: :moved)
+      end
       if @q.present?
         scope = scope.where(
           'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
           q: "%#{@q}%"
         )
+      end
+      if @tag_index_id.present?
+        @tag_index = TagIndex.find_by(id: @tag_index_id)
+        scope = scope.joins(:tag_index_items).where(tag_index_items: { tag_index_id: @tag_index_id })
       end
       @pagy, @units = pagy(scope.order(updated_at: :desc))
     end
@@ -113,6 +124,7 @@ module Admin
 
     def unit_params
       params.require(:unit).permit(:name, :name_kana, :key, :status, :unit_type, :old_key, :note,
+                                   tag_index_ids: [],
                                    links_attributes: %i[id text url active sort_order _destroy],
                                    name_logs_attributes: %i[name name_kana],
                                    aliases_attributes: %i[name kana old_key],

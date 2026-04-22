@@ -7,7 +7,8 @@ module Admin
 
     def index
       @q = params[:q]
-      @show_discarded = params[:discarded]
+      @tag_index_id = params[:tag_index_id]
+      @show_discarded = @tag_index_id.present? ? 'all' : params[:discarded]
       scope = case @show_discarded
               when 'only' then Person.discarded
               when 'all'  then Person.with_discarded
@@ -18,6 +19,10 @@ module Admin
           'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q OR old_history ILIKE :q',
           q: "%#{@q}%"
         )
+      end
+      if @tag_index_id.present?
+        @tag_index = TagIndex.find_by(id: @tag_index_id)
+        scope = scope.joins(:tag_index_items).where(tag_index_items: { tag_index_id: @tag_index_id })
       end
       @pagy, @people = pagy(scope.order(updated_at: :desc))
     end
@@ -99,6 +104,7 @@ module Admin
       params.require(:person).permit(
         :name, :name_kana, :birthday, :birth_year, :blood, :hometown, :status, :old_history, :note,
         parts: [],
+        tag_index_ids: [],
         links_attributes: %i[id text url active _destroy],
         name_logs_attributes: %i[name name_kana],
         aliases_attributes: %i[name kana old_key]

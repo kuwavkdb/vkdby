@@ -1,21 +1,35 @@
 <div class="space-y-4">
-  <%# Weekly Trends %>
+  <%# Recent Trends %>
   <div class="bg-white dark:bg-slate-800 shadow rounded-2xl overflow-hidden">
     <div class="bg-slate-50 dark:bg-slate-900/30 px-4 py-3 border-b border-slate-100 dark:border-slate-700">
-      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Weekly Trends<br><span class="text-xs font-normal">前後一週間の動向</span></h2>
+      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Recent Trends<br><span class="text-xs font-normal">最近の動向</span></h2>
     </div>
     <ul class="divide-y divide-slate-100 dark:divide-slate-700">
       <% if @weekly_trends.any? %>
         <% @weekly_trends.each do |trend| %>
           <li>
             <%= link_to trend_path(trend),
-                class: "flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors #{'font-bold text-indigo-600 dark:text-indigo-400' if trend.date == Date.current}" do %>
-              <span class="<%= trend.date == Date.current ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500' %> tabular-nums text-xs w-16 shrink-0">
-                <%= trend.date.strftime('%-m/%-d') %>
-              </span>
-              <span class="<%= trend.date == Date.current ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-600 dark:text-slate-300' %> truncate">
-                <%= trend.date == Date.current ? '今日' : trend.date.strftime('%A').then { |d| %w[日 月 火 水 木 金 土][trend.date.wday] + '曜日' } %>
-              </span>
+                class: "block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors #{'font-bold' if trend.date == Date.current}" do %>
+              <div class="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mb-1">
+                <span class="tabular-nums text-sm font-extrabold text-slate-700 dark:text-slate-300 shrink-0 w-10"><%= trend.date.strftime('%-m/%-d') %></span>
+                <% if trend.units.present? %>
+                  <% trend.units.each do |u| %>
+                    <% unit = @weekly_trend_units[u['unit_id']] %>
+                    <span class="inline-block px-1.5 py-0.5 rounded text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600">
+                      <%= unit&.name || u['name'] %>
+                    </span>
+                  <% end %>
+                <% end %>
+                <% if trend.people.present? %>
+                  <% trend.people.each do |p| %>
+                    <% person = @weekly_trend_people[p['person_id']] %>
+                    <span class="inline-block px-1.5 py-0.5 rounded text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                      <%= person&.name || p['name'] %>
+                    </span>
+                  <% end %>
+                <% end %>
+              </div>
+              <span class="text-indigo-600 dark:text-indigo-400 leading-snug"><%= format_wiki_title(trend.title.sub(/[（(][^）)]*[）)]\z/u, '').rstrip, link: false) %></span>
             <% end %>
           </li>
         <% end %>
@@ -23,12 +37,17 @@
         <li class="px-4 py-3 text-sm text-slate-400 dark:text-slate-500">データなし</li>
       <% end %>
     </ul>
+    <div class="px-4 py-2 border-t border-slate-100 dark:border-slate-700 text-right">
+      <%= link_to trends_path, class: "text-xs text-indigo-600 dark:text-indigo-400 hover:underline" do %>
+        もっと見る →
+      <% end %>
+    </div>
   </div>
 
-  <%# Recently Updated %>
+  <%# Recent Updates %>
   <div class="bg-white dark:bg-slate-800 shadow rounded-2xl overflow-hidden">
     <div class="bg-slate-50 dark:bg-slate-900/30 px-4 py-3 border-b border-slate-100 dark:border-slate-700">
-      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Recently Updated<br><span class="text-xs font-normal">最近の更新</span></h2>
+      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Recent Updates<br><span class="text-xs font-normal">最近の更新</span></h2>
     </div>
     <ul class="divide-y divide-slate-100 dark:divide-slate-700">
       <% if @recently_updated.any? %>
@@ -50,7 +69,7 @@
                 </svg>
               <% end %>
               <span class="flex-1 text-sm text-slate-700 dark:text-slate-200 truncate"><%= item.is_a?(CustomPage) ? item.title : item.name %></span>
-              <span class="shrink-0 text-xs text-slate-400 dark:text-slate-500"><%= item.updated_at.strftime('%-m/%-d') %></span>
+              <span class="shrink-0 text-xs text-slate-400 dark:text-slate-500"><%= item.updated_at.strftime('%-m/%-d') %>更新</span>
             <% end %>
           </li>
         <% end %>

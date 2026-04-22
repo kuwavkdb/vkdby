@@ -40,7 +40,7 @@ module Admin
 
     def update
       if @custom_page.update(custom_page_params)
-        redirect_to admin_custom_pages_path, notice: 'ページを更新しました。'
+        redirect_to edit_admin_custom_page_path(@custom_page), notice: 'ページを更新しました。'
       else
         render :edit, status: :unprocessable_entity
       end

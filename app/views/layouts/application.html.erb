@@ -384,7 +384,7 @@
       <footer class="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 mt-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div class="markdown-content text-sm">
-            <%= markdown(@footer_page.body) %>
+            <%= markdown(@footer_page.body, sectionable: @footer_page) %>
           </div>
         </div>
       </footer>
