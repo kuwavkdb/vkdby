@@ -23,7 +23,9 @@ class CustomPagesController < ApplicationController
     ttl = Time.current.end_of_day - Time.current
 
     @weekly_trends = Rails.cache.fetch("sidebar/weekly_trends/#{today}", expires_in: ttl) do
-      Trend.where(date: (today - 7)..(today + 7)).order(date: :desc).to_a
+      from_today = Trend.where(date: today..).order(date: :asc).limit(5).to_a
+      recent     = Trend.where(date: (today - 2)..(today - 1)).order(date: :desc).limit(5).to_a
+      (from_today + recent).sort_by(&:date).reverse
     end
 
     unit_ids   = @weekly_trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
