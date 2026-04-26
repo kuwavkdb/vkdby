@@ -1,3 +1,4 @@
+<% content_for :title, [@item.title, @item.artists.map { |a| a['alias'].presence || a['name'] }.join(' / ')].reject(&:blank?).join(' / ') %>
 <div class="flex justify-center items-start min-h-screen p-0 md:p-8">
   <div class="bg-white dark:bg-zinc-900 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
     <!-- ヘッダー（タイトル） -->
