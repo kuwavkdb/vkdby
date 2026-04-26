@@ -33,6 +33,9 @@ module Vkdby
     # Set default locale to Japanese
     config.i18n.default_locale = :ja
 
+    # Site name used in page titles
+    config.site_name = ENV.fetch('SITE_NAME', 'vkdb.jp')
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files
