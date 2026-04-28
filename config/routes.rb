@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
+Rails.application.routes.draw do
   get '/login', to: 'sessions#new'
   post '/login', to: 'sessions#create'
   delete '/logout', to: 'sessions#destroy'
@@ -19,11 +19,6 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
         patch :undiscard
       end
       resources :unit_logs
-      resources :unit_people, only: %i[create edit update destroy] do
-        collection do
-          patch :reorder
-        end
-      end
       resources :unit_snapshots, except: %i[show] do
         member do
           post :copy
