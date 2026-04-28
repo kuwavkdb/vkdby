@@ -121,7 +121,7 @@ namespace :import do # rubocop:disable Metrics/BlockLength
   end
 
   desc 'Import people from Wikipages'
-  task people: :environment do
+  task people: :environment do # rubocop:disable Metrics/BlockLength
     mode = ENV['MODE']
     manual_mode  = mode == 'MANUAL'
     skipped_mode = mode == 'SKIPPED'
@@ -186,7 +186,7 @@ namespace :import do # rubocop:disable Metrics/BlockLength
           ActiveRecord::Base.transaction do
             PersonImporter.import(wp)
             person = Person.find_by(old_wiki_id: wp.id)
-            raise "Person not created after import" unless person
+            raise 'Person not created after import' unless person
 
             if Person.where.not(id: person.id).exists?(key: original_key)
               puts "  [WARN] key=#{original_key} は既存の Person と競合するため生成キー(#{person.key})を維持します"
@@ -201,7 +201,7 @@ namespace :import do # rubocop:disable Metrics/BlockLength
             puts "  -> Person##{person.id}: #{person.name} (key=#{person.key})"
             count += 1
           end
-        rescue => e
+        rescue StandardError => e
           puts "  -> ERROR: #{e.message}"
           skipped += 1
         end
