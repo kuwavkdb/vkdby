@@ -53,8 +53,8 @@ class PeopleController < ApplicationController
 
   def units
     person = Person.kept.find_by!(key: params[:key])
-    unit_keys = person.unit_people
-                      .joins(:unit)
+    unit_keys = person.snapshot_people
+                      .joins(unit_snapshot: :unit)
                       .merge(Unit.kept)
                       .distinct
                       .pluck('units.key')
