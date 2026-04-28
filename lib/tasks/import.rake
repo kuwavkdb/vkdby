@@ -121,28 +121,92 @@ namespace :import do # rubocop:disable Metrics/BlockLength
   end
 
   desc 'Import people from Wikipages'
-  task people: :environment do
+  task people: :environment do # rubocop:disable Metrics/BlockLength
     mode = ENV['MODE']
     manual_mode  = mode == 'MANUAL'
     skipped_mode = mode == 'SKIPPED'
+    fix_mode     = mode == 'FIX_UNIT_AS_PERSON'
 
-    unless manual_mode || skipped_mode || mode == 'ALL' || ENV['ID'] || ENV['START']
+    unless manual_mode || skipped_mode || fix_mode || mode == 'ALL' || ENV['ID'] || ENV['START']
       puts 'Error: 実行条件を指定してください。'
-      puts '  MODE=ALL       全件対象'
-      puts '  MODE=MANUAL    手動仕訳済みページのみ'
-      puts '  MODE=SKIPPED   スキップ済みページのみ再処理'
-      puts '  ID=<id>        指定 ID のみ'
-      puts '  START=<id>     指定 ID 以降'
+      puts '  MODE=ALL                全件対象'
+      puts '  MODE=MANUAL             手動仕訳済みページのみ'
+      puts '  MODE=SKIPPED            スキップ済みページのみ再処理'
+      puts '  MODE=FIX_UNIT_AS_PERSON Unitとして誤取り込みされた個人ページをPersonとして再取り込みし、Unit を削除'
+      puts '    KEYS=key1,key2,...         対象 Unit key を絞り込む（省略時は全件）'
+      puts '    EXCLUDE_KEYS=key1,key2,... 除外する Unit key'
+      puts '    DRYRUN=1                   対象確認のみ（実際の変更なし）'
+      puts '  ID=<id>                 指定 ID のみ'
+      puts '  START=<id>              指定 ID 以降'
       exit 1
     end
 
     puts 'Starting person import from Wikipages...'
     puts 'Mode: MANUAL (page_type=person の手動設定済みページのみ)' if manual_mode
     puts 'Mode: SKIPPED (スキップ済みページのみ再処理)' if skipped_mode
+    puts 'Mode: FIX_UNIT_AS_PERSON (Unitとして誤取り込みされた個人ページを修正)' if fix_mode
     count = 0
     skipped = 0
 
-    if manual_mode
+    if fix_mode
+      target_keys  = ENV['KEYS']&.split(',')&.map(&:strip)
+      exclude_keys = ENV['EXCLUDE_KEYS']&.split(',')&.map(&:strip) || []
+      dry_run      = ENV['DRYRUN'] == '1'
+      puts "  対象 keys: #{target_keys.join(', ')}" if target_keys
+      puts "  除外 keys: #{exclude_keys.join(', ')}" if exclude_keys.any?
+      puts 'Mode: DRYRUN (DB への書き込みは行いません)' if dry_run
+
+      unit_query = Unit.where.not(old_wiki_id: nil)
+      unit_query = unit_query.where(key: target_keys) if target_keys
+      unit_query = unit_query.where.not(key: exclude_keys) if exclude_keys.any?
+
+      unit_query.find_each do |unit|
+        wp = Wikipage.find_by(id: unit.old_wiki_id)
+        unless wp
+          puts "[SKIP] Unit##{unit.id} (#{unit.name}): Wikipage not found"
+          skipped += 1
+          next
+        end
+
+        unless PersonImporter.valid_person?(wp)
+          puts "[SKIP] Unit##{unit.id} (#{unit.name}): valid_person? returned false"
+          skipped += 1
+          next
+        end
+
+        puts "[FIX] #{unit.name} (Unit##{unit.id}, key=#{unit.key})"
+
+        if dry_run
+          count += 1
+          next
+        end
+
+        begin
+          original_key = unit.key
+          ActiveRecord::Base.transaction do
+            PersonImporter.import(wp)
+            person = Person.find_by(old_wiki_id: wp.id)
+            raise 'Person not created after import' unless person
+
+            if Person.where.not(id: person.id).exists?(key: original_key)
+              puts "  [WARN] key=#{original_key} は既存の Person と競合するため生成キー(#{person.key})を維持します"
+            else
+              person.update_column(:key, original_key)
+            end
+
+            unit.unit_people.destroy_all
+            unit.destroy!
+            update_wiki_page_import_as_imported(wp, page_type: 'person', target: person)
+
+            puts "  -> Person##{person.id}: #{person.name} (key=#{person.key})"
+            count += 1
+          end
+        rescue StandardError => e
+          puts "  -> ERROR: #{e.message}"
+          skipped += 1
+        end
+      end
+    elsif manual_mode
       query = WikiPageImport.manually_set.where(page_type: 'person').includes(:wikipage)
     elsif skipped_mode
       query = WikiPageImport.skipped.where(page_type: [nil, 'person']).includes(:wikipage)
@@ -160,7 +224,9 @@ namespace :import do # rubocop:disable Metrics/BlockLength
     limit = ENV['LIMIT']&.to_i
     puts "Limit: #{limit}" if limit
 
-    if manual_mode || skipped_mode
+    if fix_mode
+      # 処理済み
+    elsif manual_mode || skipped_mode
       query.find_each do |wpi|
         break if limit && count >= limit
 
@@ -216,7 +282,8 @@ namespace :import do # rubocop:disable Metrics/BlockLength
 
     puts 'Import complete!'
     puts "  Imported: #{count} people"
-    puts "  Skipped:  #{skipped} pages" unless manual_mode || skipped_mode || ENV['ID']
+    puts "  Skipped:  #{skipped} pages" unless manual_mode || skipped_mode || fix_mode || ENV['ID']
+    puts "  Fixed:    #{count} units -> people / Skipped: #{skipped}" if fix_mode
   end
 
   desc 'Reset all imported data'
