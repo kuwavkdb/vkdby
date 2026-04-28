@@ -98,8 +98,8 @@ class PersonImporter < BaseWikipageImporter
     # Save Person
     person.save!
 
-    # 2.5 Link existing UnitPerson records
-    link_existing_unit_people(person)
+    # 2.5 Link existing SnapshotPerson records
+    link_existing_snapshot_people(person)
 
     # 3. Associate TagIndex (Categories)
     update_tag_indices(person, categories_data[:raw_categories])
@@ -115,10 +115,9 @@ class PersonImporter < BaseWikipageImporter
     parse_sections(person)
   end
 
-  def link_existing_unit_people(person)
+  def link_existing_snapshot_people(person)
     return if person.old_key.blank?
 
-    UnitPerson.where(old_person_key: person.old_key).update_all(person_id: person.id, person_key: person.key)
     SnapshotPerson.where(old_person_key: person.old_key).update_all(person_id: person.id, person_key: person.key)
   end
 
