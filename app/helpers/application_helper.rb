@@ -48,7 +48,7 @@ module ApplicationHelper
   end
 
   def amazon_image_url(url, size)
-    url.sub(/(\._[A-Z][A-Z0-9_]*_)?(\.(jpe?g|png|gif|webp))$/i) { "._SL#{size}_#{$2}" }
+    url.sub(/(\._[A-Z][A-Z0-9_]*_)?(\.(jpe?g|png|gif|webp))$/i) { "._SL#{size}_#{::Regexp.last_match(2)}" }
   end
 
   def logged_in?
