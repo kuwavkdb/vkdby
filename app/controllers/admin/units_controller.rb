@@ -47,8 +47,6 @@ module Admin
 
     def edit
       @unit_logs = @unit.unit_logs.order(:log_date)
-      @unit_people = @unit.unit_people.includes(:person).order(:period, :order_in_period)
-      @unit_person = @unit.unit_people.build(period: 1, order_in_period: (@unit_people.last&.order_in_period || 0) + 1)
       @unit_snapshots = @unit.unit_snapshots.includes(snapshot_people: :person).order(snapshot_date: :desc)
       @unit.links.build # Build an empty link for the form
       @wiki_page_imports = @unit.wiki_page_imports.includes(:wikipage).order(updated_at: :desc)
@@ -79,9 +77,6 @@ module Admin
         redirect_to edit_admin_unit_path(@unit), notice: 'Unit updated successfully.'
       else
         @unit_logs = @unit.unit_logs.order(:log_date)
-        @unit_people = @unit.unit_people.includes(:person).order(:period, :order_in_period)
-        @unit_person = @unit.unit_people.build(period: 1,
-                                               order_in_period: (@unit_people.last&.order_in_period || 0) + 1)
         @unit_snapshots = @unit.unit_snapshots.includes(snapshot_people: :person).order(snapshot_date: :desc)
         @unit.links.build if @unit.links.none?(&:new_record?)
         render :edit, status: :unprocessable_entity

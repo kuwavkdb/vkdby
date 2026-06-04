@@ -73,7 +73,7 @@ class Person < ApplicationRecord
   before_save :normalize_birthday_year
 
   validate :key_immutable, on: :update
-  after_create :auto_link_unit_people
+  after_create :auto_link_snapshot_people
   after_commit :expire_sidebar_cache
 
   def name
@@ -162,10 +162,10 @@ class Person < ApplicationRecord
     errors.add(:key, 'cannot be changed once set')
   end
 
-  def auto_link_unit_people
+  def auto_link_snapshot_people
     return if key.blank?
 
-    UnitPerson.where(person_key: key, person_id: nil).update_all(person_id: id)
+    SnapshotPerson.where(person_key: key, person_id: nil).update_all(person_id: id)
   end
 
   def expire_sidebar_cache
