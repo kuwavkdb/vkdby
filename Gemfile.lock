@@ -116,8 +116,8 @@ GEM
       irb (~> 1.10)
       reline (>= 0.3.8)
     diff-lcs (1.6.2)
-    discard (1.4.0)
-      activerecord (>= 4.2, < 9.0)
+    discard (2.0.0)
+      activerecord (>= 7.0, < 9.0)
     dotenv (3.2.0)
     drb (2.2.3)
     ed25519 (1.4.0)
@@ -125,13 +125,6 @@ GEM
     erubi (1.13.1)
     et-orbi (1.4.0)
       tzinfo
-    ffi (1.17.3-aarch64-linux-gnu)
-    ffi (1.17.3-aarch64-linux-musl)
-    ffi (1.17.3-arm-linux-gnu)
-    ffi (1.17.3-arm-linux-musl)
-    ffi (1.17.3-arm64-darwin)
-    ffi (1.17.3-x86_64-linux-gnu)
-    ffi (1.17.3-x86_64-linux-musl)
     fugit (1.12.1)
       et-orbi (~> 1.4)
       raabro (~> 1.4)
@@ -141,9 +134,7 @@ GEM
     htmlentities (4.3.4)
     i18n (1.14.8)
       concurrent-ruby (~> 1.0)
-    image_processing (1.14.0)
-      mini_magick (>= 4.9.5, < 6)
-      ruby-vips (>= 2.0.17, < 3)
+    image_processing (2.0.2)
     importmap-rails (2.2.3)
       actionpack (>= 6.0.0)
       activesupport (>= 6.0.0)
@@ -314,8 +305,9 @@ GEM
       zeitwerk (~> 2.6)
     rainbow (3.1.1)
     rake (13.4.2)
-    rbs (3.10.4)
+    rbs (4.0.2)
       logger
+      prism (>= 1.6.0)
       tsort
     rdoc (7.2.0)
       erb
@@ -369,9 +361,6 @@ GEM
       prism (>= 1.2, < 2.0)
       rbs (>= 3, < 5)
     ruby-progressbar (1.13.0)
-    ruby-vips (2.3.0)
-      ffi (~> 1.12)
-      logger
     rubyzip (3.3.1)
     securerandom (0.4.1)
     selenium-webdriver (4.44.0)
@@ -380,7 +369,7 @@ GEM
       rexml (~> 3.2, >= 3.2.5)
       rubyzip (>= 1.2.2, < 4.0)
       websocket (~> 1.0)
-    solargraph (0.58.3)
+    solargraph (0.59.2)
       ast (~> 2.4.3)
       backport (~> 1.2)
       benchmark (~> 0.4)
@@ -395,7 +384,7 @@ GEM
       ostruct (~> 0.6)
       parser (~> 3.0)
       prism (~> 1.4)
-      rbs (>= 3.6.1, <= 4.0.0.dev.4)
+      rbs (>= 3.10.0)
       reverse_markdown (~> 3.0)
       rubocop (~> 1.76)
       thor (~> 1.0)
@@ -499,12 +488,13 @@ DEPENDENCIES
   bundler-audit
   capybara
   debug
-  discard (~> 1.4)
-  image_processing (~> 1.2)
+  discard (~> 2.0)
+  image_processing (~> 2.0)
   importmap-rails
   jbuilder
   kamal
   lookbook
+  mini_magick
   mysql2 (~> 0.5)
   pagy (~> 43.5)
   pg (~> 1.5)
@@ -518,7 +508,7 @@ DEPENDENCIES
   rubocop-rails-omakase
   ruby-lsp
   selenium-webdriver
-  solargraph (~> 0.58.3)
+  solargraph (~> 0.59)
   solid_cable
   solid_cache
   solid_queue
@@ -565,26 +555,19 @@ CHECKSUMS
   date (3.5.1) sha256=750d06384d7b9c15d562c76291407d89e368dda4d4fff957eb94962d325a0dc0
   debug (1.11.1) sha256=2e0b0ac6119f2207a6f8ac7d4a73ca8eb4e440f64da0a3136c30343146e952b6
   diff-lcs (1.6.2) sha256=9ae0d2cba7d4df3075fe8cd8602a8604993efc0dfa934cff568969efb1909962
-  discard (1.4.0) sha256=6efcd2a53ddf96781f81b825d398f1c88ab88c0faa84e131bea6e16ef95d65d0
+  discard (2.0.0) sha256=0fc520786b4d7b9b1ea8b2b3dadbb13c3e41d2ce7d297d04869baf1c9e30d2c0
   dotenv (3.2.0) sha256=e375b83121ea7ca4ce20f214740076129ab8514cd81378161f11c03853fe619d
   drb (2.2.3) sha256=0b00d6fdb50995fe4a45dea13663493c841112e4068656854646f418fda13373
   ed25519 (1.4.0) sha256=16e97f5198689a154247169f3453ef4cfd3f7a47481fde0ae33206cdfdcac506
   erb (6.0.4) sha256=38e3803694be357fe2bfe312487c74beaf9fb4e5beb3e22498952fe1645b95d9
   erubi (1.13.1) sha256=a082103b0885dbc5ecf1172fede897f9ebdb745a4b97a5e8dc63953db1ee4ad9
   et-orbi (1.4.0) sha256=6c7e3c90779821f9e3b324c5e96fda9767f72995d6ae435b96678a4f3e2de8bc
-  ffi (1.17.3-aarch64-linux-gnu) sha256=28ad573df26560f0aedd8a90c3371279a0b2bd0b4e834b16a2baa10bd7a97068
-  ffi (1.17.3-aarch64-linux-musl) sha256=020b33b76775b1abacc3b7d86b287cef3251f66d747092deec592c7f5df764b2
-  ffi (1.17.3-arm-linux-gnu) sha256=5bd4cea83b68b5ec0037f99c57d5ce2dd5aa438f35decc5ef68a7d085c785668
-  ffi (1.17.3-arm-linux-musl) sha256=0d7626bb96265f9af78afa33e267d71cfef9d9a8eb8f5525344f8da6c7d76053
-  ffi (1.17.3-arm64-darwin) sha256=0c690555d4cee17a7f07c04d59df39b2fba74ec440b19da1f685c6579bb0717f
-  ffi (1.17.3-x86_64-linux-gnu) sha256=3746b01f677aae7b16dc1acb7cb3cc17b3e35bdae7676a3f568153fb0e2c887f
-  ffi (1.17.3-x86_64-linux-musl) sha256=086b221c3a68320b7564066f46fed23449a44f7a1935f1fe5a245bd89d9aea56
   fugit (1.12.1) sha256=5898f478ede9b415f0804e42b8f3fd53f814bd85eebffceebdbc34e1107aaf68
   globalid (1.3.0) sha256=05c639ad6eb4594522a0b07983022f04aa7254626ab69445a0e493aa3786ff11
   htmlbeautifier (1.4.3) sha256=b43d08f7e2aa6ae1b5a6f0607b4ed8954c8d4a8e85fd2336f975dda1e4db385b
   htmlentities (4.3.4) sha256=125a73c6c9f2d1b62100b7c3c401e3624441b663762afa7fe428476435a673da
   i18n (1.14.8) sha256=285778639134865c5e0f6269e0b818256017e8cde89993fdfcbfb64d088824a5
-  image_processing (1.14.0) sha256=754cc169c9c262980889bec6bfd325ed1dafad34f85242b5a07b60af004742fb
+  image_processing (2.0.2) sha256=d0cf990f862d64efb1a14916044bf4b5bb2bccc7e235022413cde46019799cfa
   importmap-rails (2.2.3) sha256=7101be2a4dc97cf1558fb8f573a718404c5f6bcfe94f304bf1f39e444feeb16a
   io-console (0.8.2) sha256=d6e3ae7a7cc7574f4b8893b4fca2162e57a825b223a177b7afa236c5ef9814cc
   irb (1.18.0) sha256=de9454a0703a54704b9811a5ef31a60c86949fbf4013fcf244fabc7c775248e3
@@ -655,7 +638,7 @@ CHECKSUMS
   railties (8.1.3) sha256=913eb0e0cb520aac687ffd74916bd726d48fa21f47833c6292576ef6a286de22
   rainbow (3.1.1) sha256=039491aa3a89f42efa1d6dec2fc4e62ede96eb6acd95e52f1ad581182b79bc6a
   rake (13.4.2) sha256=cb825b2bd5f1f8e91ca37bddb4b9aaf345551b4731da62949be002fa89283701
-  rbs (3.10.4) sha256=b17d7c4be4bb31a11a3b529830f0aa206a807ca42f2e7921a3027dfc6b7e5ce8
+  rbs (4.0.2) sha256=af75671e66cd03434cc546622741ebf83f6197ec4328375805306330bf78ef25
   rdoc (7.2.0) sha256=8650f76cd4009c3b54955eb5d7e3a075c60a57276766ebf36f9085e8c9f23192
   redcarpet (3.6.1) sha256=d444910e6aa55480c6bcdc0cdb057626e8a32c054c29e793fa642ba2f155f445
   redis (5.4.1) sha256=b5e675b57ad22b15c9bcc765d5ac26f60b675408af916d31527af9bd5a81faae
@@ -673,11 +656,10 @@ CHECKSUMS
   rubocop-rails-omakase (1.1.0) sha256=2af73ac8ee5852de2919abbd2618af9c15c19b512c4cfc1f9a5d3b6ef009109d
   ruby-lsp (0.26.9) sha256=33a01c001c00a76b4e821efc04ed7572983430f31ca5d6f3e343d0b6ccab4129
   ruby-progressbar (1.13.0) sha256=80fc9c47a9b640d6834e0dc7b3c94c9df37f08cb072b7761e4a71e22cff29b33
-  ruby-vips (2.3.0) sha256=e685ec02c13969912debbd98019e50492e12989282da5f37d05f5471442f5374
   rubyzip (3.3.1) sha256=2ed92112c7c43ba2b2527f35e6d99d9c2c99270b640aad5227516436481b1e4e
   securerandom (0.4.1) sha256=cc5193d414a4341b6e225f0cb4446aceca8e50d5e1888743fac16987638ea0b1
   selenium-webdriver (4.44.0) sha256=6f1df072529af369589c46f0e01132952aabb250cfd683c274d74dc1eb5d8477
-  solargraph (0.58.3) sha256=debefdc927d1e72383b2c4add89e71373d902b9904617efdb687749509fe2e69
+  solargraph (0.59.2) sha256=e771126c494caaee8263739fc340c13b2b1d02e262c0585a3f9da4e3c9a7407c
   solid_cable (4.0.0) sha256=8379680ef6bf36e195eb876a6306ea290f87d5fa10bc4a757bc2a918f83229b5
   solid_cache (1.0.10) sha256=bc05a2fb3ac78a6f43cbb5946679cf9db67dd30d22939ededc385cb93e120d41
   solid_queue (1.4.0) sha256=e6a18d196f0b27cb6e3c77c5b31258b05fb634f8ed64fb1866ed164047216c2a

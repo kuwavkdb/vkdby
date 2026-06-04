@@ -48,7 +48,8 @@ gem 'tailwindcss-rails'
 gem 'thruster', require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
-gem 'image_processing', '~> 1.2'
+gem 'image_processing', '~> 2.0'
+gem 'mini_magick'
 gem 'view_component'
 
 group :development, :test do
@@ -67,7 +68,7 @@ end
 
 group :development do
   gem 'ruby-lsp'
-  gem 'solargraph', '~> 0.58.3'
+  gem 'solargraph', '~> 0.59'
 
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem 'annotaterb'
@@ -84,7 +85,7 @@ end
 
 gem 'redis', '>= 4.0.1'
 
-gem 'discard', '~> 1.4'
+gem 'discard', '~> 2.0'
 gem 'rack-attack'
 gem 'romaji', '~> 0.3.0'
 
