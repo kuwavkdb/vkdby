@@ -23,12 +23,30 @@
         <% if @item.image_url.present? %>
           <div class="shrink-0">
             <% amazon_url = safe_url(@item.link_url) %>
+            <% img_src, img_srcset, img_sizes =
+                if amazon_image?(@item.image_url)
+                  src = amazon_image_url(@item.image_url, 256)
+                  srcset = [
+                    "#{amazon_image_url(@item.image_url, 208)} 208w",
+                    "#{amazon_image_url(@item.image_url, 256)} 256w",
+                    "#{amazon_image_url(@item.image_url, 416)} 416w",
+                    "#{amazon_image_url(@item.image_url, 512)} 512w",
+                  ].join(", ")
+                  [src, srcset, "(min-width: 640px) 208px, 256px"]
+                else
+                  [@item.image_url, nil, nil]
+                end
+            %>
             <% if amazon_url %>
               <%= link_to amazon_url, target: "_blank", rel: "noopener noreferrer" do %>
-                <img src="<%= @item.image_url %>" alt="<%= @item.title %>" class="w-64 h-64 sm:w-52 sm:h-52 object-cover shadow-md hover:opacity-90 transition-opacity">
+                <img src="<%= img_src %>" srcset="<%= img_srcset %>" sizes="<%= img_sizes %>"
+                     width="256" height="256"
+                     alt="<%= @item.title %>" class="w-64 h-64 sm:w-52 sm:h-52 object-cover shadow-md hover:opacity-90 transition-opacity">
               <% end %>
             <% else %>
-              <img src="<%= @item.image_url %>" alt="<%= @item.title %>" class="w-64 h-64 sm:w-52 sm:h-52 object-cover shadow-md">
+              <img src="<%= img_src %>" srcset="<%= img_srcset %>" sizes="<%= img_sizes %>"
+                   width="256" height="256"
+                   alt="<%= @item.title %>" class="w-64 h-64 sm:w-52 sm:h-52 object-cover shadow-md">
             <% end %>
           </div>
         <% end %>
