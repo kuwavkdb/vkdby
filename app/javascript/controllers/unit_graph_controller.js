@@ -39,6 +39,16 @@ export default class extends Controller {
     this.placeholderTarget.innerHTML =
       '<span class="text-sm text-slate-400 dark:text-slate-500">読み込み中...</span>'
 
+    if (!window.cytoscape) {
+      try {
+        await this._loadCytoscape()
+      } catch (e) {
+        console.error("unit-graph: cytoscape load failed", e)
+        this.placeholderTarget.innerHTML =
+          '<span class="text-sm text-slate-400 dark:text-slate-500">グラフの読み込みに失敗しました</span>'
+        return
+      }
+    }
     const cytoscape = window.cytoscape
     if (!cytoscape) {
       console.error("unit-graph: cytoscape not loaded")
@@ -292,6 +302,16 @@ export default class extends Controller {
 
     existingNodes.unlock()
     node.data("expanding", false)
+  }
+
+  _loadCytoscape() {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script")
+      script.src = "https://unpkg.com/cytoscape@3.30.2/dist/cytoscape.min.js"
+      script.onload = resolve
+      script.onerror = reject
+      document.head.appendChild(script)
+    })
   }
 
   disconnect() {
