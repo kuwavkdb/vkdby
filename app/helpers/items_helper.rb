@@ -3,6 +3,16 @@
 require 'cgi'
 
 module ItemsHelper
+  AMAZON_IMAGE_CDN = %r{https?://(?:[a-z0-9-]+\.)?(?:images-amazon\.com|m\.media-amazon\.com)/}i
+
+  def amazon_image?(url)
+    url.present? && AMAZON_IMAGE_CDN.match?(url)
+  end
+
+  def amazon_image_url(url, size)
+    url.sub(/(\._[A-Z][A-Z0-9_]*_)?(\.(jpe?g|png|gif|webp))$/i) { "._SL#{size}_#{::Regexp.last_match(2)}" }
+  end
+
   # アーティストのプロフィールページへのパスを生成
   # 優先順位: key > old_key > name(EUCエンコード)
   def artist_profile_path(artist_data)
