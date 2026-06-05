@@ -1,10 +1,10 @@
 import { Controller } from "@hotwired/stimulus"
-import Sortable from "sortablejs"
 
 export default class extends Controller {
     static values = { url: String }
 
-    connect() {
+    async connect() {
+        const { default: Sortable } = await import("sortablejs")
         this.sortable = Sortable.create(this.element, {
             handle: ".drag-handle",
             onEnd: this.onEnd.bind(this)
