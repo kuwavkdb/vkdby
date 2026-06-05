@@ -61,7 +61,7 @@ module Admin
       raise ActionController::BadRequest, 'Invalid file type' unless image&.content_type&.start_with?('image/')
 
       @custom_page.images.attach(image)
-      render json: { url: url_for(@custom_page.images.last) }
+      render json: { url: rails_blob_path(@custom_page.images.last, disposition: :inline) }
     end
 
     private

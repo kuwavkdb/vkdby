@@ -48,7 +48,7 @@ module Admin
       raise ActionController::BadRequest, 'Invalid file type' unless image&.content_type&.start_with?('image/')
 
       @section.images.attach(image)
-      render json: { url: url_for(@section.images.last) }
+      render json: { url: rails_blob_path(@section.images.last, disposition: :inline) }
     end
 
     def reorder
