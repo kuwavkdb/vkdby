@@ -1,7 +1,35 @@
 <% content_for :title, @resource.name_kana.present? ? "#{@resource.name}（#{@resource.name_kana}）" : @resource.name %>
+<% content_for :head do %>
+  <style>.page-nav-scroll::-webkit-scrollbar { display: none; }</style>
+<% end %>
 <div class="flex justify-center items-center min-h-screen p-0 md:p-8">
-  <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
+  <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl md:overflow-hidden w-full min-w-0 max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
     <%= render ProfileHeaderComponent.new(resource: @resource) %>
+
+    <nav class="md:hidden sticky top-0 z-20 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-b border-slate-100 dark:border-slate-700 flex items-stretch" aria-label="ページ内ナビゲーション">
+      <a href="#" class="shrink-0 flex items-center px-3 py-3 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border-r border-slate-200 dark:border-slate-700 transition-colors" aria-label="ページ先頭へ戻る">↑ Top</a>
+      <div class="page-nav-scroll flex items-stretch gap-x-3 overflow-x-auto px-4 min-w-0" style="scrollbar-width:none;">
+        <% if @resource.is_a?(Unit) && @snapshots.present? %>
+          <a href="#members" class="flex items-center py-3 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors shrink-0">Members</a>
+        <% end %>
+        <% if @trends.present? %>
+          <a href="#trends" class="flex items-center py-3 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors shrink-0">Trends</a>
+        <% end %>
+        <% if (@resource.is_a?(Person) && @old_history_items.present?) || (@resource.is_a?(Unit) && @history.present?) %>
+          <a href="#history" class="flex items-center py-3 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors shrink-0">History</a>
+        <% end %>
+        <% if @resource.sections.kept.exists? %>
+          <a href="#sections" class="flex items-center py-3 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors shrink-0">Notes</a>
+        <% end %>
+        <% if @items.present? %>
+          <a href="#items" class="flex items-center py-3 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors shrink-0">Items</a>
+        <% end %>
+        <% if @resource.is_a?(Unit) %>
+          <a href="#relationship-graph" class="flex items-center py-3 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors shrink-0">Graph</a>
+        <% end %>
+        <a href="#update-log" class="flex items-center py-3 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors shrink-0">Update Log</a>
+      </div>
+    </nav>
 
     <div class="p-5 md:p-8">
       <div class="grid gap-8 grid-cols-1 md:grid-cols-[350px_1fr] items-start">
@@ -14,10 +42,17 @@
 
         <div class="column-right">
           <% if @resource.is_a?(Unit) %>
-            <%= render UnitSnapshotsComponent.new(snapshots: @snapshots, unit: @resource, admin: defined?(logged_in?) && logged_in?) %>
-            <%= render UnitTrendsComponent.new(trends: @trends) if @trends %>
+            <div id="members">
+              <%= render UnitSnapshotsComponent.new(snapshots: @snapshots, unit: @resource, admin: defined?(logged_in?) && logged_in?) %>
+            </div>
 
-            <% if @resource.is_a?(Unit) && defined?(logged_in?) && logged_in? %>
+            <% if @trends %>
+              <div id="trends">
+                <%= render UnitTrendsComponent.new(trends: @trends) %>
+              </div>
+            <% end %>
+
+            <% if defined?(logged_in?) && logged_in? %>
               <div class="mt-4">
                 <%= link_to new_admin_trend_path(unit_id: @resource.id), class: "inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors" do %>
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
@@ -32,7 +67,7 @@
 
 
           <% if (@resource.is_a?(Person) && @old_history_items.present?) || (@resource.is_a?(Unit) && @history.present?) %>
-            <section>
+            <section id="history">
               <div class="flex items-center justify-between mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
                 <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">History</h2>
                 <% if @resource.is_a?(Unit) && defined?(logged_in?) && logged_in? %>
@@ -83,7 +118,9 @@
           <% end %>
 
           <% if @resource.is_a?(Person) && @trends.present? %>
-            <%= render UnitTrendsComponent.new(trends: @trends) %>
+            <div id="trends">
+              <%= render UnitTrendsComponent.new(trends: @trends) %>
+            </div>
 
             <% if defined?(logged_in?) && logged_in? %>
               <div class="mt-4">
@@ -98,13 +135,15 @@
           <% end %>
 
           <% if @resource.sections.kept.exists? %>
-            <%= render SectionComponent.with_collection(@resource.sections.kept.order(:sort_order), admin: defined?(logged_in?) && logged_in?) %>
+            <div id="sections">
+              <%= render SectionComponent.with_collection(@resource.sections.kept.order(:sort_order), admin: defined?(logged_in?) && logged_in?) %>
+            </div>
           <% end %>
         </div>
       </div>
 
       <% if @items.present? %>
-        <section class="mt-8">
+        <section id="items" class="mt-8">
           <div class="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
             <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Recent Items (Max 10)</h2>
           </div>
@@ -121,7 +160,7 @@
         <%= render "relationship_graph", unit: @resource %>
       <% end %>
 
-      <section class="mt-8">
+      <section id="update-log" class="mt-8">
         <details class="group"
                  hx-get="<%= profile_update_logs_path(@resource.key) %>"
                  hx-target="#update-logs-content"
