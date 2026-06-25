@@ -29,6 +29,9 @@
       .admin-dropdown:hover .admin-dropdown-menu {
         display: block;
       }
+      .adsense-container:not(:has(ins[data-ad-status="filled"])) {
+        display: none;
+      }
     </style>
     <%= render 'layouts/google_analytics' %>
     <%= render 'layouts/google_adsense' %>
