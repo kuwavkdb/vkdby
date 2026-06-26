@@ -38,6 +38,9 @@
           <%= render NameHistoryComponent.new(resource: @resource) %>
           <%= render LinksComponent.new(links: @links) %>
           <%= render SpotifyEmbedComponent.new(links: @links) %>
+          <div class="mt-4">
+            <%= render 'layouts/google_adsense_square' %>
+          </div>
         </div>
 
         <div class="column-right">
@@ -159,6 +162,10 @@
       <% if @resource.is_a?(Unit) %>
         <%= render "relationship_graph", unit: @resource %>
       <% end %>
+
+      <div class="mt-8">
+        <%= render 'layouts/google_adsense_square' %>
+      </div>
 
       <section id="update-log" class="mt-8">
         <details class="group"
