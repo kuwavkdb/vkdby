@@ -39,15 +39,15 @@
       <% end %>
     <% elsif @resource.is_a?(Unit) %>
       <% if @resource.unit_type.present? %>
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
-          <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Unit Type</dt>
+        <div class="flex flex-row justify-between items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
+          <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3">Unit Type</dt>
           <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100"><%= @resource.unit_type %></dd>
         </div>
       <% end %>
 
       <% if @resource.activity_periods.present? %>
-        <div class="flex flex-col border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
-          <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">活動時期</dt>
+        <div class="flex flex-row justify-between items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
+          <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3">活動時期</dt>
           <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 grid gap-x-3 justify-end" style="grid-template-columns: auto auto">
             <% @resource.activity_periods.each do |period| %>
               <span class="text-xs font-normal text-zinc-600 dark:text-zinc-300 text-right self-center"><%= period.label %></span>
@@ -59,8 +59,8 @@
     <% end %>
 
     <% if @resource.status.present? %>
-      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
-        <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Status</dt>
+      <div class="flex flex-row justify-between items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
+        <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3">Status</dt>
         <dd><span class="bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded text-xs font-bold text-zinc-600 dark:text-zinc-300"><%= @resource.status_text %></span></dd>
       </div>
     <% end %>
