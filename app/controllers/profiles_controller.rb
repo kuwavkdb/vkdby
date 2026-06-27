@@ -91,7 +91,7 @@ class ProfilesController < ApplicationController
 
     scope = @resource.class.kept.where(name_kana: @resource.name_kana).where.not(id: @resource.id)
     @same_kana_total = scope.count
-    @same_kana_resources = scope.order(updated_at: :desc).limit(6) if @same_kana_total > 0
+    @same_kana_resources = scope.order(updated_at: :desc).limit(6) if @same_kana_total.positive?
   end
 
   def load_items
