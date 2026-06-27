@@ -10,8 +10,7 @@ gem 'rails', '>= 8.1.2.1', '~> 8.1.2'
 gem 'propshaft'
 # Use pg as the database for Active Record
 gem 'pg', '~> 1.5'
-# Temporarily keep mysql2 for data migration from legacy vkdb MySQL database
-gem 'mysql2', '~> 0.5'
+# mysql2 is in :development group (legacy data migration only)
 # Use the Puma web server [https://github.com/puma/puma]
 gem 'puma', '>= 5.0'
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
@@ -32,10 +31,7 @@ gem 'bcrypt', '~> 3.1.22'
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: %i[mingw mswin x64_mingw jruby]
 
-# Use the database-backed adapters for Rails.cache, Active Job, and Action Cable
-gem 'solid_cable'
-gem 'solid_cache'
-gem 'solid_queue'
+# solid_cable, solid_cache, solid_queue are in :development group (production uses Redis)
 
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', require: false
@@ -76,6 +72,14 @@ group :development do
   gem 'web-console'
 
   gem 'lookbook'
+
+  # Legacy data migration from vkdb MySQL database
+  gem 'mysql2', '~> 0.5'
+
+  # Rails 8 defaults — not used in production (Redis is used instead)
+  gem 'solid_cable'
+  gem 'solid_cache'
+  gem 'solid_queue'
 end
 
 group :test do
