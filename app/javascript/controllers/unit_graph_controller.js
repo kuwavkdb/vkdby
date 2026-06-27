@@ -84,6 +84,7 @@ export default class extends Controller {
     this.cy = cytoscape({
       container: this.containerTarget,
       elements: [...nodes, ...edges],
+      wheelSensitivity: 0.3,
       style: [
         {
           selector: 'node[type="unit"]',
