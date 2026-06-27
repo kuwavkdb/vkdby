@@ -14,6 +14,7 @@ class ProfilesController < ApplicationController
 
     @resource.is_a?(Person) ? load_person_data : load_unit_data
     load_items
+    load_same_kana_resources
 
     respond_to do |format|
       format.html
@@ -83,6 +84,14 @@ class ProfilesController < ApplicationController
                           .active
                           .includes(snapshot_people: :person)
                           .order(past: :asc, current: :desc, snapshot_index: :asc)
+  end
+
+  def load_same_kana_resources
+    return if @resource.name_kana.blank?
+
+    scope = @resource.class.kept.where(name_kana: @resource.name_kana).where.not(id: @resource.id)
+    @same_kana_total = scope.count
+    @same_kana_resources = scope.order(updated_at: :desc).limit(6) if @same_kana_total.positive?
   end
 
   def load_items

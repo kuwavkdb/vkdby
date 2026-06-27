@@ -1,0 +1,25 @@
+<section class="mt-8">
+  <div class="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
+    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+      Did You Mean?
+      <span class="ml-1 font-normal normal-case tracking-normal text-slate-400 dark:text-slate-500">— 同じヨミガナ「<%= @resource.name_kana %>」</span>
+    </h2>
+  </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    <% if @resource.is_a?(Unit) %>
+      <%= render UnitCardComponent.with_collection(@same_kana_resources) %>
+    <% else %>
+      <%= render PersonCardComponent.with_collection(@same_kana_resources, show_history: true) %>
+    <% end %>
+  </div>
+  <% if remaining_count > 0 %>
+    <div class="mt-3 text-center">
+      <%= link_to search_path, class: "inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors" do %>
+        もっと見る
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+        </svg>
+      <% end %>
+    </div>
+  <% end %>
+</section>
