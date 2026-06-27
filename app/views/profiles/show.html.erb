@@ -167,6 +167,8 @@
         <%= render 'layouts/google_adsense_square' %>
       </div>
 
+      <%= render SameKanaSuggestionComponent.new(resource: @resource, same_kana_resources: @same_kana_resources, same_kana_total: @same_kana_total) %>
+
       <section id="update-log" class="mt-8">
         <details class="group"
                  hx-get="<%= profile_update_logs_path(@resource.key) %>"

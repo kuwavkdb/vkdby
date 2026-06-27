@@ -64,7 +64,7 @@
     <% end %>
 
     <% if @people.any? %>
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div id="results" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         <%= render PersonCardComponent.with_collection(@people, show_history: true, show_details: true) %>
       </div>
     <% else %>
