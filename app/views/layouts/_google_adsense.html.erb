@@ -1,5 +1,5 @@
 <% adsense_client = ENV['GOOGLE_ADSENSE_CLIENT_ID'] %>
-<% if adsense_client.present? %>
+<% if adsense_client.present? && !(defined?(logged_in?) && logged_in?) %>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=<%= adsense_client %>"
        crossorigin="anonymous"></script>
 <% end %>
