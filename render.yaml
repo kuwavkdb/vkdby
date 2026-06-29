@@ -28,7 +28,5 @@ services:
         value: 2
       - key: MALLOC_ARENA_MAX
         value: 2
-      - key: LD_PRELOAD
-        value: /usr/lib/x86_64-linux-gnu/libjemalloc.so.2
     region: singapore
     plan: free # Web service has a free tier.
