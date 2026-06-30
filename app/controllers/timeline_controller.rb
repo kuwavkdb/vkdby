@@ -2,11 +2,19 @@
 
 # rubocop:disable Metrics/ClassLength
 class TimelineController < ApplicationController
-  CACHE_KEY = 'timeline/major_units/v4'
+  CACHE_KEY = 'timeline/major_units/v5'
   CACHE_TTL = 1.hour
 
   VALID_ZOOMS = { '2' => 48 }.freeze
   DEFAULT_YEAR_PX = 24
+
+  # Unit の全属性を持つ AR オブジェクトをキャッシュ・保持するとメモリを圧迫するため、
+  # タイムライン表示に必要な属性のみを持つ軽量な値オブジェクトとして扱う。
+  TimelineUnit = Struct.new(:id, :name, :key, :name_kana, :activity_period, keyword_init: true) do
+    def activity_periods
+      (activity_period || []).map { |h| OpenStruct.new(h) }
+    end
+  end
 
   # rubocop:disable Metrics/AbcSize, Metrics/PerceivedComplexity
   def index
@@ -24,7 +32,8 @@ class TimelineController < ApplicationController
                   .where(id: major_debut_unit_ids)
                   .where.not(activity_period: nil)
                   .distinct
-                  .to_a
+                  .pluck(:id, :name, :key, :name_kana, :activity_period)
+                  .map { |id, name, key, name_kana, activity_period| TimelineUnit.new(id:, name:, key:, name_kana:, activity_period:) }
 
       all_years = units.flat_map do |unit|
         unit.activity_periods.map { |p| parse_year(p.from) }
@@ -79,10 +88,10 @@ class TimelineController < ApplicationController
         end
       end
 
-      { units:, year_min:, year_max:, trend_markers: }
+      { units: units.map(&:to_h), year_min:, year_max:, trend_markers: }
     end
 
-    @units          = @timeline_data[:units]
+    @units          = @timeline_data[:units].map { |attrs| TimelineUnit.new(**attrs) }
     @year_min       = @timeline_data[:year_min]
     @year_max       = @timeline_data[:year_max]
     @year_range     = (@year_min..@year_max).to_a
