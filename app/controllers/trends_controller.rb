@@ -59,6 +59,7 @@ class TrendsController < ApplicationController
     @items = scopes.reduce(:or).order(release_date: :desc).limit(8) if scopes.any?
 
     @unit_trends = Trend.where('units @> ?', [{ unit_id: unit.id }].to_json)
+                        .select(:id, :date, :title)
                         .order(date: :asc)
   end
 end
