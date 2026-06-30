@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
+  GraphUnit = Struct.new(:id, :name, :key, keyword_init: true)
+
   def initialize(unit, track_past: false)
     @unit = unit
     @track_past = track_past
@@ -185,7 +187,11 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
   end
 
   def build_graph(unit_ids_by_person, current_edge_pairs, relevant_unit_ids, hop1_unit_ids_set = Set.new, base_unit_ids = nil)
-    related_units = Unit.where(id: relevant_unit_ids).index_by(&:id)
+    # ノード描画には id/name/key のみ必要なため、Unit を AR オブジェクトとして
+    # 全件ロードせず必要な列のみ取得する
+    related_units = Unit.where(id: relevant_unit_ids)
+                        .pluck(:id, :name, :key)
+                        .to_h { |id, name, key| [id, GraphUnit.new(id:, name:, key:)] }
 
     nodes = { "unit_#{@unit.id}" => center_node }
     edges = {}
