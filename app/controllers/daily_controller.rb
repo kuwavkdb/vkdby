@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 class DailyController < ApplicationController
+  # PersonCardComponent（show_history: true）の表示に必要な列のみを取得し、
+  # old_wiki_text/note など大きいテキスト列のロードを避ける
+  PERSON_CARD_COLUMNS = %i[id key name name_kana aliases old_history].freeze
+
   def show
     @year_agnostic = params[:year].nil?
 
@@ -12,12 +16,13 @@ class DailyController < ApplicationController
     if @year_agnostic
       month = @date.month
       day = @date.day
-      @trends = Trend.on_month_day(month, day).order(date: :asc)
-      @birthdays = Person.kept.birthday_on(@date).order(name_kana: :asc)
+      @trends = Trend.on_month_day(month, day).select(:id, :date, :title, :units).order(date: :asc)
+      @birthdays = Person.kept.birthday_on(@date).select(*PERSON_CARD_COLUMNS).order(name_kana: :asc)
       @releases = Item.released_on_month_day(month, day).order(release_date: :asc)
     else
-      @trends = Trend.on_date(@date).order(created_at: :desc)
-      @birthdays = Person.kept.birthday_on(@date).where(status: %i[active hiatus]).order(name_kana: :asc)
+      @trends = Trend.on_date(@date).select(:id, :date, :title, :units).order(created_at: :desc)
+      @birthdays = Person.kept.birthday_on(@date).where(status: %i[active hiatus])
+                         .select(*PERSON_CARD_COLUMNS).order(name_kana: :asc)
       @releases = Item.released_on(@date).order(created_at: :desc)
     end
 
