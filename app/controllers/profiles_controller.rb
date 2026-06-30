@@ -74,7 +74,7 @@ class ProfilesController < ApplicationController
   end
 
   def load_unit_data
-    @history = @resource.unit_logs
+    @history = @resource.unit_logs.select(:id, :log_date, :phenomenon, :phenomenon_alias, :text)
 
     @trends = Trend.where('units @> ?', [{ unit_id: @resource.id }].to_json)
                    .order(date: :desc)
