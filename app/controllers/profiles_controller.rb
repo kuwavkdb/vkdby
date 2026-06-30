@@ -82,8 +82,14 @@ class ProfilesController < ApplicationController
 
     @snapshots = @resource.unit_snapshots
                           .active
-                          .includes(snapshot_people: :person)
+                          .includes(:snapshot_people)
                           .order(past: :asc, current: :desc, snapshot_index: :asc)
+
+    # MemberRowComponent（カレントスナップショットの表示）は person 関連が必要だが、
+    # 非カレントは member_names のテキストのみ参照するため、person の eager load を
+    # カレントスナップショットの snapshot_people に限定してメモリ消費を抑える。
+    current_snapshot_people = @snapshots.select(&:current?).flat_map(&:snapshot_people)
+    ActiveRecord::Associations::Preloader.new(records: current_snapshot_people, associations: :person).call
   end
 
   def load_same_kana_resources
