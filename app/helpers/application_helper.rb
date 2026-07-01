@@ -1,6 +1,37 @@
 # frozen_string_literal: true
 
 module ApplicationHelper
+  class ExternalAwareHtmlRenderer < Redcarpet::Render::HTML
+    def initialize(site_host:, **options)
+      @site_host = site_host
+      super(**options)
+    end
+
+    def link(link, title, content)
+      safe_link = CGI.escapeHTML(link.to_s)
+      title_attr = title.present? ? " title=\"#{CGI.escapeHTML(title)}\"" : ''
+      extra_attrs = external_url?(link) ? ' target="_blank" rel="noopener noreferrer"' : ''
+      "<a href=\"#{safe_link}\"#{title_attr}#{extra_attrs}>#{content}</a>"
+    end
+
+    def autolink(link, _link_type)
+      safe_link = CGI.escapeHTML(link.to_s)
+      extra_attrs = external_url?(link) ? ' target="_blank" rel="noopener noreferrer"' : ''
+      "<a href=\"#{safe_link}\"#{extra_attrs}>#{safe_link}</a>"
+    end
+
+    private
+
+    def external_url?(url)
+      return false if url.blank? || url.start_with?('/', '#', 'mailto:')
+      return true unless url.match?(%r{\Ahttps?://})
+
+      URI.parse(url).host != @site_host
+    rescue URI::InvalidURIError
+      true
+    end
+  end
+
   def pagy_tailwind_nav(pagy)
     html = +'<nav class="flex justify-center gap-1" aria-label="Pagination">'
 
@@ -50,10 +81,7 @@ module ApplicationHelper
 
     text = expand_include_macros(text, sectionable:)
 
-    renderer = Redcarpet::Render::HTML.new(
-      hard_wrap: true,
-      link_attributes: { target: '_blank', rel: 'noopener noreferrer' }
-    )
+    renderer = ExternalAwareHtmlRenderer.new(site_host: request.host, hard_wrap: true)
     Redcarpet::Markdown.new(renderer,
                             autolink: true,
                             tables: true,
@@ -63,6 +91,15 @@ module ApplicationHelper
   end
 
   private
+
+  def external_url?(url)
+    return false if url.blank? || url.start_with?('/', '#', 'mailto:')
+    return true unless url.match?(%r{\Ahttps?://})
+
+    URI.parse(url).host != request.host
+  rescue URI::InvalidURIError
+    true
+  end
 
   # {{include key,セクション名}}       → CustomPage (key指定)
   # {{include unit:ID,セクション名}}   → Unit (ID指定)

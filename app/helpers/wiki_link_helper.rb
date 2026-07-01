@@ -273,7 +273,9 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
       display = Regexp.last_match(1)
       url = Regexp.last_match(2)
       link_class = 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline'
-      placeholders[key] = link ? link_to(display, url, target: '_blank', rel: 'noopener noreferrer', class: link_class) : display
+      link_opts = { class: link_class }
+      link_opts.merge!(target: '_blank', rel: 'noopener noreferrer') if external_url?(url)
+      placeholders[key] = link ? link_to(display, url, **link_opts) : display
       key
     end
 
@@ -281,7 +283,9 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     if link
       protected_text = protected_text.gsub(URI::DEFAULT_PARSER.make_regexp(%w[http https])) do |match|
         link_class = 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline'
-        link_to(match, match, target: '_blank', rel: 'noopener noreferrer', class: link_class)
+        link_opts = { class: link_class }
+        link_opts.merge!(target: '_blank', rel: 'noopener noreferrer') if external_url?(match)
+        link_to(match, match, **link_opts)
       end
     end
 
