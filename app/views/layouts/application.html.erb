@@ -29,8 +29,14 @@
       .admin-dropdown:hover .admin-dropdown-menu {
         display: block;
       }
-      .adsense-container:has(ins[data-ad-status="unfilled"]) {
+      .adsense-container:has(ins[data-ad-status^="unfill"]) {
         display: none;
+      }
+      @media (max-width: 640px) {
+        .adsense-container--horizontal {
+          max-height: 120px;
+          overflow: hidden;
+        }
       }
     </style>
     <%= render 'layouts/google_analytics' %>

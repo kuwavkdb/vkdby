@@ -1,5 +1,5 @@
 <% if ENV['GOOGLE_ADSENSE_CLIENT_ID'].present? && !(defined?(logged_in?) && logged_in?) %>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 adsense-container">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 adsense-container adsense-container--horizontal">
     <ins class="adsbygoogle"
          style="display:block"
          data-ad-client="<%= ENV['GOOGLE_ADSENSE_CLIENT_ID'] %>"
