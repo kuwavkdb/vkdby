@@ -13,12 +13,15 @@
   </div>
   <%# Mobile: 320x50 fixed banner (sm未満) %>
   <div class="sm:hidden flex justify-center adsense-container">
+    <div style="width:320px;overflow:hidden;">
     <ins class="adsbygoogle"
          style="display:inline-block;width:320px;height:50px"
          data-ad-client="<%= ENV['GOOGLE_ADSENSE_CLIENT_ID'] %>"
-         data-ad-slot="2361507820"></ins>
+         data-ad-slot="2361507820"
+         data-full-width-responsive="false"></ins>
     <script>
       (adsbygoogle = window.adsbygoogle || []).push({});
     </script>
+    </div>
   </div>
 <% end %>
