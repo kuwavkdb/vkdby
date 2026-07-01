@@ -110,6 +110,15 @@ export default class extends Controller {
     }, 300)
   }
 
+  onSearchFocus(event) {
+    const input = event.currentTarget
+    const row = input.closest("[data-artist-rows-target='row']")
+    const query = input.value.trim()
+    if (query.length >= 2) {
+      this.performSearch(row, query)
+    }
+  }
+
   onKeydown(event) {
     const input = event.currentTarget
     const row = input.closest("[data-artist-rows-target='row']")
