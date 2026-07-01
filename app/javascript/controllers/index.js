@@ -7,6 +7,9 @@ import { application } from "controllers/application"
 import ArtistRowsController from "controllers/artist_rows_controller"
 application.register("artist-rows", ArtistRowsController)
 
+import ItemFormController from "controllers/item_form_controller"
+application.register("item-form", ItemFormController)
+
 import AutocompleteController from "controllers/autocomplete_controller"
 application.register("autocomplete", AutocompleteController)
 
