@@ -11,9 +11,16 @@ class ApplicationController < ActionController::Base
 
   include Pagy::Method
 
+  before_action :redirect_to_canonical_domain
   before_action :load_footer_page
 
   private
+
+  def redirect_to_canonical_domain
+    return unless request.host == "vkdby.onrender.com"
+
+    redirect_to request.url.sub("vkdby.onrender.com", "next.vkdb.jp"), status: :moved_permanently, allow_other_host: true
+  end
 
   def load_footer_page
     @footer_page = CustomPage.published.find_by(key: 'footer')
