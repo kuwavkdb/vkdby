@@ -17,9 +17,9 @@ class ApplicationController < ActionController::Base
   private
 
   def redirect_to_canonical_domain
-    return unless request.host == "vkdby.onrender.com"
+    return unless request.host == 'vkdby.onrender.com'
 
-    redirect_to request.url.sub("vkdby.onrender.com", "next.vkdb.jp"), status: :moved_permanently, allow_other_host: true
+    redirect_to request.url.sub('vkdby.onrender.com', 'next.vkdb.jp'), status: :moved_permanently, allow_other_host: true
   end
 
   def load_footer_page
