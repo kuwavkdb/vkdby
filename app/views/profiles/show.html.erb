@@ -36,8 +36,10 @@
         <div>
           <%= render BasicAttributesComponent.new(resource: @resource) %>
           <%= render NameHistoryComponent.new(resource: @resource) %>
-          <%= render LinksComponent.new(links: @links) %>
-          <%= render SpotifyEmbedComponent.new(links: @links) %>
+          <div class="hidden md:block">
+            <%= render LinksComponent.new(links: @links) %>
+            <%= render SpotifyEmbedComponent.new(links: @links) %>
+          </div>
           <div class="mt-4">
             <%= render 'layouts/google_adsense_square' %>
           </div>
@@ -168,6 +170,11 @@
       </div>
 
       <%= render SameKanaSuggestionComponent.new(resource: @resource, same_kana_resources: @same_kana_resources, same_kana_total: @same_kana_total) %>
+
+      <div class="md:hidden">
+        <%= render LinksComponent.new(links: @links) %>
+        <%= render SpotifyEmbedComponent.new(links: @links) %>
+      </div>
 
       <section id="update-log" class="mt-8">
         <details class="group"
