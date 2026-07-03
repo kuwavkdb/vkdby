@@ -41,12 +41,12 @@
               <%= link_to amazon_url, target: "_blank", rel: "noopener noreferrer" do %>
                 <img src="<%= img_src %>" srcset="<%= img_srcset %>" sizes="<%= img_sizes %>"
                      width="256" height="256"
-                     alt="<%= @item.title %>" class="w-64 h-64 sm:w-52 sm:h-52 object-cover shadow-md hover:opacity-90 transition-opacity">
+                     alt="<%= @item.title %>" class="w-64 h-64 sm:w-52 sm:h-52 object-scale-down shadow-md hover:opacity-90 transition-opacity">
               <% end %>
             <% else %>
               <img src="<%= img_src %>" srcset="<%= img_srcset %>" sizes="<%= img_sizes %>"
                    width="256" height="256"
-                   alt="<%= @item.title %>" class="w-64 h-64 sm:w-52 sm:h-52 object-cover shadow-md">
+                   alt="<%= @item.title %>" class="w-64 h-64 sm:w-52 sm:h-52 object-scale-down shadow-md">
             <% end %>
           </div>
         <% end %>

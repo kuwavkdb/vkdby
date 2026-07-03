@@ -14,7 +14,7 @@
         <%= link_to @item.link_url, target: "_blank", rel: "noopener noreferrer" do %>
           <img src="<%= img_src %>" srcset="<%= img_srcset %>" sizes="160px"
                width="160" height="160"
-               alt="<%= @item.title %>" class="w-40 h-40 object-cover hover:opacity-90 transition-opacity">
+               alt="<%= @item.title %>" class="w-40 h-40 object-scale-down hover:opacity-90 transition-opacity">
         <% end %>
         <%= link_to @item.link_url, target: "_blank", rel: "noopener noreferrer",
             style: "position:absolute; bottom:8px; left:50%; transform:translateX(-50%);",
@@ -27,7 +27,7 @@
       <% else %>
         <img src="<%= img_src %>" srcset="<%= img_srcset %>" sizes="160px"
              width="160" height="160"
-             alt="<%= @item.title %>" class="w-40 h-40 object-cover">
+             alt="<%= @item.title %>" class="w-40 h-40 object-scale-down">
       <% end %>
     </div>
   <% else %>
