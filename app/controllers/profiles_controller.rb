@@ -3,7 +3,17 @@
 class ProfilesController < ApplicationController
   def show
     @resource = Unit.kept.includes(:links).find_by(key: params[:key]) ||
-                Person.kept.includes(:links).find_by!(key: params[:key])
+                Person.kept.includes(:links).find_by(key: params[:key])
+
+    if @resource.nil?
+      discarded = Unit.with_discarded.find_by(key: params[:key], discarded_at: ..Time.current) ||
+                  Person.with_discarded.find_by(key: params[:key], discarded_at: ..Time.current)
+      if discarded&.destination_key.present?
+        redirect_to profile_path(discarded.destination_key), status: :moved_permanently
+        return
+      end
+      raise ActiveRecord::RecordNotFound
+    end
 
     if @resource.destination_key.present?
       redirect_to profile_path(@resource.destination_key), status: :moved_permanently
