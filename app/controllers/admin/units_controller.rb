@@ -108,7 +108,7 @@ module Admin
 
       @units = scope.limit(10).order(:name)
 
-      render json: @units.map { |u| { id: u.id, name: u.name, name_kana: u.name_kana, key: u.key } }
+      render json: @units.map { |u| { id: u.id, name: u.name, name_kana: u.name_kana, key: u.key, destination_key: u.destination_key } }
     end
 
     private
