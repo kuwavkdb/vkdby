@@ -65,7 +65,13 @@
           <%# Selected display (visible only when already selected) %>
           <div class="artist-selected-display flex-1 <%= search_mode ? 'items-center hidden' : 'flex items-center' %>">
             <span class="artist-chip inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
-              <span class="artist-name-display"><%= artist['name'] %></span>
+              <span class="artist-name-display">
+                <% if artist['key'].present? %>
+                  <a href="/profile/<%= artist['key'] %>" target="_blank" class="hover:underline"><%= artist['name'] %></a>
+                <% else %>
+                  <%= artist['name'] %>
+                <% end %>
+              </span>
               <button type="button"
                       class="hover:text-red-600"
                       data-action="click->artist-rows#clearSelection">×</button>

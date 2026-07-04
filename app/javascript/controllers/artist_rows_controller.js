@@ -244,7 +244,12 @@ export default class extends Controller {
     row.querySelector(".artist-key-hidden").value = key
 
     const selectedDisplay = row.querySelector(".artist-selected-display")
-    selectedDisplay.querySelector(".artist-name-display").textContent = name
+    const nameEl = selectedDisplay.querySelector(".artist-name-display")
+    if (key) {
+      nameEl.innerHTML = `<a href="/profile/${this.escapeHtml(key)}" target="_blank" class="hover:underline">${this.escapeHtml(name)}</a>`
+    } else {
+      nameEl.textContent = name
+    }
     selectedDisplay.querySelector(".artist-chip").className = mode === "person" ? PERSON_CHIP_CLASS : UNIT_CHIP_CLASS
     selectedDisplay.classList.remove("hidden")
     selectedDisplay.classList.add("flex")
