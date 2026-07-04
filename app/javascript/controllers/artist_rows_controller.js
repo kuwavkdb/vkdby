@@ -62,7 +62,14 @@ export default class extends Controller {
       btn.className = PERSON_BTN_CLASS
     }
 
+    const input = row.querySelector(".artist-search-input")
+    const previousQuery = row.querySelector(".artist-name-hidden").value || input.value
     this.clearRowSelection(row)
+
+    if (previousQuery.length >= 2) {
+      input.value = previousQuery
+      this.performSearch(row, previousQuery)
+    }
   }
 
   clearSelection(event) {
