@@ -9,10 +9,15 @@ module Admin
       @q = params[:q]
       @tag_index_id = params[:tag_index_id]
       @show_discarded = @tag_index_id.present? ? 'all' : params[:discarded]
-      scope = case @show_discarded
-              when 'only' then Person.discarded
-              when 'all'  then Person.with_discarded
-              else             Person.kept
+      @redirect_source = params[:redirect_source]
+      scope = if @redirect_source == 'only'
+                Person.with_discarded.where.not(destination_key: nil)
+              else
+                case @show_discarded
+                when 'only' then Person.discarded
+                when 'all'  then Person.with_discarded
+                else             Person.kept
+                end
               end
       if @q.present?
         scope = scope.where(
