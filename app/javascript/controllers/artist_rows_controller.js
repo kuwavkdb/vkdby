@@ -63,9 +63,13 @@ export default class extends Controller {
     }
 
     const input = row.querySelector(".artist-search-input")
-    const previousQuery = input.value
+    const previousQuery = row.querySelector(".artist-name-hidden").value || input.value
     this.clearRowSelection(row)
-    input.value = previousQuery
+
+    if (previousQuery.length >= 2) {
+      input.value = previousQuery
+      this.performSearch(row, previousQuery)
+    }
   }
 
   clearSelection(event) {
