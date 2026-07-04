@@ -90,7 +90,7 @@ module Admin
       @people = scope.limit(10).order(:name)
 
       render json: @people.map { |p|
-        { id: p.id, name: p.name.presence || p.key, name_kana: p.name_kana, key: p.key }
+        { id: p.id, name: p.name.presence || p.key, name_kana: p.name_kana, key: p.key, destination_key: p.destination_key }
       }
     end
 
@@ -102,7 +102,7 @@ module Admin
 
     def person_params
       params.require(:person).permit(
-        :name, :name_kana, :birthday, :birth_year, :blood, :hometown, :status, :old_history, :note,
+        :name, :name_kana, :birthday, :birth_year, :blood, :hometown, :status, :old_history, :destination_key, :note,
         parts: [],
         tag_index_ids: [],
         links_attributes: %i[id text url active _destroy],

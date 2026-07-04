@@ -5,7 +5,7 @@ class ProfilesController < ApplicationController
     @resource = Unit.kept.includes(:links).find_by(key: params[:key]) ||
                 Person.kept.includes(:links).find_by!(key: params[:key])
 
-    if @resource.is_a?(Unit) && @resource.destination_key.present?
+    if @resource.destination_key.present?
       redirect_to profile_path(@resource.destination_key), status: :moved_permanently
       return
     end

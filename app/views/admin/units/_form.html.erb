@@ -31,6 +31,12 @@
   </div>
 
   <div>
+    <%= form.label :destination_key, "転送先キー (destination_key)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= form.text_field :destination_key, placeholder: "統合先 Unit の key（旧URL転送用）", class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">設定すると <code>/profile/{key}</code> へのアクセスが <code>/profile/{destination_key}</code> へ 301 リダイレクトされます。Unit のマージ・統合時に使用。</p>
+  </div>
+
+  <div>
     <%= form.label :unit_type, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
     <div class="mt-2 space-x-4">
       <% Unit.unit_types.keys.each do |type| %>
