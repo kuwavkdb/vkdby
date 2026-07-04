@@ -60,6 +60,9 @@
               <% else %>
                 <span class="text-gray-400 italic">No Key</span>
               <% end %>
+              <% if person.destination_key.present? %>
+                <div class="text-xs text-amber-600 dark:text-amber-400 mt-0.5">→ <%= link_to person.destination_key, profile_path(person.destination_key), class: "hover:underline", target: "_blank" %></div>
+              <% end %>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
