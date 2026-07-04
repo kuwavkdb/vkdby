@@ -12,12 +12,15 @@ module Admin
       @tag_index_id = params[:tag_index_id]
       @show_discarded = @tag_index_id.present? ? 'all' : params[:discarded]
       @unit_type_filter = params[:unit_type]
+      @redirect_source = params[:redirect_source]
       scope = case @show_discarded
               when 'only' then Unit.discarded
               when 'all'  then Unit.with_discarded
               else             Unit.kept
               end
-      if @unit_type_filter == 'moved'
+      if @redirect_source == 'only'
+        scope = Unit.with_discarded.where.not(destination_key: nil)
+      elsif @unit_type_filter == 'moved'
         scope = scope.where(unit_type: :moved)
       elsif @show_discarded.blank? && @tag_index_id.blank?
         scope = scope.where.not(unit_type: :moved)
