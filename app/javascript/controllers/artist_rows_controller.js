@@ -63,7 +63,9 @@ export default class extends Controller {
     }
 
     const input = row.querySelector(".artist-search-input")
-    input.placeholder = newMode === "unit" ? "ユニット名で検索..." : "個人名で検索..."
+    const previousQuery = input.value
+    this.clearRowSelection(row)
+    input.value = previousQuery
   }
 
   clearSelection(event) {
