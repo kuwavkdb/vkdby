@@ -102,7 +102,7 @@ module Admin
 
     def person_params
       params.require(:person).permit(
-        :name, :name_kana, :birthday, :birth_year, :blood, :hometown, :status, :old_history, :note,
+        :name, :name_kana, :birthday, :birth_year, :blood, :hometown, :status, :old_history, :destination_key, :note,
         parts: [],
         tag_index_ids: [],
         links_attributes: %i[id text url active _destroy],
