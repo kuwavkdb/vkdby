@@ -246,7 +246,7 @@ export default class extends Controller {
     const selectedDisplay = row.querySelector(".artist-selected-display")
     const nameEl = selectedDisplay.querySelector(".artist-name-display")
     if (key) {
-      nameEl.innerHTML = `<a href="/profile/${this.escapeHtml(key)}" target="_blank" class="hover:underline">${this.escapeHtml(name)}</a>`
+      nameEl.innerHTML = `<a href="/${this.escapeHtml(key)}" target="_blank" class="hover:underline">${this.escapeHtml(name)}</a>`
     } else {
       nameEl.textContent = name
     }
