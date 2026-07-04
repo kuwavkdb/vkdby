@@ -1,6 +1,10 @@
 <div class="container mx-auto px-4 py-8">
   <div class="flex flex-col md:flex-row justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold mb-4 md:mb-0">People Management</h1>
+    <div class="flex items-center gap-3 mb-4 md:mb-0">
+      <h1 class="text-2xl font-bold">People管理</h1>
+      <%= link_to "Unit管理", admin_units_path,
+          class: "text-sm text-gray-500 hover:text-indigo-600 hover:underline" %>
+    </div>
     <div class="flex items-center space-x-4">
       <%= form_with url: admin_people_path, method: :get, local: true, class: "flex" do |f| %>
         <%= f.hidden_field :discarded, value: params[:discarded] %>
@@ -20,11 +24,13 @@
 
   <div class="flex space-x-2 mb-4">
     <%= link_to "通常", admin_people_path(q: params[:q]),
-        class: "px-3 py-1 rounded text-sm #{params[:discarded].blank? ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+        class: "px-3 py-1 rounded text-sm #{params[:discarded].blank? && params[:redirect_source].blank? ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
     <%= link_to "削除済みのみ", admin_people_path(q: params[:q], discarded: "only"),
         class: "px-3 py-1 rounded text-sm #{params[:discarded] == 'only' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
     <%= link_to "全件", admin_people_path(q: params[:q], discarded: "all"),
         class: "px-3 py-1 rounded text-sm #{params[:discarded] == 'all' ? 'bg-gray-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+    <%= link_to "リダイレクト元", admin_people_path(q: params[:q], redirect_source: "only"),
+        class: "px-3 py-1 rounded text-sm #{params[:redirect_source] == 'only' ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
   </div>
 
   <div class="mb-4">
