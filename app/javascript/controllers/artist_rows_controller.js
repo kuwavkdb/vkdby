@@ -62,7 +62,8 @@ export default class extends Controller {
       btn.className = PERSON_BTN_CLASS
     }
 
-    this.clearRowSelection(row)
+    const input = row.querySelector(".artist-search-input")
+    input.placeholder = newMode === "unit" ? "ユニット名で検索..." : "個人名で検索..."
   }
 
   clearSelection(event) {
