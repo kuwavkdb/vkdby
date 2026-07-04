@@ -90,7 +90,7 @@ module Admin
       @people = scope.limit(10).order(:name)
 
       render json: @people.map { |p|
-        { id: p.id, name: p.name.presence || p.key, name_kana: p.name_kana, key: p.key }
+        { id: p.id, name: p.name.presence || p.key, name_kana: p.name_kana, key: p.key, destination_key: p.destination_key }
       }
     end
 

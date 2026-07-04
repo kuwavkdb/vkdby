@@ -202,22 +202,44 @@ export default class extends Controller {
            data-active="false"
            data-action="click->artist-rows#selectItem"
            data-name="${this.escapeHtml(item.name)}"
-           data-key="${this.escapeHtml(item.key || "")}">
+           data-key="${this.escapeHtml(item.key || "")}"
+           data-destination-key="${this.escapeHtml(item.destination_key || "")}">
         <div class="font-medium text-gray-900 dark:text-gray-100">${this.escapeHtml(item.name)}</div>
         ${item.name_kana ? `<div class="text-xs text-gray-500 dark:text-gray-400">${this.escapeHtml(item.name_kana)}</div>` : ""}
+        ${item.destination_key ? `<div class="text-xs text-amber-600 dark:text-amber-400">→ ${this.escapeHtml(item.destination_key)}</div>` : ""}
       </div>
     `).join("")
 
     resultsEl.classList.remove("hidden")
   }
 
-  selectItem(event) {
+  async selectItem(event) {
     const resultItem = event.currentTarget
     const row = resultItem.closest("[data-artist-rows-target='row']")
-    const name = resultItem.dataset.name
-    const key = resultItem.dataset.key || ""
+    const destinationKey = resultItem.dataset.destinationKey || ""
     const mode = row.dataset.mode || "unit"
 
+    if (destinationKey) {
+      const url = mode === "unit" ? this.urlUnitsValue : this.urlPeopleValue
+      try {
+        const response = await fetch(`${url}?q=${encodeURIComponent(destinationKey)}`, {
+          headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" }
+        })
+        const data = await response.json()
+        const dest = data.find(item => item.key === destinationKey)
+        if (dest) {
+          this.applySelection(row, dest.name, dest.key, mode)
+          return
+        }
+      } catch (e) {
+        console.error("Destination key resolution failed", e)
+      }
+    }
+
+    this.applySelection(row, resultItem.dataset.name, resultItem.dataset.key || "", mode)
+  }
+
+  applySelection(row, name, key, mode) {
     row.querySelector(".artist-name-hidden").value = name
     row.querySelector(".artist-key-hidden").value = key
 
