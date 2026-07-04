@@ -79,7 +79,7 @@
                 <%= link_to "Logs", admin_unit_unit_logs_path(unit), class: "text-indigo-600 hover:text-indigo-900 mr-4" %>
                 <%= link_to "Edit", edit_admin_unit_path(unit), class: "text-indigo-600 hover:text-indigo-900 mr-4" %>
                 <% if current_user.super_operator_or_above? %>
-                  <%= button_to "Delete", admin_unit_path(unit), method: :delete,
+                  <%= button_to "論理削除", admin_unit_path(unit), method: :delete,
                     form_class: "inline",
                     onclick: "return confirm('Are you sure?')",
                     class: "text-red-600 hover:text-red-900 bg-transparent border-0 cursor-pointer p-0" %>
