@@ -2,7 +2,7 @@
 <% content_for :head do %>
   <style>.page-nav-scroll::-webkit-scrollbar { display: none; }</style>
 <% end %>
-<div class="flex justify-center items-center min-h-screen p-0 md:p-8">
+<div class="flex flex-col justify-center items-center min-h-screen p-0 md:p-8">
   <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl md:overflow-hidden w-full min-w-0 max-w-5xl animate-in slide-in-from-bottom-5 duration-700" data-google-adsense-noads>
     <%= render ProfileHeaderComponent.new(resource: @resource) %>
 
