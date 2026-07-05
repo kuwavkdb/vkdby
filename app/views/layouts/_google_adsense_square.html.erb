@@ -1,11 +1,9 @@
 <% if ENV['GOOGLE_ADSENSE_CLIENT_ID'].present? && !(defined?(logged_in?) && logged_in?) %>
   <div class="adsense-container">
     <ins class="adsbygoogle"
-         style="display:block"
+         style="display:inline-block;width:300px;height:250px"
          data-ad-client="<%= ENV['GOOGLE_ADSENSE_CLIENT_ID'] %>"
-         data-ad-slot="490467213"
-         data-ad-format="auto"
-         data-full-width-responsive="false"></ins>
+         data-ad-slot="490467213"></ins>
     <script>
       (adsbygoogle = window.adsbygoogle || []).push({});
     </script>
