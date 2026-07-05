@@ -1,12 +1,12 @@
 <% if ENV['GOOGLE_ADSENSE_CLIENT_ID'].present? && !(defined?(logged_in?) && logged_in?) %>
   <%# Desktop: horizontal banner (sm以上) %>
-  <div class="hidden sm:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 adsense-container adsense-container--horizontal">
+  <div class="hidden sm:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 adsense-container adsense-container--horizontal" style="overflow: hidden">
     <ins class="adsbygoogle"
          style="display:block"
          data-ad-client="<%= ENV['GOOGLE_ADSENSE_CLIENT_ID'] %>"
          data-ad-slot="5770025949"
          data-ad-format="horizontal"
-         data-full-width-responsive="true"></ins>
+         data-full-width-responsive="false"></ins>
     <script>
       (adsbygoogle = window.adsbygoogle || []).push({});
     </script>
