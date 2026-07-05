@@ -8,7 +8,9 @@
          data-ad-format="horizontal"
          data-full-width-responsive="false"></ins>
     <script>
-      (adsbygoogle = window.adsbygoogle || []).push({});
+      if (window.innerWidth >= 640) {
+        (adsbygoogle = window.adsbygoogle || []).push({});
+      }
     </script>
   </div>
   <%# Mobile: full-width fixed-height banner (sm未満) %>
@@ -19,7 +21,9 @@
          data-ad-slot="2361507820"
          data-full-width-responsive="false"></ins>
     <script>
-      (adsbygoogle = window.adsbygoogle || []).push({});
+      if (window.innerWidth < 640) {
+        (adsbygoogle = window.adsbygoogle || []).push({});
+      }
     </script>
   </div>
 <% end %>
