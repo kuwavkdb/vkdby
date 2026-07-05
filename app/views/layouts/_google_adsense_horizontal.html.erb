@@ -1,5 +1,4 @@
 <% if ENV['GOOGLE_ADSENSE_CLIENT_ID'].present? && !(defined?(logged_in?) && logged_in?) %>
-  <%# Desktop: horizontal banner (sm以上) %>
   <div class="hidden sm:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 adsense-container adsense-container--horizontal" style="overflow: hidden">
     <ins class="adsbygoogle"
          style="display:block"
@@ -8,22 +7,7 @@
          data-ad-format="horizontal"
          data-full-width-responsive="false"></ins>
     <script>
-      if (window.innerWidth >= 640) {
-        (adsbygoogle = window.adsbygoogle || []).push({});
-      }
-    </script>
-  </div>
-  <%# Mobile: full-width fixed-height banner (sm未満) %>
-  <div class="sm:hidden adsense-container adsense-container--horizontal">
-    <ins class="adsbygoogle"
-         style="display:inline-block;width:100%;height:50px"
-         data-ad-client="<%= ENV['GOOGLE_ADSENSE_CLIENT_ID'] %>"
-         data-ad-slot="2361507820"
-         data-full-width-responsive="false"></ins>
-    <script>
-      if (window.innerWidth < 640) {
-        (adsbygoogle = window.adsbygoogle || []).push({});
-      }
+      (adsbygoogle = window.adsbygoogle || []).push({});
     </script>
   </div>
 <% end %>
