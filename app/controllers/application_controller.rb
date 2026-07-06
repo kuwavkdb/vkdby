@@ -30,7 +30,7 @@ class ApplicationController < ActionController::Base
   def require_login
     return if logged_in?
 
-    store_return_to(request.fullpath) if request.get?
+    store_return_to(request.fullpath) if request.get? || request.head?
     redirect_to login_path, alert: 'ログインしてください'
   end
 
