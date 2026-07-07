@@ -12,15 +12,6 @@ class LinksComponentPreview < ViewComponent::Preview
     render(LinksComponent.new(links: links))
   end
 
-  def with_youtube_embed
-    links = [
-      mock_link('Official Site', 'https://example.com'),
-      mock_link('YouTube Music Video', 'https://youtube.com/watch?v=dQw4w9WgXcQ'),
-      mock_link('Twitter', 'https://twitter.com/example')
-    ]
-    render(LinksComponent.new(links: links))
-  end
-
   def no_links
     render(LinksComponent.new(links: []))
   end

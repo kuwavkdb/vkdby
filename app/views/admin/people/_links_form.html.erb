@@ -2,8 +2,37 @@
   <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100 mb-4">Official Links</h3>
   
   <%= form_with(model: [:admin, person], class: "space-y-6") do |form| %>
-    <div class="space-y-3">
-      <%= form.fields_for :links do |link_form| %>
+    <div class="space-y-3"
+         data-controller="sortable"
+         data-sortable-url-value="<%= reorder_admin_links_path(linkable_type: person.class.name, linkable_id: person.id) %>">
+      <%= form.fields_for :links, person.links.select(&:persisted?).sort_by { |l| [l.sort_order || Float::INFINITY, l.id] } do |link_form| %>
+        <div data-id="<%= link_form.object.id %>" class="flex flex-col gap-2 items-start bg-gray-50 dark:bg-gray-800 p-3 rounded-md border border-gray-200 dark:border-gray-700">
+          <div class="w-full flex gap-2 items-center">
+            <span class="drag-handle cursor-move text-gray-400 shrink-0" aria-hidden="true">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </span>
+            <span class="sr-only">並び替え</span>
+            <%= link_form.text_field :text, placeholder: "Title", class: "block w-40 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-1.5 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+            <%= link_form.text_field :url, placeholder: "URL (https://...)", class: "block flex-1 min-w-0 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-1.5 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="flex items-center">
+              <%= link_form.check_box :active, class: "rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600" %>
+              <%= link_form.label :active, class: "ml-2 text-xs text-gray-600 dark:text-gray-400" %>
+            </div>
+            <div class="flex items-center">
+              <%= link_form.check_box :_destroy, class: "rounded border-gray-300 text-red-600 shadow-sm focus:border-red-500 focus:ring-red-500 dark:bg-gray-700 dark:border-gray-600" %>
+              <%= link_form.label :_destroy, "Delete", class: "ml-2 text-xs text-red-600 font-medium" %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="space-y-3 mt-3">
+      <%= form.fields_for :links, person.links.reject(&:persisted?) do |link_form| %>
         <div class="flex flex-col gap-2 items-start bg-gray-50 dark:bg-gray-800 p-3 rounded-md border border-gray-200 dark:border-gray-700">
           <div class="w-full flex gap-2">
             <%= link_form.text_field :text, placeholder: "Title", class: "block w-40 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-1.5 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
@@ -14,12 +43,6 @@
               <%= link_form.check_box :active, class: "rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600" %>
               <%= link_form.label :active, class: "ml-2 text-xs text-gray-600 dark:text-gray-400" %>
             </div>
-            <% if link_form.object.persisted? %>
-              <div class="flex items-center">
-                <%= link_form.check_box :_destroy, class: "rounded border-gray-300 text-red-600 shadow-sm focus:border-red-500 focus:ring-red-500 dark:bg-gray-700 dark:border-gray-600" %>
-                <%= link_form.label :_destroy, "Delete", class: "ml-2 text-xs text-red-600 font-medium" %>
-              </div>
-            <% end %>
           </div>
         </div>
       <% end %>

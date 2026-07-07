@@ -45,3 +45,6 @@ application.register("timeline", TimelineController)
 
 import TimelineSearchController from "controllers/timeline_search_controller"
 application.register("timeline-search", TimelineSearchController)
+
+import YoutubeCarouselController from "controllers/youtube_carousel_controller"
+application.register("youtube-carousel", YoutubeCarouselController)

@@ -77,6 +77,7 @@ Rails.application.routes.draw do
       end
     end
 
+    resources(:links, only: []) { collection { patch :reorder } }
     resources :images, only: %i[index show destroy]
 
     resources :update_logs, only: [] do
