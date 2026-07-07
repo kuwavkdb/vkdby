@@ -3,12 +3,21 @@
 class YoutubeEmbedComponentPreview < ViewComponent::Preview
   layout 'component_preview'
   def default
-    link = mock_link('https://youtube.com/watch?v=dQw4w9WgXcQ')
-    render(YoutubeEmbedComponent.new(link: link))
+    links = [mock_link('https://youtube.com/watch?v=dQw4w9WgXcQ')]
+    render(YoutubeEmbedComponent.new(links: links))
   end
 
-  def no_link
-    render(YoutubeEmbedComponent.new(link: nil))
+  def multiple_videos
+    links = [
+      mock_link('https://youtube.com/watch?v=dQw4w9WgXcQ'),
+      mock_link('https://youtu.be/XjFviZsK9Yk'),
+      mock_link('https://youtu.be/ze-cHnIJohY')
+    ]
+    render(YoutubeEmbedComponent.new(links: links))
+  end
+
+  def no_links
+    render(YoutubeEmbedComponent.new(links: []))
   end
 
   private

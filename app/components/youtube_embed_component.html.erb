@@ -1,5 +1,24 @@
 <% if render? %>
-  <div class="relative pb-[56.25%] h-0 overflow-hidden rounded-2xl shadow-lg ring-1 ring-slate-200 dark:ring-slate-700">
-    <iframe src="https://www.youtube.com/embed/<%= youtube_video_id %>" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="absolute top-0 left-0 w-full h-full border-0"></iframe>
+  <div data-controller="youtube-carousel">
+    <% @youtube_links.each_with_index do |link, i| %>
+      <div data-youtube-carousel-target="slide" class="<%= "hidden" unless i.zero? %> relative pb-[56.25%] h-0 overflow-hidden rounded-2xl shadow-lg ring-1 ring-slate-200 dark:ring-slate-700">
+        <iframe src="https://www.youtube.com/embed/<%= link.youtube_video_id %>" title="YouTube video <%= i + 1 %>" loading="<%= i.zero? ? "eager" : "lazy" %>" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="absolute top-0 left-0 w-full h-full border-0"></iframe>
+      </div>
+    <% end %>
+
+    <% if @youtube_links.size > 1 %>
+      <div class="flex justify-center gap-2 mt-3" role="group" aria-label="動画を選択">
+        <% @youtube_links.each_with_index do |_, i| %>
+          <button type="button"
+                  data-youtube-carousel-target="dot"
+                  data-action="youtube-carousel#select"
+                  data-youtube-carousel-index-param="<%= i %>"
+                  class="w-2.5 h-2.5 rounded-full cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-unit <%= i.zero? ? "bg-slate-800 dark:bg-slate-200" : "bg-slate-300 dark:bg-slate-600" %>"
+                  aria-label="動画<%= i + 1 %>を表示"
+                  aria-current="<%= i.zero? ? "true" : "false" %>">
+          </button>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 <% end %>

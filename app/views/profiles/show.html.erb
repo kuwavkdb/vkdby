@@ -36,7 +36,7 @@
 
     <div class="p-5 md:p-8">
       <div class="md:hidden mb-4">
-        <%= render YoutubeEmbedComponent.new(link: @youtube_embed_link) %>
+        <%= render YoutubeEmbedComponent.new(links: @youtube_links) %>
       </div>
 
       <div class="grid gap-8 grid-cols-1 md:grid-cols-[350px_1fr] items-start">
@@ -55,7 +55,7 @@
         <div class="column-right">
           <% if @resource.is_a?(Unit) %>
             <div class="hidden md:block mb-4">
-              <%= render YoutubeEmbedComponent.new(link: @youtube_embed_link) %>
+              <%= render YoutubeEmbedComponent.new(links: @youtube_links) %>
             </div>
 
             <div id="members">
@@ -135,7 +135,7 @@
 
           <% if @resource.is_a?(Person) %>
             <div class="hidden md:block mt-8">
-              <%= render YoutubeEmbedComponent.new(link: @youtube_embed_link) %>
+              <%= render YoutubeEmbedComponent.new(links: @youtube_links) %>
             </div>
           <% end %>
 

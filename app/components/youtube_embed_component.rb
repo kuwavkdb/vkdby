@@ -1,16 +1,12 @@
 # frozen_string_literal: true
 
 class YoutubeEmbedComponent < ViewComponent::Base
-  def initialize(link:)
+  def initialize(links:)
     super()
-    @link = link
+    @youtube_links = links
   end
 
   def render?
-    @link&.youtube_video_id.present?
-  end
-
-  def youtube_video_id
-    @link.youtube_video_id
+    @youtube_links.present?
   end
 end
