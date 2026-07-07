@@ -35,12 +35,16 @@
     </nav>
 
     <div class="p-5 md:p-8">
+      <div class="md:hidden mb-4">
+        <%= render YoutubeEmbedComponent.new(link: @youtube_embed_link) %>
+      </div>
+
       <div class="grid gap-8 grid-cols-1 md:grid-cols-[350px_1fr] items-start">
         <div>
           <%= render BasicAttributesComponent.new(resource: @resource) %>
           <%= render NameHistoryComponent.new(resource: @resource) %>
           <div class="hidden md:block">
-            <%= render LinksComponent.new(links: @links) %>
+            <%= render LinksComponent.new(links: @links_for_list) %>
             <%= render SpotifyEmbedComponent.new(links: @links) %>
           </div>
           <div class="mt-4">
@@ -50,6 +54,10 @@
 
         <div class="column-right">
           <% if @resource.is_a?(Unit) %>
+            <div class="hidden md:block mb-4">
+              <%= render YoutubeEmbedComponent.new(link: @youtube_embed_link) %>
+            </div>
+
             <div id="members">
               <%= render UnitSnapshotsComponent.new(snapshots: @snapshots, unit: @resource, admin: defined?(logged_in?) && logged_in?) %>
             </div>
@@ -125,6 +133,12 @@
             </section>
           <% end %>
 
+          <% if @resource.is_a?(Person) %>
+            <div class="hidden md:block mt-8">
+              <%= render YoutubeEmbedComponent.new(link: @youtube_embed_link) %>
+            </div>
+          <% end %>
+
           <% if @resource.is_a?(Person) && @trends.present? %>
             <div id="trends">
               <%= render UnitTrendsComponent.new(trends: @trends) %>
@@ -175,7 +189,7 @@
       <%= render SameKanaSuggestionComponent.new(resource: @resource, same_kana_resources: @same_kana_resources, same_kana_total: @same_kana_total) %>
 
       <div id="links" class="md:hidden">
-        <%= render LinksComponent.new(links: @links) %>
+        <%= render LinksComponent.new(links: @links_for_list) %>
         <%= render SpotifyEmbedComponent.new(links: @links) %>
       </div>
 

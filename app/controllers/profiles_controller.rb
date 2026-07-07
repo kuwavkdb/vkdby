@@ -15,6 +15,8 @@ class ProfilesController < ApplicationController
     raise ActiveRecord::RecordNotFound if @resource.discarded?
 
     @links = @resource.links.where(active: true).order(:sort_order)
+    @youtube_embed_link = @links.reverse.find { |l| l.youtube_video_id.present? }
+    @links_for_list = @links - [@youtube_embed_link].compact
 
     @resource.is_a?(Person) ? load_person_data : load_unit_data
     load_items
