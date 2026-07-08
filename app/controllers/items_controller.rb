@@ -43,12 +43,12 @@ class ItemsController < ApplicationController
 
   def filter_by_artist(scope)
     if params[:old_key].present?
-      @artist = Unit.find_by(old_key: params[:old_key]) || Person.find_by(old_key: params[:old_key])
+      @artist = Unit.kept.find_by(old_key: params[:old_key]) || Person.kept.find_by(old_key: params[:old_key])
       scopes = [Item.by_artist_old_key(params[:old_key])]
       scopes << Item.by_artist_key(@artist.key) if @artist&.key.present?
       scope.merge(scopes.reduce(:or))
     elsif params[:key].present?
-      @artist = Unit.find_by(key: params[:key]) || Person.find_by(key: params[:key])
+      @artist = Unit.kept.find_by(key: params[:key]) || Person.kept.find_by(key: params[:key])
       scopes = [Item.by_artist_key(params[:key])]
       scopes << Item.by_artist_old_key(@artist.old_key) if @artist&.old_key.present?
       scope.merge(scopes.reduce(:or))

@@ -26,7 +26,7 @@ class TrendsController < ApplicationController
     @pagy, @trends = pagy(scope, limit: 20)
 
     all_unit_ids = @trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
-    @related_units = Unit.where(id: all_unit_ids).index_by(&:id)
+    @related_units = Unit.kept.where(id: all_unit_ids).index_by(&:id)
   end
 
   def show
@@ -34,10 +34,10 @@ class TrendsController < ApplicationController
     return unless @trend.units.present?
 
     unit_ids = @trend.units.map { |u| u['unit_id'] }
-    @related_units = Unit.where(id: unit_ids).index_by(&:id)
+    @related_units = Unit.kept.where(id: unit_ids).index_by(&:id)
 
     person_ids = (@trend.people || []).map { |p| p['person_id'] }.compact
-    @related_people = Person.where(id: person_ids).index_by(&:id) if person_ids.any?
+    @related_people = Person.kept.where(id: person_ids).index_by(&:id) if person_ids.any?
 
     first_unit_id = @trend.units.first&.dig('unit_id')
     @unit = @related_units[first_unit_id]
