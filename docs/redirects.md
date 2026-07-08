@@ -6,11 +6,12 @@
 
 | 旧URLパターン | 新URLパターン | ステータス | 担当 |
 |---|---|---|---|
-| `/{old_key}.html` | `/profile/{key}` | 301 | `LegacyRedirectsController#show` |
+| `/{old_key}.html` | `/{key}` | 301 | `LegacyRedirectsController#show` |
 | `/NEWS_{id}` | `/trends/{id}` | 301 | `LegacyRedirectsController#news_redirect` |
 | `/ITEM_{asin}` | `/items/{id}` | 301 | `LegacyRedirectsController#item_redirect` |
-| `/profile/{unit_key}` (destination_key あり) | `/profile/{destination_key}` | 301 | `ProfilesController#show` |
-| `/profile/{person_key}` (destination_key あり) | `/profile/{destination_key}` | 301 | `ProfilesController#show` |
+| `/{unit_key}` (destination_key あり) | `/{destination_key}` | 301 | `ProfilesController#show` |
+| `/{person_key}` (destination_key あり) | `/{destination_key}` | 301 | `ProfilesController#show` |
+| `/{prev_key}`（スタブレコード経由） | `/{key}`（現在のキー） | 301 | `ProfilesController#show` |
 
 ---
 
@@ -19,7 +20,7 @@
 ### 1. `.html` 拡張子つきURL → プロフィールページ
 
 **旧URL形式:** `/{old_key}.html`  
-**新URL形式:** `/profile/{key}`
+**新URL形式:** `/{key}`
 
 旧システムで使われていた `.html` 拡張子付きURLを、現行プロフィールページへ転送する。
 
@@ -73,8 +74,8 @@
 
 ### 4. `destination_key` によるプロフィール転送（Unit / Person 共通）
 
-**旧URL形式:** `/profile/{key}`  
-**新URL形式:** `/profile/{destination_key}`
+**旧URL形式:** `/{key}`  
+**新URL形式:** `/{destination_key}`
 
 Unit または Person のマージ・統合時に使用。`destination_key` が設定されている場合、統合先のプロフィールページへ転送する。Unit・Person どちらにも対応。
 
@@ -84,6 +85,23 @@ Unit または Person のマージ・統合時に使用。`destination_key` が�
 - [app/controllers/profiles_controller.rb:8](../app/controllers/profiles_controller.rb) — 処理実装
 - `units.destination_key` カラム（migration: `20260328031736_add_destination_key_to_units.rb`）
 - `people.destination_key` カラム（migration: `20260704033215_add_destination_key_to_people.rb`）
+
+---
+
+### 5. キー変更後のスタブレコード経由リダイレクト（Unit / Person 共通）
+
+**旧URL形式:** `/{prev_key}`（変更前のキー）  
+**新URL形式:** `/{key}`（変更後の現在のキー）
+
+管理画面でのキー変更機能（issue #57）に対応する処理。管理者が Unit / Person の `key` を変更すると、`key: prev_key` / `destination_key: 変更後のkey` を持つ discard 済みのスタブレコードが自動生成される。上記4番の `destination_key` 機構と同じコードパスで処理されるため、`ProfilesController#show` 側の実装変更は不要。
+
+**条件:** discard 済みのスタブレコードが該当 `key` で見つかり、かつ `destination_key` が設定されている場合に発動
+
+**複数回リネームされた場合の挙動:** A→B→C とリネームすると、`/A` へのアクセスは `/B` を経由して `/C` まで2ホップでリダイレクトされる（スタブレコードは常に「直前のキー→リネーム時点の新キー」のみを記録するため）
+
+**関連ファイル:**
+- [app/controllers/profiles_controller.rb:8](../app/controllers/profiles_controller.rb) — 処理実装（4番と共通）
+- 設計・実装詳細: [docs/admin/key_change.md](admin/key_change.md)
 
 ---
 
