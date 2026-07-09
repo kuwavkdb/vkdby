@@ -1,0 +1,21 @@
+<%# locals: resource (Person or Unit), change_key_path %>
+<% if current_user&.admin? %>
+  <div class="mt-4" data-controller="toggle" data-toggle-open-value="false">
+    <button type="button" data-action="toggle#toggle" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300">
+      キー変更
+    </button>
+    <div data-toggle-target="content" class="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+      <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">
+        現在のキー: <code class="font-mono"><%= resource.key %></code><br>
+        キーを変更すると、旧キーへのアクセスは新しいキーへ自動的にリダイレクトされます。
+      </p>
+      <%= form_with url: change_key_path, method: :patch, class: "flex gap-2 items-center" do |ck_form| %>
+        <%= ck_form.text_field :new_key, placeholder: "新しいキー", required: true,
+              class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+        <%= ck_form.submit "変更",
+              onclick: "return confirm('新しいキー「' + this.form.new_key.value + '」に変更しますか？この操作は元に戻せません。');",
+              class: "px-3 py-1.5 text-sm text-white bg-indigo-600 hover:bg-indigo-700 rounded cursor-pointer border-0 whitespace-nowrap" %>
+      <% end %>
+    </div>
+  </div>
+<% end %>
