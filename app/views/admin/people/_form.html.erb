@@ -76,10 +76,14 @@
       <div class="grid grid-cols-2 gap-4">
         <div>
           <%= form.label :key, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-          <div class="mt-1 block w-full rounded-md bg-gray-100 border-gray-300 px-3 py-2 text-base text-gray-600 dark:bg-gray-900 dark:text-gray-400">
-            <%= person.key || "(not set)" %>
-          </div>
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Key cannot be changed</p>
+          <% if person.new_record? %>
+            <%= form.text_field :key, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+          <% else %>
+            <div class="mt-1 block w-full rounded-md bg-gray-100 border-gray-300 px-3 py-2 text-base text-gray-600 dark:bg-gray-900 dark:text-gray-400">
+              <%= person.key || "(not set)" %>
+            </div>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Key cannot be changed</p>
+          <% end %>
         </div>
         <div>
           <%= form.label :old_key, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>

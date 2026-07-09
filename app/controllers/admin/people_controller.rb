@@ -61,7 +61,8 @@ module Admin
     end
 
     def update
-      if @person.update(person_params)
+      # key はキー変更専用の操作でのみ変更可能(issue #57)。通常の update では受け付けない。
+      if @person.update(person_params.except(:key))
         record_update_log(@person, action: 'update')
         redirect_to edit_admin_person_path(@person), notice: 'Person updated successfully.'
       else
@@ -107,7 +108,8 @@ module Admin
 
     def person_params
       params.require(:person).permit(
-        :name, :name_kana, :birthday, :birth_year, :blood, :hometown, :status, :old_history, :destination_key, :note,
+        :name, :key, :name_kana, :birthday, :birth_year, :blood, :hometown, :status, :old_history, :destination_key,
+        :note,
         parts: [],
         tag_index_ids: [],
         links_attributes: %i[id text url active _destroy],
