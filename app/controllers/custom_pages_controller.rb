@@ -45,7 +45,7 @@ class CustomPagesController < ApplicationController
 
     unit_ids   = @weekly_trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
     person_ids = @weekly_trends.flat_map { |t| t.people&.map { |p| p['person_id'] } }.compact.uniq
-    @weekly_trend_units  = Unit.where(id: unit_ids).index_by(&:id)
-    @weekly_trend_people = Person.where(id: person_ids).index_by(&:id)
+    @weekly_trend_units  = Unit.kept.where(id: unit_ids).index_by(&:id)
+    @weekly_trend_people = Person.kept.where(id: person_ids).index_by(&:id)
   end
 end
