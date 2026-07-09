@@ -23,5 +23,6 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_not_includes response.body, 'Discarded Sidebar Unit'
     assert_not_includes response.body, 'Discarded Sidebar Person'
+    assert_no_match(%r{<span class="inline-block[^"]*">\s*</span>}, response.body)
   end
 end
