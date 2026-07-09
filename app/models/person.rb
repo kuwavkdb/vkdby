@@ -36,6 +36,7 @@ require 'discard'
 class Person < ApplicationRecord
   include Discard::Model
   include WikiParser
+  include KeyChangeable
   has_many :links, as: :linkable, dependent: :destroy
   has_many :wiki_page_imports, as: :import_target
   has_many :unit_people
@@ -157,9 +158,15 @@ class Person < ApplicationRecord
   end
 
   def key_immutable
+    return if key_change_in_progress
     return unless key_changed? && key_was.present?
 
     errors.add(:key, 'cannot be changed once set')
+  end
+
+  def after_key_change(prev_key, new_key)
+    SnapshotPerson.where(person_key: prev_key).update_all(person_key: new_key)
+    UnitPerson.where(person_key: prev_key).update_all(person_key: new_key)
   end
 
   def auto_link_snapshot_people

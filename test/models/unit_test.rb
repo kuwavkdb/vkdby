@@ -49,4 +49,28 @@ class UnitTest < ActiveSupport::TestCase
     assert unit.update(name: 'Renamed Unit')
     assert_equal 'Renamed Unit', unit.reload.name
   end
+
+  test 'change_key! updates the key and creates a discarded redirect stub' do
+    unit = Unit.create!(name: 'Rename Target Unit', key: 'unit-key-change-before', status: :active)
+
+    unit.change_key!('unit-key-change-after')
+
+    assert_equal 'unit-key-change-after', unit.reload.key
+
+    stub = Unit.discarded.find_by(key: 'unit-key-change-before')
+    assert stub.present?
+    assert stub.discarded?
+    assert_equal 'unit-key-change-after', stub.destination_key
+    assert_nil stub.old_key
+  end
+
+  test 'change_key! rewrites items.artists referencing the previous key' do
+    unit = Unit.create!(name: 'Artist Unit', key: 'unit-artist-key-before', status: :active)
+    item = Item.create!(title: 'Artist Item', release_date: Date.current, link_url: 'https://example.com/unit-artist-item',
+                        artists: [{ 'name' => 'Artist Unit', 'key' => 'unit-artist-key-before' }])
+
+    unit.change_key!('unit-artist-key-after')
+
+    assert_equal 'unit-artist-key-after', item.reload.artists.first['key']
+  end
 end
