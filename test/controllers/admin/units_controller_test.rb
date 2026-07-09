@@ -29,5 +29,41 @@ module Admin
 
       assert_equal 'brand-new-unit-key', Unit.last.key
     end
+
+    test 'change_key requires admin role' do
+      patch change_key_admin_unit_path(@unit), params: { new_key: 'attempted-new-key' }
+
+      assert_redirected_to root_path
+      assert_equal 'existing-unit-controller-test', @unit.reload.key
+    end
+
+    test 'change_key updates the key and creates a redirect stub when admin' do
+      login_as_admin
+
+      patch change_key_admin_unit_path(@unit), params: { new_key: 'new-unit-key-via-endpoint' }
+
+      assert_redirected_to edit_admin_unit_path(@unit)
+      assert_equal 'new-unit-key-via-endpoint', @unit.reload.key
+      stub = Unit.discarded.find_by(key: 'existing-unit-controller-test')
+      assert stub.present?
+      assert_equal 'new-unit-key-via-endpoint', stub.destination_key
+    end
+
+    test 'change_key shows an error when the new key is already taken' do
+      login_as_admin
+      Unit.create!(name: 'Other Unit', key: 'already-taken-key', status: :active)
+
+      patch change_key_admin_unit_path(@unit), params: { new_key: 'already-taken-key' }
+
+      assert_redirected_to edit_admin_unit_path(@unit)
+      assert_equal 'existing-unit-controller-test', @unit.reload.key
+    end
+
+    private
+
+    def login_as_admin
+      admin = User.create!(email: 'admin-key-change-test@example.com', name: 'Admin', password: 'password', role: :admin)
+      post login_path, params: { email: admin.email, password: 'password' }
+    end
   end
 end
