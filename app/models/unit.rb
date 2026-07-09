@@ -31,6 +31,7 @@ require 'discard'
 
 class Unit < ApplicationRecord
   include Discard::Model
+  include KeyChangeable
   has_many :links, as: :linkable, dependent: :destroy
   accepts_nested_attributes_for :links, allow_destroy: true, reject_if: proc { |attrs| attrs['url'].blank? }
   has_many :wiki_page_imports, as: :import_target
@@ -108,6 +109,7 @@ class Unit < ApplicationRecord
   private
 
   def key_immutable
+    return if key_change_in_progress
     return unless key_changed? && key_was.present?
 
     errors.add(:key, 'cannot be changed once set')
