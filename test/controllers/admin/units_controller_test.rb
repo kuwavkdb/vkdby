@@ -62,6 +62,22 @@ module Admin
       assert_equal 'existing-unit-controller-test', @unit.reload.key
     end
 
+    test 'edit shows the change key form for admin' do
+      login_as_admin
+
+      get edit_admin_unit_path(@unit)
+
+      assert_response :success
+      assert_includes response.body, 'キー変更'
+    end
+
+    test 'edit does not show the change key form for non-admin' do
+      get edit_admin_unit_path(@unit)
+
+      assert_response :success
+      assert_not_includes response.body, 'キー変更'
+    end
+
     private
 
     def login_as_admin

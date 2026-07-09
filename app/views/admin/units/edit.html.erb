@@ -9,6 +9,7 @@
         <div class="bg-white shadow rounded-lg p-6 mb-6">
           <%= render "form", unit: @unit %>
         </div>
+        <%= render "admin/shared/change_key_form", change_key_path: change_key_admin_unit_path(@unit), form_id: "change_key_form" %>
       </div>
       
       <div class="md:col-span-2">
