@@ -29,6 +29,7 @@
         <%= unit.key || "(not set)" %>
       </div>
       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Key cannot be changed</p>
+      <%= render "admin/shared/change_key_trigger", resource: unit, form_id: "change_key_form" %>
     <% end %>
   </div>
 
