@@ -43,10 +43,13 @@ module Admin
       patch change_key_admin_unit_path(@unit), params: { new_key: 'new-unit-key-via-endpoint' }
 
       assert_redirected_to edit_admin_unit_path(@unit)
+      assert_nil flash[:alert]
+      assert_equal 'Key changed successfully.', flash[:notice]
       assert_equal 'new-unit-key-via-endpoint', @unit.reload.key
       stub = Unit.discarded.find_by(key: 'existing-unit-controller-test')
       assert stub.present?
       assert_equal 'new-unit-key-via-endpoint', stub.destination_key
+      assert UpdateLog.exists?(loggable: @unit, action: 'change_key')
     end
 
     test 'change_key shows an error when the new key is already taken' do

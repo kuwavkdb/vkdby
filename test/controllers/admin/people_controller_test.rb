@@ -43,10 +43,13 @@ module Admin
       patch change_key_admin_person_path(@person), params: { new_key: 'new-person-key-via-endpoint' }
 
       assert_redirected_to edit_admin_person_path(@person)
+      assert_nil flash[:alert]
+      assert_equal 'Key changed successfully.', flash[:notice]
       assert_equal 'new-person-key-via-endpoint', @person.reload.key
       stub = Person.discarded.find_by(key: 'existing-person-controller-test')
       assert stub.present?
       assert_equal 'new-person-key-via-endpoint', stub.destination_key
+      assert UpdateLog.exists?(loggable: @person, action: 'change_key')
     end
 
     test 'change_key shows an error when the new key is already taken' do

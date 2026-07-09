@@ -15,7 +15,7 @@ class UpdateLog < ApplicationRecord
     end
   end
 
-  validates :action, inclusion: { in: %w[create update discard undiscard] }
+  validates :action, inclusion: { in: %w[create update discard undiscard change_key] }
 
   def self.for_unit(unit)
     snapshot_ids = unit.unit_snapshot_ids
