@@ -45,6 +45,7 @@ class Unit < ApplicationRecord
   enum :status, { pre: 0, active: 1, freeze: 2, disbanded: 3, unknown: 99 }
 
   validates :status, presence: true
+  validate :key_immutable, on: :update
 
   STATUS_TRANSLATIONS = {
     'pre' => '準備中',
@@ -105,6 +106,12 @@ class Unit < ApplicationRecord
   end
 
   private
+
+  def key_immutable
+    return unless key_changed? && key_was.present?
+
+    errors.add(:key, 'cannot be changed once set')
+  end
 
   after_commit :expire_timeline_cache
   after_commit :expire_sidebar_cache

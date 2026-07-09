@@ -28,7 +28,25 @@
 require 'test_helper'
 
 class UnitTest < ActiveSupport::TestCase
-  # test "the truth" do
-  #   assert true
-  # end
+  test 'key can be set on create' do
+    unit = Unit.create!(name: 'New Unit', key: 'new-unit-key-test', status: :active)
+
+    assert_equal 'new-unit-key-test', unit.key
+  end
+
+  test 'key cannot be changed once set' do
+    unit = Unit.create!(name: 'Existing Unit', key: 'existing-unit-key-test', status: :active)
+
+    unit.key = 'changed-unit-key-test'
+
+    assert_not unit.valid?
+    assert_includes unit.errors[:key], 'cannot be changed once set'
+  end
+
+  test 'other attributes can still be updated when key is unchanged' do
+    unit = Unit.create!(name: 'Existing Unit', key: 'unchanged-unit-key-test', status: :active)
+
+    assert unit.update(name: 'Renamed Unit')
+    assert_equal 'Renamed Unit', unit.reload.name
+  end
 end
