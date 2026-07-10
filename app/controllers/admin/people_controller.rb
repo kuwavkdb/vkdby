@@ -102,12 +102,12 @@ module Admin
 
     def purge
       unless @person.redirect_source?
-        redirect_to admin_people_path, alert: 'リダイレクト元のレコードのみ物理削除できます。'
+        redirect_to admin_people_path(redirect_source: 'only'), alert: 'リダイレクト元のレコードのみ物理削除できます。'
         return
       end
 
       if Item.by_artist_key(@person.key).exists?
-        redirect_to admin_people_path, alert: 'このキーはまだ作品から参照されているため物理削除できません。'
+        redirect_to admin_people_path(redirect_source: 'only'), alert: 'このキーはまだ作品から参照されているため物理削除できません。'
         return
       end
 
@@ -121,7 +121,7 @@ module Admin
         loggable_id: @person.id,
         diff: { 'key' => [key_was, nil], 'destination_key' => [destination_was, nil] }
       )
-      redirect_to admin_people_path, notice: 'リダイレクト元レコードを物理削除しました。'
+      redirect_to admin_people_path(redirect_source: 'only'), notice: 'リダイレクト元レコードを物理削除しました。'
     end
 
     def search

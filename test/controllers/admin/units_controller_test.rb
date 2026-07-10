@@ -77,7 +77,7 @@ module Admin
 
       delete purge_admin_unit_path(@unit)
 
-      assert_redirected_to admin_units_path
+      assert_redirected_to admin_units_path(redirect_source: 'only')
       assert_equal 'リダイレクト元のレコードのみ物理削除できます。', flash[:alert]
       assert Unit.exists?(id: @unit.id)
     end
@@ -89,7 +89,7 @@ module Admin
 
       delete purge_admin_unit_path(stub)
 
-      assert_redirected_to admin_units_path
+      assert_redirected_to admin_units_path(redirect_source: 'only')
       assert_equal 'リダイレクト元レコードを物理削除しました。', flash[:notice]
       assert_not Unit.exists?(id: stub.id)
       assert UpdateLog.exists?(loggable_type: 'Unit', loggable_id: stub.id, action: 'purge')
@@ -104,7 +104,7 @@ module Admin
 
       delete purge_admin_unit_path(stub)
 
-      assert_redirected_to admin_units_path
+      assert_redirected_to admin_units_path(redirect_source: 'only')
       assert_equal 'このキーはまだ作品から参照されているため物理削除できません。', flash[:alert]
       assert Unit.exists?(id: stub.id)
     end
