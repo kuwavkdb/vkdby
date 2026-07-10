@@ -18,6 +18,7 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
       member do
         patch :undiscard
         patch :change_key
+        delete :purge
       end
       resources :unit_logs
       resources :unit_snapshots, except: %i[show] do
@@ -41,6 +42,7 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
       member do
         patch :undiscard
         patch :change_key
+        delete :purge
       end
     end
 
