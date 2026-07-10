@@ -3,7 +3,7 @@
 require 'test_helper'
 
 module Admin
-  class PeopleControllerTest < ActionDispatch::IntegrationTest
+  class PeopleControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
     setup do
       post login_path, params: { email: users(:one).email, password: 'password' }
       @person = Person.create!(name: 'Existing Person', key: 'existing-person-controller-test', status: :active)
@@ -59,6 +59,64 @@ module Admin
       patch change_key_admin_person_path(@person), params: { new_key: 'already-taken-person-key' }
 
       assert_redirected_to edit_admin_person_path(@person)
+      assert_equal 'existing-person-controller-test', @person.reload.key
+    end
+
+    test 'purge requires admin role' do
+      @person.change_key!('new-key-for-purge-auth-test')
+      stub = Person.discarded.find_by(key: 'existing-person-controller-test')
+
+      delete purge_admin_person_path(stub)
+
+      assert_redirected_to root_path
+      assert Person.exists?(id: stub.id)
+    end
+
+    test 'purge is rejected for a non redirect-source record' do
+      login_as_admin
+
+      delete purge_admin_person_path(@person)
+
+      assert_redirected_to admin_people_path(redirect_source: 'only')
+      assert_equal 'リダイレクト元のレコードのみ物理削除できます。', flash[:alert]
+      assert Person.exists?(id: @person.id)
+    end
+
+    test 'purge deletes the redirect-source stub and logs the action' do
+      login_as_admin
+      @person.change_key!('new-key-for-purge-test')
+      stub = Person.discarded.find_by(key: 'existing-person-controller-test')
+
+      delete purge_admin_person_path(stub)
+
+      assert_redirected_to admin_people_path(redirect_source: 'only')
+      assert_equal 'リダイレクト元レコードを物理削除しました。', flash[:notice]
+      assert_not Person.exists?(id: stub.id)
+      assert UpdateLog.exists?(loggable_type: 'Person', loggable_id: stub.id, action: 'purge')
+    end
+
+    test 'purge is rejected when the key is still referenced by an item' do
+      login_as_admin
+      @person.change_key!('new-key-for-purge-item-test')
+      stub = Person.discarded.find_by(key: 'existing-person-controller-test')
+      Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item',
+                   artists: [{ 'key' => stub.key, 'name' => 'Existing Person' }])
+
+      delete purge_admin_person_path(stub)
+
+      assert_redirected_to admin_people_path(redirect_source: 'only')
+      assert_equal 'このキーはまだ作品から参照されているため物理削除できません。', flash[:alert]
+      assert Person.exists?(id: stub.id)
+    end
+
+    test 'purging a redirect-source stub allows reverting the key' do
+      login_as_admin
+      @person.change_key!('new-key-for-purge-revert-test')
+      stub = Person.discarded.find_by(key: 'existing-person-controller-test')
+
+      delete purge_admin_person_path(stub)
+      @person.reload.change_key!('existing-person-controller-test')
+
       assert_equal 'existing-person-controller-test', @person.reload.key
     end
 

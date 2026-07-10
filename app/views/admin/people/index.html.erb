@@ -82,6 +82,12 @@
                       form: { class: "inline-block" },
                       class: "text-green-600 hover:text-green-900 bg-transparent border-0 cursor-pointer p-0" %>
                 <% end %>
+                <% if person.redirect_source? && current_user.admin? %>
+                  <%= button_to "物理削除", purge_admin_person_path(person), method: :delete,
+                      form: { class: "inline-block ml-4" },
+                      onclick: "return confirm('「#{person.key}」を物理削除します。この操作は元に戻せません。よろしいですか？')",
+                      class: "text-white bg-red-800 hover:bg-red-900 rounded px-2 py-1 cursor-pointer" %>
+                <% end %>
               <% else %>
                 <%= link_to "Edit", edit_admin_person_path(person), class: "text-indigo-600 hover:text-indigo-900 mr-4" %>
                 <% if current_user.super_operator_or_above? %>

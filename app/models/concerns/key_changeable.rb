@@ -31,6 +31,12 @@ module KeyChangeable
     end
   end
 
+  # discard 済み・destination_key ありのリダイレクト元レコードかどうか(issue #891)。
+  # 物理削除できる対象をこの条件に厳密に限定する。
+  def redirect_source?
+    discarded? && destination_key.present?
+  end
+
   private
 
   # サブクラスで、key を参照している独自テーブルのカスケード更新に使う
