@@ -3,7 +3,7 @@
 require 'test_helper'
 
 module Admin
-  class UnitsControllerTest < ActionDispatch::IntegrationTest
+  class UnitsControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
     setup do
       post login_path, params: { email: users(:one).email, password: 'password' }
       @unit = Unit.create!(name: 'Existing Unit', key: 'existing-unit-controller-test', status: :active)
