@@ -66,6 +66,7 @@ end
 - Person / Unit で discard ベースの実装を共通化する（Unit には統合用の確立済みパターンとして `unit_type: moved`（discard せず `kept` のまま運用、`lib/tasks/import_moved.rake:57-68`）が既に存在するが、Person には `unit_type` に相当するカラムがなく同じパターンを使えないため、今回は Person/Unit 対称に discard ベースで統一する。`unit_type: moved` は既存の統合用途のまま温存し、本機能では使わない）
 - discard により admin 側のデフォルト一覧・検索（`Person.kept` / `Unit.kept` 起点、[`admin/people_controller.rb`](../../app/controllers/admin/people_controller.rb#L8-L21), [`admin/units_controller.rb`](../../app/controllers/admin/units_controller.rb#L16-L27)）や公開側の一覧・検索・自動補完（`.kept` 起点）からは自動的に除外される
 - 複数回リネームされた場合（A→B→C）、A へのアクセスは B を経由して C まで2ホップでリダイレクトされる（destination_key チェーンは既存の統合パターンでも起こり得る挙動であり、本機能固有の問題ではないため許容する）
+- スタブレコードが残っている間は `prev_key` が unique index 上「使用中」のままになるため、キーを元に戻す（revert）操作はできない。これを解消するため、リダイレクト元レコードを物理削除できる機能を別途 [issue #891](https://github.com/kuwavkdb/vkdby/issues/891) で追加した（`purge` アクション、admin 限定）
 
 ### 2. `change_key!` によるキー更新とカスケード
 

@@ -54,6 +54,7 @@
 | Users 管理 | 全アクション |
 | Wiki Page Imports | 全アクション |
 | Units / People — キー変更 | change_key |
+| Units / People — リダイレクト元の物理削除 | purge |
 
 ---
 
@@ -84,6 +85,7 @@
 | `admin?` でない | Section / Custom Page 編集画面のアップロードボタン |
 | `admin?` でない | ナビの Images リンク |
 | `admin?` でない | Units / People 編集画面の「キー変更」ボタン |
+| `admin?` でない | Units / People 一覧のリダイレクト元「物理削除」ボタン |
 
 ---
 

@@ -4,9 +4,9 @@ module Admin
   class UnitsController < Admin::BaseController # rubocop:disable Metrics/ClassLength
     include LoggableLinkChanges
 
-    before_action :set_unit, only: %i[show edit update destroy undiscard change_key]
+    before_action :set_unit, only: %i[show edit update destroy undiscard change_key purge]
     before_action :require_super_operator, only: %i[destroy]
-    before_action :require_admin, only: %i[change_key]
+    before_action :require_admin, only: %i[change_key purge]
 
     def index
       @q = params[:q]
@@ -114,6 +114,30 @@ module Admin
       redirect_to edit_admin_unit_path(@unit), alert: 'That key is already in use.'
     rescue ActiveRecord::RecordInvalid => e
       redirect_to edit_admin_unit_path(@unit), alert: e.message
+    end
+
+    def purge
+      unless @unit.redirect_source?
+        redirect_to admin_units_path, alert: 'リダイレクト元のレコードのみ物理削除できます。'
+        return
+      end
+
+      if Item.by_artist_key(@unit.key).exists?
+        redirect_to admin_units_path, alert: 'このキーはまだ作品から参照されているため物理削除できません。'
+        return
+      end
+
+      key_was = @unit.key
+      destination_was = @unit.destination_key
+      @unit.destroy!
+      UpdateLog.create!(
+        user: current_user,
+        action: 'purge',
+        loggable_type: 'Unit',
+        loggable_id: @unit.id,
+        diff: { 'key' => [key_was, nil], 'destination_key' => [destination_was, nil] }
+      )
+      redirect_to admin_units_path, notice: 'リダイレクト元レコードを物理削除しました。'
     end
 
     def search

@@ -2,9 +2,9 @@
 
 module Admin
   class PeopleController < Admin::BaseController # rubocop:disable Metrics/ClassLength
-    before_action :set_person, only: %i[edit update destroy undiscard change_key]
+    before_action :set_person, only: %i[edit update destroy undiscard change_key purge]
     before_action :require_super_operator, only: %i[destroy]
-    before_action :require_admin, only: %i[change_key]
+    before_action :require_admin, only: %i[change_key purge]
 
     def index
       @q = params[:q]
@@ -98,6 +98,30 @@ module Admin
       redirect_to edit_admin_person_path(@person), alert: 'That key is already in use.'
     rescue ActiveRecord::RecordInvalid => e
       redirect_to edit_admin_person_path(@person), alert: e.message
+    end
+
+    def purge
+      unless @person.redirect_source?
+        redirect_to admin_people_path, alert: 'リダイレクト元のレコードのみ物理削除できます。'
+        return
+      end
+
+      if Item.by_artist_key(@person.key).exists?
+        redirect_to admin_people_path, alert: 'このキーはまだ作品から参照されているため物理削除できません。'
+        return
+      end
+
+      key_was = @person.key
+      destination_was = @person.destination_key
+      @person.destroy!
+      UpdateLog.create!(
+        user: current_user,
+        action: 'purge',
+        loggable_type: 'Person',
+        loggable_id: @person.id,
+        diff: { 'key' => [key_was, nil], 'destination_key' => [destination_was, nil] }
+      )
+      redirect_to admin_people_path, notice: 'リダイレクト元レコードを物理削除しました。'
     end
 
     def search
