@@ -9,6 +9,7 @@
       <div class="bg-white shadow rounded-lg p-6 dark:bg-gray-800">
         <%= render "form", person: @person %>
       </div>
+      <%= render "admin/shared/change_key_form", change_key_path: change_key_admin_person_path(@person), form_id: "change_key_form" %>
 
       <div>
         <%= render "links_form", person: @person %>

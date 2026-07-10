@@ -4,8 +4,9 @@ module Admin
   class UnitsController < Admin::BaseController # rubocop:disable Metrics/ClassLength
     include LoggableLinkChanges
 
-    before_action :set_unit, only: %i[show edit update destroy undiscard]
+    before_action :set_unit, only: %i[show edit update destroy undiscard change_key]
     before_action :require_super_operator, only: %i[destroy]
+    before_action :require_admin, only: %i[change_key]
 
     def index
       @q = params[:q]
@@ -74,7 +75,7 @@ module Admin
     def update
       pre_link_ids = @unit.links.pluck(:id)
 
-      if @unit.update(unit_params)
+      if @unit.update(unit_update_params)
         record_update_log(@unit, action: 'update')
         record_link_changes(@unit, pre_link_ids)
         redirect_to edit_admin_unit_path(@unit), notice: 'Unit updated successfully.'
@@ -96,6 +97,23 @@ module Admin
       @unit.undiscard
       record_update_log(@unit, action: 'undiscard')
       redirect_to admin_units_path, notice: 'Unit restored successfully.'
+    end
+
+    def change_key
+      new_key = params[:new_key].to_s.strip
+
+      if new_key.blank?
+        redirect_to edit_admin_unit_path(@unit), alert: 'New key is required.'
+        return
+      end
+
+      @unit.change_key!(new_key)
+      record_update_log(@unit, action: 'change_key')
+      redirect_to edit_admin_unit_path(@unit), notice: 'Key changed successfully.'
+    rescue ActiveRecord::RecordNotUnique
+      redirect_to edit_admin_unit_path(@unit), alert: 'That key is already in use.'
+    rescue ActiveRecord::RecordInvalid => e
+      redirect_to edit_admin_unit_path(@unit), alert: e.message
     end
 
     def search
@@ -127,6 +145,11 @@ module Admin
                                    name_logs_attributes: %i[name name_kana],
                                    aliases_attributes: %i[name kana old_key],
                                    activity_periods_attributes: %i[from to label])
+    end
+
+    # key はキー変更専用の操作でのみ変更可能(issue #57)。通常の update では受け付けない。
+    def unit_update_params
+      unit_params.except(:key)
     end
   end
 end

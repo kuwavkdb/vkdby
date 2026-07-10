@@ -23,7 +23,7 @@ module Admin
       diff = case action
              when 'create'
                record.saved_changes.except('created_at', 'updated_at')
-             when 'update'
+             when 'update', 'change_key'
                record.saved_changes.except('updated_at')
              end
 

@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 module Admin
-  class PeopleController < Admin::BaseController
-    before_action :set_person, only: %i[edit update destroy undiscard]
+  class PeopleController < Admin::BaseController # rubocop:disable Metrics/ClassLength
+    before_action :set_person, only: %i[edit update destroy undiscard change_key]
     before_action :require_super_operator, only: %i[destroy]
+    before_action :require_admin, only: %i[change_key]
 
     def index
       @q = params[:q]
@@ -61,7 +62,8 @@ module Admin
     end
 
     def update
-      if @person.update(person_params)
+      # key はキー変更専用の操作でのみ変更可能(issue #57)。通常の update では受け付けない。
+      if @person.update(person_params.except(:key))
         record_update_log(@person, action: 'update')
         redirect_to edit_admin_person_path(@person), notice: 'Person updated successfully.'
       else
@@ -79,6 +81,23 @@ module Admin
       @person.undiscard
       record_update_log(@person, action: 'undiscard')
       redirect_to admin_people_path, notice: 'Person restored successfully.'
+    end
+
+    def change_key
+      new_key = params[:new_key].to_s.strip
+
+      if new_key.blank?
+        redirect_to edit_admin_person_path(@person), alert: 'New key is required.'
+        return
+      end
+
+      @person.change_key!(new_key)
+      record_update_log(@person, action: 'change_key')
+      redirect_to edit_admin_person_path(@person), notice: 'Key changed successfully.'
+    rescue ActiveRecord::RecordNotUnique
+      redirect_to edit_admin_person_path(@person), alert: 'That key is already in use.'
+    rescue ActiveRecord::RecordInvalid => e
+      redirect_to edit_admin_person_path(@person), alert: e.message
     end
 
     def search
@@ -107,7 +126,8 @@ module Admin
 
     def person_params
       params.require(:person).permit(
-        :name, :name_kana, :birthday, :birth_year, :blood, :hometown, :status, :old_history, :destination_key, :note,
+        :name, :key, :name_kana, :birthday, :birth_year, :blood, :hometown, :status, :old_history, :destination_key,
+        :note,
         parts: [],
         tag_index_ids: [],
         links_attributes: %i[id text url active _destroy],

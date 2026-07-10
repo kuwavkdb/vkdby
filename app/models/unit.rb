@@ -31,6 +31,7 @@ require 'discard'
 
 class Unit < ApplicationRecord
   include Discard::Model
+  include KeyChangeable
   has_many :links, as: :linkable, dependent: :destroy
   accepts_nested_attributes_for :links, allow_destroy: true, reject_if: proc { |attrs| attrs['url'].blank? }
   has_many :wiki_page_imports, as: :import_target
@@ -45,6 +46,7 @@ class Unit < ApplicationRecord
   enum :status, { pre: 0, active: 1, freeze: 2, disbanded: 3, unknown: 99 }
 
   validates :status, presence: true
+  validate :key_immutable, on: :update
 
   STATUS_TRANSLATIONS = {
     'pre' => '準備中',
@@ -105,6 +107,13 @@ class Unit < ApplicationRecord
   end
 
   private
+
+  def key_immutable
+    return if key_change_in_progress
+    return unless key_changed? && key_was.present?
+
+    errors.add(:key, 'cannot be changed once set')
+  end
 
   after_commit :expire_timeline_cache
   after_commit :expire_sidebar_cache

@@ -53,6 +53,7 @@
 | Items — 削除 | destroy |
 | Users 管理 | 全アクション |
 | Wiki Page Imports | 全アクション |
+| Units / People — キー変更 | change_key |
 
 ---
 
@@ -82,6 +83,7 @@
 | `super_operator_or_above?` でない | 画像管理の削除ボタン |
 | `admin?` でない | Section / Custom Page 編集画面のアップロードボタン |
 | `admin?` でない | ナビの Images リンク |
+| `admin?` でない | Units / People 編集画面の「キー変更」ボタン |
 
 ---
 

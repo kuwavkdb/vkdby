@@ -32,7 +32,7 @@
 #
 require 'test_helper'
 
-class PersonTest < ActiveSupport::TestCase
+class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
   test 'parse_old_history parses simple history' do
     person = Person.new(old_history: 'BandA → BandB')
     history = person.parse_old_history
@@ -190,5 +190,42 @@ class PersonTest < ActiveSupport::TestCase
     assert_equal "Develop One's Faculties", item[:unit_name]
     # '(0x27)は%2527に二重エンコード
     assert_equal '%44%65%76%65%6C%6F%70+%4F%6E%65%2527%73+%46%61%63%75%6C%74%69%65%73', item[:old_key]
+  end
+
+  test 'change_key! updates the key and creates a discarded redirect stub' do
+    person = Person.create!(name: 'Rename Target Person', key: 'person-key-change-before', status: :active)
+
+    person.change_key!('person-key-change-after')
+
+    assert_equal 'person-key-change-after', person.reload.key
+
+    stub = Person.discarded.find_by(key: 'person-key-change-before')
+    assert stub.present?
+    assert stub.discarded?
+    assert_equal 'person-key-change-after', stub.destination_key
+    assert_nil stub.old_key
+  end
+
+  test 'change_key! rewrites snapshot_people.person_key and unit_people.person_key' do
+    person = Person.create!(name: 'Referenced Person', key: 'person-ref-key-before', status: :active)
+    unit = Unit.create!(name: 'Host Unit', key: 'person-ref-host-unit', status: :active)
+    snapshot = unit.unit_snapshots.create!(snapshot_date: Date.current, current: true)
+    snapshot_person = snapshot.snapshot_people.create!(person_key: 'person-ref-key-before', person_name: 'x', sort_order: 1)
+    unit_person = UnitPerson.create!(unit: unit, person_key: 'person-ref-key-before')
+
+    person.change_key!('person-ref-key-after')
+
+    assert_equal 'person-ref-key-after', snapshot_person.reload.person_key
+    assert_equal 'person-ref-key-after', unit_person.reload.person_key
+  end
+
+  test 'change_key! rewrites items.artists referencing the previous key' do
+    person = Person.create!(name: 'Artist Person', key: 'person-artist-key-before', status: :active)
+    item = Item.create!(title: 'Artist Item', release_date: Date.current, link_url: 'https://example.com/person-artist-item',
+                        artists: [{ 'name' => 'Artist Person', 'key' => 'person-artist-key-before' }])
+
+    person.change_key!('person-artist-key-after')
+
+    assert_equal 'person-artist-key-after', item.reload.artists.first['key']
   end
 end

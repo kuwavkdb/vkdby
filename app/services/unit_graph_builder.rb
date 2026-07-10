@@ -189,7 +189,7 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
   def build_graph(unit_ids_by_person, current_edge_pairs, relevant_unit_ids, hop1_unit_ids_set = Set.new, base_unit_ids = nil)
     # ノード描画には id/name/key のみ必要なため、Unit を AR オブジェクトとして
     # 全件ロードせず必要な列のみ取得する
-    related_units = Unit.where(id: relevant_unit_ids)
+    related_units = Unit.kept.where(id: relevant_unit_ids)
                         .pluck(:id, :name, :key)
                         .to_h { |id, name, key| [id, GraphUnit.new(id:, name:, key:)] }
 
