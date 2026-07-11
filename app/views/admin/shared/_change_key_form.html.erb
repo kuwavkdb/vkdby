@@ -1,6 +1,6 @@
 <%# locals: change_key_path, form_id %>
 <%# フォームの入れ子はできないため、外枠だけをここに置き、可視部品(_change_key_trigger)は
-    key フィールドの隣から form="<%= form_id %>" で参照する %>
+    key フィールドの隣から form 属性で form_id を参照する %>
 <% if current_user&.admin? %>
   <%= form_with url: change_key_path, method: :patch, id: form_id do end %>
 <% end %>

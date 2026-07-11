@@ -4,18 +4,26 @@
       <h1 class="text-2xl font-bold">Edit Unit: <%= @unit.name %></h1>
       <%= link_to "Back to Public Page", profile_path(@unit.key), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
     </div>
-    <div class="md:grid md:grid-cols-3 md:gap-8">
-      <div class="md:col-span-1">
+    <div class="md:grid md:grid-cols-5 md:gap-8">
+      <div class="md:col-span-2">
         <div class="bg-white shadow rounded-lg p-6 mb-6">
           <%= render "form", unit: @unit %>
         </div>
         <%= render "admin/shared/change_key_form", change_key_path: change_key_admin_unit_path(@unit), form_id: "change_key_form" %>
       </div>
-      
-      <div class="md:col-span-2">
+
+      <div class="md:col-span-3">
         <%= render "snapshots_list", unit: @unit, unit_snapshots: @unit_snapshots %>
         <%= render "links_form", unit: @unit %>
         <%= render "admin/sections/list", sectionable: @unit, sections: @unit.sections.with_discarded.order(:sort_order) %>
+        <% if current_user.super_operator_or_above? && !@unit.discarded? %>
+          <div class="mt-4 mb-4 flex justify-end">
+            <%= button_to "論理削除", admin_unit_path(@unit), method: :delete,
+                form_class: "inline",
+                onclick: "return confirm('#{@unit.name} を論理削除しますか？')",
+                class: "px-3 py-1.5 text-sm text-white bg-red-600 hover:bg-red-700 rounded cursor-pointer border-0" %>
+          </div>
+        <% end %>
         <%= render "admin/wiki_page_imports/import_target_panel", wiki_page_imports: @wiki_page_imports, import_target: @unit %>
       </div>
     </div>
