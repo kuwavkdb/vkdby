@@ -3,12 +3,14 @@
 require 'test_helper'
 
 class CustomPagesControllerTest < ActionDispatch::IntegrationTest
-  test 'sidebar does not render a discarded unit or person referenced by a weekly trend' do
+  setup do
     # key未設定の既存フィクスチャが "最近の更新" 欄に混ざると別バグ(issue #874)で
     # profile_path がルート生成エラーになるため、この検証の対象外にしておく
     Unit.kept.where(key: nil).find_each(&:discard)
     Person.kept.where(key: nil).find_each(&:discard)
+  end
 
+  test 'sidebar does not render a discarded unit or person referenced by a weekly trend' do
     unit = Unit.create!(name: 'Discarded Sidebar Unit', key: 'discarded-unit-sidebar-test', status: :active)
     person = Person.create!(name: 'Discarded Sidebar Person', key: 'discarded-person-sidebar-test', status: :active)
     unit.discard
