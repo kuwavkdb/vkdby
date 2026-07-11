@@ -1,15 +1,15 @@
 <% content_for :title, @year.to_s %>
-<div class="flex justify-center min-h-screen p-0 md:p-8 bg-gray-100 dark:bg-gray-900">
+<div class="flex justify-center">
   <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
 
     <!-- Year Header -->
     <header class="mb-8 text-center border-b border-slate-200 dark:border-slate-700 pb-6">
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-2">
+        Yearly Summary
+      </p>
       <h1 class="text-3xl font-black text-slate-800 dark:text-slate-100">
         <%= @year %>年
       </h1>
-      <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
-        Yearly Summary
-      </p>
     </header>
 
     <!-- Navigation -->
@@ -17,11 +17,11 @@
       <!-- Year Navigation -->
       <div class="flex justify-between items-center">
         <%= link_to "← 前年", yearly_path(year: @year - 1),
-            class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300" %>
+            class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
         <%= link_to "年一覧", date_index_path,
-            class: "text-sm font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200" %>
+            class: "text-sm font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
         <%= link_to "翌年 →", yearly_path(year: @year + 1),
-            class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300" %>
+            class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
       </div>
     </div>
 

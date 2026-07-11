@@ -1,5 +1,5 @@
 <% content_for :title, @year_agnostic ? @date.strftime('%-m/%-d') : @date.strftime('%Y/%-m/%-d') %>
-<div class="flex justify-center min-h-screen p-0 md:p-8 bg-gray-100 dark:bg-gray-900">
+<div class="flex justify-center">
   <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
 
     <!-- Date Header -->
@@ -13,22 +13,22 @@
           <% else %>
             <% prev_year_date = @date - 1.year %>
             <%= link_to "← 前年同日", daily_path(year: prev_year_date.year, month: prev_year_date.month, day: prev_year_date.day),
-                class: "text-xs font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap" %>
+                class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
             <%= link_to "← 前日 (#{prev_date.month}/#{prev_date.day})", daily_path(year: prev_date.year, month: prev_date.month, day: prev_date.day),
                 class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
           <% end %>
         </div>
         <div class="text-center flex-grow">
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-2">
+            <%= @year_agnostic ? "All Years Summary" : "Daily Summary" %>
+          </p>
           <h1 class="text-3xl font-black text-slate-800 dark:text-slate-100">
             <% if @year_agnostic %>
               <%= "#{@date.month}月#{@date.day}日" %>
             <% else %>
-              <%= link_to "#{@date.year}年#{@date.month}月", monthly_path(year: @date.year, month: @date.month), class: "text-indigo-600 dark:text-indigo-400 underline decoration-2 underline-offset-4 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors" %><%= @date.strftime('%-d日') %>
+              <%= link_to "#{@date.year}年#{@date.month}月", monthly_path(year: @date.year, month: @date.month), class: "text-indigo-600 dark:text-indigo-400 underline decoration-2 underline-offset-4 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors" %><%= @date.strftime('%-d日') %><span class="text-xl font-bold text-slate-500 dark:text-slate-400 ml-1">(<%= %w[日 月 火 水 木 金 土][@date.wday] %>)</span>
             <% end %>
           </h1>
-          <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
-            <%= @year_agnostic ? "All Years Summary" : "Daily Summary" %>
-          </p>
           <% if @year_agnostic %>
             <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
               <%= "#{@date.month}月#{@date.day}日" %>が誕生日のアーティストや、動向・リリース情報をまとめて掲載しています。
@@ -46,6 +46,9 @@
                 <% end %>
               </nav>
             <% end %>
+          <% else %>
+            <%= link_to "他の年の#{@date.month}月#{@date.day}日", birthday_date_path(month: @date.month, day: @date.day),
+                class: "inline-block mt-3 text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
           <% end %>
         </div>
         <div class="flex gap-2 flex-shrink-0">
@@ -58,7 +61,7 @@
                 class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
             <% next_year_date = @date + 1.year %>
             <%= link_to "翌年同日 →", daily_path(year: next_year_date.year, month: next_year_date.month, day: next_year_date.day),
-                class: "text-xs font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap" %>
+                class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
           <% end %>
         </div>
       </div>
