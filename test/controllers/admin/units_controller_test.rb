@@ -136,11 +136,41 @@ module Admin
       assert_not_includes response.body, 'キー変更'
     end
 
+    test 'edit shows the discard button for super_operator or above' do
+      get edit_admin_unit_path(@unit)
+
+      assert_response :success
+      assert_includes response.body, '論理削除'
+    end
+
+    test 'edit does not show the discard button for operator' do
+      login_as_operator
+
+      get edit_admin_unit_path(@unit)
+
+      assert_response :success
+      assert_not_includes response.body, '論理削除'
+    end
+
+    test 'edit does not show the discard button for an already discarded unit' do
+      @unit.discard
+
+      get edit_admin_unit_path(@unit)
+
+      assert_response :success
+      assert_not_includes response.body, '論理削除'
+    end
+
     private
 
     def login_as_admin
       admin = User.create!(email: 'admin-key-change-test@example.com', name: 'Admin', password: 'password', role: :admin)
       post login_path, params: { email: admin.email, password: 'password' }
+    end
+
+    def login_as_operator
+      operator = User.create!(email: 'operator-discard-test@example.com', name: 'Operator', password: 'password', role: :operator)
+      post login_path, params: { email: operator.email, password: 'password' }
     end
   end
 end
