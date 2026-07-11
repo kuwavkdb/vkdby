@@ -39,7 +39,7 @@
         <%= render YoutubeEmbedComponent.new(links: @youtube_links) %>
       </div>
 
-      <div class="grid gap-8 grid-cols-1 md:grid-cols-[350px_1fr] items-start">
+      <div class="grid gap-8 grid-cols-1 md:grid-cols-[minmax(220px,350px)_minmax(350px,1fr)] items-start">
         <div>
           <%= render BasicAttributesComponent.new(resource: @resource) %>
           <%= render NameHistoryComponent.new(resource: @resource) %>
