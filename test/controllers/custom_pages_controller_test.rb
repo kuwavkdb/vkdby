@@ -25,4 +25,26 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, 'Discarded Sidebar Person'
     assert_no_match(%r{<span class="inline-block[^"]*">\s*</span>}, response.body)
   end
+
+  test 'index page shows the today teaser link with correct href and bilingual text' do
+    CustomPage.create!(key: 'index', title: 'トップページ', active: true, body: 'body')
+    today = Date.current
+
+    get root_path
+
+    assert_response :success
+    assert_includes response.body, birthday_date_path(month: today.month, day: today.day)
+    assert_includes response.body, '今日はなんの日？'
+    assert_includes response.body, 'What Happened Today'
+  end
+
+  test 'non-index custom page does not show the today teaser link' do
+    page = CustomPage.create!(key: 'other-page-for-teaser-test', title: 'Other Page', active: true, body: 'body')
+
+    get custom_page_path(key: page.key)
+
+    assert_response :success
+    assert_not_includes response.body, '今日はなんの日？'
+    assert_not_includes response.body, 'What Happened Today'
+  end
 end
