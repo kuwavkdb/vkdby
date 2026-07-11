@@ -22,4 +22,8 @@ class ProfileHeaderComponent < ViewComponent::Base
   def name_kana
     @resource.name_kana
   end
+
+  def display_aliases
+    @resource.aliases.reject { |a| a.name.blank? }
+  end
 end
