@@ -83,9 +83,10 @@
         <div class="mt-10 grid gap-8 grid-cols-1 md:grid-cols-[1fr_360px] items-start">
           <% if @snapshot %>
             <section>
-              <div class="flex items-center gap-2 mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
-                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  <% if @trend.units.size > 1 %><%= @unit.name %> <% end %>Members
+              <div class="flex items-center gap-2 mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
+                <h2 class="flex items-baseline gap-1.5">
+                  <%= link_to @unit.name, profile_path(@unit.key), class: "text-sm font-bold text-slate-800 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" %>
+                  <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Members</span>
                 </h2>
                 <% if @snapshot.label.present? && @trend.snapshot_date.blank? %>
                   <span class="text-xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"><%= @snapshot.label %></span>
@@ -102,7 +103,7 @@
             <div></div>
           <% end %>
 
-          <%= render UnitTrendsComponent.new(trends: @unit_trends, current_trend_id: @trend.id) %>
+          <%= render UnitTrendsComponent.new(trends: @unit_trends, current_trend_id: @trend.id, top_spacing: false) %>
         </div>
       <% end %>
 
