@@ -36,6 +36,10 @@ module Vkdby
     # Site name used in page titles
     config.site_name = ENV.fetch('SITE_NAME', 'vkdb.jp')
 
+    # TagIndex IDs that mark a Person/Unit as unpublished (content hidden, see issue #919).
+    # Override per environment in config/environments/*.rb if needed.
+    config.unpublished_tag_ids = [2643]
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

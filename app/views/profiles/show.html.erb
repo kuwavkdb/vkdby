@@ -6,6 +6,14 @@
   <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl md:overflow-hidden w-full min-w-0 max-w-5xl animate-in slide-in-from-bottom-5 duration-700" data-google-adsense-noads>
     <%= render ProfileHeaderComponent.new(resource: @resource) %>
 
+    <% if @unpublished %>
+      <div class="p-8 md:p-12 text-center text-slate-600 dark:text-slate-300">
+        <p class="text-sm md:text-base">諸事情により掲載を停止しております。</p>
+        <div class="mt-6 flex justify-center">
+          <%= render 'layouts/google_adsense_square' %>
+        </div>
+      </div>
+    <% else %>
     <nav class="md:hidden sticky top-0 z-20 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-b border-slate-100 dark:border-slate-700 flex items-stretch" aria-label="ページ内ナビゲーション">
       <a href="#" class="shrink-0 flex items-center px-3 py-3 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border-r border-slate-200 dark:border-slate-700 transition-colors" aria-label="ページ先頭へ戻る">↑ Top</a>
       <div class="page-nav-scroll flex items-stretch gap-x-3 overflow-x-auto px-4 min-w-0" style="scrollbar-width:none;">
@@ -223,5 +231,6 @@
         </p>
       </footer>
     </div>
+    <% end %>
   </div>
 </div>
