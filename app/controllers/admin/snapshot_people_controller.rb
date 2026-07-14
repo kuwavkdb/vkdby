@@ -4,7 +4,7 @@ module Admin
   class SnapshotPeopleController < Admin::BaseController
     before_action :set_unit
     before_action :set_unit_snapshot
-    before_action :set_snapshot_person, only: %i[edit update destroy]
+    before_action :set_snapshot_person, only: %i[edit update destroy create_person]
 
     def create
       @snapshot_person = @unit_snapshot.snapshot_people.build(snapshot_person_params)
@@ -36,6 +36,40 @@ module Admin
       record_update_log(@snapshot_person, action: 'discard')
       redirect_to edit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
                   notice: 'Member was successfully removed.'
+    end
+
+    def create_person
+      if @snapshot_person.person_key.blank?
+        redirect_to edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @unit_snapshot, @snapshot_person),
+                    alert: 'Person Key を設定してから実行してください。'
+        return
+      end
+
+      if @snapshot_person.person_id.present?
+        redirect_to edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @unit_snapshot, @snapshot_person),
+                    alert: 'すでにPersonと紐付けられています。'
+        return
+      end
+
+      person = Person.new(
+        name: @snapshot_person.person_name,
+        key: @snapshot_person.person_key,
+        parts: @snapshot_person.part == 'unknown' ? [] : [@snapshot_person.part]
+      )
+
+      if person.save
+        @snapshot_person.update(person_id: person.id)
+        record_update_log(person, action: 'create')
+        record_update_log(@snapshot_person, action: 'update')
+        redirect_to edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @unit_snapshot, @snapshot_person),
+                    notice: 'Personを新規作成して紐付けました。'
+      else
+        redirect_to edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @unit_snapshot, @snapshot_person),
+                    alert: "Personの作成に失敗しました: #{person.errors.full_messages.join(', ')}"
+      end
+    rescue ActiveRecord::RecordNotUnique
+      redirect_to edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @unit_snapshot, @snapshot_person),
+                  alert: 'そのPerson Keyはすでに使用されています。既存のPersonへの紐付けをご確認ください。'
     end
 
     def reorder
