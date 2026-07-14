@@ -60,4 +60,28 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, 'Twice Renamed Unit'
   end
+
+  test 'shows an unpublished message instead of content for a person tagged as unpublished' do
+    person = Person.create!(name: 'Unpublished Person', key: 'person-unpublished-page', status: :active)
+    tag_index = TagIndex.create!(id: Rails.application.config.unpublished_tag_ids.first, name: '掲載停止')
+    TagIndexItem.create!(tag_index: tag_index, indexable: person)
+
+    get profile_path(person.key)
+
+    assert_response :success
+    assert_includes response.body, 'Unpublished Person'
+    assert_includes response.body, '諸事情により掲載を停止しております。'
+  end
+
+  test 'shows an unpublished message instead of content for a unit tagged as unpublished' do
+    unit = Unit.create!(name: 'Unpublished Unit', key: 'unit-unpublished-page', status: :active)
+    tag_index = TagIndex.create!(id: Rails.application.config.unpublished_tag_ids.first, name: '掲載停止')
+    TagIndexItem.create!(tag_index: tag_index, indexable: unit)
+
+    get profile_path(unit.key)
+
+    assert_response :success
+    assert_includes response.body, 'Unpublished Unit'
+    assert_includes response.body, '諸事情により掲載を停止しております。'
+  end
 end

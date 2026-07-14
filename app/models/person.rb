@@ -37,6 +37,7 @@ class Person < ApplicationRecord
   include Discard::Model
   include WikiParser
   include KeyChangeable
+  include Unpublishable
   has_many :links, as: :linkable, dependent: :destroy
   has_many :wiki_page_imports, as: :import_target
   has_many :unit_people
