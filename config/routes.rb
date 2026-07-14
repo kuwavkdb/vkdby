@@ -32,6 +32,9 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
           collection do
             patch :reorder
           end
+          member do
+            post :create_person
+          end
         end
       end
     end

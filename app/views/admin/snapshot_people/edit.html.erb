@@ -14,6 +14,29 @@
       </div>
       <h1 class="text-2xl font-bold dark:text-white">Edit Member: <%= @snapshot_person.name %></h1>
     </div>
+    <% if @snapshot_person.person_id.nil? && @snapshot_person.person_name.present? %>
+      <div class="mb-6 rounded-md border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-800 dark:bg-indigo-900/30">
+        <p class="text-sm font-medium text-indigo-800 dark:text-indigo-200">Personレコードが未作成です</p>
+        <p class="mt-1 text-sm text-indigo-700 dark:text-indigo-300">
+          以下の内容でPersonを新規作成し、このメンバーに紐付けます:
+          名前「<%= @snapshot_person.person_name %>」/
+          Key「<%= @snapshot_person.person_key.presence || "未設定" %>」/
+          Part「<%= @snapshot_person.part.humanize %>」
+        </p>
+        <% if @snapshot_person.person_key.blank? %>
+          <p class="mt-2 text-sm text-red-600 dark:text-red-400">Person Key を設定してから実行してください。</p>
+        <% end %>
+        <div class="mt-3">
+          <%= button_to "Personを新規作成して紐付ける",
+                create_person_admin_unit_unit_snapshot_snapshot_person_path(@unit, @unit_snapshot, @snapshot_person),
+                method: :post,
+                disabled: @snapshot_person.person_key.blank?,
+                class: "inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
+                form_class: "inline" %>
+        </div>
+      </div>
+    <% end %>
+
     <div class="bg-white shadow rounded-lg p-6 dark:bg-gray-800">
       <%= render "form", unit: @unit, unit_snapshot: @unit_snapshot, snapshot_person: @snapshot_person %>
 
