@@ -228,4 +228,18 @@ class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
 
     assert_equal 'person-artist-key-after', item.reload.artists.first['key']
   end
+
+  test 'unpublished? is false without an unpublished tag' do
+    person = Person.create!(name: 'Untagged Person', key: 'person-untagged', status: :active)
+
+    assert_not person.unpublished?
+  end
+
+  test 'unpublished? is true when tagged with a configured unpublished tag id' do
+    person = Person.create!(name: 'Unpublished Person', key: 'person-unpublished', status: :active)
+    tag_index = TagIndex.create!(id: Rails.application.config.unpublished_tag_ids.first, name: '掲載停止')
+    TagIndexItem.create!(tag_index: tag_index, indexable: person)
+
+    assert person.unpublished?
+  end
 end

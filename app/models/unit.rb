@@ -32,6 +32,7 @@ require 'discard'
 class Unit < ApplicationRecord
   include Discard::Model
   include KeyChangeable
+  include Unpublishable
   has_many :links, as: :linkable, dependent: :destroy
   accepts_nested_attributes_for :links, allow_destroy: true, reject_if: proc { |attrs| attrs['url'].blank? }
   has_many :wiki_page_imports, as: :import_target

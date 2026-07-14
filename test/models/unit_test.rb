@@ -73,4 +73,18 @@ class UnitTest < ActiveSupport::TestCase
 
     assert_equal 'unit-artist-key-after', item.reload.artists.first['key']
   end
+
+  test 'unpublished? is false without an unpublished tag' do
+    unit = Unit.create!(name: 'Untagged Unit', key: 'unit-untagged', status: :active)
+
+    assert_not unit.unpublished?
+  end
+
+  test 'unpublished? is true when tagged with a configured unpublished tag id' do
+    unit = Unit.create!(name: 'Unpublished Unit', key: 'unit-unpublished', status: :active)
+    tag_index = TagIndex.create!(id: Rails.application.config.unpublished_tag_ids.first, name: '掲載停止')
+    TagIndexItem.create!(tag_index: tag_index, indexable: unit)
+
+    assert unit.unpublished?
+  end
 end
