@@ -1,0 +1,388 @@
+<style type="text/css">
+<!--
+body{
+	margin:0;
+	padding:0;
+	color:#888888;
+}
+h1{
+	margin-bottom:0;
+	width:250px;
+	float:left;
+}
+h1.event{
+	width:100%;
+	clear:left;
+	text-align:center;
+	font-size:40px;
+	padding:20px;
+}
+p.title{
+	padding:0;
+	margin:0;
+}
+
+div{
+	clear:both;
+}
+div.top{
+	float:left;
+}
+div.outer{
+	background-color:#ffffff;
+	text-align:center;
+	clear:both;
+	background-image:url(/img/vize/vize_chan_s.jpg);
+	background-position:right bottom;
+	background-repeat:no-repeat;
+	background-attachment: fixed;
+}
+div.flyer{
+	text-align:left;
+	background-color:#000000;
+	background-color:transparent;
+	margin-right:auto;
+	margin-left:auto;
+	width:949px;
+}
+img#flyer{
+	margin-left:auto;
+	margin-right:auto;
+}
+.form{
+	text-align:center;
+	border:2px solid #58441F;
+	width:950px;
+	background-color:#a8946F;
+	padding:5px;
+	margin-left:auto;
+	margin-right:auto;
+}
+.form a:link{
+	text-decoration:underline;
+}
+div.artists{
+	margin:0;
+	padding:10px 40px;
+	background-color:#000000;
+	background-color:transparent;
+	color:#ffffff;
+	color:#58441F;
+	text-align:center;
+}
+div.artists ul{
+	margin:0;
+	padding:0;
+	width:850px;
+}
+div.artists ul li a:visited,
+div.artists ul li a:link{
+	color:#ffffff;
+	color:#58441F;
+	text-decoration:none;
+}
+div.artists ul li a:hover{
+	color:#58441F;
+	text-decoration:underline;
+}
+div.artists ul li span{
+	word-break:keep-all;
+	white-space:nowrap;
+}
+div.artists ul li.mc{
+	font-size:28px;
+}
+div.artists ul li{
+	font-size:36px;
+	display:inline;
+	font-weight:bold;
+	font-family:Vardana;
+	padding:6px;
+	color:#8888aa;
+}
+a:visited,
+a:link{
+	color:#ffffff;
+	color:#58441F;
+	text-decoration:none;
+}
+a:hover{
+	color:#58441F;
+	text-decoration:underline;
+}
+div.time{
+	text-align:center;
+	font-size:40px;
+	padding:10px;
+	font-weight:bold;
+	color:#AAA094;
+}
+h4{
+	font-size:40px;
+}
+span.date{
+	font-size:60px;
+	color:#000000;
+}
+div.footer{
+	text-align:center;
+	backgound-color:#ffffff;
+	filter: alpha(opacity=50);
+	-moz-opacity:0.5;
+	opacity:0.5;
+}
+span.sep{
+	padding-left:12px;
+	font-weight:normal;
+	color:#eee4e4;
+}
+span.sep.last{
+	display:none;
+}
+p.message{
+	text-align:center;
+	font-size:40px;
+}
+div.tv h2 span{
+	font-size:12px;
+}
+div.tv{
+	width:949px;
+	margin-left:auto;
+	margin-right:auto;
+}
+div.tv2{
+	width:49%;
+	float:left;
+	clear:none;
+	text-align:left;
+}
+br.mobile{
+	display:none;
+}
+
+
+/* FÝ’è */
+
+	a:visited,
+	a:link{
+		color:#006439;
+	}
+	a:hover{
+		color:#006439;
+	}
+	div.artists ul li a:visited,
+	div.artists ul li a:link{
+		color:#006439;
+	}
+	div.artists ul li a:hover{
+		color:#006439;
+	}
+	div.artists{
+		color:#006439;
+	}
+	.form{
+		border:2px solid #006439;
+		background-color:#86A385;
+	}
+
+	body.color001 a:visited,
+	body.color001 a:link{
+		color:#58441F;
+	}
+	body.color001 a:hover{
+		color:#58441F;
+	}
+	body.color001 div.artists ul li a:visited,
+	body.color001 div.artists ul li a:link{
+		color:#58441F;
+	}
+	body.color001 div.artists ul li a:hover{
+		color:#58441F;
+	}
+	body.color001 div.artists{
+		color:#58441F;
+	}
+	body.color001 .form{
+		border:2px solid #58441F;
+		background-color:#a8946F;
+	}
+
+	body.color003 a:visited,
+	body.color003 a:link{
+		color:#74181D;
+	}
+	body.color003 a:hover{
+		color:#74181D;
+	}
+	body.color003 div.artists ul li a:visited,
+	body.color003 div.artists ul li a:link{
+		color:#74181D;
+	}
+	body.color003 div.artists ul li a:hover{
+		color:#74181D;
+	}
+	body.color003 div.artists{
+		color:#74181D;
+	}
+	body.color003 .form{
+		border:2px solid #893F34;
+		background-color:#AE816C;
+	}
+
+	body.color004 a:visited,
+	body.color004 a:link{
+		color:#0084C9;
+	}
+	body.color004 a:hover{
+		color:#0084C9;
+	}
+	body.color004 div.artists ul li a:visited,
+	body.color004 div.artists ul li a:link{
+		color:#0084C9;
+	}
+	body.color004 div.artists ul li a:hover{
+		color:#0084C9;
+	}
+	body.color004 div.artists{
+		color:#0084C9;
+	}
+	body.color004 .form{
+		border:2px solid #0084C9;
+		background-color:#96B7ED;
+	}
+
+	body.color005 a:visited,
+	body.color005 a:link{
+		color:#3C117D;
+	}
+	body.color005 a:hover{
+		color:#3C117D;
+	}
+	body.color005 div.artists ul li a:visited,
+	body.color005 div.artists ul li a:link{
+		color:#3C117D;
+	}
+	body.color005 div.artists ul li a:hover{
+		color:#3C117D;
+	}
+	body.color005 div.artists{
+		color:#3C117D;
+	}
+	body.color005 .form{
+		border:2px solid #3C117D;
+		background-color:#9480B3;
+	}
+
+	body.color006 a:visited,
+	body.color006 a:link{
+		color:#C20180;
+	}
+	body.color006 a:hover{
+		color:#C20180;
+	}
+	body.color006 div.artists ul li a:visited,
+	body.color006 div.artists ul li a:link{
+		color:#C20180;
+	}
+	body.color006 div.artists ul li a:hover{
+		color:#C20180;
+	}
+	body.color006 div.artists{
+		color:#C20180;
+	}
+	body.color006 .form{
+		border:2px solid #C20180;
+		background-color:#E19FC3;
+	}
+
+	body.color007 a:visited,
+	body.color007 a:link{
+		color:#05A79A;
+	}
+	body.color007 a:hover{
+		color:#05A79A;
+	}
+	body.color007 div.artists ul li a:visited,
+	body.color007 div.artists ul li a:link{
+		color:#05A79A;
+	}
+	body.color007 div.artists ul li a:hover{
+		color:#05A79A;
+	}
+	body.color007 div.artists{
+		color:#05A79A;
+	}
+	body.color007 .form{
+		border:2px solid #05A79A;
+		background-color:#88D3CE;
+	}
+
+	body.color008 a:visited,
+	body.color008 a:link{
+		color:#C00A3B;
+	}
+	body.color008 a:hover{
+		color:#C00A3B;
+	}
+	body.color008 div.artists ul li a:visited,
+	body.color008 div.artists ul li a:link{
+		color:#C00A3B;
+	}
+	body.color008 div.artists ul li a:hover{
+		color:#C00A3B;
+	}
+	body.color008 div.artists{
+		color:#C00A3B;
+	}
+	body.color008 .form{
+		border:2px solid #C00A3B;
+		background-color:#E1948C;
+	}
+
+	body.color009 a:visited,
+	body.color009 a:link{
+		color:#353F63;
+	}
+	body.color009 a:hover{
+		color:#353F63;
+	}
+	body.color009 div.artists ul li a:visited,
+	body.color009 div.artists ul li a:link{
+		color:#353F63;
+	}
+	body.color009 div.artists ul li a:hover{
+		color:#353F63;
+	}
+	body.color009 div.artists{
+		color:#353F63;
+	}
+	body.color009 .form{
+		border:2px solid #353F63;
+		background-color:#9592A5;
+	}
+
+	body.color010 a:visited,
+	body.color010 a:link{
+		color:#006439;
+	}
+	body.color010 a:hover{
+		color:#006439;
+	}
+	body.color010 div.artists ul li a:visited,
+	body.color010 div.artists ul li a:link{
+		color:#006439;
+	}
+	body.color010 div.artists ul li a:hover{
+		color:#006439;
+	}
+	body.color010 div.artists{
+		color:#006439;
+	}
+	body.color010 .form{
+		border:2px solid #006439;
+		background-color:#86A385;
+	}
+
+-->
+</style>
