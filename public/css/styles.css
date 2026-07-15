@@ -1,0 +1,346 @@
+@charset "UTF-8";
+body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, p, blockquote, th, td { 
+  margin: 0;
+  padding: 0;
+}
+
+img { 
+  border: 0;
+}
+
+em, strong, th, var {
+  font-style: normal;
+  font-weight: normal;
+}
+
+ol, ul {
+  list-style: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: normal;
+}
+
+
+/*----------------------------------------------------------------------
+
+Contents Style
+
+----------------------------------------------------------------------*/
+h1 {
+  text-align: center;
+  margin: 2em 1em 1em;
+}
+
+
+.modules {
+  margin: 0 auto 3em;
+  /*padding: 5px;*/
+}
+.modules:after {
+  content: ".";
+  display: block;
+  clear: both;
+  height: 0;
+  visibility: hidden;
+}
+.modules li.post {
+  /*margin: 5px;*/
+  float: left;
+  padding: 0;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(34, 25, 25, 0.4);
+  -moz-box-shadow: 0 1px 2px rgba(34, 25, 25, 0.4);
+  -webkit-box-shadow: 0 1px 3px rgba(34, 25, 25, 0.4);
+}
+.modules li p {
+  padding: 10px;
+}
+.modules li p.thumb {
+  padding: 10px 10px 2px;
+}
+
+.modules li p.thumb img {
+  max-width: 100% !important;
+  /* May I rot in hell for this IE6 hack */
+  _width: 95% !important;
+  height: auto !important;
+}
+
+.modules li p.caption {
+  padding: 0 10px 10px;
+}
+
+
+.footer {
+  text-align: center;
+  margin: 3em;
+}
+
+
+
+
+
+
+/* ---------------- */
+body {
+    background-color: #fff;
+    max-width: 1000px;
+    margin: 0 auto;
+    font-family: "Helvetica Neue",Arial,"Hiragino Kaku Gothic Pro",Meiryo,"MS PGothic",sans-serif;
+}
+#container{
+    background-image: url(http://www.vkdb.jp/theme/mods/vico_m.jpg);
+    background-repeat: no-repeat;
+    background-position: bottom right;
+    margin: 0 auto;
+    /*padding-bottom: 370px;*/
+}
+#top_message{
+    font-size: 12pt;
+}
+.modules{
+    background-color: #ddd;
+    padding-top: 18px;
+    padding-bottom: 18px;
+}
+.post{
+    font-size: 14pt;
+    margin: 18px 0 18px 4%;
+    height: auto;
+    min-height: 180px;
+    min-width: 295px;
+}
+.post.row0{
+    min-height: 90px;
+}
+.post.col1{
+    width: 44%;
+}
+.post.col2{
+    width: 92%;
+}
+.thumb{
+    min-height: 54px;
+    background-color: #E3017F;
+    text-align: left;
+    font-size: 16pt;
+    font-weight: bold;
+    color: #fff;
+}
+.thumb img{
+    height: 80px;
+    width: 80px;
+    vertical-align: top;
+    float:left;
+    margin-right:8px;
+    margin-bottom:8px;
+
+}
+.history .thumb{
+    min-height: 30px;
+}
+.comment{
+    color: #222;
+    background-color: #fff;
+    line-height: 140%;
+}
+.row1 .comment{
+    min-height: 145px;
+}
+.row1L .comment{
+    min-height: 290px;
+    /*font-size*/: 140%;
+}
+.row2 .comment{
+    min-height: 400px;
+}
+.user {
+    background-color: #CFFA78;
+    height: auto;
+    font-family: "Arial";
+    text-align: right;
+    font-size: 12pt;
+    padding: 4px 4px 2px;
+}
+.user li{
+    float: left;
+    margin:0 4px;
+}
+.user a{
+    /*border-left: 8px solid #E3017F;*/
+/*
+    margin-right: 8px;
+    padding-left: 4px;
+    white-space: nowrap;
+*/
+}
+.user a img{
+    padding: 2px;
+}
+
+.user a:link img,
+.user a:visited img{
+    background-color: #CFFA78;
+}
+.user a:hover img{
+    background-color: #fff;
+}
+.comment p{
+    padding: 5px 10px;
+}
+.comment ul{
+    padding: 5px 10px;
+}
+.comment li{
+    padding: 5px;
+    float: left;
+    text-align: center;
+}
+.comment li .caption{
+    font-size: 10pt;
+    line-height: 100%;
+}
+
+.notes{
+  font-size: 11pt;
+  color: #666;
+  background-color: #eee;
+  margin: 8px;
+  padding: 4px;
+}
+
+div.title{
+    background-image: url("../img/f00327.png"); /* http://frames-design.com/ */
+    background-repeat: no-repeat;
+    background-position: top center;
+    background-size: contain;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 576px;
+    width: 100%;
+}
+h1{
+    font-family: "Arial";
+    padding: 20%;
+}
+h2{
+    text-align: center;
+}
+
+.modules.history .row1.post{
+    height: auto;
+    min-height: auto;
+}
+.modules.history .row1.post .thumb{
+    height: auto;
+    padding: 4px;
+    font-size: 18pt;
+}
+.modules.history .row1.post .comment{
+    height: auto;
+    min-height: 2em;
+}
+
+
+#footer{
+    padding: 20px;
+    text-align: center;
+    background-color: #CFFA78
+}
+
+.twitter_widget{
+ width:50%;
+ float:left;
+}
+.ninja_onebutton_wrapper{
+ width:45%  ;
+ float: right;
+}
+.ninja_onebutton_wrapper div{
+    float:left;
+    margin-left: 5px;
+}
+
+h2{
+ clear:both;
+}
+
+.capture{
+  width: 280px;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  float: left;
+}
+
+@media screen and (max-width: 1900px) {
+  div.title{
+    margin-top: 18px;
+  }
+  h1{
+    font-size: 26pt;
+  }
+}
+
+@media screen and (max-width: 720px) {
+  div.title{
+    max-width: 400px;
+  }
+  h1{
+    font-size: 18pt;
+  }
+  .post.col1{
+    width: 92%;
+  }
+    .twitter_widget{
+        width:90%;
+        margin-left: auto;
+        margin-right: auto;
+        float:none;
+    }
+    .ninja_onebutton_wrapper{
+        width:90%;
+        margin-left: auto;
+        margin-right: auto;
+        float:none;
+    }
+}
+@media screen and (max-width: 330px) {
+    h1{
+        font-size: 15pt;
+    }
+    .post.col1{
+        width: 280px;
+    }
+    .thumb img{
+        height: 46px;
+        width: 46px;
+        margin-right:4px;
+        margin-bottom:4px;
+    }
+    .user{
+        font-size: 10pt;
+    }
+    .user a{
+        margin-top: 1px;
+        margin-bottom: 1px;
+        padding-top: 1pt;
+        padding-bottom: 1pt;
+        display: block;
+    }
+    .footer {
+        margin: 3em 1em;
+    }
+    .twitter_widget{
+        width:100%;
+        float:left;
+    }
+    .ninja_onebutton_wrapper{
+        width:100%  ;
+        float: right;
+    }
+    .capture{
+      max-width: 270px;
+    }
+}
