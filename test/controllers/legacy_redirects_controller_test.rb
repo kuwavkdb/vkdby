@@ -97,4 +97,10 @@ class LegacyRedirectsControllerTest < ActionDispatch::IntegrationTest
     assert_response :moved_permanently
     assert_redirected_to '/date/2024'
   end
+
+  test 'should redirect double-percent-encoded calendar page to /date/:year/:month/:day' do
+    get '/%A5%AB%A5%EC%A5%F3%A5%C0%A1%BC%252F2026%2D4%2D15.html'
+    assert_response :moved_permanently
+    assert_redirected_to '/date/2026/4/15'
+  end
 end
