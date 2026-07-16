@@ -55,4 +55,52 @@ class LegacyRedirectsControllerTest < ActionDispatch::IntegrationTest
     get '/non_existent_key.html'
     assert_response :not_found
   end
+
+  test 'should redirect /NEWS.html to /trends' do
+    get '/NEWS.html'
+    assert_response :moved_permanently
+    assert_redirected_to '/trends'
+  end
+
+  test 'should redirect /release_recent.htm to /items' do
+    get '/release_recent.htm'
+    assert_response :moved_permanently
+    assert_redirected_to '/items'
+  end
+
+  test 'should redirect EUC-JP encoded index page to /units' do
+    get '/%BA%F7%B0%FA.html'
+    assert_response :moved_permanently
+    assert_redirected_to '/units'
+  end
+
+  test 'should redirect EUC-JP encoded person index page to /people' do
+    get '/%B8%C4%BF%CD%BA%F7%B0%FA.html'
+    assert_response :moved_permanently
+    assert_redirected_to '/people'
+  end
+
+  test 'should redirect EUC-JP encoded timeline page to /timeline' do
+    get '/%C7%AF%C9%BD.html'
+    assert_response :moved_permanently
+    assert_redirected_to '/timeline'
+  end
+
+  test 'should redirect EUC-JP encoded timeline page with suffix to /timeline' do
+    get '/%C7%AF%C9%BD2008.html'
+    assert_response :moved_permanently
+    assert_redirected_to '/timeline'
+  end
+
+  test 'should redirect double-percent-encoded yearly trend page to /date/:year' do
+    get '/%C6%B0%B8%FE%252F2024.html'
+    assert_response :moved_permanently
+    assert_redirected_to '/date/2024'
+  end
+
+  test 'should redirect double-percent-encoded calendar page to /date/:year/:month/:day' do
+    get '/%A5%AB%A5%EC%A5%F3%A5%C0%A1%BC%252F2026%2D4%2D15.html'
+    assert_response :moved_permanently
+    assert_redirected_to '/date/2026/4/15'
+  end
 end
