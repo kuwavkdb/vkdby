@@ -12,11 +12,16 @@ class ApplicationController < ActionController::Base
   include Pagy::Method
 
   before_action :load_footer_page
+  before_action :load_top_message_page
 
   private
 
   def load_footer_page
     @footer_page = CustomPage.published.find_by(key: 'footer')
+  end
+
+  def load_top_message_page
+    @top_message_page = CustomPage.published.find_by(key: 'top_message')
   end
 
   def current_user
