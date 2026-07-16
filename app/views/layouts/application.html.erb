@@ -378,6 +378,15 @@
         </div>
       </div>
     </nav>
+    <% if @top_message_page %>
+      <div class="bg-amber-100 dark:bg-amber-900 border-b border-amber-200 dark:border-amber-800" role="note">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="markdown-content text-sm text-amber-800 dark:text-amber-200 [&>p]:my-0">
+            <%= markdown(@top_message_page.body, sectionable: @top_message_page) %>
+          </div>
+        </div>
+      </div>
+    <% end %>
     <%= render 'layouts/google_adsense_horizontal' %>
     <main class="<%= content_for?(:main_max_w) ? content_for(:main_max_w) : 'max-w-7xl' %> mx-auto py-6 <%= content_for?(:main_px) ? content_for(:main_px) : 'sm:px-6 lg:px-8' %>">
       <% if notice %>
