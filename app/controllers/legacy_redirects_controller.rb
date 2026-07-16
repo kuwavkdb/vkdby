@@ -1,6 +1,13 @@
 # frozen_string_literal: true
 
 class LegacyRedirectsController < ApplicationController
+  # Fixed legacy pages keyed by their EUC-JP decoded name (issue #925)
+  SPECIAL_LEGACY_PAGES = {
+    '索引' => '/units',
+    '個人索引' => '/people'
+  }.freeze
+  YEARLY_TREND_PATTERN = %r{\A動向/(\d{4})\z}
+
   def show
     old_key = params[:old_key]
     encoded_old_key = URI.encode_www_form_component(old_key.gsub('+', ' '))
@@ -25,16 +32,17 @@ class LegacyRedirectsController < ApplicationController
       return
     end
 
+    decoded_name = decode_euc_jp(old_key)
+
+    # Fallback: Try to match fixed legacy pages (index/timeline/yearly trend pages)
+    if decoded_name && (special_redirect_path = special_legacy_redirect_path(decoded_name))
+      redirect_to special_redirect_path, status: :moved_permanently
+      return
+    end
+
     # If neither found, prepare data for 404 page with creation link
     @old_key = old_key
-    begin
-      # Try to decode old_key (EUC-JP) to UTF-8 unit_name
-      # Unescape first, then force encoding to EUC-JP and transcode to UTF-8
-      decoded_bytes = URI.decode_www_form_component(old_key)
-      @unit_name = decoded_bytes.force_encoding('EUC-JP').encode('UTF-8')
-    rescue StandardError
-      @unit_name = nil
-    end
+    @unit_name = decoded_name
 
     render 'not_found', status: :not_found, layout: false
   end
@@ -55,5 +63,22 @@ class LegacyRedirectsController < ApplicationController
     else
       render 'not_found', status: :not_found, layout: false
     end
+  end
+
+  private
+
+  # Try to decode old_key (EUC-JP) to UTF-8
+  # Unescape first, then force encoding to EUC-JP and transcode to UTF-8
+  def decode_euc_jp(old_key)
+    URI.decode_www_form_component(old_key).force_encoding('EUC-JP').encode('UTF-8')
+  rescue StandardError
+    nil
+  end
+
+  def special_legacy_redirect_path(decoded_name)
+    return SPECIAL_LEGACY_PAGES[decoded_name] if SPECIAL_LEGACY_PAGES.key?(decoded_name)
+    return '/timeline' if decoded_name.start_with?('年表')
+
+    (match = decoded_name.match(YEARLY_TREND_PATTERN)) && "/date/#{match[1]}"
   end
 end

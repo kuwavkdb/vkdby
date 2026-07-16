@@ -172,6 +172,10 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
   # Cross-search
   get 'search', to: 'search#index'
 
+  # Legacy redirects for fixed important pages (issue #925)
+  get '/NEWS.html', to: redirect('/trends')
+  get '/release_recent.htm', to: redirect('/items')
+
   # Legacy redirects for .html extensions
   get '/:old_key.html', to: 'legacy_redirects#show', constraints: { old_key: %r{[^/]+} }
 
