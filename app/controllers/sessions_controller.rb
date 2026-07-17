@@ -9,6 +9,7 @@ class SessionsController < ApplicationController
     user = User.find_by(email: params[:email])
     if user&.authenticate(params[:password])
       session[:user_id] = user.id
+      OperationLog.create!(user: user, operation_type: 'login')
       redirect_to session.delete(:return_to) || root_path, notice: 'ログインしました'
     else
       flash.now[:alert] = 'メールアドレスまたはパスワードが正しくありません'

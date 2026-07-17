@@ -52,6 +52,7 @@
 | **画像アップロード**（Custom Page 編集） | upload_image |
 | Items — 削除 | destroy |
 | Users 管理 | 全アクション |
+| Operation Logs（ログイン履歴） | index（全アクション） |
 | Wiki Page Imports | 全アクション |
 | Units / People — キー変更 | change_key |
 | Units / People — リダイレクト元の物理削除 | purge |
@@ -94,3 +95,5 @@
 - ロール定義: `app/models/user.rb`
 - 権限チェックメソッド: `app/controllers/admin/base_controller.rb`
 - 各コントローラーの `before_action`: `app/controllers/admin/` 以下
+- ログイン履歴（`OperationLog`）の記録: `app/controllers/sessions_controller.rb`（ログイン成功時）
+- ログイン履歴の参照: `app/controllers/admin/operation_logs_controller.rb`（`require_admin`）

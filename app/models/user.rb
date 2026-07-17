@@ -20,6 +20,8 @@ class User < ApplicationRecord
   has_secure_password
   enum :role, { operator: 0, super_operator: 1, admin: 2 }, default: :operator
 
+  has_many :operation_logs, dependent: :destroy
+
   validates :email, presence: true, uniqueness: true
   validates :name, presence: true
 
