@@ -10,6 +10,7 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
   namespace :admin do
     root to: 'users#index'
     resources :users
+    resources :operation_logs, only: %i[index]
     resources :external_sites
     resources :units do
       collection do
