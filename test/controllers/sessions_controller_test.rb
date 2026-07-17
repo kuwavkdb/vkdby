@@ -13,6 +13,21 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_url
   end
 
+  test 'should record an operation log on successful login' do
+    assert_difference('OperationLog.count', 1) do
+      post login_url, params: { email: 'one@example.com', password: 'password' }
+    end
+    log = OperationLog.last
+    assert_equal users(:one), log.user
+    assert_equal 'login', log.operation_type
+  end
+
+  test 'should not record an operation log on failed login' do
+    assert_no_difference('OperationLog.count') do
+      post login_url, params: { email: 'one@example.com', password: 'wrong' }
+    end
+  end
+
   test 'should redirect back to the page that required login' do
     get admin_root_url
     assert_redirected_to login_url

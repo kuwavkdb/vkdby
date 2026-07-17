@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  operation_type: login
+  created_at: <%= 1.day.ago %>
+
+two:
+  user: admin
+  operation_type: login
+  created_at: <%= 1.hour.ago %>

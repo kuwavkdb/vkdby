@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_04_064057) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_17_151105) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -128,6 +128,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_04_064057) do
     t.string "via"
     t.string "via_url"
     t.integer "wikipage_id"
+  end
+
+  create_table "operation_logs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "operation_type", null: false
+    t.bigint "user_id", null: false
+    t.index ["created_at"], name: "index_operation_logs_on_created_at"
+    t.index ["operation_type"], name: "index_operation_logs_on_operation_type"
+    t.index ["user_id"], name: "index_operation_logs_on_user_id"
   end
 
   create_table "people", force: :cascade do |t|
@@ -410,6 +419,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_04_064057) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "custom_page_includes", "custom_pages", column: "source_custom_page_id"
   add_foreign_key "custom_page_includes", "custom_pages", column: "target_custom_page_id"
+  add_foreign_key "operation_logs", "users"
   add_foreign_key "snapshot_people", "people"
   add_foreign_key "snapshot_people", "unit_snapshots"
   add_foreign_key "tag_index_items", "tag_indices"
