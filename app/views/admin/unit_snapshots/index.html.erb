@@ -17,6 +17,7 @@
           <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
             <thead class="bg-gray-50 dark:bg-gray-800">
               <tr>
+                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">ID</th>
                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">日付</th>
                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">ラベル</th>
                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">メンバー</th>
@@ -30,6 +31,9 @@
             <tbody class="divide-y divide-gray-200 bg-white dark:bg-gray-900 dark:divide-gray-700">
               <% @unit_snapshots.each do |snapshot| %>
                 <tr>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    <%= snapshot.id %>
+                  </td>
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900 dark:text-gray-200">
                     <%= snapshot.snapshot_date&.strftime("%Y/%m/%d") %>
                   </td>
