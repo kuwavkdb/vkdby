@@ -1,6 +1,16 @@
 # frozen_string_literal: true
 
 module TrendsHelper
+  # Trend#units / Trend#people の jsonb に保存されたスナップショット時点の名前を優先し、
+  # 無ければ現在の Unit / Person の名前にフォールバックする
+  def trend_unit_display_name(unit_data, unit)
+    unit_data['name'].presence || unit&.name
+  end
+
+  def trend_person_display_name(person_data, person)
+    person_data['name'].presence || person&.name
+  end
+
   def twitter_url?(url)
     return false if url.blank?
 
