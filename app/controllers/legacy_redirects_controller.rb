@@ -45,8 +45,9 @@ class LegacyRedirectsController < ApplicationController
     # If neither found, prepare data for 404 page with creation link
     @old_key = old_key
     @unit_name = decoded_name
+    @not_found_query = decoded_name.presence || old_key
 
-    render 'not_found', status: :not_found, layout: false
+    render 'not_found', status: :not_found
   end
 
   def news_redirect
@@ -54,7 +55,7 @@ class LegacyRedirectsController < ApplicationController
     if trend
       redirect_to trend_url(trend), status: :moved_permanently
     else
-      render 'not_found', status: :not_found, layout: false
+      render 'not_found', status: :not_found
     end
   end
 
@@ -63,7 +64,7 @@ class LegacyRedirectsController < ApplicationController
     if item
       redirect_to item_url(item), status: :moved_permanently
     else
-      render 'not_found', status: :not_found, layout: false
+      render 'not_found', status: :not_found
     end
   end
 
