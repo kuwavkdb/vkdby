@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_17_151105) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_19_132618) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -93,11 +93,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_17_151105) do
     t.date "release_date", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.index "((artists)::text) gin_trgm_ops", name: "index_items_on_artists_trgm", using: :gin
     t.index ["artists"], name: "index_items_on_artists", using: :gin
     t.index ["asin"], name: "index_items_on_asin", unique: true
     t.index ["link_url"], name: "index_items_on_link_url", unique: true
     t.index ["release_date"], name: "index_items_on_release_date"
     t.index ["title"], name: "index_items_on_title"
+    t.index ["title"], name: "index_items_on_title_trgm", opclass: :gin_trgm_ops, using: :gin
   end
 
   create_table "links", force: :cascade do |t|

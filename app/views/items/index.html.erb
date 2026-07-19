@@ -13,6 +13,20 @@
     </div>
     <div class="p-5 md:p-8">
 
+      <div class="mb-6">
+        <%= form_with url: items_path, method: :get, local: true, class: "flex gap-2" do |f| %>
+          <%= hidden_field_tag :key, params[:key] if params[:key].present? %>
+          <%= hidden_field_tag :old_key, params[:old_key] if params[:old_key].present? %>
+          <%= f.text_field :q, value: params[:q], placeholder: "商品名・アーティスト名で検索",
+              class: "w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-400" %>
+          <%= f.button class: "bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl transition-colors shadow-sm hover:shadow-md flex items-center justify-center min-w-[3rem]" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+          <% end %>
+        <% end %>
+      </div>
+
       <div class="flex flex-wrap gap-2 mb-6">
 
         <%
@@ -28,10 +42,10 @@
             decade_counts = @year_counts.group_by { |y, _| (y / 10) * 10 }.transform_values { |pairs| pairs.sum(&:last) }
           %>
 
-          <%= link_to "ALL", items_path(key: params[:key], old_key: params[:old_key]), class: "#{base_classes} #{current_decade.nil? ? active_classes : inactive_classes}" %>
+          <%= link_to "ALL", items_path(key: params[:key], old_key: params[:old_key], q: params[:q]), class: "#{base_classes} #{current_decade.nil? ? active_classes : inactive_classes}" %>
 
           <% decades.each do |decade| %>
-            <%= link_to items_path(decade: decade, key: params[:key], old_key: params[:old_key]), class: "#{base_classes} #{current_decade == decade ? active_classes : inactive_classes}" do %>
+            <%= link_to items_path(decade: decade, key: params[:key], old_key: params[:old_key], q: params[:q]), class: "#{base_classes} #{current_decade == decade ? active_classes : inactive_classes}" do %>
               <%= "#{decade}s" %><span class="opacity-60 ml-1 font-normal text-xs">(<%= decade_counts[decade] %>)</span>
             <% end %>
           <% end %>
@@ -39,13 +53,15 @@
         <% else %>
           <%
             current_year = params[:year].presence&.to_i
+            current_decade = params[:decade].presence&.to_i
             years_by_decade = @years.group_by { |y| (y / 10) * 10 }
           %>
 
-          <%= link_to "NEWEST", items_path, class: "#{base_classes} #{current_year.nil? ? active_classes : inactive_classes}" %>
+          <%= link_to "NEWEST", items_path(q: params[:q]), class: "#{base_classes} #{current_year.nil? && current_decade.nil? ? active_classes : inactive_classes}" %>
 
           <% years_by_decade.each do |decade, years| %>
-            <% is_active_decade = years.include?(current_year) %>
+            <% is_active_decade = years.include?(current_year) || current_decade == decade %>
+            <% decade_count = years.sum { |y| @year_counts[y] } %>
             <div class="relative inline-block text-left"
                  data-controller="dropdown"
                  data-action="click@window->dropdown#hide"
@@ -62,9 +78,16 @@
               </button>
 
               <div class="absolute left-0 top-full mt-1 min-w-full w-max box-border origin-top-left bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden py-1 hidden"
-                   data-dropdown-target="menu">
+                   data-dropdown-target="menu"
+                   data-transition-enter="transition ease-out duration-100"
+                   data-transition-enter-start="transform opacity-0 scale-95"
+                   data-transition-enter-end="transform opacity-100 scale-100"
+                   data-transition-leave="transition ease-in duration-75"
+                   data-transition-leave-start="transform opacity-100 scale-100"
+                   data-transition-leave-end="transform opacity-0 scale-95">
+                <%= link_to "ALL #{decade}s <span class='text-xs opacity-50 ml-1 font-normal'>(#{decade_count})</span>".html_safe, items_path(decade: decade, q: params[:q]), class: "block px-4 py-2 text-sm font-bold whitespace-nowrap text-slate-700 dark:text-slate-300 hover:bg-slate-100 hover:text-indigo-600 dark:hover:bg-slate-700 dark:hover:text-white border-b border-slate-100 dark:border-slate-700 #{current_decade == decade ? 'bg-indigo-50 dark:bg-slate-700 text-indigo-700 dark:text-indigo-300' : ''}" %>
                 <% years.each do |year| %>
-                  <%= link_to "#{year} <span class='text-xs opacity-50 ml-1 font-normal'>(#{@year_counts[year]})</span>".html_safe, items_path(year: year), class: "block px-4 py-2 text-sm whitespace-nowrap text-slate-700 dark:text-slate-300 hover:bg-slate-100 hover:text-indigo-600 dark:hover:bg-slate-700 dark:hover:text-white #{current_year == year ? 'bg-indigo-50 dark:bg-slate-700 font-bold text-indigo-700 dark:text-indigo-300' : ''}" %>
+                  <%= link_to "#{year} <span class='text-xs opacity-50 ml-1 font-normal'>(#{@year_counts[year]})</span>".html_safe, items_path(year: year, q: params[:q]), class: "block px-4 py-2 text-sm whitespace-nowrap text-slate-700 dark:text-slate-300 hover:bg-slate-100 hover:text-indigo-600 dark:hover:bg-slate-700 dark:hover:text-white #{current_year == year ? 'bg-indigo-50 dark:bg-slate-700 font-bold text-indigo-700 dark:text-indigo-300' : ''}" %>
                 <% end %>
               </div>
             </div>
@@ -80,9 +103,9 @@
             month_inactive_classes = "bg-white text-slate-500 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600 dark:hover:bg-slate-700"
             current_month = params[:month].presence&.to_i
           %>
-          <%= link_to params[:year], items_path(year: params[:year]), class: "#{month_base_classes} #{current_month.nil? ? month_active_classes : month_inactive_classes}" %>
+          <%= link_to params[:year], items_path(year: params[:year], q: params[:q]), class: "#{month_base_classes} #{current_month.nil? ? month_active_classes : month_inactive_classes}" %>
           <% @months.each do |month| %>
-            <%= link_to "#{month} <span class='opacity-60 ml-0.5 font-normal'>(#{@month_counts[month]})</span>".html_safe, items_path(year: params[:year], month: month), class: "#{month_base_classes} #{current_month == month ? month_active_classes : month_inactive_classes}" %>
+            <%= link_to "#{month} <span class='opacity-60 ml-0.5 font-normal'>(#{@month_counts[month]})</span>".html_safe, items_path(year: params[:year], month: month, q: params[:q]), class: "#{month_base_classes} #{current_month == month ? month_active_classes : month_inactive_classes}" %>
           <% end %>
         </div>
       <% end %>
