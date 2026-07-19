@@ -168,7 +168,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     snapshot = unit&.unit_snapshots&.active&.find_by(id: snapshot_id)
     return '' unless snapshot
 
-    html = render(UnitSnapshotsComponent.new(snapshots: [snapshot], unit: unit, admin: false)).to_s
+    html = render(UnitSnapshotsComponent.new(snapshots: [snapshot], unit: unit, admin: false, show_label: false)).to_s
     register_plugin_placeholder(placeholders, html)
   end
 end

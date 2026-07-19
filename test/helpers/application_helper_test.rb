@@ -45,6 +45,17 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(/テストメンバー/, result)
   end
 
+  test '{{snapshot key,id}}で埋め込んだ場合はバンドページと違いラベルが表示されない' do
+    unit = Unit.create!(key: 'snapshot-plugin-unit-label', name: 'テストユニット', status: 'active')
+    snapshot = unit.unit_snapshots.create!(snapshot_date: '2020-01-01', current: true, active: true,
+                                           label: 'テストラベル')
+    snapshot.snapshot_people.create!(person_name: 'テストメンバー', part: :vocal, status: :active)
+
+    result = markdown("{{snapshot #{unit.key},#{snapshot.id}}}")
+
+    assert_no_match(/テストラベル/, result)
+  end
+
   test '{{snapshot}}でユニットkeyが存在しない場合は空文字になる' do
     unit = Unit.create!(key: 'snapshot-plugin-unit2', name: 'テストユニット2', status: 'active')
     snapshot = unit.unit_snapshots.create!(snapshot_date: '2020-01-01', current: true, active: true)
