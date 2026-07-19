@@ -69,7 +69,18 @@ class ApplicationController < ActionController::Base
   end
 
   def render_not_found(query: nil)
-    @not_found_query = query
+    @not_found_query = decode_percent_encoded_key(query)
     render 'errors/not_found', status: :not_found
+  end
+
+  # Middleware::EucJpUrlFixer は旧EUC-JPリンク対策として、パス中の%XXを%25XXに
+  # 再エンコードして保持するため、通常のUTF-8パーセントエンコードされたパス
+  # （日本語キーなど）もRackの自動デコードを経ずに届く。404の検索欄プリフィル
+  # 表示のためだけに、ここで改めてデコードを試みる。
+  def decode_percent_encoded_key(key)
+    return key if key.blank?
+
+    decoded = URI::DEFAULT_PARSER.unescape(key)
+    decoded.valid_encoding? ? decoded : key
   end
 end
