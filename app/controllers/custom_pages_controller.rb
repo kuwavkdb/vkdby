@@ -6,7 +6,7 @@ class CustomPagesController < ApplicationController
   def show
     @page = CustomPage.published.find_by!(key: params[:key])
   rescue ActiveRecord::RecordNotFound
-    render_not_found
+    render_not_found(query: params[:key])
   end
 
   def index_page

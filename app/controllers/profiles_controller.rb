@@ -32,7 +32,7 @@ class ProfilesController < ApplicationController
     end
   rescue ActiveRecord::RecordNotFound
     respond_to do |format|
-      format.html { render_not_found }
+      format.html { render_not_found(query: params[:key]) }
       format.json { render json: { error: 'Resource not found' }, status: :not_found }
     end
   end

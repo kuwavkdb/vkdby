@@ -68,7 +68,8 @@ class ApplicationController < ActionController::Base
     year >= 1970 && year <= Date.today.year + 10
   end
 
-  def render_not_found
+  def render_not_found(query: nil)
+    @not_found_query = query
     render 'errors/not_found', status: :not_found
   end
 end

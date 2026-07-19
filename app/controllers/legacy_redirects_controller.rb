@@ -45,6 +45,7 @@ class LegacyRedirectsController < ApplicationController
     # If neither found, prepare data for 404 page with creation link
     @old_key = old_key
     @unit_name = decoded_name
+    @not_found_query = decoded_name.presence || old_key
 
     render 'not_found', status: :not_found
   end
