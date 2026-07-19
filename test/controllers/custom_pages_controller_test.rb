@@ -49,4 +49,17 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, '今日はなんの日？'
     assert_not_includes response.body, 'What Happened Today'
   end
+
+  test 'custom page body renders an embedded unit snapshot via {{snapshot}} macro' do
+    unit = Unit.create!(name: 'Snapshot Embed Unit', key: 'snapshot-embed-test-unit', status: :active)
+    snapshot = unit.unit_snapshots.create!(snapshot_date: '2020-01-01', current: true, active: true)
+    snapshot.snapshot_people.create!(person_name: 'Snapshot Embed Member', part: :vocal, status: :active)
+    page = CustomPage.create!(key: 'snapshot-embed-test-page', title: 'Snapshot Embed Page', active: true,
+                              body: "本文\n\n{{snapshot #{unit.key},#{snapshot.id}}}\n\n続き")
+
+    get custom_page_path(key: page.key)
+
+    assert_response :success
+    assert_includes response.body, 'Snapshot Embed Member'
+  end
 end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module ApplicationHelper
+module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   class ExternalAwareHtmlRenderer < Redcarpet::Render::HTML
     def initialize(site_host:, **options)
       @site_host = site_host
@@ -79,15 +79,17 @@ module ApplicationHelper
   def markdown(text, sectionable: nil)
     return '' if text.blank?
 
-    text = expand_include_macros(text, sectionable:)
+    placeholders = {}
+    text = expand_plugin_macros(text, sectionable:, placeholders:)
 
     renderer = ExternalAwareHtmlRenderer.new(site_host: request.host, hard_wrap: true)
-    Redcarpet::Markdown.new(renderer,
-                            autolink: true,
-                            tables: true,
-                            fenced_code_blocks: true,
-                            strikethrough: true,
-                            no_intra_emphasis: true).render(text).html_safe
+    html = Redcarpet::Markdown.new(renderer,
+                                   autolink: true,
+                                   tables: true,
+                                   fenced_code_blocks: true,
+                                   strikethrough: true,
+                                   no_intra_emphasis: true).render(text)
+    restore_plugin_placeholders(html, placeholders).html_safe
   end
 
   private
@@ -101,28 +103,72 @@ module ApplicationHelper
     true
   end
 
+  # {{プラグイン名 パラメータ}} 形式の記法をディスパッチする
+  PLUGIN_HANDLERS = {
+    'include' => :expand_include_plugin,
+    'snapshot' => :expand_snapshot_plugin
+  }.freeze
+
+  def expand_plugin_macros(text, sectionable: nil, placeholders: {})
+    text.gsub(/\{\{(\w[\w-]*)\s+(.+?)\}\}/m) do
+      plugin_name = Regexp.last_match(1)
+      args = Regexp.last_match(2).strip
+      handler = PLUGIN_HANDLERS[plugin_name]
+      handler ? send(handler, args, sectionable, placeholders) : Regexp.last_match(0)
+    end
+  end
+
+  # レンダリング済みHTMLをMarkdown解析後に復元するためのプレースホルダーを発行する。
+  # コンポーネントの生成するHTML（複数行タグ・Stimulus/htmx属性等）はRedcarpetの
+  # 生HTMLブロック認識に乗らず壊れることがあるため、Markdown解析を経由させない。
+  def register_plugin_placeholder(placeholders, html)
+    token = "⟦PLUGIN_PLACEHOLDER_#{SecureRandom.hex(8)}⟧"
+    placeholders[token] = html
+    token
+  end
+
+  def restore_plugin_placeholders(html, placeholders)
+    placeholders.each do |token, raw_html|
+      html = html.sub("<p>#{token}</p>", raw_html)
+      html = html.sub(token, raw_html)
+    end
+    html
+  end
+
   # {{include key,セクション名}}       → CustomPage (key指定)
   # {{include unit:ID,セクション名}}   → Unit (ID指定)
   # {{include person:ID,セクション名}} → Person (ID指定)
   # {{include ,セクション名}}          → 自身のページ (key省略・カンマあり)
   # {{include セクション名}}           → 自身のページ (key省略・カンマなし)
-  def expand_include_macros(text, sectionable: nil)
-    text.gsub(/\{\{include\s+(?:([a-z0-9_:-]*),)?(.+?)\}\}/) do
-      identifier = Regexp.last_match(1)&.strip
-      section_name = Regexp.last_match(2).strip
+  def expand_include_plugin(args, sectionable, _placeholders)
+    identifier, section_name = args.include?(',') ? args.split(',', 2) : [nil, args]
+    identifier = identifier&.strip
+    section_name = section_name.strip
 
-      owner = if identifier.nil? || identifier.empty?
-                sectionable
-              elsif identifier.start_with?('unit:')
-                Unit.find_by(id: identifier.delete_prefix('unit:'))
-              elsif identifier.start_with?('person:')
-                Person.find_by(id: identifier.delete_prefix('person:'))
-              else
-                CustomPage.published.find_by(key: identifier)
-              end
+    owner = if identifier.nil? || identifier.empty?
+              sectionable
+            elsif identifier.start_with?('unit:')
+              Unit.find_by(id: identifier.delete_prefix('unit:'))
+            elsif identifier.start_with?('person:')
+              Person.find_by(id: identifier.delete_prefix('person:'))
+            else
+              CustomPage.published.find_by(key: identifier)
+            end
 
-      section = owner&.sections&.kept&.find_by(name: section_name)
-      section&.markdown.presence || section&.wiki_text.presence || ''
-    end
+    section = owner&.sections&.kept&.find_by(name: section_name)
+    section&.markdown.presence || section&.wiki_text.presence || ''
+  end
+
+  # {{snapshot ユニットkey,snapshot_id}}
+  def expand_snapshot_plugin(args, _sectionable, placeholders)
+    unit_key, snapshot_id = args.split(',', 2).map(&:strip)
+    return '' if unit_key.blank? || snapshot_id.blank?
+
+    unit = Unit.kept.find_by(key: unit_key)
+    snapshot = unit&.unit_snapshots&.active&.find_by(id: snapshot_id)
+    return '' unless snapshot
+
+    html = render(UnitSnapshotsComponent.new(snapshots: [snapshot], unit: unit, admin: false, show_label: false)).to_s
+    register_plugin_placeholder(placeholders, html)
   end
 end

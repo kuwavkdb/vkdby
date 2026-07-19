@@ -36,6 +36,14 @@ module Vkdby
     # Site name used in page titles
     config.site_name = ENV.fetch('SITE_NAME', 'vkdb.jp')
 
+    # Base URL for old-key links to the legacy site (issue #946).
+    # Only relevant during the migration period; remove once the old site is retired.
+    config.old_key_url_base = ENV.fetch('OLD_KEY_URL_BASE', 'https://wiki.vkdb.jp')
+
+    # Google Custom Search Engine ID, offered as a supplementary web-wide search
+    # option alongside the internal DB search on error pages (issue #962).
+    config.google_cse_id = ENV.fetch('GOOGLE_CSE_ID', '012501366286233936630:nhzl-0aow2y')
+
     # TagIndex IDs that mark a Person/Unit as unpublished (content hidden, see issue #919).
     # Override per environment in config/environments/*.rb if needed.
     config.unpublished_tag_ids = [2643]
