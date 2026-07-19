@@ -6,7 +6,7 @@
           <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             <%= snapshot.past? ? 'Related' : 'Members' %>
           </h2>
-          <% if snapshot.label.present? %>
+          <% if @show_label && snapshot.label.present? %>
             <span class="text-xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"><%= snapshot.label %></span>
           <% end %>
           <% if snapshot.current? %>
