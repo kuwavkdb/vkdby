@@ -79,7 +79,7 @@ module ApplicationHelper
   def markdown(text, sectionable: nil)
     return '' if text.blank?
 
-    text = expand_include_macros(text, sectionable:)
+    text = expand_plugin_macros(text, sectionable:)
 
     renderer = ExternalAwareHtmlRenderer.new(site_host: request.host, hard_wrap: true)
     Redcarpet::Markdown.new(renderer,
@@ -101,28 +101,41 @@ module ApplicationHelper
     true
   end
 
+  # {{プラグイン名 パラメータ}} 形式の記法をディスパッチする
+  PLUGIN_HANDLERS = {
+    'include' => :expand_include_plugin
+  }.freeze
+
+  def expand_plugin_macros(text, sectionable: nil)
+    text.gsub(/\{\{(\w[\w-]*)\s+(.+?)\}\}/m) do
+      plugin_name = Regexp.last_match(1)
+      args = Regexp.last_match(2).strip
+      handler = PLUGIN_HANDLERS[plugin_name]
+      handler ? send(handler, args, sectionable) : Regexp.last_match(0)
+    end
+  end
+
   # {{include key,セクション名}}       → CustomPage (key指定)
   # {{include unit:ID,セクション名}}   → Unit (ID指定)
   # {{include person:ID,セクション名}} → Person (ID指定)
   # {{include ,セクション名}}          → 自身のページ (key省略・カンマあり)
   # {{include セクション名}}           → 自身のページ (key省略・カンマなし)
-  def expand_include_macros(text, sectionable: nil)
-    text.gsub(/\{\{include\s+(?:([a-z0-9_:-]*),)?(.+?)\}\}/) do
-      identifier = Regexp.last_match(1)&.strip
-      section_name = Regexp.last_match(2).strip
+  def expand_include_plugin(args, sectionable)
+    identifier, section_name = args.include?(',') ? args.split(',', 2) : [nil, args]
+    identifier = identifier&.strip
+    section_name = section_name.strip
 
-      owner = if identifier.nil? || identifier.empty?
-                sectionable
-              elsif identifier.start_with?('unit:')
-                Unit.find_by(id: identifier.delete_prefix('unit:'))
-              elsif identifier.start_with?('person:')
-                Person.find_by(id: identifier.delete_prefix('person:'))
-              else
-                CustomPage.published.find_by(key: identifier)
-              end
+    owner = if identifier.nil? || identifier.empty?
+              sectionable
+            elsif identifier.start_with?('unit:')
+              Unit.find_by(id: identifier.delete_prefix('unit:'))
+            elsif identifier.start_with?('person:')
+              Person.find_by(id: identifier.delete_prefix('person:'))
+            else
+              CustomPage.published.find_by(key: identifier)
+            end
 
-      section = owner&.sections&.kept&.find_by(name: section_name)
-      section&.markdown.presence || section&.wiki_text.presence || ''
-    end
+    section = owner&.sections&.kept&.find_by(name: section_name)
+    section&.markdown.presence || section&.wiki_text.presence || ''
   end
 end
