@@ -32,7 +32,7 @@ class ProfilesController < ApplicationController
     end
   rescue ActiveRecord::RecordNotFound
     respond_to do |format|
-      format.html { render file: Rails.root.join('public/404.html'), status: :not_found, layout: false }
+      format.html { render_not_found }
       format.json { render json: { error: 'Resource not found' }, status: :not_found }
     end
   end

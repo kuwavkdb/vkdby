@@ -46,7 +46,7 @@ class LegacyRedirectsController < ApplicationController
     @old_key = old_key
     @unit_name = decoded_name
 
-    render 'not_found', status: :not_found, layout: false
+    render 'not_found', status: :not_found
   end
 
   def news_redirect
@@ -54,7 +54,7 @@ class LegacyRedirectsController < ApplicationController
     if trend
       redirect_to trend_url(trend), status: :moved_permanently
     else
-      render 'not_found', status: :not_found, layout: false
+      render 'not_found', status: :not_found
     end
   end
 
@@ -63,7 +63,7 @@ class LegacyRedirectsController < ApplicationController
     if item
       redirect_to item_url(item), status: :moved_permanently
     else
-      render 'not_found', status: :not_found, layout: false
+      render 'not_found', status: :not_found
     end
   end
 

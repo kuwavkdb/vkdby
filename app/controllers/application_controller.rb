@@ -69,6 +69,6 @@ class ApplicationController < ActionController::Base
   end
 
   def render_not_found
-    render file: Rails.root.join('public/404.html'), status: :not_found, layout: false
+    render 'errors/not_found', status: :not_found
   end
 end
