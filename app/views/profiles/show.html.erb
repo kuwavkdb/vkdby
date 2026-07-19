@@ -62,9 +62,11 @@
 
         <div class="column-right">
           <% if @resource.is_a?(Unit) %>
-            <div class="hidden md:block mb-4">
-              <%= render YoutubeEmbedComponent.new(links: @youtube_links) %>
-            </div>
+            <% if @youtube_links.present? %>
+              <div class="hidden md:block mb-4">
+                <%= render YoutubeEmbedComponent.new(links: @youtube_links) %>
+              </div>
+            <% end %>
 
             <div id="members">
               <%= render UnitSnapshotsComponent.new(snapshots: @snapshots, unit: @resource, admin: defined?(logged_in?) && logged_in?) %>

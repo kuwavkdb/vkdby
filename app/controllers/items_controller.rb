@@ -24,6 +24,7 @@ class ItemsController < ApplicationController
 
   def index
     base_scope = filter_by_artist(Item.all)
+    base_scope = filter_by_query(base_scope)
 
     @year_counts = base_scope.where.not(release_date: nil)
                              .group('EXTRACT(year FROM release_date)::integer').count
@@ -55,6 +56,12 @@ class ItemsController < ApplicationController
     else
       scope
     end
+  end
+
+  def filter_by_query(scope)
+    return scope if params[:q].blank?
+
+    scope.where('title ILIKE :q OR artists::text ILIKE :q', q: "%#{params[:q]}%")
   end
 
   def filter_by_decade(scope)
