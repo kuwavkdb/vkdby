@@ -12,15 +12,22 @@ export default class extends Controller {
     urlPeople: String
   }
 
-  connect() {
+  async connect() {
     this.timeout = null
     this.handleClickOutside = this.handleClickOutside.bind(this)
     document.addEventListener("click", this.handleClickOutside)
     this.syncHiddenField()
+
+    const { default: Sortable } = await import("sortablejs")
+    this.sortable = Sortable.create(this.containerTarget, {
+      handle: ".drag-handle",
+      onEnd: () => this.syncHiddenField()
+    })
   }
 
   disconnect() {
     document.removeEventListener("click", this.handleClickOutside)
+    if (this.sortable) this.sortable.destroy()
   }
 
   handleClickOutside(event) {
