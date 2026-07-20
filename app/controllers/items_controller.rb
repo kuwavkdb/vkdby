@@ -4,21 +4,20 @@ class ItemsController < ApplicationController
   def show
     @item = Item.find(params[:id])
 
-    scopes = @item.artists.flat_map do |a|
-      [
-        (Item.by_artist_key(a['key']) if a['key'].present?),
-        (Item.by_artist_old_key(a['old_key']) if a['old_key'].present?),
-        (Item.by_artist_name(a['name']) if a['name'].present?)
-      ].compact
-    end
+    scoped_artists = @item.artists.filter_map { |a| [a, artist_item_scope(a)] if artist_item_scope(a) }
 
-    if scopes.any?
-      base_query = scopes.reduce(:or).where.not(id: @item.id)
-      @related_items_count = base_query.count
+    if scoped_artists.any?
+      base_query = scoped_artists.map(&:last).reduce(:or).where.not(id: @item.id)
       @related_items = base_query.order(Arel.sql('RANDOM()')).limit(10)
     else
-      @related_items_count = 0
       @related_items = Item.none
+    end
+
+    # アーティストごとに「もっと見る」ボタンを出す必要があるかを判定する
+    # (関連作品グリッドは全アーティストのOR結果からのランダム抽出なので、
+    #  特定の1人だけの作品数が多くても網羅されているとは限らないため)
+    @artists_with_more_items = scoped_artists.filter_map do |a, scope|
+      a if scope.where.not(id: @item.id).count > 10
     end
   end
 
@@ -41,6 +40,22 @@ class ItemsController < ApplicationController
   end
 
   private
+
+  # key/old_keyが分かっているアーティストはそれらのみで一致を判定する。
+  # nameは表記揺れがなく一意なサイト内ページ識別子ではない
+  # (例: 「オムニバス」は多数の無関係な作品で使われる汎用的な名前)ため、
+  # key/old_keyが無い(サイト内にページが存在しない)場合のみnameでの一致にフォールバックする。
+  def artist_item_scope(artist)
+    if artist['key'].present? || artist['old_key'].present?
+      scopes = [
+        (Item.by_artist_key(artist['key']) if artist['key'].present?),
+        (Item.by_artist_old_key(artist['old_key']) if artist['old_key'].present?)
+      ].compact
+      scopes.reduce(:or)
+    elsif artist['name'].present?
+      Item.by_artist_name(artist['name'])
+    end
+  end
 
   def filter_by_artist(scope)
     if params[:old_key].present?

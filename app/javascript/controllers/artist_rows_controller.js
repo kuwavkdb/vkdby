@@ -12,15 +12,22 @@ export default class extends Controller {
     urlPeople: String
   }
 
-  connect() {
+  async connect() {
     this.timeout = null
     this.handleClickOutside = this.handleClickOutside.bind(this)
     document.addEventListener("click", this.handleClickOutside)
     this.syncHiddenField()
+
+    const { default: Sortable } = await import("sortablejs")
+    this.sortable = Sortable.create(this.containerTarget, {
+      handle: ".drag-handle",
+      onEnd: () => this.syncHiddenField()
+    })
   }
 
   disconnect() {
     document.removeEventListener("click", this.handleClickOutside)
+    if (this.sortable) this.sortable.destroy()
   }
 
   handleClickOutside(event) {
@@ -182,19 +189,24 @@ export default class extends Controller {
       })
       if (!response.ok) throw new Error("Search failed")
       const data = await response.json()
-      this.displayResults(row, data)
+      this.displayResults(row, data, query)
     } catch (e) {
       console.error("Artist search failed", e)
     }
   }
 
-  displayResults(row, items) {
+  displayResults(row, items, query) {
     const resultsEl = row.querySelector(".artist-results")
 
-    if (items.length === 0) {
-      this.hideResults(row)
-      return
-    }
+    const freeTextHtml = `
+      <div class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-t border-gray-200 dark:border-gray-700"
+           data-result-item
+           data-active="false"
+           data-action="click->artist-rows#selectFreeText"
+           data-name="${this.escapeHtml(query)}">
+        <div class="text-sm text-gray-600 dark:text-gray-400">「${this.escapeHtml(query)}」を名前のみで追加</div>
+      </div>
+    `
 
     resultsEl.innerHTML = items.map(item => `
       <div class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
@@ -208,9 +220,16 @@ export default class extends Controller {
         ${item.name_kana ? `<div class="text-xs text-gray-500 dark:text-gray-400">${this.escapeHtml(item.name_kana)}</div>` : ""}
         ${item.destination_key ? `<div class="text-xs text-amber-600 dark:text-amber-400">→ ${this.escapeHtml(item.destination_key)}</div>` : ""}
       </div>
-    `).join("")
+    `).join("") + freeTextHtml
 
     resultsEl.classList.remove("hidden")
+  }
+
+  selectFreeText(event) {
+    const resultItem = event.currentTarget
+    const row = resultItem.closest("[data-artist-rows-target='row']")
+    const mode = row.dataset.mode || "unit"
+    this.applySelection(row, resultItem.dataset.name, "", mode)
   }
 
   async selectItem(event) {

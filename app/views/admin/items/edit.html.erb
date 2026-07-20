@@ -1,6 +1,9 @@
 <div class="container mx-auto px-4 py-8">
   <div class="max-w-2xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6">Edit Item: <%= @item.title %></h1>
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">Edit Item: <%= @item.title %></h1>
+      <%= link_to "Back to Public Page", item_path(@item), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
+    </div>
     <div class="bg-white shadow rounded-lg p-6">
       <%= render "form", item: @item %>
     </div>

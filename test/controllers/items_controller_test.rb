@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-class ItemsControllerTest < ActionDispatch::IntegrationTest
+class ItemsControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
   test 'index does not resolve artist info for a discarded unit key' do
     unit = Unit.create!(name: 'Discarded Unit', key: 'discarded-unit-items-test', status: :active)
     unit.discard
@@ -38,6 +38,120 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, 'Item One'
     assert_not_includes response.body, 'Item Two'
+  end
+
+  test 'show hides non-omnibus artists from the header when various_artists is true' do
+    item = Item.create!(
+      title: 'VA Compilation',
+      artists: [{ 'name' => 'オムニバス' }, { 'name' => 'Artist A' }, { 'name' => 'Artist B' }],
+      various_artists: true,
+      release_date: '2026-03-01',
+      link_url: "http://example.com/va-item-#{SecureRandom.hex(4)}"
+    )
+
+    get item_path(item)
+
+    assert_response :success
+    header_text = Nokogiri::HTML(response.body).at_css('h1').text
+    assert_includes header_text, 'オムニバス'
+    assert_not_includes header_text, 'Artist A'
+    assert_not_includes header_text, 'Artist B'
+    assert_includes response.body, 'Artist A'
+    assert_includes response.body, 'Artist B'
+  end
+
+  test 'show lists all artists in the header when various_artists is false' do
+    item = Item.create!(
+      title: 'Regular Item',
+      artists: [{ 'name' => 'オムニバス' }, { 'name' => 'Artist A' }],
+      various_artists: false,
+      release_date: '2026-03-01',
+      link_url: "http://example.com/non-va-item-#{SecureRandom.hex(4)}"
+    )
+
+    get item_path(item)
+
+    assert_response :success
+    header_text = Nokogiri::HTML(response.body).at_css('h1').text
+    assert_includes header_text, 'オムニバス'
+    assert_includes header_text, 'Artist A'
+  end
+
+  test 'show does not render a link for a name-only artist' do
+    item = Item.create!(
+      title: 'Name Only Artist Item',
+      artists: [{ 'name' => '名前のみのアーティスト' }],
+      release_date: '2026-03-01',
+      link_url: "http://example.com/name-only-artist-item-#{SecureRandom.hex(4)}"
+    )
+
+    get item_path(item)
+
+    assert_response :success
+    assert_includes response.body, '名前のみのアーティスト'
+    assert_not_includes response.body, %(href="/#{ERB::Util.url_encode('名前のみのアーティスト'.encode('EUC-JP'))}.html")
+  end
+
+  test 'show renders a see-all button per artist whose own related item count exceeds 10, linking only to that artist' do
+    unit_a = Unit.create!(name: 'Artist A', key: "artist-a-#{SecureRandom.hex(4)}", status: :active)
+    unit_b = Unit.create!(name: 'Artist B', key: "artist-b-#{SecureRandom.hex(4)}", status: :active)
+
+    item = Item.create!(
+      title: 'Multi Artist Item',
+      artists: [
+        { 'name' => unit_a.name, 'key' => unit_a.key },
+        { 'name' => unit_b.name, 'key' => unit_b.key }
+      ],
+      release_date: '2026-03-01',
+      link_url: "http://example.com/multi-artist-item-#{SecureRandom.hex(4)}"
+    )
+    11.times do |i|
+      Item.create!(
+        title: "Artist A Related Item #{i}",
+        artists: [{ 'name' => unit_a.name, 'key' => unit_a.key }],
+        release_date: '2026-03-01',
+        link_url: "http://example.com/related-item-a-#{i}-#{SecureRandom.hex(4)}"
+      )
+    end
+    2.times do |i|
+      Item.create!(
+        title: "Artist B Related Item #{i}",
+        artists: [{ 'name' => unit_b.name, 'key' => unit_b.key }],
+        release_date: '2026-03-01',
+        link_url: "http://example.com/related-item-b-#{i}-#{SecureRandom.hex(4)}"
+      )
+    end
+
+    get item_path(item)
+
+    assert_response :success
+    assert_includes response.body, "#{unit_a.name} の全作品を見る"
+    assert_includes response.body, items_path(key: unit_a.key)
+    assert_not_includes response.body, "#{unit_b.name} の全作品を見る"
+  end
+
+  test 'show excludes items that only share an artist name when that artist has a key or old_key' do
+    item = Item.create!(
+      title: 'VA Compilation With Generic Name',
+      artists: [{ 'name' => 'オムニバス', 'old_key' => 'omnibus-generic-name-unique-old-key' }],
+      release_date: '2026-03-01',
+      link_url: "http://example.com/va-generic-name-item-#{SecureRandom.hex(4)}"
+    )
+    # 同じ「オムニバス」という名前だが、別のold_keyを持つ無関係な作品
+    15.times do |i|
+      Item.create!(
+        title: "Unrelated VA Album #{i}",
+        artists: [{ 'name' => 'オムニバス', 'old_key' => "unrelated-omnibus-old-key-#{i}" }],
+        release_date: '2026-03-01',
+        link_url: "http://example.com/unrelated-va-#{i}-#{SecureRandom.hex(4)}"
+      )
+    end
+
+    get item_path(item)
+
+    assert_response :success
+    assert_not_includes response.body, 'Unrelated VA Album'
+    assert_not_includes response.body, 'オムニバス の全作品を見る'
   end
 
   test 'index filters by artist name with q param' do

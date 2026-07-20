@@ -14,16 +14,12 @@ module ItemsHelper
   end
 
   # アーティストのプロフィールページへのパスを生成
-  # 優先順位: key > old_key > name(EUCエンコード)
+  # 優先順位: key > old_key。どちらも無い(名前のみの)アーティストはページが存在しないためリンクにしない
   def artist_profile_path(artist_data)
     if artist_data['key'].present?
       "/#{artist_data['key']}"
     elsif artist_data['old_key'].present?
       "/#{artist_data['old_key']}.html"
-    elsif artist_data['name'].present?
-      # nameをEUC-JPでURLエンコードしてold_key形式として扱う
-      encoded_name = ERB::Util.url_encode(artist_data['name'].encode('EUC-JP'))
-      "/#{encoded_name}.html"
     end
   end
 

@@ -38,6 +38,11 @@
     <%= form.url_field :image_url, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
   </div>
 
+  <div class="flex items-center gap-2">
+    <%= form.check_box :various_artists, class: "rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700" %>
+    <%= form.label :various_artists, "Various Artists（オムニバス）", class: "text-sm font-medium text-gray-700 dark:text-gray-300" %>
+  </div>
+
   <div data-controller="artist-rows"
        data-artist-rows-url-units-value="<%= search_admin_units_path %>"
        data-artist-rows-url-people-value="<%= search_admin_people_path %>">
@@ -46,8 +51,9 @@
     <%# Row container %>
     <div data-artist-rows-target="container" class="space-y-2">
       <% (item.artists || []).each do |artist| %>
-        <% search_mode = artist['key'].blank? && artist['old_key'].blank? %>
+        <% search_mode = artist['name'].blank? %>
         <div class="flex items-center gap-2" data-artist-rows-target="row" data-mode="unit">
+          <span class="drag-handle flex-none px-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab" aria-hidden="true">⠿</span>
           <button type="button"
                   class="flex-none px-2 py-1 text-xs rounded border border-indigo-300 bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 dark:border-indigo-700 whitespace-nowrap"
                   data-action="click->artist-rows#toggleMode">Units</button>
@@ -101,6 +107,7 @@
     <%# Template for new empty rows %>
     <template data-artist-rows-target="template">
       <div class="flex items-center gap-2 mt-2" data-artist-rows-target="row" data-mode="unit">
+        <span class="drag-handle flex-none px-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab" aria-hidden="true">⠿</span>
         <button type="button"
                 class="flex-none px-2 py-1 text-xs rounded border border-indigo-300 bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 dark:border-indigo-700 whitespace-nowrap"
                 data-action="click->artist-rows#toggleMode">Units</button>
