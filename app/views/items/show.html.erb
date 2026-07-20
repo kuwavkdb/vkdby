@@ -8,8 +8,15 @@
           <%= link_to "Edit", edit_admin_item_path(@item), class: "px-3 py-1 bg-white/10 hover:bg-white/20 text-amber-900/80 hover:text-amber-900 text-xs font-bold rounded border border-amber-900/20 backdrop-blur-sm transition" %>
         </div>
       <% end %>
+      <%
+        headline_artists, other_artists = if @item.various_artists?
+                                             @item.artists.partition { |a| a['name'] == 'オムニバス' }
+                                           else
+                                             [@item.artists, []]
+                                           end
+      %>
       <h1 class="text-xl font-black text-zinc-900 leading-snug flex flex-wrap items-center gap-2">
-        <% @item.artists.each do |artist_data| %>
+        <% headline_artists.each do |artist_data| %>
           <% artist_label = artist_data['alias'].presence || artist_data['name'] %>
           <% artist_path = artist_profile_path(artist_data) %>
           <% if artist_path %>
@@ -20,6 +27,19 @@
         <% end %>
         <span><%= @item.title %></span>
       </h1>
+      <% if other_artists.any? %>
+        <div class="mt-2 flex flex-wrap items-center gap-1">
+          <% other_artists.each do |artist_data| %>
+            <% artist_label = artist_data['alias'].presence || artist_data['name'] %>
+            <% artist_path = artist_profile_path(artist_data) %>
+            <% if artist_path %>
+              <%= link_to artist_label, artist_path, class: "px-2 py-0.5 rounded text-sm font-medium bg-white/60 text-zinc-800 hover:bg-white/80 transition-colors border border-white/40" %>
+            <% else %>
+              <span class="px-2 py-0.5 rounded text-sm font-medium bg-white/40 text-zinc-800 border border-white/30"><%= artist_label %></span>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
     </div>
 
     <div class="p-5 md:p-8">
@@ -130,9 +150,9 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <%= render ItemCardComponent.with_collection(@related_items) %>
           </div>
-          <% if @related_items_count > 10 %>
-            <% first_artist = @item.artists.find { |a| a['old_key'].present? || a['key'].present? } %>
-            <%= render ArtistItemsButtonComponent.new(artist_name: artist_names, old_key: first_artist&.dig('old_key'), key: first_artist&.dig('key')) %>
+          <% @artists_with_more_items.each do |artist_data| %>
+            <% artist_label = artist_data['alias'].presence || artist_data['name'] %>
+            <%= render ArtistItemsButtonComponent.new(artist_name: artist_label, old_key: artist_data['old_key'], key: artist_data['key']) %>
           <% end %>
         </div>
       <% end %>

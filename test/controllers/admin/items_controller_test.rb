@@ -29,6 +29,26 @@ module Admin
       assert_equal [{ 'name' => '名称のみのアーティスト' }], item.artists
     end
 
+    test 'update sets the various_artists flag from the checkbox param' do
+      item = Item.create!(
+        title: 'Test Item',
+        release_date: Date.today,
+        link_url: "https://example.com/item-#{SecureRandom.hex(4)}"
+      )
+
+      patch admin_item_path(item), params: {
+        item: {
+          title: item.title,
+          release_date: item.release_date,
+          link_url: item.link_url,
+          various_artists: '1'
+        }
+      }
+
+      assert_redirected_to admin_items_path
+      assert item.reload.various_artists?
+    end
+
     test 'edit renders a previously saved name-only artist as a selected chip, not a blank search box' do
       item = Item.create!(
         title: 'Test Item',
