@@ -24,7 +24,7 @@ module Admin
         }
       }
 
-      assert_redirected_to admin_items_path
+      assert_redirected_to edit_admin_item_path(item)
       item.reload
       assert_equal [{ 'name' => '名称のみのアーティスト' }], item.artists
     end
@@ -45,7 +45,7 @@ module Admin
         }
       }
 
-      assert_redirected_to admin_items_path
+      assert_redirected_to edit_admin_item_path(item)
       assert item.reload.various_artists?
     end
 

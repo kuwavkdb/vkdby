@@ -42,7 +42,7 @@ module Admin
       @item.artists = build_artists_from_json(params[:item][:artists_json])
 
       if @item.save
-        redirect_to admin_items_path, notice: 'Item updated successfully.'
+        redirect_to edit_admin_item_path(@item), notice: 'Item updated successfully.'
       else
         render :edit, status: :unprocessable_entity
       end
