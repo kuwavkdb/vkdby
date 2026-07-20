@@ -60,7 +60,7 @@ module Admin
     end
 
     def item_params
-      params.require(:item).permit(:title, :release_date, :link_url, :asin, :image_url)
+      params.require(:item).permit(:title, :release_date, :link_url, :asin, :image_url, :various_artists)
     end
 
     def build_artist_from_params
