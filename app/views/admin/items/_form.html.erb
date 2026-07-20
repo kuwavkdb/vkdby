@@ -46,7 +46,7 @@
     <%# Row container %>
     <div data-artist-rows-target="container" class="space-y-2">
       <% (item.artists || []).each do |artist| %>
-        <% search_mode = artist['key'].blank? && artist['old_key'].blank? %>
+        <% search_mode = artist['name'].blank? %>
         <div class="flex items-center gap-2" data-artist-rows-target="row" data-mode="unit">
           <button type="button"
                   class="flex-none px-2 py-1 text-xs rounded border border-indigo-300 bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 dark:border-indigo-700 whitespace-nowrap"
