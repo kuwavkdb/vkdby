@@ -40,6 +40,21 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, 'Item Two'
   end
 
+  test 'show does not render a link for a name-only artist' do
+    item = Item.create!(
+      title: 'Name Only Artist Item',
+      artists: [{ 'name' => '名前のみのアーティスト' }],
+      release_date: '2026-03-01',
+      link_url: "http://example.com/name-only-artist-item-#{SecureRandom.hex(4)}"
+    )
+
+    get item_path(item)
+
+    assert_response :success
+    assert_includes response.body, '名前のみのアーティスト'
+    assert_not_includes response.body, %(href="/#{ERB::Util.url_encode('名前のみのアーティスト'.encode('EUC-JP'))}.html")
+  end
+
   test 'index filters by artist name with q param' do
     item = Item.create!(
       title: 'Searchable Artist Item',
