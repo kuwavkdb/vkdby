@@ -53,6 +53,7 @@
       <% (item.artists || []).each do |artist| %>
         <% search_mode = artist['name'].blank? %>
         <div class="flex items-center gap-2" data-artist-rows-target="row" data-mode="unit">
+          <span class="drag-handle flex-none px-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab" aria-hidden="true">⠿</span>
           <button type="button"
                   class="flex-none px-2 py-1 text-xs rounded border border-indigo-300 bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 dark:border-indigo-700 whitespace-nowrap"
                   data-action="click->artist-rows#toggleMode">Units</button>
@@ -106,6 +107,7 @@
     <%# Template for new empty rows %>
     <template data-artist-rows-target="template">
       <div class="flex items-center gap-2 mt-2" data-artist-rows-target="row" data-mode="unit">
+        <span class="drag-handle flex-none px-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab" aria-hidden="true">⠿</span>
         <button type="button"
                 class="flex-none px-2 py-1 text-xs rounded border border-indigo-300 bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 dark:border-indigo-700 whitespace-nowrap"
                 data-action="click->artist-rows#toggleMode">Units</button>
