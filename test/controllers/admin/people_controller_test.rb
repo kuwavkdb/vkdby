@@ -136,6 +136,61 @@ module Admin
       assert_not_includes response.body, 'キー変更'
     end
 
+    test 'index renders tag filter comboboxes only for groups and tags visible on people' do
+      group = IndexGroup.create!(name: '属性グループ', people_filter_order: 1)
+      hidden_group = IndexGroup.create!(name: '非表示グループ', people_filter_order: nil)
+      TagIndex.create!(name: '有効タグ', index_group: group, order_in_group: 1)
+      TagIndex.create!(name: '無効タグ', index_group: group, active: false)
+      TagIndex.create!(name: '孤立タグ', index_group: hidden_group)
+
+      get admin_people_path
+
+      assert_response :success
+      assert_includes response.body, '属性グループ'
+      assert_includes response.body, '有効タグ'
+      assert_not_includes response.body, '無効タグ'
+      assert_not_includes response.body, '非表示グループ'
+      assert_not_includes response.body, '孤立タグ'
+    end
+
+    test 'index filters people by tag_index_id selected from the tag filter' do
+      group = IndexGroup.create!(name: '属性グループ', people_filter_order: 1)
+      tag = TagIndex.create!(name: '有効タグ', index_group: group, order_in_group: 1)
+      TagIndexItem.create!(tag_index: tag, indexable: @person)
+      other_person = Person.create!(name: 'Other Person', key: 'other-person-controller-test', status: :active)
+
+      get admin_people_path(tag_index_id: tag.id)
+
+      assert_response :success
+      assert_includes response.body, @person.name
+      assert_not_includes response.body, other_person.name
+    end
+
+    test 'index filters people by status' do
+      hiatus_person = Person.create!(name: 'Hiatus Person', key: 'hiatus-person-controller-test', status: :hiatus)
+
+      get admin_people_path(status: 'hiatus')
+
+      assert_response :success
+      assert_includes response.body, hiatus_person.name
+      assert_not_includes response.body, @person.name
+    end
+
+    test 'index combines tag_index_id and status filters' do
+      group = IndexGroup.create!(name: '属性グループ', people_filter_order: 1)
+      tag = TagIndex.create!(name: '有効タグ', index_group: group, order_in_group: 1)
+      tagged_active = Person.create!(name: 'Tagged Active Person', key: 'tagged-active-person-test', status: :active)
+      tagged_hiatus = Person.create!(name: 'Tagged Hiatus Person', key: 'tagged-hiatus-person-test', status: :hiatus)
+      TagIndexItem.create!(tag_index: tag, indexable: tagged_active)
+      TagIndexItem.create!(tag_index: tag, indexable: tagged_hiatus)
+
+      get admin_people_path(tag_index_id: tag.id, status: 'hiatus')
+
+      assert_response :success
+      assert_includes response.body, tagged_hiatus.name
+      assert_not_includes response.body, tagged_active.name
+    end
+
     private
 
     def login_as_admin

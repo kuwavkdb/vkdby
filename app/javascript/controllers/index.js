@@ -7,9 +7,6 @@ import { application } from "controllers/application"
 import ArtistRowsController from "controllers/artist_rows_controller"
 application.register("artist-rows", ArtistRowsController)
 
-import ItemFormController from "controllers/item_form_controller"
-application.register("item-form", ItemFormController)
-
 import AutocompleteController from "controllers/autocomplete_controller"
 application.register("autocomplete", AutocompleteController)
 
@@ -19,26 +16,29 @@ application.register("date-picker", DatePickerController)
 import DropdownController from "controllers/dropdown_controller"
 application.register("dropdown", DropdownController)
 
-import MobileMenuController from "controllers/mobile_menu_controller"
-application.register("mobile-menu", MobileMenuController)
+import ItemFormController from "controllers/item_form_controller"
+application.register("item-form", ItemFormController)
 
-import SearchSuggestController from "controllers/search_suggest_controller"
-application.register("search-suggest", SearchSuggestController)
-
-import PersonSelectController from "controllers/person_select_controller"
-application.register("person-select", PersonSelectController)
-
-import SortableController from "controllers/sortable_controller"
-application.register("sortable", SortableController)
-
-import ToggleController from "controllers/toggle_controller"
-application.register("toggle", ToggleController)
+import LinkTitleSuggestController from "controllers/link_title_suggest_controller"
+application.register("link-title-suggest", LinkTitleSuggestController)
 
 import MarkdownPreviewController from "controllers/markdown_preview_controller"
 application.register("markdown-preview", MarkdownPreviewController)
 
-import UnitGraphController from "controllers/unit_graph_controller"
-application.register("unit-graph", UnitGraphController)
+import MobileMenuController from "controllers/mobile_menu_controller"
+application.register("mobile-menu", MobileMenuController)
+
+import PersonSelectController from "controllers/person_select_controller"
+application.register("person-select", PersonSelectController)
+
+import SearchSuggestController from "controllers/search_suggest_controller"
+application.register("search-suggest", SearchSuggestController)
+
+import SortableController from "controllers/sortable_controller"
+application.register("sortable", SortableController)
+
+import TagGroupSelectController from "controllers/tag_group_select_controller"
+application.register("tag-group-select", TagGroupSelectController)
 
 import TimelineController from "controllers/timeline_controller"
 application.register("timeline", TimelineController)
@@ -46,8 +46,11 @@ application.register("timeline", TimelineController)
 import TimelineSearchController from "controllers/timeline_search_controller"
 application.register("timeline-search", TimelineSearchController)
 
+import ToggleController from "controllers/toggle_controller"
+application.register("toggle", ToggleController)
+
+import UnitGraphController from "controllers/unit_graph_controller"
+application.register("unit-graph", UnitGraphController)
+
 import YoutubeCarouselController from "controllers/youtube_carousel_controller"
 application.register("youtube-carousel", YoutubeCarouselController)
-
-import LinkTitleSuggestController from "controllers/link_title_suggest_controller"
-application.register("link-title-suggest", LinkTitleSuggestController)

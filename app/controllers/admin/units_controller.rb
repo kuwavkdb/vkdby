@@ -14,6 +14,7 @@ module Admin
       @show_discarded = @tag_index_id.present? ? 'all' : params[:discarded]
       @unit_type_filter = params[:unit_type]
       @redirect_source = params[:redirect_source]
+      @status_filter = params[:status]
       scope = case @show_discarded
               when 'only' then Unit.discarded
               when 'all'  then Unit.with_discarded
@@ -36,7 +37,9 @@ module Admin
         @tag_index = TagIndex.find_by(id: @tag_index_id)
         scope = scope.joins(:tag_index_items).where(tag_index_items: { tag_index_id: @tag_index_id })
       end
+      scope = scope.where(status: @status_filter) if @status_filter.present?
       @pagy, @units = pagy(scope.order(updated_at: :desc))
+      @tag_filter_groups = IndexGroup.tag_filter_options_for_units
     end
 
     def new
