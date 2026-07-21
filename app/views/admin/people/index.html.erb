@@ -8,6 +8,10 @@
     <div class="flex items-center space-x-4">
       <%= form_with url: admin_people_path, method: :get, local: true, class: "flex" do |f| %>
         <%= f.hidden_field :discarded, value: params[:discarded] %>
+        <%= f.hidden_field :tag_index_id, value: params[:tag_index_id] %>
+        <%= f.select :status, options_for_select(Person::STATUS_TRANSLATIONS.map { |key, label| [label, key] }, params[:status]),
+              { include_blank: "すべてのStatus" },
+              { onchange: "this.form.requestSubmit()", "aria-label": "Statusで絞り込み", class: "border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 mr-2" } %>
         <%= f.text_field :q, value: params[:q], placeholder: "Search by name or key...", class: "rounded-l-md border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" %>
         <%= f.submit "Search", class: "px-4 py-2 bg-white text-gray-700 border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-50 cursor-pointer" %>
       <% end %>
@@ -21,6 +25,8 @@
       <%= link_to "フィルター解除", admin_people_path, class: "text-indigo-600 hover:text-indigo-800 underline" %>
     </div>
   <% end %>
+
+  <%= render "admin/shared/tag_filter", groups: @tag_filter_groups %>
 
   <div class="flex space-x-2 mb-4">
     <%= link_to "通常", admin_people_path(q: params[:q]),
