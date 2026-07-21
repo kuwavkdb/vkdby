@@ -191,6 +191,49 @@ module Admin
       assert_not_includes response.body, tagged_active.name
     end
 
+    test 'bulk_update_status requires admin role' do
+      other_person = Person.create!(name: 'Other Person', key: 'bulk-status-auth-person', status: :active)
+
+      patch bulk_update_status_admin_people_path, params: { ids: [@person.id, other_person.id], status: 'hiatus' }
+
+      assert_redirected_to root_path
+      assert_equal 'active', @person.reload.status
+      assert_equal 'active', other_person.reload.status
+    end
+
+    test 'bulk_update_status updates the status of the selected people and logs each change' do
+      login_as_admin
+      other_person = Person.create!(name: 'Other Person', key: 'bulk-status-person', status: :active)
+
+      patch bulk_update_status_admin_people_path, params: { ids: [@person.id, other_person.id], status: 'hiatus' }
+
+      assert_redirected_to admin_people_path
+      assert_equal '2件のStatusを更新しました', flash[:notice]
+      assert_equal 'hiatus', @person.reload.status
+      assert_equal 'hiatus', other_person.reload.status
+      assert UpdateLog.exists?(loggable: @person, action: 'update')
+      assert UpdateLog.exists?(loggable: other_person, action: 'update')
+    end
+
+    test 'bulk_update_status shows an alert when no ids are selected' do
+      login_as_admin
+
+      patch bulk_update_status_admin_people_path, params: { ids: [], status: 'hiatus' }
+
+      assert_redirected_to admin_people_path
+      assert_equal '項目が選択されていません', flash[:alert]
+    end
+
+    test 'bulk_update_status shows an alert for an invalid status' do
+      login_as_admin
+
+      patch bulk_update_status_admin_people_path, params: { ids: [@person.id], status: 'not-a-real-status' }
+
+      assert_redirected_to admin_people_path
+      assert_equal 'Statusを選択してください', flash[:alert]
+      assert_equal 'active', @person.reload.status
+    end
+
     private
 
     def login_as_admin

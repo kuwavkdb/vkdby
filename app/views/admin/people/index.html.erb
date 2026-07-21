@@ -47,6 +47,11 @@
     <table class="min-w-full divide-y divide-gray-200">
       <thead class="bg-gray-50">
         <tr>
+          <% if current_user.admin? %>
+            <th class="px-4 py-3">
+              <input type="checkbox" id="check_all" class="rounded border-gray-300" onclick="document.querySelectorAll('.row-check').forEach(c => c.checked = this.checked)" aria-label="すべて選択">
+            </th>
+          <% end %>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parts</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Key</th>
@@ -57,6 +62,11 @@
       <tbody class="bg-white divide-y divide-gray-200">
         <% @people.each do |person| %>
           <tr class="<%= person.discarded? ? 'bg-red-50' : '' %>">
+            <% if current_user.admin? %>
+              <td class="px-4 py-4">
+                <input type="checkbox" value="<%= person.id %>" class="row-check rounded border-gray-300" aria-label="<%= person.name %> を選択">
+              </td>
+            <% end %>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
               <%= person.name %>
               <% if person.discarded? %>
@@ -109,6 +119,51 @@
       </tbody>
     </table>
   </div>
+
+  <% if current_user.admin? %>
+    <div class="sticky bottom-0 z-10 flex flex-wrap items-center gap-2 bg-white border-t border-gray-200 px-4 py-3 shadow-md mb-4">
+      <label class="text-sm text-gray-600">一括更新:</label>
+      <select id="bulk-status-select"
+              class="text-sm rounded border-gray-300 py-1.5 pr-8"
+              aria-label="一括更新するStatus">
+        <% Person::STATUS_TRANSLATIONS.each do |key, label| %>
+          <option value="<%= key %>"><%= label %></option>
+        <% end %>
+      </select>
+      <button type="button"
+              onclick="submitBulkStatus()"
+              class="px-4 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer">
+        選択した項目のStatusを更新
+      </button>
+    </div>
+
+    <%= form_with url: bulk_update_status_admin_people_path, method: :patch, id: "bulk-status-form", class: "hidden" do %>
+      <input type="hidden" name="status" id="bulk-status-value">
+    <% end %>
+
+    <script>
+      function submitBulkStatus() {
+        var checked = document.querySelectorAll('.row-check:checked');
+        if (checked.length === 0) {
+          alert('項目が選択されていません');
+          return;
+        }
+        if (!confirm('選択した ' + checked.length + ' 件のStatusを更新します。よろしいですか？')) return;
+
+        var form = document.getElementById('bulk-status-form');
+        form.querySelectorAll('input[name="ids[]"]').forEach(function(el) { el.remove(); });
+        checked.forEach(function(cb) {
+          var input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = 'ids[]';
+          input.value = cb.value;
+          form.appendChild(input);
+        });
+        document.getElementById('bulk-status-value').value = document.getElementById('bulk-status-select').value;
+        form.requestSubmit();
+      }
+    </script>
+  <% end %>
 
   <div class="mt-4">
     <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
