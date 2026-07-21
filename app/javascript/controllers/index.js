@@ -48,3 +48,6 @@ application.register("timeline-search", TimelineSearchController)
 
 import YoutubeCarouselController from "controllers/youtube_carousel_controller"
 application.register("youtube-carousel", YoutubeCarouselController)
+
+import LinkTitleSuggestController from "controllers/link_title_suggest_controller"
+application.register("link-title-suggest", LinkTitleSuggestController)
