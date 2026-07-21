@@ -6,7 +6,7 @@ module Admin
 
     before_action :set_unit, only: %i[show edit update destroy undiscard change_key purge]
     before_action :require_super_operator, only: %i[destroy]
-    before_action :require_admin, only: %i[change_key purge]
+    before_action :require_admin, only: %i[change_key purge bulk_update_status]
 
     def index
       @q = params[:q]
@@ -141,6 +141,23 @@ module Admin
         diff: { 'key' => [key_was, nil], 'destination_key' => [destination_was, nil] }
       )
       redirect_to admin_units_path(redirect_source: 'only'), notice: 'リダイレクト元レコードを物理削除しました。'
+    end
+
+    def bulk_update_status
+      ids = Array(params[:ids]).map(&:to_i).reject(&:zero?)
+      status = params[:status].presence
+      return redirect_back_or_to admin_units_path, alert: '項目が選択されていません' if ids.empty?
+      return redirect_back_or_to admin_units_path, alert: 'Statusを選択してください' unless Unit.statuses.key?(status)
+
+      count = 0
+      Unit.with_discarded.where(id: ids).find_each do |unit|
+        next if unit.status == status
+
+        unit.update!(status: status)
+        record_update_log(unit, action: 'update')
+        count += 1
+      end
+      redirect_back_or_to admin_units_path, notice: "#{count}件のStatusを更新しました"
     end
 
     def search

@@ -217,6 +217,49 @@ module Admin
       assert_not_includes response.body, tagged_active.name
     end
 
+    test 'bulk_update_status requires admin role' do
+      other_unit = Unit.create!(name: 'Other Unit', key: 'bulk-status-auth-unit', status: :active)
+
+      patch bulk_update_status_admin_units_path, params: { ids: [@unit.id, other_unit.id], status: 'freeze' }
+
+      assert_redirected_to root_path
+      assert_equal 'active', @unit.reload.status
+      assert_equal 'active', other_unit.reload.status
+    end
+
+    test 'bulk_update_status updates the status of the selected units and logs each change' do
+      login_as_admin
+      other_unit = Unit.create!(name: 'Other Unit', key: 'bulk-status-unit', status: :active)
+
+      patch bulk_update_status_admin_units_path, params: { ids: [@unit.id, other_unit.id], status: 'freeze' }
+
+      assert_redirected_to admin_units_path
+      assert_equal '2件のStatusを更新しました', flash[:notice]
+      assert_equal 'freeze', @unit.reload.status
+      assert_equal 'freeze', other_unit.reload.status
+      assert UpdateLog.exists?(loggable: @unit, action: 'update')
+      assert UpdateLog.exists?(loggable: other_unit, action: 'update')
+    end
+
+    test 'bulk_update_status shows an alert when no ids are selected' do
+      login_as_admin
+
+      patch bulk_update_status_admin_units_path, params: { ids: [], status: 'freeze' }
+
+      assert_redirected_to admin_units_path
+      assert_equal '項目が選択されていません', flash[:alert]
+    end
+
+    test 'bulk_update_status shows an alert for an invalid status' do
+      login_as_admin
+
+      patch bulk_update_status_admin_units_path, params: { ids: [@unit.id], status: 'not-a-real-status' }
+
+      assert_redirected_to admin_units_path
+      assert_equal 'Statusを選択してください', flash[:alert]
+      assert_equal 'active', @unit.reload.status
+    end
+
     private
 
     def login_as_admin
