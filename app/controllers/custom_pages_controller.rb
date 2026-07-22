@@ -26,8 +26,8 @@ class CustomPagesController < ApplicationController
 
     @recently_updated = Rails.cache.fetch('sidebar/recently_updated', expires_in: 10.minutes) do
       pages   = CustomPage.published.order(updated_at: :desc).limit(10).to_a
-      units   = Unit.kept.order(updated_at: :desc).limit(10).to_a
-      persons = Person.kept.order(updated_at: :desc).limit(10).to_a
+      units   = Unit.kept.where.not(key: nil).order(updated_at: :desc).limit(10).to_a
+      persons = Person.kept.where.not(key: nil).order(updated_at: :desc).limit(10).to_a
       (pages + units + persons).sort_by(&:updated_at).reverse.first(8)
     end
 
