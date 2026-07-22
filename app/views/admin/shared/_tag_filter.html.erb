@@ -1,0 +1,18 @@
+<% if groups.present? %>
+  <div class="flex flex-wrap gap-3 mb-4">
+    <% groups.each do |group| %>
+      <div class="relative" data-controller="tag-group-select"
+           data-tag-group-select-tags-value="<%= group[:tags].to_json %>">
+        <label for="tag_group_<%= group[:id] %>" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1"><%= group[:name] %></label>
+        <input type="text" id="tag_group_<%= group[:id] %>"
+               placeholder="検索..."
+               role="combobox" aria-expanded="false" aria-autocomplete="list"
+               class="w-36 rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+               data-tag-group-select-target="input"
+               data-action="input->tag-group-select#search focus->tag-group-select#search keydown->tag-group-select#onKeydown">
+        <div data-tag-group-select-target="results" role="listbox"
+             class="hidden absolute z-50 mt-1 w-48 max-h-60 overflow-y-auto bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700"></div>
+      </div>
+    <% end %>
+  </div>
+<% end %>

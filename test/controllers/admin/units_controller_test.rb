@@ -161,6 +161,105 @@ module Admin
       assert_not_includes response.body, '論理削除'
     end
 
+    test 'index renders tag filter comboboxes only for groups and tags visible on units' do
+      group = IndexGroup.create!(name: '属性グループ', units_filter_order: 1)
+      hidden_group = IndexGroup.create!(name: '非表示グループ', units_filter_order: nil)
+      TagIndex.create!(name: '有効タグ', index_group: group, order_in_group: 1)
+      TagIndex.create!(name: '無効タグ', index_group: group, active: false)
+      TagIndex.create!(name: '孤立タグ', index_group: hidden_group)
+
+      # q で一致しない検索にして、key が未設定なfixtureのUnitが一覧描画でエラーにならないようにする
+      get admin_units_path(q: 'no-such-unit-zzz')
+
+      assert_response :success
+      assert_includes response.body, '属性グループ'
+      assert_includes response.body, '有効タグ'
+      assert_not_includes response.body, '無効タグ'
+      assert_not_includes response.body, '非表示グループ'
+      assert_not_includes response.body, '孤立タグ'
+    end
+
+    test 'index filters units by tag_index_id selected from the tag filter' do
+      group = IndexGroup.create!(name: '属性グループ', units_filter_order: 1)
+      tag = TagIndex.create!(name: '有効タグ', index_group: group, order_in_group: 1)
+      TagIndexItem.create!(tag_index: tag, indexable: @unit)
+      other_unit = Unit.create!(name: 'Other Unit', key: 'other-unit-controller-test', status: :active)
+
+      get admin_units_path(tag_index_id: tag.id)
+
+      assert_response :success
+      assert_includes response.body, @unit.name
+      assert_not_includes response.body, other_unit.name
+    end
+
+    test 'index filters units by status' do
+      frozen_unit = Unit.create!(name: 'Frozen Unit', key: 'frozen-unit-controller-test', status: :freeze, unit_type: :band)
+
+      get admin_units_path(status: 'freeze')
+
+      assert_response :success
+      assert_includes response.body, frozen_unit.name
+      assert_not_includes response.body, @unit.name
+    end
+
+    test 'index combines tag_index_id and status filters' do
+      group = IndexGroup.create!(name: '属性グループ', units_filter_order: 1)
+      tag = TagIndex.create!(name: '有効タグ', index_group: group, order_in_group: 1)
+      tagged_active = Unit.create!(name: 'Tagged Active Unit', key: 'tagged-active-unit-test', status: :active)
+      tagged_frozen = Unit.create!(name: 'Tagged Frozen Unit', key: 'tagged-frozen-unit-test', status: :freeze)
+      TagIndexItem.create!(tag_index: tag, indexable: tagged_active)
+      TagIndexItem.create!(tag_index: tag, indexable: tagged_frozen)
+
+      get admin_units_path(tag_index_id: tag.id, status: 'freeze')
+
+      assert_response :success
+      assert_includes response.body, tagged_frozen.name
+      assert_not_includes response.body, tagged_active.name
+    end
+
+    test 'bulk_update_status requires admin role' do
+      other_unit = Unit.create!(name: 'Other Unit', key: 'bulk-status-auth-unit', status: :active)
+
+      patch bulk_update_status_admin_units_path, params: { ids: [@unit.id, other_unit.id], status: 'freeze' }
+
+      assert_redirected_to root_path
+      assert_equal 'active', @unit.reload.status
+      assert_equal 'active', other_unit.reload.status
+    end
+
+    test 'bulk_update_status updates the status of the selected units and logs each change' do
+      login_as_admin
+      other_unit = Unit.create!(name: 'Other Unit', key: 'bulk-status-unit', status: :active)
+
+      patch bulk_update_status_admin_units_path, params: { ids: [@unit.id, other_unit.id], status: 'freeze' }
+
+      assert_redirected_to admin_units_path
+      assert_equal '2件のStatusを更新しました', flash[:notice]
+      assert_equal 'freeze', @unit.reload.status
+      assert_equal 'freeze', other_unit.reload.status
+      assert UpdateLog.exists?(loggable: @unit, action: 'update')
+      assert UpdateLog.exists?(loggable: other_unit, action: 'update')
+    end
+
+    test 'bulk_update_status shows an alert when no ids are selected' do
+      login_as_admin
+
+      patch bulk_update_status_admin_units_path, params: { ids: [], status: 'freeze' }
+
+      assert_redirected_to admin_units_path
+      assert_equal '項目が選択されていません', flash[:alert]
+    end
+
+    test 'bulk_update_status shows an alert for an invalid status' do
+      login_as_admin
+
+      patch bulk_update_status_admin_units_path, params: { ids: [@unit.id], status: 'not-a-real-status' }
+
+      assert_redirected_to admin_units_path
+      assert_equal 'Statusを選択してください', flash[:alert]
+      assert_equal 'active', @unit.reload.status
+    end
+
     private
 
     def login_as_admin

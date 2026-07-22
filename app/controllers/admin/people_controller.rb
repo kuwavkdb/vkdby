@@ -4,13 +4,14 @@ module Admin
   class PeopleController < Admin::BaseController # rubocop:disable Metrics/ClassLength
     before_action :set_person, only: %i[edit update destroy undiscard change_key purge]
     before_action :require_super_operator, only: %i[destroy]
-    before_action :require_admin, only: %i[change_key purge]
+    before_action :require_admin, only: %i[change_key purge bulk_update_status]
 
     def index
       @q = params[:q]
       @tag_index_id = params[:tag_index_id]
       @show_discarded = @tag_index_id.present? ? 'all' : params[:discarded]
       @redirect_source = params[:redirect_source]
+      @status_filter = params[:status]
       scope = if @redirect_source == 'only'
                 Person.with_discarded.where.not(destination_key: nil)
               else
@@ -30,7 +31,9 @@ module Admin
         @tag_index = TagIndex.find_by(id: @tag_index_id)
         scope = scope.joins(:tag_index_items).where(tag_index_items: { tag_index_id: @tag_index_id })
       end
+      scope = scope.where(status: @status_filter) if @status_filter.present?
       @pagy, @people = pagy(scope.order(updated_at: :desc))
+      @tag_filter_groups = IndexGroup.tag_filter_options_for_people
     end
 
     def new
@@ -122,6 +125,23 @@ module Admin
         diff: { 'key' => [key_was, nil], 'destination_key' => [destination_was, nil] }
       )
       redirect_to admin_people_path(redirect_source: 'only'), notice: 'リダイレクト元レコードを物理削除しました。'
+    end
+
+    def bulk_update_status
+      ids = Array(params[:ids]).map(&:to_i).reject(&:zero?)
+      status = params[:status].presence
+      return redirect_back_or_to admin_people_path, alert: '項目が選択されていません' if ids.empty?
+      return redirect_back_or_to admin_people_path, alert: 'Statusを選択してください' unless Person.statuses.key?(status)
+
+      count = 0
+      Person.with_discarded.where(id: ids).find_each do |person|
+        next if person.status == status
+
+        person.update!(status: status)
+        record_update_log(person, action: 'update')
+        count += 1
+      end
+      redirect_back_or_to admin_people_path, notice: "#{count}件のStatusを更新しました"
     end
 
     def search
