@@ -1,7 +1,9 @@
+<% title = "People管理" %>
+<% content_for :title, title %>
 <div class="container mx-auto px-4 py-8">
   <div class="flex flex-col md:flex-row justify-between items-center mb-6">
     <div class="flex items-center gap-3 mb-4 md:mb-0">
-      <h1 class="text-2xl font-bold">People管理</h1>
+      <h1 class="text-2xl font-bold"><%= title %></h1>
       <%= link_to "Unit管理", admin_units_path,
           class: "text-sm text-gray-500 hover:text-indigo-600 hover:underline" %>
     </div>
