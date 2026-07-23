@@ -1,3 +1,5 @@
+<% title = "メンバー編集: #{@snapshot_person.name}" %>
+<% content_for :title, title %>
 <div class="max-w-7xl mx-auto px-4 py-8">
   <div class="max-w-2xl mx-auto">
     <div class="mb-6">
@@ -12,7 +14,7 @@
           <span>日付: <%= @unit_snapshot.snapshot_date.strftime("%Y/%m/%d") %></span>
         <% end %>
       </div>
-      <h1 class="text-2xl font-bold dark:text-white">Edit Member: <%= @snapshot_person.name %></h1>
+      <h1 class="text-2xl font-bold dark:text-white"><%= title %></h1>
     </div>
     <% if @snapshot_person.person_id.nil? && @snapshot_person.person_name.present? %>
       <div class="mb-6 rounded-md border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-800 dark:bg-indigo-900/30">

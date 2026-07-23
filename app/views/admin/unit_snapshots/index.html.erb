@@ -1,7 +1,9 @@
+<% title = "#{@unit.name} のスナップショット" %>
+<% content_for :title, title %>
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <div class="sm:flex sm:items-center">
     <div class="sm:flex-auto">
-      <h1 class="text-xl font-semibold text-gray-900 dark:text-white"><%= @unit.name %> のスナップショット</h1>
+      <h1 class="text-xl font-semibold text-gray-900 dark:text-white"><%= title %></h1>
       <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">特定時点のラインアップスナップショット。</p>
     </div>
     <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
