@@ -47,6 +47,7 @@ class Unit < ApplicationRecord
   enum :status, { pre: 0, active: 1, freeze: 2, disbanded: 3, unknown: 99 }
 
   validates :status, presence: true
+  validates :key, uniqueness: { case_sensitive: false }, allow_blank: true
   validate :key_immutable, on: :update
 
   STATUS_TRANSLATIONS = {

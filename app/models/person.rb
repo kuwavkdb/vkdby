@@ -74,6 +74,7 @@ class Person < ApplicationRecord
 
   before_save :normalize_birthday_year
 
+  validates :key, uniqueness: { case_sensitive: false }, allow_blank: true
   validate :key_immutable, on: :update
   after_create :auto_link_snapshot_people
   after_commit :expire_sidebar_cache
