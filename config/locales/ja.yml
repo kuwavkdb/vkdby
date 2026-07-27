@@ -2,10 +2,12 @@ ja:
   errors:
     messages:
       blank: "を入力してください"
+      taken: "はすでに存在します"
   activerecord:
     errors:
       messages:
         blank: "を入力してください"
+        taken: "はすでに存在します"
     attributes:
       link:
         url: "URL"
