@@ -18,7 +18,7 @@ class IndicesController < ApplicationController
 
   def show
     @index = TagIndex.find(params[:id])
-    @people = @index.people.order(:name_kana, :name)
-    @units = @index.units.order(:name_kana, :name)
+    @people = @index.people.kept.order(:name_kana, :name)
+    @units = @index.units.kept.order(:name_kana, :name)
   end
 end
