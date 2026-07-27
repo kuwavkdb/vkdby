@@ -43,6 +43,33 @@ class UnitTest < ActiveSupport::TestCase
     assert_includes unit.errors[:key], 'cannot be changed once set'
   end
 
+  test 'key uniqueness is case-insensitive' do
+    Unit.create!(name: 'Existing Unit', key: 'case-key-test', status: :active)
+    unit = Unit.new(name: 'Duplicate Unit', key: 'Case-Key-Test', status: :active)
+
+    assert_not unit.valid?
+    assert_includes unit.errors[:key], 'はすでに存在します'
+  end
+
+  test 'change_key! raises when new key duplicates an existing key by case only' do
+    Unit.create!(name: 'Existing Unit', key: 'case-change-target', status: :active)
+    unit = Unit.create!(name: 'Renaming Unit', key: 'unit-key-change-case-before', status: :active)
+
+    assert_raises(ActiveRecord::RecordInvalid) do
+      unit.change_key!('Case-Change-Target')
+    end
+  end
+
+  test 'change_key! raises when new key duplicates a discarded redirect stub by case only' do
+    unit = Unit.create!(name: 'Rename Target Unit', key: 'unit-key-stub-before', status: :active)
+    unit.change_key!('unit-key-stub-after')
+    other = Unit.create!(name: 'Other Unit', key: 'unit-key-stub-other', status: :active)
+
+    assert_raises(ActiveRecord::RecordInvalid) do
+      other.change_key!('Unit-Key-Stub-Before')
+    end
+  end
+
   test 'other attributes can still be updated when key is unchanged' do
     unit = Unit.create!(name: 'Existing Unit', key: 'unchanged-unit-key-test', status: :active)
 

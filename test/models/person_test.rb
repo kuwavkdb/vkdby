@@ -192,6 +192,33 @@ class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
     assert_equal '%44%65%76%65%6C%6F%70+%4F%6E%65%2527%73+%46%61%63%75%6C%74%69%65%73', item[:old_key]
   end
 
+  test 'key uniqueness is case-insensitive' do
+    Person.create!(name: 'Existing Person', key: 'case-key-test', status: :active)
+    person = Person.new(name: 'Duplicate Person', key: 'Case-Key-Test', status: :active)
+
+    assert_not person.valid?
+    assert_includes person.errors[:key], 'はすでに存在します'
+  end
+
+  test 'change_key! raises when new key duplicates an existing key by case only' do
+    Person.create!(name: 'Existing Person', key: 'case-change-target', status: :active)
+    person = Person.create!(name: 'Renaming Person', key: 'person-key-change-case-before', status: :active)
+
+    assert_raises(ActiveRecord::RecordInvalid) do
+      person.change_key!('Case-Change-Target')
+    end
+  end
+
+  test 'change_key! raises when new key duplicates a discarded redirect stub by case only' do
+    person = Person.create!(name: 'Rename Target Person', key: 'person-key-stub-before', status: :active)
+    person.change_key!('person-key-stub-after')
+    other = Person.create!(name: 'Other Person', key: 'person-key-stub-other', status: :active)
+
+    assert_raises(ActiveRecord::RecordInvalid) do
+      other.change_key!('Person-Key-Stub-Before')
+    end
+  end
+
   test 'change_key! updates the key and creates a discarded redirect stub' do
     person = Person.create!(name: 'Rename Target Person', key: 'person-key-change-before', status: :active)
 
