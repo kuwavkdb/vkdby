@@ -52,5 +52,8 @@ application.register("toggle", ToggleController)
 import UnitGraphController from "controllers/unit_graph_controller"
 application.register("unit-graph", UnitGraphController)
 
+import UnitSelectController from "controllers/unit_select_controller"
+application.register("unit-select", UnitSelectController)
+
 import YoutubeCarouselController from "controllers/youtube_carousel_controller"
 application.register("youtube-carousel", YoutubeCarouselController)

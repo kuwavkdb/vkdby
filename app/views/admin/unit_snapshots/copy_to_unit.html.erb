@@ -1,0 +1,32 @@
+<% title = "スナップショットを別ユニットにコピー" %>
+<% content_for :title, title %>
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <h1 class="text-xl font-semibold text-gray-900 dark:text-white"><%= title %></h1>
+  <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">
+    <%= @unit.name %> の「<%= @unit_snapshot.label.presence || @unit_snapshot.snapshot_date&.strftime("%Y/%m/%d") %>」を、選択したユニットにコピーします。
+  </p>
+
+  <%= form_with url: copy_to_unit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot), method: :post, class: "mt-6 space-y-4" do %>
+    <div data-controller="unit-select"
+         data-unit-select-url-value="<%= search_admin_units_path %>"
+         class="relative">
+      <label for="target_unit_search" class="block text-sm font-medium text-gray-700 dark:text-gray-300">コピー先ユニット</label>
+      <input type="text"
+             id="target_unit_search"
+             placeholder="ユニット名で検索..."
+             autocomplete="off"
+             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+             data-unit-select-target="input"
+             data-action="input->unit-select#search keydown->unit-select#onKeydown">
+      <div data-unit-select-target="results"
+           class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 hidden max-h-60 overflow-y-auto"></div>
+      <input type="hidden" name="target_unit_id" data-unit-select-target="unitId">
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">2文字以上入力すると候補が表示されます。</p>
+    </div>
+
+    <div class="flex justify-end gap-3 pt-2">
+      <%= link_to "キャンセル", admin_unit_unit_snapshots_path(@unit), class: "inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600" %>
+      <button type="submit" class="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer">コピーを実行</button>
+    </div>
+  <% end %>
+</div>
