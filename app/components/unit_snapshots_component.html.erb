@@ -7,7 +7,7 @@
             <%= snapshot.past? ? 'Related' : 'Members' %>
           </h2>
           <% if @show_label && snapshot.label.present? %>
-            <span class="text-xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"><%= snapshot.label %></span>
+            <span class="text-xs font-black px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"><%= snapshot.label %></span>
           <% end %>
           <% if snapshot.current? %>
             <span class="text-xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400">Current</span>
