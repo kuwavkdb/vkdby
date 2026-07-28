@@ -59,6 +59,34 @@ module Admin
       assert_redirected_to admin_unit_unit_snapshots_path(@unit)
     end
 
+    test 'should get copy_to_unit form' do
+      get copy_to_unit_admin_unit_unit_snapshot_path(@unit, @snapshot)
+      assert_response :success
+    end
+
+    test 'should copy unit_snapshot to another unit' do
+      other_unit = units(:two)
+
+      assert_difference('UnitSnapshot.count', 1) do
+        assert_difference('SnapshotPerson.count', @snapshot.snapshot_people.count) do
+          post copy_to_unit_admin_unit_unit_snapshot_path(@unit, @snapshot), params: { target_unit_id: other_unit.id }
+        end
+      end
+
+      new_snapshot = UnitSnapshot.last
+      assert_equal other_unit, new_snapshot.unit
+      assert_equal @snapshot.label, new_snapshot.label
+      assert_not new_snapshot.current?
+      assert_redirected_to edit_admin_unit_unit_snapshot_path(other_unit, new_snapshot)
+    end
+
+    test 'should not copy unit_snapshot when target unit is missing' do
+      assert_no_difference('UnitSnapshot.count') do
+        post copy_to_unit_admin_unit_unit_snapshot_path(@unit, @snapshot), params: { target_unit_id: '' }
+      end
+      assert_redirected_to copy_to_unit_admin_unit_unit_snapshot_path(@unit, @snapshot)
+    end
+
     test 'should redirect to login when not authenticated' do
       delete logout_path
       get admin_unit_unit_snapshots_path(@unit)

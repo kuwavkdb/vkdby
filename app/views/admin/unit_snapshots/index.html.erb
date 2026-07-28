@@ -60,6 +60,7 @@
                   <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                     <%= link_to "編集", edit_admin_unit_unit_snapshot_path(@unit, snapshot), class: "text-indigo-600 hover:text-indigo-900 mr-4 dark:text-indigo-400 dark:hover:text-indigo-300" %>
                     <%= button_to "コピー", copy_admin_unit_unit_snapshot_path(@unit, snapshot), method: :post, class: "text-green-600 hover:text-green-900 bg-transparent border-0 cursor-pointer p-0 inline mr-4 dark:text-green-400 dark:hover:text-green-300", form_class: "inline", onclick: "return confirm('このスナップショットをコピーしますか？')" %>
+                    <%= link_to "別ユニット", copy_to_unit_admin_unit_unit_snapshot_path(@unit, snapshot), class: "text-green-600 hover:text-green-900 mr-4 dark:text-green-400 dark:hover:text-green-300" %>
                     <% if current_user.super_operator_or_above? %>
                       <%= button_to "削除", admin_unit_unit_snapshot_path(@unit, snapshot), method: :delete, class: "text-red-600 hover:text-red-900 bg-transparent border-0 cursor-pointer p-0 inline dark:text-red-400 dark:hover:text-red-300", form_class: "inline", onclick: "return confirm('本当に削除しますか？')" %>
                     <% end %>

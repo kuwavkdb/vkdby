@@ -26,6 +26,8 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
       resources :unit_snapshots, except: %i[show] do
         member do
           post :copy
+          get :copy_to_unit
+          post :copy_to_unit
         end
         collection do
           patch :reorder
