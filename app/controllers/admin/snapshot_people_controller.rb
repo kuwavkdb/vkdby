@@ -96,10 +96,11 @@ module Admin
     def snapshot_person_params
       p = params.require(:snapshot_person).permit(
         :person_id, :person_name, :name_alias, :part, :part_alias,
-        :status, :support, :sort_order, :person_key, :old_person_key,
+        :status, :support, :sort_order, :person_key,
         :inline_history, :sns
       )
       p[:person_id] = nil if p[:person_id].to_i.zero?
+      p.delete(:inline_history) if p[:person_id].present?
 
       if p[:sns].is_a?(String)
         p[:sns] = p[:sns].split("\n").map(&:strip).reject(&:blank?)

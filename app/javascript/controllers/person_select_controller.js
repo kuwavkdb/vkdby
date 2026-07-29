@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // Single-select autocomplete for person lookup.
 // Sets a hidden person_id field and optionally fills person_name.
 export default class extends Controller {
-  static targets = ["input", "results", "personId", "personName"]
+  static targets = ["input", "results", "personId", "personName", "selected", "selectedName", "searchBox"]
   static values = { url: String }
 
   connect() {
@@ -124,18 +124,30 @@ export default class extends Controller {
     const name = event.currentTarget.dataset.name
 
     this.personIdTarget.value = id
-    this.inputTarget.value = name
 
     if (this.hasPersonNameTarget && !this.personNameTarget.value) {
       this.personNameTarget.value = name
     }
 
     this.hideResults()
+    this.showSelected(name)
   }
 
   clear() {
     this.personIdTarget.value = ''
     this.inputTarget.value = ''
+    this.showSearchBox()
+  }
+
+  showSelected(name) {
+    if (this.hasSelectedNameTarget) this.selectedNameTarget.textContent = name
+    if (this.hasSelectedTarget) this.selectedTarget.classList.remove('hidden')
+    if (this.hasSearchBoxTarget) this.searchBoxTarget.classList.add('hidden')
+  }
+
+  showSearchBox() {
+    if (this.hasSelectedTarget) this.selectedTarget.classList.add('hidden')
+    if (this.hasSearchBoxTarget) this.searchBoxTarget.classList.remove('hidden')
   }
 
   showResults() {
