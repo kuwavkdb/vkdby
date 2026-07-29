@@ -10,8 +10,16 @@
 
     <div class="md:grid md:grid-cols-3 md:gap-8">
       <div class="md:col-span-1">
-        <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="bg-white shadow rounded-lg p-6 mb-6 dark:bg-gray-800">
           <%= render "form", unit: @unit, unit_snapshot: @unit_snapshot %>
+        </div>
+
+        <div class="bg-white shadow rounded-lg p-6 dark:bg-gray-800">
+          <h2 class="text-sm font-medium text-gray-900 dark:text-white mb-4">スナップショットのコピー</h2>
+          <div class="flex flex-col gap-3">
+            <%= button_to "同じユニットにコピー", copy_admin_unit_unit_snapshot_path(@unit, @unit_snapshot), method: :post, class: "inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer w-full", form_class: "w-full", onclick: "return confirm('このスナップショットをコピーしますか？')" %>
+            <%= link_to "別ユニットにコピー", copy_to_unit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot), class: "inline-flex items-center justify-center rounded-md border border-gray-400 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 w-full dark:bg-gray-700 dark:border-gray-500 dark:text-white dark:hover:bg-gray-600" %>
+          </div>
         </div>
       </div>
 
