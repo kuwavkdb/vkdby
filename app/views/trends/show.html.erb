@@ -105,7 +105,7 @@
             <div></div>
           <% end %>
 
-          <%= render UnitTrendsComponent.new(trends: @unit_trends, current_trend_id: @trend.id, top_spacing: false) %>
+          <%= render UnitTrendsComponent.new(trends: @unit_trends, current_trend_id: @trend.id, top_spacing: false, resource: @unit, related_units: @unit_trends_related_units) %>
         </div>
       <% end %>
 

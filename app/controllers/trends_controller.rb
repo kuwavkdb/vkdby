@@ -24,17 +24,14 @@ class TrendsController < ApplicationController
     end
 
     @pagy, @trends = pagy(scope, limit: 20)
-
-    all_unit_ids = @trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
-    @related_units = Unit.kept.where(id: all_unit_ids).index_by(&:id)
+    @related_units = related_units_for(@trends)
   end
 
   def show
     @trend = Trend.find(params[:id])
     return unless @trend.units.present?
 
-    unit_ids = @trend.units.map { |u| u['unit_id'] }
-    @related_units = Unit.kept.where(id: unit_ids).index_by(&:id)
+    @related_units = related_units_for([@trend])
 
     person_ids = (@trend.people || []).map { |p| p['person_id'] }.compact
     @related_people = Person.kept.where(id: person_ids).index_by(&:id) if person_ids.any?
@@ -59,7 +56,15 @@ class TrendsController < ApplicationController
     @items = scopes.reduce(:or).order(release_date: :desc).limit(8) if scopes.any?
 
     @unit_trends = Trend.where('units @> ?', [{ unit_id: unit.id }].to_json)
-                        .select(:id, :date, :title)
+                        .select(:id, :date, :title, :units)
                         .order(date: :asc)
+    @unit_trends_related_units = related_units_for(@unit_trends)
+  end
+
+  private
+
+  def related_units_for(trends)
+    unit_ids = trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
+    Unit.kept.where(id: unit_ids).index_by(&:id)
   end
 end

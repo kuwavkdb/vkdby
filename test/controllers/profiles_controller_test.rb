@@ -84,4 +84,15 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'Unpublished Unit'
     assert_includes response.body, '諸事情により掲載を停止しております。'
   end
+
+  test 'unit trend list shows the recorded name when it differs from the current unit name' do
+    unit = Unit.create!(name: 'Renamed Trend Unit', key: 'unit-trend-name-badge', status: :active)
+    Trend.create!(title: 'Trend before rename', date: Date.current, publish_start_at: Time.current,
+                  unit_phenomenon: :other, units: [{ 'unit_id' => unit.id, 'name' => 'Old Trend Unit Name' }])
+
+    get profile_path(unit.key)
+
+    assert_response :success
+    assert_includes response.body, 'Old Trend Unit Name'
+  end
 end
