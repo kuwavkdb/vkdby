@@ -90,6 +90,9 @@ class ProfilesController < ApplicationController
                    .order(date: :desc)
                    .limit(10)
 
+    trend_unit_ids = @trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
+    @trend_related_units = Unit.kept.where(id: trend_unit_ids).index_by(&:id)
+
     @snapshots = @resource.unit_snapshots
                           .active
                           .includes(:snapshot_people)
