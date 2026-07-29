@@ -82,6 +82,28 @@ module Admin
       assert_redirected_to edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @snapshot, sp)
     end
 
+    test 'should update inline_history when person is not linked' do
+      sp = snapshot_people(:three)
+      assert_nil sp.person_id
+
+      patch admin_unit_unit_snapshot_snapshot_person_path(@unit, sp.unit_snapshot, sp), params: {
+        snapshot_person: { part: sp.part, sort_order: sp.sort_order, inline_history: 'edited history' }
+      }
+
+      assert_equal 'edited history', sp.reload.inline_history
+    end
+
+    test 'should not update inline_history when person is linked' do
+      sp = snapshot_people(:one)
+      assert sp.person_id.present?
+
+      patch admin_unit_unit_snapshot_snapshot_person_path(@unit, sp.unit_snapshot, sp), params: {
+        snapshot_person: { part: sp.part, sort_order: sp.sort_order, inline_history: 'edited history' }
+      }
+
+      assert_nil sp.reload.inline_history
+    end
+
     test 'should link to existing person when person_key is already in use' do
       Person.create!(name: 'Existing', key: 'dup_key')
       sp = @snapshot.snapshot_people.create!(person_name: 'Dup Guy', part: 'vocal')
@@ -94,6 +116,35 @@ module Admin
       sp.reload
       assert_nil sp.person_id
       assert_redirected_to edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @snapshot, sp)
+    end
+
+    test 'renders edit form for linked snapshot_person with locked inline_history' do
+      sp = snapshot_people(:one)
+      assert sp.person_id.present?
+
+      get edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, sp.unit_snapshot, sp)
+
+      assert_response :success
+      assert_select 'a', text: /紐付け済み/
+      assert_select 'textarea[name=?][readonly]', 'snapshot_person[inline_history]'
+    end
+
+    test 'renders edit form for unlinked snapshot_person with editable inline_history' do
+      sp = snapshot_people(:three)
+      assert_nil sp.person_id
+
+      get edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, sp.unit_snapshot, sp)
+
+      assert_response :success
+      assert_select 'span', text: /未紐付け/
+      assert_select 'textarea[name=?]:not([readonly])', 'snapshot_person[inline_history]'
+    end
+
+    test 'renders add member form on unit_snapshot edit page' do
+      get edit_admin_unit_unit_snapshot_path(@unit, @snapshot)
+
+      assert_response :success
+      assert_select 'h3', text: 'Add Member'
     end
   end
 end
