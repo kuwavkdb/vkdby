@@ -87,6 +87,18 @@ module Admin
       assert_redirected_to copy_to_unit_admin_unit_unit_snapshot_path(@unit, @snapshot)
     end
 
+    test 'should reorder unit_snapshots' do
+      other_snapshot = unit_snapshots(:two)
+
+      patch reorder_admin_unit_unit_snapshots_path(@unit), params: {
+        ids: [other_snapshot.id, @snapshot.id]
+      }, as: :json
+
+      assert_response :success
+      assert_equal 1, other_snapshot.reload.snapshot_index
+      assert_equal 2, @snapshot.reload.snapshot_index
+    end
+
     test 'should redirect to login when not authenticated' do
       delete logout_path
       get admin_unit_unit_snapshots_path(@unit)

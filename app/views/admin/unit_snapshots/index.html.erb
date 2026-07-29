@@ -19,6 +19,9 @@
           <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
             <thead class="bg-gray-50 dark:bg-gray-800">
               <tr>
+                <th scope="col" class="relative py-3.5 pl-4 pr-3 sm:pl-6 w-10">
+                  <span class="sr-only">並び替え</span>
+                </th>
                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">ID</th>
                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">日付</th>
                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">ラベル</th>
@@ -30,9 +33,16 @@
                 </th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200 bg-white dark:bg-gray-900 dark:divide-gray-700">
+            <tbody class="divide-y divide-gray-200 bg-white dark:bg-gray-900 dark:divide-gray-700"
+                   data-controller="sortable"
+                   data-sortable-url-value="<%= reorder_admin_unit_unit_snapshots_path(@unit) %>">
               <% @unit_snapshots.each do |snapshot| %>
-                <tr>
+                <tr data-id="<%= snapshot.id %>">
+                  <td class="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-900 sm:pl-6 drag-handle cursor-move">
+                    <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  </td>
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
                     <%= snapshot.id %>
                   </td>

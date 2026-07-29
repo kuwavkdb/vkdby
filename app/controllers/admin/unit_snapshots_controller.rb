@@ -7,7 +7,7 @@ module Admin
 
     def index
       @unit_snapshots = @unit.unit_snapshots.includes(snapshot_people: :person)
-                             .order(snapshot_date: :desc)
+                             .order(:snapshot_index)
     end
 
     def new
