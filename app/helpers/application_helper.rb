@@ -86,7 +86,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # 一度デコードして元の文字列に戻したうえで、<title>に必要な最小限（"&"と"<"）だけを
   # 再エスケープする。
   def page_title_text(text)
-    CGI.unescapeHTML(text.to_s).gsub('&', '&amp;').gsub('<', '&lt;').html_safe # rubocop:disable Rails/OutputSafety
+    CGI.unescapeHTML(text.to_s).gsub('&', '&amp;').gsub('<', '&lt;').html_safe
   end
 
   def markdown(text, sectionable: nil)
