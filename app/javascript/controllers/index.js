@@ -16,6 +16,9 @@ application.register("date-picker", DatePickerController)
 import DropdownController from "controllers/dropdown_controller"
 application.register("dropdown", DropdownController)
 
+import ItemCardArtistsController from "controllers/item_card_artists_controller"
+application.register("item-card-artists", ItemCardArtistsController)
+
 import ItemFormController from "controllers/item_form_controller"
 application.register("item-form", ItemFormController)
 
