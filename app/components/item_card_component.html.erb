@@ -57,9 +57,9 @@
         <% end %>
       </div>
 
-      <!-- アーティスト -->
+      <!-- アーティスト（3行を超えて折り返した場合のみ、実際の溢れをJSで検知してフェードアウトさせる） -->
       <% if @item.artists.present? %>
-        <div class="flex flex-wrap gap-1">
+        <div class="flex flex-wrap gap-1 max-h-[5.5rem] overflow-hidden" data-controller="item-card-artists">
           <% @item.artists.each do |artist_data| %>
             <% artist_label = artist_data['alias'].presence || artist_data['name'] %>
             <% artist_path = artist_profile_path(artist_data) %>
