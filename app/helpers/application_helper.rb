@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'cgi'
+
 module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   class ExternalAwareHtmlRenderer < Redcarpet::Render::HTML
     def initialize(site_host:, **options)
@@ -74,6 +76,17 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
 
   def logged_in?
     false
+  end
+
+  # <title> はHTML5仕様上RCDATA要素で、タグとして解釈されるのは "&" と "<" のみ。
+  # content_for(:title, ...)にプレーン文字列を渡すとActionViewの内部バッファ格納時に
+  # 一度HTMLエスケープされる（例: "'" → "&#39;"）ため、そのまま出力すると
+  # デフォルトのHTMLエスケープ(h)で数値文字参照が二重化されたり、ブラウザ上は
+  # 正しく表示されるとはいえソースに不要な参照が残ったりする。
+  # 一度デコードして元の文字列に戻したうえで、<title>に必要な最小限（"&"と"<"）だけを
+  # 再エスケープする。
+  def page_title_text(text)
+    CGI.unescapeHTML(text.to_s).gsub('&', '&amp;').gsub('<', '&lt;').html_safe # rubocop:disable Rails/OutputSafety
   end
 
   def markdown(text, sectionable: nil)
