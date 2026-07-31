@@ -5,7 +5,7 @@
 
   <div class="space-y-3">
     <% @trends.each do |trend| %>
-      <%= render TrendListRowComponent.new(trend: trend, current: current?(trend)) %>
+      <%= render TrendListRowComponent.new(trend: trend, current: current?(trend), resource: @resource, related_units: @related_units) %>
     <% end %>
   </div>
 </section>

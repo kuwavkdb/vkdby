@@ -30,4 +30,17 @@ class TrendsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, 'Discarded Show Unit'
     assert_not_includes response.body, 'Discarded Show Person'
   end
+
+  test 'show sidebar shows the recorded name for a related trend when it differs from the current unit name' do
+    unit = Unit.create!(name: 'Sidebar Unit', key: 'trend-sidebar-unit', status: :active)
+    main_trend = Trend.create!(title: 'Main trend', date: Date.current, publish_start_at: Time.current,
+                               unit_phenomenon: :other, units: [{ 'unit_id' => unit.id, 'name' => 'Sidebar Unit' }])
+    Trend.create!(title: 'Older trend', date: Date.current - 1, publish_start_at: Time.current,
+                  unit_phenomenon: :other, units: [{ 'unit_id' => unit.id, 'name' => 'Old Sidebar Name' }])
+
+    get trend_path(main_trend)
+
+    assert_response :success
+    assert_includes response.body, 'Old Sidebar Name'
+  end
 end

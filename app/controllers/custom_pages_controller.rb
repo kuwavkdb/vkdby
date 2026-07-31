@@ -26,13 +26,13 @@ class CustomPagesController < ApplicationController
 
     @recently_updated = Rails.cache.fetch('sidebar/recently_updated', expires_in: 10.minutes) do
       pages   = CustomPage.published.order(updated_at: :desc).limit(10).to_a
-      units   = Unit.kept.where.not(key: nil).order(updated_at: :desc).limit(10).to_a
-      persons = Person.kept.where.not(key: nil).order(updated_at: :desc).limit(10).to_a
+      units   = Unit.kept.published.where.not(key: nil).order(updated_at: :desc).limit(10).to_a
+      persons = Person.kept.published.where.not(key: nil).order(updated_at: :desc).limit(10).to_a
       (pages + units + persons).sort_by(&:updated_at).reverse.first(8)
     end
 
     @birthday_people = Rails.cache.fetch("sidebar/birthday_people/#{today}", expires_in: ttl) do
-      Person.kept.birthday_on(today).or(Person.kept.birthday_on(today + 1)).order(:name_kana).to_a
+      Person.kept.published.birthday_on(today).or(Person.kept.published.birthday_on(today + 1)).order(:name_kana).to_a
     end
   end
 

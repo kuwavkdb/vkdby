@@ -74,7 +74,7 @@
 
             <% if @trends %>
               <div id="trends">
-                <%= render UnitTrendsComponent.new(trends: @trends) %>
+                <%= render UnitTrendsComponent.new(trends: @trends, resource: @resource, related_units: @trend_related_units) %>
               </div>
             <% end %>
 

@@ -269,4 +269,14 @@ class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
 
     assert person.unpublished?
   end
+
+  test 'published scope excludes persons tagged with a configured unpublished tag id' do
+    published_person = Person.create!(name: 'Published Person', key: 'person-published-scope', status: :active)
+    unpublished_person = Person.create!(name: 'Unpublished Person', key: 'person-unpublished-scope', status: :active)
+    tag_index = TagIndex.create!(id: Rails.application.config.unpublished_tag_ids.first, name: '掲載停止')
+    TagIndexItem.create!(tag_index: tag_index, indexable: unpublished_person)
+
+    assert_includes Person.published, published_person
+    assert_not_includes Person.published, unpublished_person
+  end
 end

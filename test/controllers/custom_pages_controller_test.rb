@@ -50,6 +50,37 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, 'What Happened Today'
   end
 
+  test 'sidebar excludes a unit or person tagged as unpublished from recently updated' do
+    unit = Unit.create!(name: 'Unpublished Sidebar Unit', key: 'unpublished-unit-sidebar-test', status: :active)
+    person = Person.create!(name: 'Unpublished Sidebar Person', key: 'unpublished-person-sidebar-test',
+                            status: :active)
+    tag_index = TagIndex.create!(id: Rails.application.config.unpublished_tag_ids.first, name: '掲載停止')
+    TagIndexItem.create!(tag_index: tag_index, indexable: unit)
+    TagIndexItem.create!(tag_index: tag_index, indexable: person)
+    page = CustomPage.create!(key: 'unpublished-sidebar-test-page', title: 'Unpublished Sidebar Test Page',
+                              active: true, body: 'body')
+
+    get custom_page_path(key: page.key)
+
+    assert_response :success
+    assert_not_includes response.body, 'Unpublished Sidebar Unit'
+    assert_not_includes response.body, 'Unpublished Sidebar Person'
+  end
+
+  test 'sidebar excludes a person tagged as unpublished from birthdays' do
+    person = Person.create!(name: 'Unpublished Sidebar Birthday Person', key: 'unpublished-birthday-sidebar-test',
+                            status: :active, birthday: Date.current)
+    tag_index = TagIndex.create!(id: Rails.application.config.unpublished_tag_ids.first, name: '掲載停止')
+    TagIndexItem.create!(tag_index: tag_index, indexable: person)
+    page = CustomPage.create!(key: 'unpublished-birthday-sidebar-test-page',
+                              title: 'Unpublished Birthday Sidebar Test Page', active: true, body: 'body')
+
+    get custom_page_path(key: page.key)
+
+    assert_response :success
+    assert_not_includes response.body, 'Unpublished Sidebar Birthday Person'
+  end
+
   test 'custom page body renders an embedded unit snapshot via {{snapshot}} macro' do
     unit = Unit.create!(name: 'Snapshot Embed Unit', key: 'snapshot-embed-test-unit', status: :active)
     snapshot = unit.unit_snapshots.create!(snapshot_date: '2020-01-01', current: true, active: true)
