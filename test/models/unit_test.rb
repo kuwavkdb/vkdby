@@ -114,4 +114,14 @@ class UnitTest < ActiveSupport::TestCase
 
     assert unit.unpublished?
   end
+
+  test 'published scope excludes units tagged with a configured unpublished tag id' do
+    published_unit = Unit.create!(name: 'Published Unit', key: 'unit-published-scope', status: :active)
+    unpublished_unit = Unit.create!(name: 'Unpublished Unit', key: 'unit-unpublished-scope', status: :active)
+    tag_index = TagIndex.create!(id: Rails.application.config.unpublished_tag_ids.first, name: '掲載停止')
+    TagIndexItem.create!(tag_index: tag_index, indexable: unpublished_unit)
+
+    assert_includes Unit.published, published_unit
+    assert_not_includes Unit.published, unpublished_unit
+  end
 end

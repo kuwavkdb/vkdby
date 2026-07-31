@@ -17,11 +17,11 @@ class DailyController < ApplicationController
       month = @date.month
       day = @date.day
       @trends = Trend.on_month_day(month, day).select(:id, :date, :title, :units).order(date: :asc)
-      @birthdays = Person.kept.birthday_on(@date).select(*PERSON_CARD_COLUMNS).order(name_kana: :asc)
+      @birthdays = Person.kept.published.birthday_on(@date).select(*PERSON_CARD_COLUMNS).order(name_kana: :asc)
       @releases = Item.released_on_month_day(month, day).order(release_date: :asc)
     else
       @trends = Trend.on_date(@date).select(:id, :date, :title, :units).order(created_at: :desc)
-      @birthdays = Person.kept.birthday_on(@date).where(status: %i[active hiatus])
+      @birthdays = Person.kept.published.birthday_on(@date).where(status: %i[active hiatus])
                          .select(*PERSON_CARD_COLUMNS).order(name_kana: :asc)
       @releases = Item.released_on(@date).order(created_at: :desc)
     end
