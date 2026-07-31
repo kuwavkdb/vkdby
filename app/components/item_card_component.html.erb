@@ -57,14 +57,9 @@
         <% end %>
       </div>
 
-      <!-- アーティスト（アーティスト数が多い場合のみ、3行目に達したらフェードアウトさせ高さを固定する） -->
+      <!-- アーティスト（3行を超えて折り返した場合のみ、実際の溢れをJSで検知してフェードアウトさせる） -->
       <% if @item.artists.present? %>
-        <% artist_wrapper_classes = %w[flex flex-wrap gap-1]
-           artist_wrapper_classes += %w[h-[5.5rem]
-                                        overflow-hidden
-                                        [mask-image:linear-gradient(to_bottom,black_63%,transparent_100%)]
-                                        [-webkit-mask-image:linear-gradient(to_bottom,black_63%,transparent_100%)]] if many_artists? %>
-        <div class="<%= artist_wrapper_classes.join(' ') %>">
+        <div class="flex flex-wrap gap-1 max-h-[5.5rem] overflow-hidden" data-controller="item-card-artists">
           <% @item.artists.each do |artist_data| %>
             <% artist_label = artist_data['alias'].presence || artist_data['name'] %>
             <% artist_path = artist_profile_path(artist_data) %>
