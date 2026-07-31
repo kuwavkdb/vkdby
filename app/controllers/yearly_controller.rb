@@ -14,7 +14,7 @@ class YearlyController < ApplicationController
     @monthly_trend_counts = calculate_monthly_trend_counts(@year)
     @month_unknown_trends = fetch_month_unknown_trends(@year)
     @related_units = load_related_units(@month_unknown_trends)
-    @born_persons = Person.kept.where(birth_year: @year).order(:birthday, :name)
+    @born_persons = Person.kept.published.where(birth_year: @year).order(:birthday, :name)
   end
 
   private
