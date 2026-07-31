@@ -57,9 +57,14 @@
         <% end %>
       </div>
 
-      <!-- アーティスト -->
+      <!-- アーティスト（アーティスト数が多い場合のみ、3行目に達したらフェードアウトさせ高さを固定する） -->
       <% if @item.artists.present? %>
-        <div class="flex flex-wrap gap-1">
+        <% artist_wrapper_classes = %w[flex flex-wrap gap-1]
+           artist_wrapper_classes += %w[h-[5.5rem]
+                                        overflow-hidden
+                                        [mask-image:linear-gradient(to_bottom,black_63%,transparent_100%)]
+                                        [-webkit-mask-image:linear-gradient(to_bottom,black_63%,transparent_100%)]] if many_artists? %>
+        <div class="<%= artist_wrapper_classes.join(' ') %>">
           <% @item.artists.each do |artist_data| %>
             <% artist_label = artist_data['alias'].presence || artist_data['name'] %>
             <% artist_path = artist_profile_path(artist_data) %>
