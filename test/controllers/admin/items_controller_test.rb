@@ -49,6 +49,17 @@ module Admin
       assert item.reload.various_artists?
     end
 
+    test 'new does not auto-confirm an artist passed via query params, even with an artist_key' do
+      get new_admin_item_path, params: {
+        artist_name: 'シド',
+        artist_key: 'shid'
+      }
+
+      assert_response :success
+      assert_match(/artist-search-input[^>]*value="シド"/, response.body)
+      assert_no_match(/artist-name-hidden[^>]*value="シド"/, response.body)
+    end
+
     test 'edit renders a previously saved name-only artist as a selected chip, not a blank search box' do
       item = Item.create!(
         title: 'Test Item',

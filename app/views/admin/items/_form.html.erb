@@ -51,7 +51,7 @@
     <%# Row container %>
     <div data-artist-rows-target="container" class="space-y-2">
       <% (item.artists || []).each do |artist| %>
-        <% search_mode = artist['name'].blank? %>
+        <% search_mode = artist['confirmed'] == false || artist['name'].blank? %>
         <div class="flex items-center gap-2" data-artist-rows-target="row" data-mode="unit">
           <span class="drag-handle flex-none px-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab" aria-hidden="true">⠿</span>
           <button type="button"

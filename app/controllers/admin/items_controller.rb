@@ -66,7 +66,9 @@ module Admin
     def build_artist_from_params
       return [] if params[:artist_name].blank?
 
-      [{ 'name' => params[:artist_name], 'key' => params[:artist_key], 'old_key' => params[:artist_old_key] }.compact_blank]
+      artist = { 'name' => params[:artist_name], 'key' => params[:artist_key], 'old_key' => params[:artist_old_key] }.compact_blank
+      artist['confirmed'] = false
+      [artist]
     end
 
     def build_artists_from_json(json)
