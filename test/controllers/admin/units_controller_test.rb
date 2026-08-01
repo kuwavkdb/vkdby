@@ -9,6 +9,15 @@ module Admin
       @unit = Unit.create!(name: 'Existing Unit', key: 'existing-unit-controller-test', status: :active)
     end
 
+    test 'search finds a unit whose name is half-width when queried with full-width alphanumerics' do
+      Unit.create!(name: 'ABC123', key: 'zenkaku-search-admin-units-test', status: :active)
+
+      get search_admin_units_path(q: 'ＡＢＣ１２３')
+
+      assert_response :success
+      assert_includes response.parsed_body.pluck('name'), 'ABC123'
+    end
+
     test 'update does not change key even when key param is submitted' do
       patch admin_unit_path(@unit), params: {
         unit: { name: 'Renamed Unit', key: 'attempted-new-key' }

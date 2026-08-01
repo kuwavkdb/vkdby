@@ -12,7 +12,7 @@ class UnitsController < ApplicationController
     if params[:q].present?
       scope = scope.where(
         'units.name ILIKE :q OR units.name_kana ILIKE :q OR units.name_log::text ILIKE :q OR units.aliases::text ILIKE :q',
-        q: "%#{params[:q]}%"
+        q: "%#{normalize_search_query(params[:q])}%"
       )
     end
     @selected_tag_ids = params[:tag_ids]&.to_unsafe_h&.transform_values(&:presence)&.compact || {}
@@ -27,7 +27,7 @@ class UnitsController < ApplicationController
   end
 
   def search
-    q = params[:q].to_s.strip.first(100)
+    q = normalize_search_query(params[:q].to_s.strip.first(100))
     if q.length < 2
       render json: []
       return

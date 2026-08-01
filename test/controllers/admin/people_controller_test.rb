@@ -9,6 +9,15 @@ module Admin
       @person = Person.create!(name: 'Existing Person', key: 'existing-person-controller-test', status: :active)
     end
 
+    test 'search finds a person whose name is half-width when queried with full-width alphanumerics' do
+      Person.create!(name: 'ABC123', key: 'zenkaku-search-admin-people-test', status: :active)
+
+      get search_admin_people_path(q: 'ＡＢＣ１２３')
+
+      assert_response :success
+      assert_includes response.parsed_body.pluck('name'), 'ABC123'
+    end
+
     test 'create allows setting key' do
       assert_difference('Person.count') do
         post admin_people_path, params: {

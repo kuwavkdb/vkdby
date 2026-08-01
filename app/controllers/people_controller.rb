@@ -12,7 +12,7 @@ class PeopleController < ApplicationController
     if params[:q].present?
       scope = scope.where(
         'people.name ILIKE :q OR people.name_kana ILIKE :q OR people.name_log::text ILIKE :q OR people.aliases::text ILIKE :q OR people.old_history ILIKE :q',
-        q: "%#{params[:q]}%"
+        q: "%#{normalize_search_query(params[:q])}%"
       )
     end
     @selected_tag_ids = params[:tag_ids]&.to_unsafe_h&.transform_values(&:presence)&.compact || {}
@@ -26,7 +26,7 @@ class PeopleController < ApplicationController
   end
 
   def search
-    q = params[:q].to_s.strip.first(100)
+    q = normalize_search_query(params[:q].to_s.strip.first(100))
     if q.length < 2
       render json: []
       return
