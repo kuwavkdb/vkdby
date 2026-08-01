@@ -64,6 +64,12 @@ class ApplicationController < ActionController::Base
     nil
   end
 
+  # 全角英数字（ＡＢＣ１２３など）で検索してもDB上の半角表記とマッチするよう、
+  # 検索クエリをNFKCで正規化する（全角→半角、半角カナ→全角カナなど）。
+  def normalize_search_query(query)
+    query.to_s.unicode_normalize(:nfkc)
+  end
+
   def valid_year?(year)
     year >= 1970 && year <= Date.today.year + 10
   end

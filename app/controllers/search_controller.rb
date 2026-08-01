@@ -5,8 +5,9 @@ class SearchController < ApplicationController
     @query = params[:q]
 
     if @query.present?
-      search_pattern = "%#{@query}%"
-      exact_pattern = ActiveRecord::Base.sanitize_sql_like(@query)
+      normalized_query = normalize_search_query(@query)
+      search_pattern = "%#{normalized_query}%"
+      exact_pattern = ActiveRecord::Base.sanitize_sql_like(normalized_query)
       relevance_order = Arel.sql(
         "CASE WHEN name ILIKE #{Unit.connection.quote(exact_pattern)} THEN 0 " \
         "WHEN name ILIKE #{Unit.connection.quote("#{exact_pattern}%")} THEN 1 " \

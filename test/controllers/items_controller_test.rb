@@ -40,6 +40,19 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Me
     assert_not_includes response.body, 'Item Two'
   end
 
+  test 'index filters by title with full-width alphanumeric q param' do
+    item = Item.create!(
+      title: 'ABC123',
+      release_date: '2026-03-01',
+      link_url: "http://example.com/zenkaku-search-item-#{SecureRandom.hex(4)}"
+    )
+
+    get items_path(q: 'ＡＢＣ１２３')
+
+    assert_response :success
+    assert_includes response.body, item.title
+  end
+
   test 'show hides non-omnibus artists from the header when various_artists is true' do
     item = Item.create!(
       title: 'VA Compilation',
