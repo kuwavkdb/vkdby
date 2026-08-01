@@ -23,6 +23,16 @@ module ItemsHelper
     end
   end
 
+  # アーティストで絞り込んだItem#indexへのパスを生成
+  # 優先順位: key > old_key。どちらも無い(名前のみの)アーティストは絞り込み対象を一意に特定できないためリンクにしない
+  def artist_items_path(artist_data)
+    if artist_data['key'].present?
+      items_path(key: artist_data['key'])
+    elsif artist_data['old_key'].present?
+      items_path(old_key: artist_data['old_key'])
+    end
+  end
+
   # Tower Records OnlineのValueCommerceアフィリエイトトラッキング付き検索URL
   def tower_records_search_url(item)
     artist_names = item.artists.map { |a| a['name'] }.join(' ')
