@@ -17,8 +17,31 @@
         <%= form_with url: items_path, method: :get, local: true, class: "flex gap-2" do |f| %>
           <%= hidden_field_tag :key, params[:key] if params[:key].present? %>
           <%= hidden_field_tag :old_key, params[:old_key] if params[:old_key].present? %>
-          <%= f.text_field :q, value: params[:q], placeholder: "商品名・アーティスト名で検索",
-              class: "w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-400" %>
+          <% if @artist %>
+            <span class="shrink-0 inline-flex items-center gap-1 pl-3 pr-1 py-1 rounded-xl text-sm font-bold bg-indigo-50 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-700">
+              <%= @artist.name %>
+              <%= link_to items_path(q: params[:q].presence),
+                    class: "rounded-full p-0.5 hover:bg-indigo-100 dark:hover:bg-indigo-800 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700",
+                    "aria-label": "「#{@artist.name}」の絞り込みを解除" do %>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                  <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                </svg>
+              <% end %>
+            </span>
+          <% end %>
+          <div class="relative flex-1 min-w-0">
+            <%= f.text_field :q, value: params[:q], placeholder: "商品名・アーティスト名で検索",
+                class: "w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 #{'pr-10' if params[:q].present?} text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-400" %>
+            <% if params[:q].present? %>
+              <%= link_to items_path(key: params[:key].presence, old_key: params[:old_key].presence),
+                    class: "absolute inset-y-0 right-2 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-full p-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700",
+                    "aria-label": "検索語をクリア" do %>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                  <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                </svg>
+              <% end %>
+            <% end %>
+          </div>
           <%= f.button class: "bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl transition-colors shadow-sm hover:shadow-md flex items-center justify-center min-w-[3rem]" do %>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
