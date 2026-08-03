@@ -8,7 +8,7 @@
         <h3 class="text-base md:text-lg font-black text-slate-800 dark:text-slate-100">
 
           <% if @member.person && @member.person.key.present? %>
-            <%= link_to @member.name, profile_path(@member.person.key), class: "hover:text-person transition-colors" %>
+            <%= link_to @member.name, profile_path(@member.person.key), class: "text-unit dark:text-blue-400 underline decoration-unit/25 dark:decoration-blue-400/40 underline-offset-2 hover:decoration-unit dark:hover:decoration-blue-400 transition-colors" %>
           <% else %>
 
             <%= @member.name %>

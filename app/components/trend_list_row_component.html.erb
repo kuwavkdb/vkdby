@@ -14,13 +14,13 @@
   </div>
 <% else %>
   <%= link_to trend_path(@trend), class: "flex items-start gap-3 text-sm group" do %>
-    <div class="shrink-0 w-24 text-slate-600 dark:text-slate-400 font-mono text-sm pt-0.5 font-bold group-hover:text-indigo-500 transition-colors">
+    <div class="shrink-0 w-24 text-indigo-600 dark:text-indigo-400 font-mono text-sm pt-0.5 font-bold group-hover:text-indigo-500 transition-colors">
       <%= @trend.date.strftime('%Y/%m/%d') %>
     </div>
     <div class="grow">
-      <p class="font-bold text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+      <p class="font-bold text-indigo-700 dark:text-indigo-300 underline decoration-indigo-600/25 dark:decoration-indigo-400/40 underline-offset-2 group-hover:decoration-indigo-600 dark:group-hover:decoration-indigo-400 transition-colors">
         <% unit_badges.each do |name| %>
-          <span class="px-1.5 py-0.5 rounded text-[11px] align-middle bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"><%= name %></span>
+          <span class="px-1.5 py-0.5 rounded text-[11px] align-middle bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 no-underline"><%= name %></span>
         <% end %>
         <%= format_wiki_title(@trend.title, link: false) %>
       </p>
