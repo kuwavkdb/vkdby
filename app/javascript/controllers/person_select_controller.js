@@ -113,6 +113,7 @@ export default class extends Controller {
            data-name="${this.escapeHtml(item.name)}">
         <div class="font-medium text-gray-900 dark:text-gray-100">${this.escapeHtml(item.name)}</div>
         ${item.name_kana ? `<div class="text-xs text-gray-500 dark:text-gray-400">${this.escapeHtml(item.name_kana)}</div>` : ''}
+        ${item.history_summary ? `<div class="text-xs text-gray-500 dark:text-gray-400">${this.escapeHtml(item.history_summary)}</div>` : ''}
       </div>
     `).join('')
 

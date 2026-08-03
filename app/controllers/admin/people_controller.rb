@@ -158,11 +158,33 @@ module Admin
       @people = scope.limit(10).order(:name)
 
       render json: @people.map { |p|
-        { id: p.id, name: p.name.presence || p.key, name_kana: p.name_kana, key: p.key, destination_key: p.destination_key }
+        {
+          id: p.id,
+          name: p.name.presence || p.key,
+          name_kana: p.name_kana,
+          key: p.key,
+          destination_key: p.destination_key,
+          history_summary: person_history_summary(p)
+        }
       }
     end
 
     private
+
+    def person_history_summary(person)
+      # 末尾が「{{category ...}}」等のステータスタグのみの場合 unit_name が空になるため、
+      # unit_name を持つ項目が含まれる直近の履歴グループまで遡る
+      recent_history = person.parse_old_history.reverse.find { |group| group.any? { |item| item[:unit_name].present? } }
+      return nil if recent_history.blank?
+
+      recent_history.filter_map do |item|
+        next if item[:unit_name].blank?
+
+        text = helpers.strip_tags(item[:unit_name].to_s)
+        text += "(#{helpers.strip_tags(item[:part_and_name])})" if item[:part_and_name].present?
+        text
+      end.join('、')
+    end
 
     def set_person
       @person = Person.with_discarded.find(params[:id])
