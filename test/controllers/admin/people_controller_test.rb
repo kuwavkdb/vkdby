@@ -18,6 +18,32 @@ module Admin
       assert_includes response.parsed_body.pluck('name'), 'ABC123'
     end
 
+    test 'search includes a history summary to distinguish same-named people' do
+      Person.create!(
+        name: '同名太郎', key: 'history-summary-search-test', status: :active,
+        old_history: '[[サンプルユニット]](Vocal)'
+      )
+
+      get search_admin_people_path(q: '同名太郎')
+
+      assert_response :success
+      result = response.parsed_body.find { |p| p['key'] == 'history-summary-search-test' }
+      assert_equal 'サンプルユニット(Vocal)', result['history_summary']
+    end
+
+    test 'search history summary skips a trailing status-only tag with no unit name' do
+      Person.create!(
+        name: '状況不明太郎', key: 'history-summary-status-tag-test', status: :active,
+        old_history: '[[サンプルユニット]](Vocal) → {{category 個人/状況不明}}'
+      )
+
+      get search_admin_people_path(q: '状況不明太郎')
+
+      assert_response :success
+      result = response.parsed_body.find { |p| p['key'] == 'history-summary-status-tag-test' }
+      assert_equal 'サンプルユニット(Vocal)', result['history_summary']
+    end
+
     test 'create allows setting key' do
       assert_difference('Person.count') do
         post admin_people_path, params: {
