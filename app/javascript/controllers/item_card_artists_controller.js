@@ -1,17 +1,22 @@
 import { Controller } from "@hotwired/stimulus"
 
-// 参加アーティストのタグが3行を超えて折り返された場合のみ、下端をフェードアウトさせる。
-// アーティスト数ではなく実際の折り返し行数（バンド名の長さで変わる）で判定するため、
-// レイアウト後にscrollHeightで溢れを検知してからマスクを適用する。
+// 商品名とアーティストタグを合わせた表示領域が、カードの高さに収まりきらない場合のみ
+// 下端をフェードアウトさせる。商品名の長さによってグラデーションの位置がばらつかないよう、
+// 商品名単独・アーティスト単独ではなく両者をまとめたコンテナの溢れをレイアウト後に
+// scrollHeightで検知してからマスクを適用する。
+// フェードアウトが発生する場合のみ、発売日との余白も詰める（フェードなしの場合は詰めない）。
 const FADE_MASK_CLASSES = [
     "[mask-image:linear-gradient(to_bottom,black_63%,transparent_100%)]",
     "[-webkit-mask-image:linear-gradient(to_bottom,black_63%,transparent_100%)]",
 ]
 
 export default class extends Controller {
+    static targets = ["content", "date"]
+
     connect() {
-        if (this.element.scrollHeight > this.element.clientHeight) {
-            this.element.classList.add(...FADE_MASK_CLASSES)
+        if (this.contentTarget.scrollHeight > this.contentTarget.clientHeight) {
+            this.contentTarget.classList.add(...FADE_MASK_CLASSES)
+            this.dateTarget.classList.replace("pt-2", "pt-1")
         }
     }
 }
