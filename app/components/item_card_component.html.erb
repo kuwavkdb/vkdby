@@ -18,7 +18,7 @@
         <% end %>
         <%= link_to @item.link_url, target: "_blank", rel: "noopener noreferrer",
             style: "position:absolute; bottom:8px; left:50%; transform:translateX(-50%);",
-            class: "inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-lg transition text-xs whitespace-nowrap z-10 sm:opacity-0 sm:group-hover:opacity-100" do %>
+            class: "inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 hover:opacity-50! text-black font-bold rounded-lg transition text-xs whitespace-nowrap z-10 sm:opacity-0 sm:group-hover:opacity-100" do %>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 shrink-0">
             <path d="M2.25 2.25a.75.75 0 0 0 0 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 0 0-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 0 0 0-1.5H5.378A2.25 2.25 0 0 1 7.5 15h11.218a.75.75 0 0 0 .674-.421 60.358 60.358 0 0 0 2.96-7.228.75.75 0 0 0-.525-.965A60.864 60.864 0 0 0 5.68 4.509l-.232-.867A1.875 1.875 0 0 0 3.636 2.25H2.25ZM3.75 20.25a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0ZM16.5 20.25a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z" />
           </svg>
@@ -31,9 +31,13 @@
       <% end %>
     </div>
   <% else %>
-    <div class="relative shrink-0 w-40 h-40 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-      <span class="text-zinc-400 dark:text-zinc-500 text-sm">画像なし</span>
+    <div class="relative shrink-0 w-40 h-40 bg-zinc-100 dark:bg-zinc-800">
       <% if @item.link_url.present? %>
+        <%= link_to @item.link_url, target: "_blank", rel: "noopener noreferrer",
+            "aria-label": "#{@item.title} をAmazonで購入",
+            class: "absolute inset-0 flex items-center justify-center hover:opacity-90 transition-opacity" do %>
+          <span class="text-zinc-400 dark:text-zinc-500 text-sm">画像なし</span>
+        <% end %>
         <%= link_to @item.link_url, target: "_blank", rel: "noopener noreferrer",
             style: "position:absolute; bottom:8px; left:50%; transform:translateX(-50%);",
             class: "inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-lg transition text-xs whitespace-nowrap z-10 sm:opacity-0 sm:group-hover:opacity-100" do %>
@@ -42,24 +46,30 @@
           </svg>
           Amazonで購入
         <% end %>
+      <% else %>
+        <div class="w-40 h-40 flex items-center justify-center">
+          <span class="text-zinc-400 dark:text-zinc-500 text-sm">画像なし</span>
+        </div>
       <% end %>
     </div>
   <% end %>
 
-  <!-- 情報（右側） -->
-  <div class="flex-1 px-4 py-2 min-w-0 flex flex-col">
-    <!-- タイトル + アーティスト（上部、残りスペースを占有） -->
-    <div class="flex-1 flex flex-col gap-2">
+  <!-- 情報（右側。全体をitem#showへのリンクにし、アーティストタグだけ上に重ねてクリック可能にする） -->
+  <div class="relative flex-1 px-4 py-2 min-w-0 flex flex-col" data-controller="item-card-artists">
+    <%# タイトル下のoverflow-hiddenラッパーに阻まれず領域全体を覆うため、専用のリンクを重ねる（実体のリンクはタイトルの方） %>
+    <%= link_to "", item_path(@item), class: "absolute inset-0", "aria-hidden": "true", tabindex: "-1" %>
+    <!-- タイトル + アーティスト（合わせて5行相当の高さに制限し、実際の溢れをJSで検知してフェードアウトさせる） -->
+    <div class="max-h-[7rem] flex flex-col gap-2 overflow-hidden" data-item-card-artists-target="content">
       <!-- タイトル -->
-      <div>
+      <div class="relative z-10">
         <%= link_to item_path(@item), class: "block" do %>
-          <h3 class="font-bold text-zinc-900 dark:text-zinc-100 hover:text-amber-600 dark:hover:text-amber-400 transition-colors overflow-hidden" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;"><%= @item.title %></h3>
+          <h3 class="font-bold text-zinc-900 dark:text-zinc-100 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"><%= @item.title %></h3>
         <% end %>
       </div>
 
-      <!-- アーティスト（3行を超えて折り返した場合のみ、実際の溢れをJSで検知してフェードアウトさせる） -->
+      <!-- アーティスト -->
       <% if @item.artists.present? %>
-        <div class="flex flex-wrap gap-1 max-h-[5.5rem] overflow-hidden" data-controller="item-card-artists">
+        <div class="relative z-10 flex flex-wrap gap-1">
           <% @item.artists.each do |artist_data| %>
             <% artist_label = artist_data['alias'].presence || artist_data['name'] %>
             <% artist_path = artist_items_path(artist_data) %>
@@ -73,10 +83,10 @@
       <% end %>
     </div>
 
-    <!-- 発売日（下部固定） -->
-    <div class="pt-2">
-      <span class="text-zinc-400 dark:text-zinc-500 font-mono text-sm font-bold">
-        <%= @item.release_date.strftime('%Y/%m/%d') %> 発売
+    <!-- 発売日（下部固定。フェードアウト時のみJSでpt-2からpt-1に詰める） -->
+    <div class="pt-2" data-item-card-artists-target="date">
+      <span class="text-zinc-500 dark:text-zinc-400 font-mono text-sm font-bold">
+        <%= @item.release_date.strftime('%Y/%m/%d') %> <%= @item.release_date.future? ? '発売予定' : '発売' %>
       </span>
     </div>
   </div>
