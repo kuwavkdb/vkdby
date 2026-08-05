@@ -29,7 +29,85 @@
 require 'test_helper'
 
 class ItemTest < ActiveSupport::TestCase
-  # test "the truth" do
-  #   assert true
-  # end
+  test 'by_artist_old_key finds an item whose artists array contains the old_key' do
+    item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-old-key',
+                        artists: [{ 'name' => 'ムック', 'alias' => 'MUCC', 'old_key' => '%A5%E0%A5%C3%A5%AF' }])
+    other = Item.create!(title: 'Other Album', release_date: Date.current, link_url: 'https://example.com/item-old-key-other',
+                         artists: [{ 'name' => 'Other Artist' }])
+
+    result = Item.by_artist_old_key('%A5%E0%A5%C3%A5%AF')
+
+    assert_includes result, item
+    assert_not_includes result, other
+  end
+
+  test 'replace_artist! replaces only the matching entry, preserves alias, and marks it confirmed' do
+    item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-replace',
+                        artists: [
+                          { 'name' => 'ムック', 'alias' => 'MUCC', 'old_key' => '%A5%E0%A5%C3%A5%AF' },
+                          { 'name' => 'Other Artist', 'key' => 'other-artist' }
+                        ])
+
+    result = item.replace_artist!(match_type: 'old_key', match_value: '%A5%E0%A5%C3%A5%AF',
+                                  replacement: { 'name' => 'MUCC', 'key' => 'mucc' })
+
+    assert_equal true, result
+    item.reload
+    replaced = item.artists.find { |a| a['key'] == 'mucc' }
+    untouched = item.artists.find { |a| a['key'] == 'other-artist' }
+
+    assert_equal 'MUCC', replaced['name']
+    assert_equal 'MUCC', replaced['alias']
+    assert_equal true, replaced['confirmed']
+    assert_nil replaced['old_key']
+    assert_equal({ 'name' => 'Other Artist', 'key' => 'other-artist' }, untouched)
+  end
+
+  test 'replace_artist! matches by key' do
+    item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-replace-key',
+                        artists: [{ 'name' => 'Old Name', 'key' => 'stale-key' }])
+
+    item.replace_artist!(match_type: 'key', match_value: 'stale-key',
+                         replacement: { 'name' => 'New Name', 'key' => 'new-key' })
+
+    item.reload
+    assert_equal 'new-key', item.artists.first['key']
+    assert_equal 'New Name', item.artists.first['name']
+  end
+
+  test 'replace_artist! matches by name' do
+    item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-replace-name',
+                        artists: [{ 'name' => 'ムック' }])
+
+    item.replace_artist!(match_type: 'name', match_value: 'ムック',
+                         replacement: { 'name' => 'MUCC', 'key' => 'mucc' })
+
+    item.reload
+    assert_equal 'mucc', item.artists.first['key']
+  end
+
+  test 'replace_artist! is a no-op when nothing matches, and does not touch updated_at' do
+    item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-replace-no-match',
+                        artists: [{ 'name' => 'ムック', 'old_key' => '%A5%E0%A5%C3%A5%AF' }])
+    original_updated_at = item.updated_at
+
+    result = item.replace_artist!(match_type: 'old_key', match_value: 'no-such-old-key',
+                                  replacement: { 'name' => 'MUCC', 'key' => 'mucc' })
+
+    assert_equal false, result
+    item.reload
+    assert_equal [{ 'name' => 'ムック', 'old_key' => '%A5%E0%A5%C3%A5%AF' }], item.artists
+    assert_equal original_updated_at, item.updated_at
+  end
+
+  test 'replace_artist! returns false for an invalid match_type' do
+    item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-replace-invalid',
+                        artists: [{ 'name' => 'ムック', 'old_key' => '%A5%E0%A5%C3%A5%AF' }])
+
+    result = item.replace_artist!(match_type: 'bogus', match_value: 'x', replacement: { 'name' => 'MUCC' })
+
+    assert_equal false, result
+    item.reload
+    assert_equal [{ 'name' => 'ムック', 'old_key' => '%A5%E0%A5%C3%A5%AF' }], item.artists
+  end
 end

@@ -54,6 +54,29 @@ class Item < ApplicationRecord
     where('artists @> ?', [{ name: name }].to_json)
   }
 
+  # match_type ("old_key" / "key" / "name") で一致した artists 要素を
+  # replacement（{"name" =>, "key" =>, "old_key" =>} を持つ Hash）で一括差し替えする。
+  # 一致する要素が無かった場合は何も更新せず false を返す（意図しない updated_at 更新を避けるため）。
+  def replace_artist!(match_type:, match_value:, replacement:)
+    return false unless %w[old_key key name].include?(match_type.to_s)
+
+    new_artists = (artists || []).map do |entry|
+      next entry unless entry[match_type.to_s].to_s == match_value.to_s
+
+      entry.merge(
+        'name' => replacement['name'],
+        'key' => replacement['key'],
+        'old_key' => replacement['old_key'],
+        'confirmed' => true
+      ).compact_blank
+    end
+
+    return false if new_artists == artists
+
+    update!(artists: new_artists)
+    true
+  end
+
   # 発売日で検索するスコープ
   scope :released_on, ->(date) { where(release_date: date) }
   scope :released_on_month_day, lambda { |month, day|

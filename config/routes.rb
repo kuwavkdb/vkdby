@@ -64,7 +64,12 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
       end
     end
 
-    resources :items
+    resources :items do
+      collection do
+        get :bulk_artist_edit
+        patch :bulk_artist_update
+      end
+    end
 
     resources :tag_indices, only: %i[update] do
       collection do

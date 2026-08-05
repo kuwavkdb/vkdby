@@ -1,0 +1,141 @@
+<% title = "アーティスト一括変更" %>
+<% content_for :title, title %>
+<div class="container mx-auto px-4 py-8">
+  <div class="flex items-center gap-3 mb-6">
+    <h1 class="text-2xl font-bold"><%= title %></h1>
+    <%= link_to "Item管理に戻る", admin_items_path, class: "text-sm text-gray-500 hover:text-indigo-600 hover:underline" %>
+  </div>
+
+  <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
+    指定した条件（old_key / key / name）で Item に紐づいているアーティストを検索し、選択した Item のアーティストをまとめて別の Unit/Person に差し替えます。
+  </p>
+
+  <%= form_with url: bulk_artist_edit_admin_items_path, method: :get, local: true, class: "flex flex-wrap items-end gap-2 mb-6" do %>
+    <div>
+      <%= label_tag :match_type, "検索対象", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <%= select_tag :match_type,
+            options_for_select([%w[old_key old_key], %w[key key], %w[name name]], @match_type),
+            class: "mt-1 rounded-md border-gray-300 shadow-sm text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    </div>
+    <div>
+      <%= label_tag :match_value, "検索値", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <%= text_field_tag :match_value, @match_value, class: "mt-1 rounded-md border-gray-300 shadow-sm text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    </div>
+    <%= submit_tag "検索", class: "px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600" %>
+  <% end %>
+
+  <% if @match_type.blank? || @match_value.blank? %>
+    <p class="text-sm text-gray-500 dark:text-gray-400">検索対象と検索値を指定して検索してください。</p>
+  <% elsif @items.empty? %>
+    <p class="text-sm text-gray-500 dark:text-gray-400">該当する Item が見つかりませんでした。</p>
+  <% else %>
+    <%= form_with url: bulk_artist_update_admin_items_path, method: :patch, local: true,
+          html: { onsubmit: "return confirmBulkArtistUpdate()" } do %>
+      <%= hidden_field_tag :match_type, @match_type %>
+      <%= hidden_field_tag :match_value, @match_value %>
+
+      <div class="mb-4">
+        <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
+      </div>
+
+      <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg mb-4">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead class="bg-gray-50 dark:bg-gray-900">
+            <tr>
+              <th class="px-4 py-3">
+                <input type="checkbox" id="check_all" class="rounded border-gray-300" onclick="document.querySelectorAll('.row-check').forEach(c => c.checked = this.checked)" aria-label="すべて選択">
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Release Date</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Artists</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            <% @items.each do |item| %>
+              <tr>
+                <td class="px-4 py-4">
+                  <%= check_box_tag "ids[]", item.id, false, id: "item_#{item.id}", class: "row-check rounded border-gray-300", aria: { label: "#{item.title} を選択" } %>
+                </td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <%= link_to item.title, edit_admin_item_path(item), class: "hover:underline", target: "_blank", rel: "noopener" %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"><%= item.release_date %></td>
+                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  <% (item.artists || []).each do |a| %>
+                    <% matched = a[@match_type].to_s == @match_value %>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs mr-1 mb-1 <%= matched ? 'bg-amber-100 text-amber-800 ring-1 ring-amber-400 dark:bg-amber-900 dark:text-amber-200' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' %>">
+                      <%= a['name'] %><% if a['key'].blank? %> (未紐付け)<% end %>
+                    </span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-4 mb-6">
+        <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-4 mb-6"
+           data-controller="artist-rows"
+           data-artist-rows-url-units-value="<%= search_admin_units_path %>"
+           data-artist-rows-url-people-value="<%= search_admin_people_path %>">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">置換先アーティスト</label>
+
+        <div data-artist-rows-target="container">
+          <div class="flex items-center gap-2" data-artist-rows-target="row" data-mode="unit">
+            <button type="button"
+                    class="flex-none px-2 py-1 text-xs rounded border border-indigo-300 bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 dark:border-indigo-700 whitespace-nowrap"
+                    data-action="click->artist-rows#toggleMode">Units</button>
+
+            <div class="artist-search-wrapper flex-1 relative">
+              <input type="text"
+                     class="artist-search-input block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                     placeholder="ユニット名で検索..."
+                     autocomplete="off"
+                     data-action="input->artist-rows#onSearchInput keydown->artist-rows#onKeydown focus->artist-rows#onSearchFocus">
+              <div class="artist-results hidden absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 max-h-60 overflow-auto"></div>
+            </div>
+
+            <div class="artist-selected-display flex-1 items-center hidden">
+              <span class="artist-chip inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                <span class="artist-name-display"></span>
+                <button type="button"
+                        class="hover:text-red-600"
+                        data-action="click->artist-rows#clearSelection">×</button>
+              </span>
+            </div>
+
+            <input type="hidden" class="artist-alias-input" value="">
+            <input type="hidden" class="artist-name-hidden" value="">
+            <input type="hidden" class="artist-key-hidden" value="">
+            <input type="hidden" class="artist-old-key-hidden" value="">
+          </div>
+        </div>
+
+        <%= hidden_field_tag :replacement_json, "[]", data: { artist_rows_target: "hiddenField" } %>
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          選択した Item のうち、検索条件（<%= @match_type %> = 「<%= @match_value %>」）に一致するアーティスト要素だけを、ここで選んだ Unit/Person に差し替えます。
+        </p>
+      </div>
+
+      <div class="flex justify-end">
+        <%= submit_tag "選択した項目のアーティストを一括差し替え",
+              class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 cursor-pointer" %>
+      </div>
+    <% end %>
+
+    <script>
+      function confirmBulkArtistUpdate() {
+        var checked = document.querySelectorAll('.row-check:checked');
+        if (checked.length === 0) {
+          alert('項目が選択されていません');
+          return false;
+        }
+        return confirm('選択した ' + checked.length + ' 件のアーティストを一括で差し替えます。よろしいですか？');
+      }
+    </script>
+  <% end %>
+</div>
