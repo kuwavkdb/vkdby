@@ -66,7 +66,6 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
 
     resources :items do
       collection do
-        get :bulk_artist_edit
         patch :bulk_artist_update
       end
     end

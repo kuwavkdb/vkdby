@@ -54,11 +54,17 @@ class Item < ApplicationRecord
     where('artists @> ?', [{ name: name }].to_json)
   }
 
-  # match_type ("old_key" / "key" / "name") で一致した artists 要素を
-  # replacement（{"name" =>, "key" =>, "old_key" =>} を持つ Hash）で一括差し替えする。
+  # alias（表示名）でアーティストを検索するスコープ
+  scope :by_artist_alias, lambda { |alias_name|
+    where('artists @> ?', [{ alias: alias_name }].to_json)
+  }
+
+  # match_type ("old_key" / "key" / "name" / "alias") で一致した artists 要素を
+  # replacement（{"name" =>, "key" =>, "old_key" =>, "alias" =>} を持つ Hash）で一括差し替えする。
+  # alias は replacement の値で上書きする（未指定・空なら表示名は設定しない。既存の alias は引き継がれない）。
   # 一致する要素が無かった場合は何も更新せず false を返す（意図しない updated_at 更新を避けるため）。
   def replace_artist!(match_type:, match_value:, replacement:)
-    return false unless %w[old_key key name].include?(match_type.to_s)
+    return false unless %w[old_key key name alias].include?(match_type.to_s)
 
     new_artists = (artists || []).map do |entry|
       next entry unless entry[match_type.to_s].to_s == match_value.to_s
@@ -67,6 +73,7 @@ class Item < ApplicationRecord
         'name' => replacement['name'],
         'key' => replacement['key'],
         'old_key' => replacement['old_key'],
+        'alias' => replacement['alias'],
         'confirmed' => true
       ).compact_blank
     end

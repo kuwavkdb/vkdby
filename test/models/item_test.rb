@@ -41,15 +41,38 @@ class ItemTest < ActiveSupport::TestCase
     assert_not_includes result, other
   end
 
-  test 'replace_artist! replaces only the matching entry, preserves alias, and marks it confirmed' do
+  test 'by_artist_alias finds an item whose artists array contains the alias' do
+    item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-alias',
+                        artists: [{ 'name' => 'ムック', 'alias' => 'MUCC' }])
+    other = Item.create!(title: 'Other Album', release_date: Date.current, link_url: 'https://example.com/item-alias-other',
+                         artists: [{ 'name' => 'Other Artist' }])
+
+    result = Item.by_artist_alias('MUCC')
+
+    assert_includes result, item
+    assert_not_includes result, other
+  end
+
+  test 'replace_artist! matches by alias' do
+    item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-replace-alias-match',
+                        artists: [{ 'name' => 'ムック', 'alias' => 'MUCC' }])
+
+    item.replace_artist!(match_type: 'alias', match_value: 'MUCC',
+                         replacement: { 'name' => 'ムック', 'key' => 'mucc', 'alias' => 'MUCC' })
+
+    item.reload
+    assert_equal 'mucc', item.artists.first['key']
+  end
+
+  test 'replace_artist! replaces only the matching entry and marks it confirmed' do
     item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-replace',
                         artists: [
-                          { 'name' => 'ムック', 'alias' => 'MUCC', 'old_key' => '%A5%E0%A5%C3%A5%AF' },
+                          { 'name' => 'ムック', 'alias' => 'OLD ALIAS', 'old_key' => '%A5%E0%A5%C3%A5%AF' },
                           { 'name' => 'Other Artist', 'key' => 'other-artist' }
                         ])
 
     result = item.replace_artist!(match_type: 'old_key', match_value: '%A5%E0%A5%C3%A5%AF',
-                                  replacement: { 'name' => 'MUCC', 'key' => 'mucc' })
+                                  replacement: { 'name' => 'MUCC', 'key' => 'mucc', 'alias' => 'MUCC' })
 
     assert_equal true, result
     item.reload
@@ -61,6 +84,17 @@ class ItemTest < ActiveSupport::TestCase
     assert_equal true, replaced['confirmed']
     assert_nil replaced['old_key']
     assert_equal({ 'name' => 'Other Artist', 'key' => 'other-artist' }, untouched)
+  end
+
+  test 'replace_artist! clears an existing alias when the replacement does not specify one' do
+    item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-replace-alias-clear',
+                        artists: [{ 'name' => 'ムック', 'alias' => 'OLD ALIAS', 'old_key' => '%A5%E0%A5%C3%A5%AF' }])
+
+    item.replace_artist!(match_type: 'old_key', match_value: '%A5%E0%A5%C3%A5%AF',
+                         replacement: { 'name' => 'MUCC', 'key' => 'mucc' })
+
+    item.reload
+    assert_nil item.artists.first['alias']
   end
 
   test 'replace_artist! matches by key' do

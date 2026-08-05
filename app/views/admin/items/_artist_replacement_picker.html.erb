@@ -1,0 +1,47 @@
+<div class="bg-white dark:bg-gray-800 shadow rounded-lg p-4 mb-6"
+     data-controller="artist-rows"
+     data-artist-rows-url-units-value="<%= search_admin_units_path %>"
+     data-artist-rows-url-people-value="<%= search_admin_people_path %>">
+  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">置換先アーティスト</label>
+
+  <div data-artist-rows-target="container">
+    <div class="flex items-center gap-2" data-artist-rows-target="row" data-mode="unit">
+      <button type="button"
+              class="flex-none px-2 py-1 text-xs rounded border border-indigo-300 bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 dark:border-indigo-700 whitespace-nowrap"
+              data-action="click->artist-rows#toggleMode">Units</button>
+
+      <div class="artist-search-wrapper flex-1 relative">
+        <input type="text"
+               class="artist-search-input block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+               placeholder="ユニット名で検索..."
+               autocomplete="off"
+               data-action="input->artist-rows#onSearchInput keydown->artist-rows#onKeydown focus->artist-rows#onSearchFocus">
+        <div class="artist-results hidden absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 max-h-60 overflow-auto"></div>
+      </div>
+
+      <div class="artist-selected-display flex-1 items-center hidden">
+        <span class="artist-chip inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+          <span class="artist-name-display"></span>
+          <button type="button"
+                  class="hover:text-red-600"
+                  data-action="click->artist-rows#clearSelection">×</button>
+        </span>
+      </div>
+
+      <input type="text"
+             class="artist-alias-input w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+             placeholder="表示名（任意）"
+             data-action="input->artist-rows#onAliasInput">
+
+      <input type="hidden" class="artist-name-hidden" value="">
+      <input type="hidden" class="artist-key-hidden" value="">
+      <input type="hidden" class="artist-old-key-hidden" value="">
+    </div>
+  </div>
+
+  <%= hidden_field_tag :replacement_json, "[]", data: { artist_rows_target: "hiddenField" } %>
+  <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+    選択した Item のうち、検索条件（<%= @match_type %> = 「<%= @match_value %>」）に一致するアーティスト要素だけを、ここで選んだ Unit/Person に差し替えます。
+    「表示名」を指定すると、対象 Item での表示名（alias）としてまとめて上書きされます（空欄の場合は表示名を設定しません）。
+  </p>
+</div>
