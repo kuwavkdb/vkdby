@@ -51,6 +51,12 @@
       <%= hidden_field_tag :match_type, @match_type %>
       <%= hidden_field_tag :match_value, @match_value %>
 
+      <div class="mb-2">
+        <button type="button" onclick="selectUnlinkedArtistsOnly()"
+                title="Unit/Personに未紐付けの項目だけを選択します"
+                class="text-sm text-indigo-600 hover:underline">未紐付けのみ選択</button>
+      </div>
+
       <%= render "items_table" %>
       <%= render "artist_replacement_picker" %>
 
