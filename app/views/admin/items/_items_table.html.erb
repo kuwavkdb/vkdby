@@ -20,8 +20,10 @@
       <% @items.each do |item| %>
         <tr>
           <% if @show_bulk_artist_ui %>
+            <% matched_and_unlinked = (item.artists || []).any? { |a| a[@match_type].to_s == @match_value && a['key'].blank? } %>
             <td class="px-4 py-4">
-              <%= check_box_tag "ids[]", item.id, false, id: "item_#{item.id}", class: "row-check rounded border-gray-300", aria: { label: "#{item.title} を選択" } %>
+              <%= check_box_tag "ids[]", item.id, false, id: "item_#{item.id}", class: "row-check rounded border-gray-300",
+                    data: { unlinked: matched_and_unlinked }, aria: { label: "#{item.title} を選択" } %>
             </td>
           <% end %>
           <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
