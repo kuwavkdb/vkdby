@@ -102,6 +102,22 @@ module Admin
       assert_includes response.body, 'function confirmBulkArtistUpdate()'
     end
 
+    test 'index marks the checkbox as unlinked only when the matching artist entry has no key' do
+      unlinked = Item.create!(title: 'Unlinked Item', release_date: Date.today,
+                              link_url: "https://example.com/item-#{SecureRandom.hex(4)}",
+                              artists: [{ 'name' => 'ムック', 'old_key' => '%A5%E0%A5%C3%A5%AF' }])
+      linked = Item.create!(title: 'Linked Item', release_date: Date.today,
+                            link_url: "https://example.com/item-#{SecureRandom.hex(4)}",
+                            artists: [{ 'name' => 'ムック', 'key' => 'mucc', 'old_key' => '%A5%E0%A5%C3%A5%AF' }])
+
+      get admin_items_path(match_type: 'old_key', match_value: '%A5%E0%A5%C3%A5%AF')
+
+      assert_response :success
+      assert_includes response.body, "id=\"item_#{unlinked.id}\" value=\"#{unlinked.id}\" class=\"row-check rounded border-gray-300\" data-unlinked=\"true\""
+      assert_includes response.body, "id=\"item_#{linked.id}\" value=\"#{linked.id}\" class=\"row-check rounded border-gray-300\" data-unlinked=\"false\""
+      assert_includes response.body, 'function selectUnlinkedArtistsOnly()'
+    end
+
     test 'index lists only items whose artists match the given alias (display name)' do
       matching = Item.create!(title: 'Matching Item', release_date: Date.today,
                               link_url: "https://example.com/item-#{SecureRandom.hex(4)}",

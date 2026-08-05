@@ -69,6 +69,13 @@
         }
         return confirm('選択した ' + checked.length + ' 件のアーティストを一括で差し替えます。よろしいですか？');
       }
+
+      function selectUnlinkedArtistsOnly() {
+        document.querySelectorAll('.row-check').forEach(function(c) {
+          c.checked = c.dataset.unlinked === 'true';
+        });
+        document.getElementById('check_all').checked = false;
+      }
     </script>
   <% else %>
     <%= render "items_table" %>
