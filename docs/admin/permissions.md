@@ -39,6 +39,7 @@
 | People — 削除 | destroy |
 | Trends — 削除 | destroy |
 | Items — 閲覧・作成・編集 | index / new / create / edit / update |
+| Items — アーティスト一括変更（index にアーティスト検索条件がある場合のみUI表示） | bulk_artist_update |
 | Custom Pages — 削除・復元 | destroy / undiscard |
 | Update Logs — 全操作 | 全アクション（restore 含む） |
 | Unit Snapshots — スナップショット作成 | create |

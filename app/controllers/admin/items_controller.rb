@@ -2,15 +2,24 @@
 
 module Admin
   class ItemsController < Admin::BaseController
-    before_action :require_super_operator, only: %i[new create edit update]
+    MATCH_TYPES = %w[old_key key name alias].freeze
+
+    before_action :require_super_operator, only: %i[new create edit update bulk_artist_update]
     before_action :require_admin, only: %i[destroy]
     before_action :set_item, only: %i[edit update destroy]
 
     def index
       @q = params[:q]
+      @match_type = params[:match_type].presence_in(MATCH_TYPES)
+      @match_value = params[:match_value].to_s.strip
+
       scope = Item.all.order(release_date: :desc)
       scope = scope.where('title ILIKE :q OR asin ILIKE :q', q: "%#{@q}%") if @q.present?
+      scope = scope.public_send(:"by_artist_#{@match_type}", @match_value) if @match_type.present? && @match_value.present?
       @pagy, @items = pagy(scope)
+
+      # アーティスト一括変更UIはsuper_operator以上、かつアーティスト検索条件が指定されている時のみ表示する
+      @show_bulk_artist_ui = current_user.super_operator_or_above? && @match_type.present? && @match_value.present?
     end
 
     def new
@@ -53,6 +62,24 @@ module Admin
       redirect_to admin_items_path, notice: 'Item deleted successfully.'
     end
 
+    def bulk_artist_update
+      ids = Array(params[:ids]).map(&:to_i).reject(&:zero?)
+      match_type = params[:match_type].presence_in(MATCH_TYPES)
+      match_value = params[:match_value].to_s.strip
+      replacement = build_replacement_from_json(params[:replacement_json])
+      redirect_params = { match_type: match_type, match_value: match_value }
+
+      return redirect_to admin_items_path(redirect_params), alert: '項目が選択されていません' if ids.empty?
+      return redirect_to admin_items_path(redirect_params), alert: '検索条件が不正です' if match_type.blank? || match_value.blank?
+      return redirect_to admin_items_path(redirect_params), alert: '置換先のUnit/Personを選択してください' if replacement.blank?
+
+      count = 0
+      Item.where(id: ids).find_each do |item|
+        count += 1 if item.replace_artist!(match_type: match_type, match_value: match_value, replacement: replacement)
+      end
+      redirect_to admin_items_path(redirect_params), notice: "#{count}件のアーティストを差し替えました"
+    end
+
     private
 
     def set_item
@@ -79,6 +106,17 @@ module Admin
           .map { |a| a.slice('name', 'key', 'old_key', 'alias').compact_blank }
     rescue JSON::ParserError
       []
+    end
+
+    def build_replacement_from_json(json)
+      return nil if json.blank?
+
+      entry = JSON.parse(json).find { |a| a['name'].present? }
+      return nil unless entry
+
+      entry.slice('name', 'key', 'old_key', 'alias').compact_blank
+    rescue JSON::ParserError
+      nil
     end
   end
 end
