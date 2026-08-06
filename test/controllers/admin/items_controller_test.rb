@@ -144,15 +144,43 @@ module Admin
       assert_includes response.body, 'ムック（MUCC）'
     end
 
-    test 'index shows both name and alias for each artist in the bulk artist search results too' do
+    test 'index shows name, alias, key and old_key separately for each artist in the bulk artist search results' do
       Item.create!(title: 'Matching Item', release_date: Date.today,
                    link_url: "https://example.com/item-#{SecureRandom.hex(4)}",
-                   artists: [{ 'name' => 'ムック', 'alias' => 'MUCC' }])
+                   artists: [{ 'name' => 'ムック', 'alias' => 'MUCC', 'key' => 'mucc', 'old_key' => '%A5%E0%A5%C3%A5%AF' }])
 
       get admin_items_path(match_type: 'alias', match_value: 'MUCC')
 
       assert_response :success
-      assert_includes response.body, 'ムック（MUCC）'
+      assert_match(%r{>name</span>\s*<span[^>]*>ムック</span>}, response.body)
+      assert_match(%r{>alias</span>\s*<span[^>]*>MUCC</span>}, response.body)
+      assert_match(%r{>key</span>\s*<a[^>]*>mucc</a>}, response.body)
+      assert_match(%r{>old_key</span>\s*<a[^>]*>%A5%E0%A5%C3%A5%AF</a>}, response.body)
+    end
+
+    test 'index links key to the profile page and old_key to the old wiki page' do
+      Item.create!(title: 'Matching Item', release_date: Date.today,
+                   link_url: "https://example.com/item-#{SecureRandom.hex(4)}",
+                   artists: [{ 'name' => 'ムック', 'key' => 'mucc', 'old_key' => '%A5%E0%A5%C3%A5%AF' }])
+
+      get admin_items_path(match_type: 'key', match_value: 'mucc')
+
+      assert_response :success
+      assert_match(%r{<a[^>]*href="/mucc"[^>]*>mucc</a>}, response.body)
+      assert_match(%r{<a[^>]*href="#{Regexp.escape(Rails.application.config.old_key_url_base)}/%A5%E0%A5%C3%A5%AF\.html"[^>]*>%A5%E0%A5%C3%A5%AF</a>},
+                   response.body)
+    end
+
+    test 'index shows an em dash for key/old_key when the artist entry has neither' do
+      Item.create!(title: 'Unlinked Item', release_date: Date.today,
+                   link_url: "https://example.com/item-#{SecureRandom.hex(4)}",
+                   artists: [{ 'name' => 'ムック' }])
+
+      get admin_items_path(match_type: 'name', match_value: 'ムック')
+
+      assert_response :success
+      assert_match(%r{>key</span>\s*<span[^>]*>—</span>}, response.body)
+      assert_match(%r{>old_key</span>\s*<span[^>]*>—</span>}, response.body)
     end
 
     test 'index does not show the bulk artist replace UI for an operator, even with an artist search condition' do
