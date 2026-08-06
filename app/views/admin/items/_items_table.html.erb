@@ -27,23 +27,48 @@
             </td>
           <% end %>
           <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-            <%= link_to item.title, item_path(item), class: "text-indigo-600 hover:text-indigo-900" %>
+            <%= link_to item.title, item_path(item), class: "text-indigo-600 hover:text-indigo-900 max-w-xs line-clamp-2 block" %>
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"><%= item.release_date %></td>
           <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
             <% if @show_bulk_artist_ui %>
-              <% (item.artists || []).each do |a| %>
+              <% (item.artists || []).each_with_index do |a, i| %>
                 <% matched = a[@match_type].to_s == @match_value %>
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs mr-1 mb-1 <%= matched ? 'bg-amber-100 text-amber-800 ring-1 ring-amber-400 dark:bg-amber-900 dark:text-amber-200' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' %>">
-                  <%= a['name'] %><% if a['alias'].present? %>（<%= a['alias'] %>）<% end %><% if a['key'].blank? %> (未紐付け)<% end %>
-                </span>
+                <div class="text-xs space-y-0.5 <%= 'mt-2 pt-2 border-t border-gray-100 dark:border-gray-700' if i.positive? %>">
+                  <div>
+                    <span class="inline-block w-14 text-gray-400 dark:text-gray-500 uppercase tracking-wide">name</span>
+                    <span class="font-medium <%= matched ? 'text-amber-800 dark:text-amber-300' : 'text-gray-900 dark:text-gray-100' %>"><%= a['name'].presence || '—' %></span>
+                  </div>
+                  <% if a['alias'].present? %>
+                    <div>
+                      <span class="inline-block w-14 text-gray-400 dark:text-gray-500 uppercase tracking-wide">alias</span>
+                      <span class="font-medium <%= 'text-amber-800 dark:text-amber-300' if matched %>"><%= a['alias'] %></span>
+                    </div>
+                  <% end %>
+                  <div>
+                    <span class="inline-block w-14 text-gray-400 dark:text-gray-500 uppercase tracking-wide">key</span>
+                    <% if a['key'].present? %>
+                      <%= link_to a['key'], profile_path(a['key']), target: "_blank", rel: "noopener", class: "font-medium text-indigo-600 hover:underline" %>
+                    <% else %>
+                      <span class="font-medium text-gray-400 dark:text-gray-500">—</span>
+                    <% end %>
+                  </div>
+                  <div>
+                    <span class="inline-block w-14 text-gray-400 dark:text-gray-500 uppercase tracking-wide">old_key</span>
+                    <% if a['old_key'].present? %>
+                      <%= link_to a['old_key'], "#{Rails.application.config.old_key_url_base}/#{a['old_key']}.html", target: "_blank", rel: "noopener", class: "font-medium text-indigo-600 hover:underline" %>
+                    <% else %>
+                      <span class="font-medium text-gray-400 dark:text-gray-500">—</span>
+                    <% end %>
+                  </div>
+                </div>
               <% end %>
             <% else %>
               <%= item.artists.map { |a| a['alias'].present? ? "#{a['name']}（#{a['alias']}）" : a['name'] }.join(', ') %>
             <% end %>
           </td>
           <% unless @show_bulk_artist_ui %>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"><%= item.asin %></td>
+            <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 break-words"><%= item.asin %></td>
           <% end %>
           <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
             <% if current_user.super_operator_or_above? %>
