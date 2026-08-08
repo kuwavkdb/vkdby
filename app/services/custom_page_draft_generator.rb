@@ -31,6 +31,7 @@ class CustomPageDraftGenerator
     body = convert_links(body)
     body = convert_horizontal_rules(body)
     body = flag_unsupported_plugins(body)
+    body = normalize_blank_lines(body)
 
     Draft.new(
       wikipage_id: @wikipage.id,
@@ -56,10 +57,13 @@ class CustomPageDraftGenerator
 
   # PukiWiki記法では ! の数が多いほど上位の見出し（!!! が最大）。
   # !!! → #, !! → ##, ! → ### に変換する。
+  # 直前が箇条書き等の場合、空行を挟まないとMarkdown上でリスト項目の続きとして
+  # 解釈されてしまう（見出しとして認識されない）ため、見出しの前に必ず空行を入れる。
+  # 連続見出し等で空行が重複した場合は normalize_blank_lines で正規化する。
   def convert_headings(text)
     text.gsub(/^(!{1,3})(?!!)\s*(.*)$/) do
       level = 4 - Regexp.last_match(1).length
-      ('#' * level) + " #{Regexp.last_match(2)}"
+      "\n#{'#' * level} #{Regexp.last_match(2)}"
     end
   end
 
@@ -120,6 +124,11 @@ class CustomPageDraftGenerator
       @warnings << "未対応プラグイン #{plugin_name} を検出しました（要手動対応）"
       "<!-- TODO: 要手動対応 元記法: #{match} -->"
     end
+  end
+
+  # convert_headings で挿入した空行により3行以上の連続改行ができた場合、空行1つに正規化する
+  def normalize_blank_lines(text)
+    text.gsub(/\n{3,}/, "\n\n")
   end
 
   def encoded_old_key
