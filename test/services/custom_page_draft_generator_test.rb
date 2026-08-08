@@ -15,6 +15,16 @@ class CustomPageDraftGeneratorTest < ActiveSupport::TestCase
     assert_includes draft.body, '### 小見出し'
   end
 
+  test '見出しの直前が箇条書きの場合、見出しがリスト項目に取り込まれないよう空行が挿入される' do
+    draft = generate(name: 'test', wiki: "!!実績\n*50,000円\n!2019/10/17 … 寄付致しました。\n")
+    assert_includes draft.body, "- 50,000円\n\n### 2019/10/17 … 寄付致しました。"
+  end
+
+  test '見出しが連続しても余計な空行が積み重ならない' do
+    draft = generate(name: 'test', wiki: "!!!大見出し\n!!中見出し\n")
+    refute_includes draft.body, "\n\n\n"
+  end
+
   test '箇条書き */**/*** は入れ子のMarkdownリストに変換される' do
     draft = generate(name: 'test', wiki: "*一階層\n**二階層\n***三階層\n")
     assert_includes draft.body, '- 一階層'
