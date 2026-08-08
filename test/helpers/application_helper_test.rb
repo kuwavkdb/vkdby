@@ -103,4 +103,32 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(%r{hx-get="[^"]*snapshots/#{snapshot.id}/members"}, result)
     assert_match(/テストメンバー4/, result)
   end
+
+  test '{{item ASIN}}でItemカードが埋め込まれる' do
+    item = Item.create!(title: 'テストアルバム', release_date: '2020-01-01',
+                        link_url: 'https://example.com/item/1', asin: 'B00TESTASIN')
+
+    result = markdown("{{item #{item.asin}}}")
+
+    assert_match(/テストアルバム/, result)
+  end
+
+  test '{{item ASIN}}で複数行タグが崩れずに埋め込まれる' do
+    item = Item.create!(title: 'テストアルバム2', release_date: '2020-01-01',
+                        link_url: 'https://example.com/item/2', asin: 'B00TESTASIN2')
+
+    result = markdown("前\n\n{{item #{item.asin}}}\n\n後")
+
+    # ItemCardComponentの複数行タグの属性がRedcarpetに解析されテキストとして
+    # 露出していないこと（<p>の中にdata-controller等の属性テキストが漏れていないこと）を確認する
+    assert_no_match(/<p>[^<]*data-controller/, result)
+    assert_match(/data-controller="item-card-artists"/, result)
+    assert_match(/テストアルバム2/, result)
+  end
+
+  test '{{item ASIN}}でASINが未登録の場合は空文字になる' do
+    result = markdown('前{{item B00NOSUCHASIN}}後')
+
+    assert_match(/前後/, result)
+  end
 end

@@ -119,7 +119,8 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # {{プラグイン名 パラメータ}} 形式の記法をディスパッチする
   PLUGIN_HANDLERS = {
     'include' => :expand_include_plugin,
-    'snapshot' => :expand_snapshot_plugin
+    'snapshot' => :expand_snapshot_plugin,
+    'item' => :expand_item_plugin
   }.freeze
 
   def expand_plugin_macros(text, sectionable: nil, placeholders: {})
@@ -182,6 +183,18 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     return '' unless snapshot
 
     html = render(UnitSnapshotsComponent.new(snapshots: [snapshot], unit: unit, admin: false, show_label: false)).to_s
+    register_plugin_placeholder(placeholders, html)
+  end
+
+  # {{item ASIN}}
+  def expand_item_plugin(args, _sectionable, placeholders)
+    asin = args.strip
+    return '' if asin.blank?
+
+    item = Item.find_by(asin: asin)
+    return '' unless item
+
+    html = render(ItemCardComponent.new(item_card: item)).to_s
     register_plugin_placeholder(placeholders, html)
   end
 end

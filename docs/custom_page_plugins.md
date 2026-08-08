@@ -22,7 +22,8 @@ CustomPage の `body`（Markdown）内に `{{プラグイン名 パラメータ}
 ```ruby
 PLUGIN_HANDLERS = {
   'include' => :expand_include_plugin,
-  'snapshot' => :expand_snapshot_plugin
+  'snapshot' => :expand_snapshot_plugin,
+  'item' => :expand_item_plugin
 }.freeze
 ```
 
@@ -108,6 +109,32 @@ end
   - `show_label: false` を渡し、バンドページと異なりラベルバッジ（「結成時」等）は非表示にする（[app/components/unit_snapshots_component.rb](../app/components/unit_snapshots_component.rb)）
 - `snapshot_id` の確認は管理画面のスナップショット一覧（`admin/unit_snapshots#index` および Unit編集画面内の一覧）にID列を表示済み（[issue #954](https://github.com/kuwavkdb/vkdby/issues/954)）
 
+---
+
+## `item` プラグイン
+
+指定したASINの商品（`Item`）カードを埋め込む。旧サイトの `{{a2s ASIN[,ASIN...]}}`（Amazon商品埋め込み）記法からの移行先（[issue #1087](https://github.com/kuwavkdb/vkdby/issues/1087)）。まずは単一ASINのみに対応し、複数ASIN対応は必要になった時点で別途拡張する。
+
+**記法:** `{{item ASIN}}`
+
+```ruby
+def expand_item_plugin(args, _sectionable, placeholders)
+  asin = args.strip
+  return '' if asin.blank?
+
+  item = Item.find_by(asin: asin)
+  return '' unless item
+
+  html = render(ItemCardComponent.new(item_card: item)).to_s
+  register_plugin_placeholder(placeholders, html)
+end
+```
+
+- `Item#asin`（一意）で検索する
+- 見つからない場合（ASIN未登録・誤り等）は**空文字を返す（サイレント失敗、`include`/`snapshot` と同じ方針）**
+- 描画は既存の `ItemCardComponent`（商品ページ・関連作品グリッド等と共通）を再利用する
+- `ItemCardComponent` が生成するHTMLはStimulus属性（`data-controller="item-card-artists"`）を含む複数行タグのため、`snapshot` と同じ**プレースホルダー方式**を使う（`include` 方式だとRedcarpetの生HTML解析でタグが壊れる。詳細は次節参照）
+
 ### なぜプレースホルダー方式にしているか
 
 `UnitSnapshotsComponent` が生成するHTMLは、Stimulus (`data-controller`, `data-action`) や htmx (`hx-get`, `hx-trigger`) の属性を持つ複数行の `<div ...>` タグを含む。これを `include` と同じ方式（文字列としてMarkdown本文に差し込み、Redcarpetで再解析させる）で実装したところ、以下の問題が手動確認で見つかった。
@@ -159,9 +186,10 @@ end
 
 | 種別 | ファイル |
 |---|---|
-| ディスパッチ機構・`include`・`snapshot` | [app/helpers/application_helper.rb](../app/helpers/application_helper.rb) |
+| ディスパッチ機構・`include`・`snapshot`・`item` | [app/helpers/application_helper.rb](../app/helpers/application_helper.rb) |
 | `include` 専用の循環参照チェック（別ロジック） | [app/models/custom_page.rb](../app/models/custom_page.rb) |
 | `snapshot` の描画コンポーネント | [app/components/unit_snapshots_component.rb](../app/components/unit_snapshots_component.rb), [app/components/unit_snapshots_component.html.erb](../app/components/unit_snapshots_component.html.erb) |
+| `item` の描画コンポーネント | [app/components/item_card_component.rb](../app/components/item_card_component.rb), [app/components/item_card_component.html.erb](../app/components/item_card_component.html.erb) |
 | 管理画面（スナップショットID確認用） | [app/views/admin/unit_snapshots/index.html.erb](../app/views/admin/unit_snapshots/index.html.erb), [app/views/admin/units/_snapshots_list.html.erb](../app/views/admin/units/_snapshots_list.html.erb) |
 | テスト | [test/helpers/application_helper_test.rb](../test/helpers/application_helper_test.rb), [test/controllers/custom_pages_controller_test.rb](../test/controllers/custom_pages_controller_test.rb) |
 
