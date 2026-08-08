@@ -24,13 +24,17 @@
 
 旧システムで使われていた `.html` 拡張子付きURLを、現行プロフィールページへ転送する。
 
-**検索順序（Unit → Person の順で探す）:**
+**検索順序（CustomPage → Unit → Person の順で探す）:**
 
-1. `Unit.old_key` が一致
-2. `Unit.old_key` がURLエンコード済み old_key と一致
-3. `Unit.aliases` 配列内の `old_key` フィールドが一致
-4. `Unit.aliases` 配列内の `old_key` フィールドがURLエンコード済み old_key と一致
-5. 上記4パターンを Person でも同様に確認
+1. `CustomPage.old_key`（`published` スコープのみ）が一致
+2. `CustomPage.old_key` がURLエンコード済み old_key と一致
+3. `Unit.old_key` が一致
+4. `Unit.old_key` がURLエンコード済み old_key と一致
+5. `Unit.aliases` 配列内の `old_key` フィールドが一致
+6. `Unit.aliases` 配列内の `old_key` フィールドがURLエンコード済み old_key と一致
+7. 上記4〜6パターンを Person でも同様に確認
+
+CustomPage は `Unit`/`Person` と異なり `aliases` を持たない（[issue #1085](https://github.com/kuwavkdb/vkdby/issues/1085)、初回実装のため単一の `old_key` のみ。複数の旧名を持つページが出てきたら `aliases` の追加を検討）。
 
 **見つからない場合:** 404ページを表示（EUC-JP デコードを試みてユニット名を表示）
 

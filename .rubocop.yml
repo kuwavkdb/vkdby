@@ -17,3 +17,4 @@ Metrics/ClassLength:
   Exclude:
     - 'app/models/person.rb'
     - 'app/services/base_wikipage_importer.rb'
+    - 'test/services/custom_page_draft_generator_test.rb'
