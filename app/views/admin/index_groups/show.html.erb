@@ -49,6 +49,10 @@
         <% end %>
       </div>
 
+      <div class="mb-4">
+        <%= link_to "＋ タグを追加", new_admin_tag_index_path, class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700" %>
+      </div>
+
       <%= form_with url: move_indices_admin_index_group_path(@index_group), method: :post, local: true, html: { id: "move_indices_form" } do |f| %>
         <div class="mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
           <div class="flex items-center mb-3">
@@ -80,7 +84,9 @@
             <div class="flex items-center gap-4">
               <%= link_to "Units: #{index.units.count}", admin_units_path(tag_index_id: index.id), class: "text-sm text-indigo-600 hover:text-indigo-800 hover:underline" %>
               <%= link_to "People: #{index.people.count}", admin_people_path(tag_index_id: index.id), class: "text-sm text-indigo-600 hover:text-indigo-800 hover:underline" %>
+              <%= link_to "名称変更", edit_admin_tag_index_path(index), class: "text-xs px-2 py-1 rounded border text-gray-600 border-gray-300 hover:bg-gray-50" %>
               <%= button_to index.active? ? "非表示" : "表示", admin_tag_index_path(index, tag_index: { active: !index.active? }), method: :patch, class: "text-xs px-2 py-1 rounded border #{index.active? ? 'text-red-600 border-red-200 hover:bg-red-50' : 'text-blue-600 border-blue-200 hover:bg-blue-50'}" %>
+              <%= button_to "削除", admin_tag_index_path(index), method: :delete, class: "text-xs px-2 py-1 rounded border text-red-600 border-red-200 hover:bg-red-50", onclick: "return confirm('「#{j index.name}」を削除しますか？紐づくUnit/Personとの関連も削除されます。')" %>
             </div>
           </li>
         <% end %>
@@ -104,6 +110,10 @@
             <% end %>
           </div>
         <% end %>
+      </div>
+
+      <div class="mb-4">
+        <%= link_to "＋ タグを追加", new_admin_tag_index_path(index_group_id: @index_group.id), class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700" %>
       </div>
 
       <%= form_with url: detach_indices_admin_index_group_path(@index_group), method: :post, local: true, html: { id: "detach_indices_form" } do |f| %>
@@ -145,7 +155,9 @@
             <div class="flex items-center gap-4">
               <%= link_to "Units: #{index.units.count}", admin_units_path(tag_index_id: index.id), class: "text-sm text-indigo-600 hover:text-indigo-800 hover:underline" %>
               <%= link_to "People: #{index.people.count}", admin_people_path(tag_index_id: index.id), class: "text-sm text-indigo-600 hover:text-indigo-800 hover:underline" %>
+              <%= link_to "名称変更", edit_admin_tag_index_path(index), class: "text-xs px-2 py-1 rounded border text-gray-600 border-gray-300 hover:bg-gray-50" %>
               <%= button_to index.active? ? "非表示" : "表示", admin_tag_index_path(index, tag_index: { active: !index.active? }), method: :patch, class: "text-xs px-2 py-1 rounded border #{index.active? ? 'text-red-600 border-red-200 hover:bg-red-50' : 'text-blue-600 border-blue-200 hover:bg-blue-50'}" %>
+              <%= button_to "削除", admin_tag_index_path(index), method: :delete, class: "text-xs px-2 py-1 rounded border text-red-600 border-red-200 hover:bg-red-50", onclick: "return confirm('「#{j index.name}」を削除しますか？紐づくUnit/Personとの関連も削除されます。')" %>
             </div>
           </li>
         <% end %>

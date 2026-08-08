@@ -24,7 +24,7 @@
 |---|---|
 | Units — 閲覧・作成・編集 | index / new / create / edit / update / show / search |
 | People — 閲覧・作成・編集 | index / new / create / edit / update / search |
-| Index Groups | 全アクション |
+| Index Groups / タグ（Tag Indices）— 閲覧・作成・編集・削除・並べ替え・グループ移動 | 全アクション |
 | Trends — 閲覧・作成・編集 | index / new / create / edit / update |
 | External Sites | 全アクション |
 | Custom Pages — 閲覧・作成・編集 | index / new / create / edit / update |

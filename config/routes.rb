@@ -70,7 +70,7 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
       end
     end
 
-    resources :tag_indices, only: %i[update] do
+    resources :tag_indices, except: %i[index show] do
       collection do
         post :bulk_update
       end
