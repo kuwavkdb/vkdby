@@ -80,12 +80,13 @@ warning:      内部リンク [[編集について]] はリンク解決できな
 | `[[label\|target]]`（targetがURLでない） | `label`（平文化）＋警告 | wikiページ名やサービス独自記法（例: `TBTV-Visual:452`）を誤ってリンク化しないため |
 | `[[PageName]]` | `[PageName](/key)` または `PageName`（平文化）＋警告 | 同名の `Unit`/`Person` を `kept` スコープで検索し、見つかればプロフィールページへのリンクに自動解決。見つからなければ平文化 |
 | `----` | `---` | |
-| `{{include ...}}` / `{{snapshot ...}}` | そのまま維持 | `CustomPage` のMarkdownヘルパーが解釈できるプラグインのため変換不要（[docs/custom_page_plugins.md](../custom_page_plugins.md)参照） |
+| `==打ち消し線==` | `~~打ち消し線~~` | |
+| `{{include ...}}` / `{{snapshot ...}}` / `{{item ...}}` | そのまま維持 | `CustomPage` のMarkdownヘルパーが解釈できるプラグインのため変換不要（[docs/custom_page_plugins.md](../custom_page_plugins.md)参照） |
 | 上記以外の `{{プラグイン ...}}` | `<!-- TODO: 要手動対応 元記法: {{...}} -->` ＋警告 | `{{tweet}}` `{{a2s}}` `{{category_list_db}}` 等、新サイトに対応機能がないもの |
 
 ## 既知の限界
 
-- Amazon商品埋め込み（`{{a2s ASIN}}`）は現時点では変換できず、TODOコメントとして残るのみ。[issue #1087](https://github.com/kuwavkdb/vkdby/issues/1087)（Item card埋め込みプラグイン）が実装されれば `{{item ASIN}}` 等への置き換えが可能になる見込み。
+- Amazon商品埋め込み（`{{a2s ASIN}}`）は現時点では変換できず、TODOコメントとして残るのみ。[issue #1087](https://github.com/kuwavkdb/vkdby/issues/1087)（Item card埋め込みプラグイン、`{{item ASIN}}`）は実装済みだが、`{{a2s}}` から `{{item}}` への自動置換はこのジェネレーターにはまだ組み込んでいない（要手動対応）。
 - `{{category_list_db ...}}` のような動的一覧プラグインは、そもそも静的なMarkdownページでは同じ機能を再現できない。該当ページ（例: `events`）は個別に「簡易化して残すか」「対応を見送るか」を人手で判断する必要がある。
 - 単一ブラケット `[label|url]` は実データ上すべてURL/相対パスだったため常にリンク化している。今後想定外のデータが出てきた場合は要調整。
 

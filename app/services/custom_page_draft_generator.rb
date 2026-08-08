@@ -11,7 +11,7 @@ class CustomPageDraftGenerator
 
   # CustomPage の markdown ヘルパー（ApplicationHelper#expand_plugin_macros）が
   # そのまま解釈できるプラグイン。変換せず残す。
-  SUPPORTED_PLUGINS = %w[include snapshot].freeze
+  SUPPORTED_PLUGINS = %w[include snapshot item].freeze
 
   def self.generate(wikipage)
     new(wikipage).generate
@@ -30,6 +30,7 @@ class CustomPageDraftGenerator
     body = convert_lists(body)
     body = convert_links(body)
     body = convert_horizontal_rules(body)
+    body = convert_strikethrough(body)
     body = flag_unsupported_plugins(body)
     body = normalize_blank_lines(body)
 
@@ -111,6 +112,11 @@ class CustomPageDraftGenerator
 
   def convert_horizontal_rules(text)
     text.gsub(/^-{4,}\s*$/, '---')
+  end
+
+  # ==打ち消し線== → ~~打ち消し線~~
+  def convert_strikethrough(text)
+    text.gsub(/==(.+?)==/) { "~~#{Regexp.last_match(1)}~~" }
   end
 
   # include / snapshot 以外のプラグイン記法はそのまま残すと崩れるため、
