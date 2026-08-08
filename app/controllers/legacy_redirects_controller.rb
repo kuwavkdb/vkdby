@@ -22,6 +22,15 @@ class LegacyRedirectsController < ApplicationController
       return
     end
 
+    # Try to find CustomPage by old_key（issue #1085）
+    if (custom_page = CustomPage.published.find_by(old_key: old_key) ||
+                      CustomPage.published.find_by(old_key: encoded_old_key))
+      new_url = custom_page_url(custom_page.key)
+      response.headers['Link'] = "<#{new_url}>; rel=\"canonical\""
+      redirect_to new_url, status: :moved_permanently
+      return
+    end
+
     # Try to find Unit by old_key
     if (unit = Unit.find_by(old_key: old_key) || Unit.find_by(old_key: encoded_old_key) ||
                Unit.where('aliases @> ?', [{ old_key: old_key }].to_json).first ||

@@ -101,7 +101,7 @@ module Admin
     end
 
     def custom_page_params
-      params.require(:custom_page).permit(:key, :title, :body, :active)
+      params.require(:custom_page).permit(:key, :title, :body, :active, :old_key)
     end
   end
 end

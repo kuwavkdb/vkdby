@@ -63,7 +63,7 @@ warning:      内部リンク [[編集について]] はリンク解決できな
 ...
 ```
 
-- `old_key` は Unit/Person importer と同じ規約（`URI.encode_www_form_component(name.encode('EUC-JP'))`）で算出している。[issue #1085](https://github.com/kuwavkdb/vkdby/issues/1085)（旧URLリダイレクト対応）で `custom_pages.old_key` 列が追加され次第、この値をそのまま使える。
+- `old_key` は Unit/Person importer と同じ規約（`URI.encode_www_form_component(name.encode('EUC-JP'))`）で算出している。[issue #1085](https://github.com/kuwavkdb/vkdby/issues/1085)（旧URLリダイレクト対応）で `custom_pages.old_key` 列が追加済みなので、この値を本番の管理画面フォームの「旧キー」欄にそのまま貼り付ければ `/{old_key}.html` からのリダイレクトが有効になる（詳細: [docs/redirects.md](../redirects.md)）。
 - `key(仮)` は自動採番していない（対象ページにはカナ読みがなく、Unit/Personのようなローマ字変換ができないため）。公開時に管理画面で正式な `key` に変更する前提。
 
 ## 変換ルール（`CustomPageDraftGenerator`）

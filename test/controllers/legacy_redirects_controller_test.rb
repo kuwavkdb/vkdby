@@ -16,6 +16,12 @@ class LegacyRedirectsControllerTest < ActionDispatch::IntegrationTest
       old_key: 'old_person_k',
       status: :active
     )
+    @custom_page = CustomPage.create!(
+      key: 'events',
+      title: 'イベント',
+      old_key: 'events',
+      active: true
+    )
   end
 
   test 'should redirect to unit page if old_key matches unit' do
@@ -23,6 +29,19 @@ class LegacyRedirectsControllerTest < ActionDispatch::IntegrationTest
     assert_response :moved_permanently
     assert_redirected_to profile_path(@unit.key)
     assert_match(/<#{Regexp.escape(profile_url(@unit.key))}>; rel="canonical"/, response.headers['Link'])
+  end
+
+  test 'should redirect to custom page if old_key matches a published custom page' do
+    get "/#{@custom_page.old_key}.html"
+    assert_response :moved_permanently
+    assert_redirected_to custom_page_path(@custom_page.key)
+    assert_match(/<#{Regexp.escape(custom_page_url(@custom_page.key))}>; rel="canonical"/, response.headers['Link'])
+  end
+
+  test 'should not redirect to an unpublished (draft) custom page' do
+    @custom_page.update!(active: false)
+    get "/#{@custom_page.old_key}.html"
+    assert_response :not_found
   end
 
   test 'should redirect to person page if old_key matches person' do
