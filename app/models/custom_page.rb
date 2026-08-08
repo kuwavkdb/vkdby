@@ -9,6 +9,7 @@
 #  body         :text
 #  discarded_at :datetime
 #  key          :string           not null
+#  old_key      :string
 #  title        :string           not null
 #  created_at   :datetime         not null
 #  updated_at   :datetime         not null
@@ -16,7 +17,8 @@
 # Indexes
 #
 #  index_custom_pages_on_discarded_at  (discarded_at)
-#  index_custom_pages_on_key          (key) UNIQUE
+#  index_custom_pages_on_key           (key) UNIQUE
+#  index_custom_pages_on_old_key       (old_key) UNIQUE
 #
 
 class CustomPage < ApplicationRecord

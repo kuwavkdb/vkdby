@@ -19,6 +19,14 @@
   </div>
 
   <div>
+    <%= form.label :old_key, "旧キー (old_key)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">旧サイトの <code>xxxxx.html</code> のURLエンコード済み部分。設定すると <code>/{old_key}.html</code> へのアクセスがこのページへ301リダイレクトされる。</p>
+    <%= form.text_field :old_key,
+        class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono dark:bg-gray-700 dark:border-gray-600 dark:text-white",
+        placeholder: "例: events, %B5%C1%B1%E7%B3%E8%C6%B0" %>
+  </div>
+
+  <div>
     <%= form.label :title, "タイトル", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
     <%= form.text_field :title,
         class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
