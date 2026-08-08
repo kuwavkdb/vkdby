@@ -74,10 +74,16 @@ class CustomPageDraftGeneratorTest < ActiveSupport::TestCase
     assert_includes draft.body, '---'
   end
 
-  test 'include/snapshot プラグインはそのまま残る' do
-    draft = generate(name: 'test', wiki: '{{include about,概要}} {{snapshot merry,1}}')
+  test '==打ち消し線== はMarkdownの~~打ち消し線~~に変換される' do
+    draft = generate(name: 'test', wiki: '==受領証が届き次第画像を差し替えます==')
+    assert_includes draft.body, '~~受領証が届き次第画像を差し替えます~~'
+  end
+
+  test 'include/snapshot/item プラグインはそのまま残る' do
+    draft = generate(name: 'test', wiki: '{{include about,概要}} {{snapshot merry,1}} {{item B004X86P9U}}')
     assert_includes draft.body, '{{include about,概要}}'
     assert_includes draft.body, '{{snapshot merry,1}}'
+    assert_includes draft.body, '{{item B004X86P9U}}'
   end
 
   test '未対応プラグインはTODOコメントに置き換えられ警告が積まれる' do
