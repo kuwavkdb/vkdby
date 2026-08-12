@@ -81,6 +81,9 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
         patch :undiscard
         post :upload_image
       end
+      collection do
+        post :preview
+      end
     end
 
     resources :sections, only: %i[new create edit update destroy] do

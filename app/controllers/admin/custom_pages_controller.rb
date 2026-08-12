@@ -70,6 +70,14 @@ module Admin
       render json: { url: rails_blob_path(@custom_page.images.last, disposition: :inline) }
     end
 
+    # {{include}}/{{snapshot}}/{{item}} 等のプラグイン記法を含め、実際の公開ページと
+    # 同じ ApplicationHelper#markdown でレンダリングしたHTMLを返す（issue #1089）。
+    # 新規作成中（未保存）の場合は id が渡らないため sectionable は nil になる。
+    def preview
+      custom_page = params[:id].present? ? CustomPage.with_discarded.find_by(id: params[:id]) : nil
+      render json: { html: helpers.markdown(params[:body].to_s, sectionable: custom_page) }
+    end
+
     private
 
     def set_custom_page
