@@ -14,12 +14,21 @@
   </div>
 
   <div class="mb-4 flex items-center gap-4 text-sm">
-    <%= link_to "通常", admin_custom_pages_path(q: params[:q]),
+    <%= link_to "通常", admin_custom_pages_path(q: params[:q], system: params[:system]),
         class: "#{params[:discarded].blank? ? 'font-bold underline' : 'text-indigo-600 hover:underline'}" %>
-    <%= link_to "削除済み", admin_custom_pages_path(q: params[:q], discarded: 'only'),
+    <%= link_to "削除済み", admin_custom_pages_path(q: params[:q], discarded: 'only', system: params[:system]),
         class: "#{params[:discarded] == 'only' ? 'font-bold underline' : 'text-indigo-600 hover:underline'}" %>
-    <%= link_to "すべて", admin_custom_pages_path(q: params[:q], discarded: 'all'),
+    <%= link_to "すべて", admin_custom_pages_path(q: params[:q], discarded: 'all', system: params[:system]),
         class: "#{params[:discarded] == 'all' ? 'font-bold underline' : 'text-indigo-600 hover:underline'}" %>
+  </div>
+
+  <div class="mb-4 flex items-center gap-4 text-sm">
+    <%= link_to "すべて表示", admin_custom_pages_path(q: params[:q], discarded: params[:discarded]),
+        class: "#{params[:system].blank? ? 'font-bold underline' : 'text-indigo-600 hover:underline'}" %>
+    <%= link_to "システム用ページのみ", admin_custom_pages_path(q: params[:q], discarded: params[:discarded], system: 'only'),
+        class: "#{params[:system] == 'only' ? 'font-bold underline' : 'text-indigo-600 hover:underline'}" %>
+    <%= link_to "システム用ページを除く", admin_custom_pages_path(q: params[:q], discarded: params[:discarded], system: 'exclude'),
+        class: "#{params[:system] == 'exclude' ? 'font-bold underline' : 'text-indigo-600 hover:underline'}" %>
   </div>
 
   <div class="mb-4 flex justify-center">
