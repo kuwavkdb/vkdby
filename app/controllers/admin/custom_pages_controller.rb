@@ -19,6 +19,12 @@ module Admin
 
       scope = scope.where('key ILIKE :q OR title ILIKE :q', q: "%#{@q}%") if @q.present?
 
+      scope = case params[:system]
+              when 'only'    then scope.system_pages
+              when 'exclude' then scope.non_system_pages
+              else                scope
+              end
+
       @pagy, @custom_pages = pagy(scope.order(updated_at: :desc), limit: 20)
     end
 

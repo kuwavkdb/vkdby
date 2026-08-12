@@ -29,5 +29,25 @@ module Admin
       custom_page.reload
       assert_equal '%B5%C1%B1%E7%B3%E8%C6%B0', custom_page.old_key
     end
+
+    test 'index with system=only shows only system pages' do
+      CustomPage.find_or_create_by!(key: 'footer') { |p| p.title = 'フッター' }
+      CustomPage.create!(key: 'events', title: 'イベント')
+
+      get admin_custom_pages_path(system: 'only')
+
+      assert_includes @controller.view_assigns['custom_pages'].map(&:key), 'footer'
+      assert_not_includes @controller.view_assigns['custom_pages'].map(&:key), 'events'
+    end
+
+    test 'index with system=exclude hides system pages' do
+      CustomPage.find_or_create_by!(key: 'footer') { |p| p.title = 'フッター' }
+      CustomPage.create!(key: 'events', title: 'イベント')
+
+      get admin_custom_pages_path(system: 'exclude')
+
+      assert_not_includes @controller.view_assigns['custom_pages'].map(&:key), 'footer'
+      assert_includes @controller.view_assigns['custom_pages'].map(&:key), 'events'
+    end
   end
 end

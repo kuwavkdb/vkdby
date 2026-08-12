@@ -32,12 +32,18 @@ class CustomPage < ApplicationRecord
   # 削除不可のページkey一覧（ルートとして使用されるなど、システム上必須のページ）
   PROTECTED_KEYS = %w[index].freeze
 
+  # サイトの仕組み（トップページ本体・グローバルフッター・トップメッセージ・IPブロックリスト）として
+  # 参照される「システム用ページ」のkey一覧。今後増える場合はここに追加する。
+  SYSTEM_KEYS = (%w[index footer top_message] + [Middleware::IpBlocker::CUSTOM_PAGE_KEY]).freeze
+
   validates :key, presence: true, uniqueness: true,
                   format: { with: /\A[a-z0-9_-]+\z/, message: '半角英数字・アンダースコア・ハイフンのみ使用可' }
   validates :title, presence: true
   validate :no_circular_includes, if: :body_changed?
 
   scope :published, -> { kept.where(active: true) }
+  scope :system_pages, -> { where(key: SYSTEM_KEYS) }
+  scope :non_system_pages, -> { where.not(key: SYSTEM_KEYS) }
 
   after_commit :expire_sidebar_cache
   after_commit :expire_blocked_ips_cache, if: -> { key == Middleware::IpBlocker::CUSTOM_PAGE_KEY }
@@ -45,6 +51,10 @@ class CustomPage < ApplicationRecord
 
   def protected?
     PROTECTED_KEYS.include?(key)
+  end
+
+  def system?
+    SYSTEM_KEYS.include?(key)
   end
 
   def expire_cache
