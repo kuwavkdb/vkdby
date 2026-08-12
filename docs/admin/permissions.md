@@ -28,6 +28,7 @@
 | Trends — 閲覧・作成・編集 | index / new / create / edit / update |
 | External Sites | 全アクション |
 | Custom Pages — 閲覧・作成・編集 | index / new / create / edit / update |
+| Custom Pages — サーバーサイドプレビュー（`{{include}}`/`{{snapshot}}`/`{{item}}` 等のプラグイン記法を反映） | preview |
 | Sections — 全操作 | new / create / edit / update / destroy / undiscard / reorder |
 | Unit Logs / Person Logs | 閲覧 |
 
