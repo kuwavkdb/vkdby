@@ -22,5 +22,7 @@
             sectionable: @custom_page,
             sections: @custom_page.sections.with_discarded.order(sort_order: :asc, id: :asc) %>
     </div>
+
+    <%= render "markdown_help" %>
   </div>
 </div>

@@ -250,6 +250,24 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_no_match(/undefined/, result)
   end
 
+  test '{{member パート,表示名,old_key,リンク}}の4番目のパラメータがURLの場合はそのままリンクになる' do
+    Person.create!(name: 'のる', key: 'member-plugin-person-url',
+                   old_key: URI.encode_www_form_component('のる5'.encode('EUC-JP')))
+
+    result = markdown('{{member Vocal,のる,のる5,http://example.com/noru}}')
+
+    assert_match(%r{href="http://example.com/noru"}, result)
+  end
+
+  test '{{member パート,表示名,old_key,リンク}}の4番目のパラメータが@始まりの場合はXアカウントとして扱われる' do
+    Person.create!(name: 'のる', key: 'member-plugin-person-x',
+                   old_key: URI.encode_www_form_component('のる6'.encode('EUC-JP')))
+
+    result = markdown('{{member Vocal,のる,のる6,@noru_xxx}}')
+
+    assert_match(%r{href="https://x.com/noru_xxx"}, result)
+  end
+
   test '{{member2}}はold_keyが一致しない場合、複数行のdataをメンバー自身の経歴として出力する' do
     result = markdown(<<~MARKDOWN)
       {{member2 Bass,森川泰敬
@@ -314,7 +332,7 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(%r{href="/member2-plugin-person-inline"}, result)
   end
 
-  test '{{member2 パート,表示名,old_key,SNS}}（4番目のパラメータ）はold_keyの一致有無にかかわらずSNSリンクを表示する' do
+  test '{{member2 パート,表示名,old_key,リンク}}（4番目のパラメータ）はold_keyの一致有無にかかわらずリンクを表示する' do
     result = markdown(<<~MARKDOWN)
       {{member2 Bass,泉,泉(ex-蟋蟀),http://ameblo.jp/bass-izumi/
       → [蟋蟀](/koorogi) → 個人/フリー
@@ -323,6 +341,16 @@ class ApplicationHelperTest < ActionView::TestCase
 
     assert_match(%r{href="http://ameblo.jp/bass-izumi/"}, result)
     assert_match(/蟋蟀/, result)
+  end
+
+  test '{{member2}}の4番目のパラメータが@始まりの場合はXアカウントとして扱われる' do
+    result = markdown(<<~MARKDOWN)
+      {{member2 Bass,泉,泉(ex-蟋蟀),@bass_izumi
+      → [蟋蟀](/koorogi) → 個人/フリー
+      }}
+    MARKDOWN
+
+    assert_match(%r{href="https://x.com/bass_izumi"}, result)
   end
 
   test '{{member2}}のold_keyが"-"（未指定）の場合はPersonを検索せずdataを経歴として扱う' do
