@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'cgi'
+require 'digest'
 
 module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   class ExternalAwareHtmlRenderer < Redcarpet::Render::HTML
@@ -131,6 +132,10 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # （例: {{div_end}}）も許可するプラグイン
   PLUGINS_WITHOUT_REQUIRED_ARGS = %w[div_begin div_end].freeze
 
+  # コンポーネントレンダリングを伴うプラグインのキャッシュ設定（plugin_cache_fetch参照）
+  PLUGIN_CACHE_VERSION = 'v1'
+  PLUGIN_CACHE_TTL = 7.days
+
   # 複数行にわたるプラグイン記法（例: {{member2 ...}}）のディスパッチ先。
   # 1行目に閉じの"}}"がなければ複数行プラグインとみなし、次に現れる
   # "}}"のみの行までをdataとして扱う（本文中に{{fn ...}}のような単行プラグインが
@@ -193,6 +198,16 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     html
   end
 
+  # {{item}} / {{member}} / {{member2}} / {{snapshot}} はコンポーネントのレンダリングを
+  # 伴いコストが高いため、結果のHTML断片をRails.cacheに保存して再利用する（issue #1115）。
+  # key_partsには参照先レコードの cache_key_with_version（id + updated_at）を含めることで、
+  # レコードが更新されるたびにキーが変わり、明示的な無効化なしに自動でキャッシュが切り替わる。
+  # expires_in は更新のないレコードのキャッシュがRedis上に無期限に残り続けないための保険。
+  def plugin_cache_fetch(*key_parts, &)
+    key = (['markdown_plugin', PLUGIN_CACHE_VERSION] + key_parts).join('/')
+    Rails.cache.fetch(key, expires_in: PLUGIN_CACHE_TTL, &)
+  end
+
   # {{include key,セクション名}}       → CustomPage (key指定)
   # {{include unit:ID,セクション名}}   → Unit (ID指定)
   # {{include person:ID,セクション名}} → Person (ID指定)
@@ -226,7 +241,9 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     snapshot = unit&.unit_snapshots&.active&.find_by(id: snapshot_id)
     return '' unless snapshot
 
-    html = render(UnitSnapshotsComponent.new(snapshots: [snapshot], unit: unit, admin: false, show_label: false)).to_s
+    html = plugin_cache_fetch('snapshot', unit.cache_key_with_version, snapshot.cache_key_with_version) do
+      render(UnitSnapshotsComponent.new(snapshots: [snapshot], unit: unit, admin: false, show_label: false)).to_s
+    end
     register_plugin_placeholder(placeholders, html)
   end
 
@@ -238,7 +255,9 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     item = Item.find_by(asin: asin)
     return '' unless item
 
-    html = render(ItemCardComponent.new(item_card: item)).to_s
+    html = plugin_cache_fetch('item', item.cache_key_with_version) do
+      render(ItemCardComponent.new(item_card: item)).to_s
+    end
     register_plugin_placeholder(placeholders, html)
   end
 
@@ -255,8 +274,10 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     person = Person.kept.find_by(old_key: encode_member_old_key(raw_old_key))
     return '' unless person
 
-    member = MemberPluginRow.new(part: part, name: display_name, person: person, sns: link.presence && [link])
-    html = render(MemberRowComponent.new(member: member, hide_status: true))
+    html = plugin_cache_fetch('member', person.cache_key_with_version, Digest::MD5.hexdigest(args)) do
+      member = MemberPluginRow.new(part: part, name: display_name, person: person, sns: link.presence && [link])
+      render(MemberRowComponent.new(member: member, hide_status: true)).to_s
+    end
     register_plugin_placeholder(placeholders, html)
   end
 
@@ -306,15 +327,21 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     raw_old_key = nil if raw_old_key.blank? || raw_old_key == '-'
     person = raw_old_key && Person.kept.find_by(old_key: encode_member_old_key(raw_old_key))
 
-    member = MemberPluginRow.new(
-      part: part,
-      name: display_name,
-      person: person,
-      sns: link.presence && [link],
-      inline_history: person ? nil : data.to_s.strip.presence
-    )
+    # personが見つかった場合dataは経歴として使われない（下記inline_history参照）ため、
+    # その場合はキャッシュキーからdataを除外しヒット率を上げる。
+    fingerprint = person ? args.to_s : "#{args}\n#{data}"
+    person_key = person&.cache_key_with_version || 'noperson'
 
-    html = render(MemberRowComponent.new(member: member, hide_status: true))
+    html = plugin_cache_fetch('member2', person_key, Digest::MD5.hexdigest(fingerprint)) do
+      member = MemberPluginRow.new(
+        part: part,
+        name: display_name,
+        person: person,
+        sns: link.presence && [link],
+        inline_history: person ? nil : data.to_s.strip.presence
+      )
+      render(MemberRowComponent.new(member: member, hide_status: true)).to_s
+    end
     register_plugin_placeholder(placeholders, html)
   end
 
