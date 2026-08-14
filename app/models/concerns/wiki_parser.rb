@@ -12,7 +12,7 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
   #   ],
   #   ...
   # ]
-  def parse_history_string(history_text) # rubocop:disable Metrics/PerceivedComplexity
+  def parse_history_string(history_text) # rubocop:disable Metrics/PerceivedComplexity, Metrics/AbcSize
     return [] if history_text.blank?
 
     # Filter out comment lines starting with //
@@ -70,6 +70,21 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
             unit_name: display_unit_name,
             part_and_name: part_and_name&.strip,
             old_key: encoded_unit_name,
+            notes: metadata[:notes]
+          }
+        # Pattern 1b: [Label](target) or [Label](target)(Part) - Markdown形式のリンク
+        # （CustomPageDraftGeneratorが旧[[Label|target]]記法から変換した経歴テキストなどで使用される）
+        when /\[([^\]]+)\]\(([^)]+)\)(?:\(([^)]+)\))?/
+          link_text = ::Regexp.last_match(1)
+          target = ::Regexp.last_match(2)
+          part_and_name = ::Regexp.last_match(3)
+
+          display_link_text = wrapped_in_parens ? "(#{link_text.strip})" : link_text.strip
+
+          concurrent_items << {
+            unit_name: display_link_text,
+            part_and_name: part_and_name&.strip,
+            external_url: target.strip,
             notes: metadata[:notes]
           }
         # Pattern 2: [LinkText|URL] or [LinkText|URL](Part) - External link

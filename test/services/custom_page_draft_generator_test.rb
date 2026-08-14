@@ -110,6 +110,25 @@ class CustomPageDraftGeneratorTest < ActiveSupport::TestCase
     assert_empty draft.warnings
   end
 
+  test '{{member2 ...}}（複数行）はTODO化せずそのまま残り、内部の{{fn ...}}で途中切断されない（Issue#1123）' do
+    wiki = <<~WIKI
+      {{member Vocal,相馬 ジュン平,-,http://smjp.jugem.jp/}}
+      {{member2 Bass,森川泰敬
+      → [GLAMOROUS HONEY|/glamorous-honey]{{fn 2006/05/10加入}}
+      }}
+      {{member Drums,和也,和也(ex-VIRULENT),http://ameblo.jp/virulent-kazuya/}}
+    WIKI
+    draft = generate(name: 'test', wiki: wiki)
+
+    assert_includes draft.body, <<~EXPECTED.strip
+      {{member2 Bass,森川泰敬
+      → [GLAMOROUS HONEY](/glamorous-honey){{fn 2006/05/10加入}}
+      }}
+    EXPECTED
+    assert_includes draft.body, '{{member Drums,和也,和也(ex-VIRULENT),http://ameblo.jp/virulent-kazuya/}}'
+    assert_empty draft.warnings
+  end
+
   test '{{include unit:ID,セクション名}} は対象のUnitに同名のSectionがあればそのまま残る' do
     unit = Unit.create!(name: 'テストバンド2', key: 'test-band2-for-draft-generator')
     unit.sections.create!(name: '概要', wiki_text: '本文')

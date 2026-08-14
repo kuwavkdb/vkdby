@@ -123,14 +123,25 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     'item' => :expand_item_plugin,
     'div_begin' => :expand_div_begin_plugin,
     'div_end' => :expand_div_end_plugin,
-    'member' => :expand_member_plugin
+    'member' => :expand_member_plugin,
+    'member2' => :expand_member2_plugin
   }.freeze
 
   # パラメータ（{{プラグイン名 ...}} の "..." 部分）を省略した記法
   # （例: {{div_end}}）も許可するプラグイン
   PLUGINS_WITHOUT_REQUIRED_ARGS = %w[div_begin div_end].freeze
 
+  # 複数行にわたるプラグイン記法（例: {{member2 ...}}）のディスパッチ先。
+  # 1行目に閉じの"}}"がなければ複数行プラグインとみなし、次に現れる
+  # "}}"のみの行までをdataとして扱う（本文中に{{fn ...}}のような単行プラグインが
+  # ネストしていても、それ単体では終端と誤認しない）。
+  MULTILINE_PLUGIN_HANDLERS = {
+    'member2' => :expand_member2_plugin
+  }.freeze
+
   def expand_plugin_macros(text, sectionable: nil, placeholders: {})
+    text = expand_multiline_plugin_macros(text, sectionable, placeholders)
+
     # {{div_begin}}で開いたタグの種類（:div / :details）を対応する{{div_end}}まで
     # 覚えておくためのスタック。gsubはテキストを先頭から順に処理するため、
     # 通常のネストした記法であればこの単純なスタックで正しく対応付けられる。
@@ -146,6 +157,22 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
       else
         Regexp.last_match(0)
       end
+    end
+  end
+
+  # {{プラグイン名 1行目のパラメータ\n複数行のdata\n}}
+  # 1行目末尾に"}}"がない（=閉じていない）場合のみ複数行プラグインとして扱う。
+  # 終端は単独で"}}"だけの行。
+  def expand_multiline_plugin_macros(text, sectionable, placeholders)
+    names = Regexp.union(MULTILINE_PLUGIN_HANDLERS.keys)
+
+    text.gsub(/\{\{(#{names})(?:[ \t]+([^\n]*))?\n(.*?)\n[ \t]*\}\}[ \t]*$/m) do
+      plugin_name = Regexp.last_match(1)
+      args = Regexp.last_match(2)&.strip
+      data = Regexp.last_match(3)
+      handler = MULTILINE_PLUGIN_HANDLERS[plugin_name]
+
+      send(handler, args, sectionable, placeholders, [], data)
     end
   end
 
@@ -243,10 +270,49 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # 永続化しない埋め込み表示のためのラッパーで、MemberRowComponentが要求する
   # インターフェース（part / name / person / part_alias / sns / inline_history / status / support?）
   # のうち、プラグインが受け取らない属性はすべて未指定（nil・非サポート）として扱う。
+  # inline_historyはmember2（old_key不一致時）でのみ使用し、parse_inline_historyで
+  # UnitPerson同様WikiParser#parse_history_stringに委譲する。
   MemberPluginRow = Struct.new(:part, :name, :person, :part_alias, :sns, :inline_history, :status, keyword_init: true) do
+    include WikiParser
+
     def support?
       false
     end
+
+    def parse_inline_history
+      parse_history_string(inline_history)
+    end
+  end
+
+  # {{member2 パート,表示名,old_key,SNS\nメンバー経歴\n}}
+  # （old_key・SNSは未エンコード・省略可。old_keyは"-"でも未指定扱い）
+  # 例:
+  #   {{member2 Bass,森川泰敬
+  #   → [GLAMOROUS HONEY](/glamorous-honey){{fn 2006/05/10加入}}
+  #   }}
+  # old_keyが一致するPersonが見つかればmemberプラグインと同様にそのPersonの経歴を出力する。
+  # 一致しない（またはold_key省略・"-"指定）場合は、ブロック内のdata（1行目以降）を
+  # そのメンバー自身の経歴として扱い、経歴カードを出力する（[Label](URL)形式のリンクや
+  # {{fn ...}}のような注記プラグインを含められる。WikiParser#parse_history_string参照）。
+  # SNSはold_keyの一致有無にかかわらず指定があれば表示する。
+  # 単独行（{{member2 パート,表示名,old_key}}）で使った場合はdataなしのmemberプラグイン相当になる。
+  def expand_member2_plugin(args, _sectionable, placeholders, _open_tags, data = nil)
+    part, display_name, raw_old_key, sns_value = args.to_s.split(',', 4).map { |v| v&.strip }
+    return '' if part.blank? || display_name.blank?
+
+    raw_old_key = nil if raw_old_key.blank? || raw_old_key == '-'
+    person = raw_old_key && Person.kept.find_by(old_key: encode_member_old_key(raw_old_key))
+
+    member = MemberPluginRow.new(
+      part: part,
+      name: display_name,
+      person: person,
+      sns: sns_value.presence && [sns_value],
+      inline_history: person ? nil : data.to_s.strip.presence
+    )
+
+    html = render(MemberRowComponent.new(member: member, hide_status: true))
+    register_plugin_placeholder(placeholders, html)
   end
 
   # HTML属性インジェクション対策のため、div_beginで出力できる属性は class / subject のみに限定する。
