@@ -6,17 +6,24 @@
 # 本番DBとローカルDBが分離しているため、このクラスはローカル環境でのみ使用し、
 # 生成した下書きは人手で本番の管理画面へ貼り付けて仕上げる運用を想定している。
 # （lib/tasks/custom_page_drafts.rake から呼び出す）
-class CustomPageDraftGenerator
+class CustomPageDraftGenerator # rubocop:disable Metrics/ClassLength
   Draft = Struct.new(:wikipage_id, :key, :title, :old_key, :body, :warnings, keyword_init: true)
 
   # 変換せずそのまま残すプラグイン。
-  # snapshot / item / div_begin / member は CustomPage の markdown ヘルパー
+  # snapshot / item / div_begin / member / member2 は CustomPage の markdown ヘルパー
   # （ApplicationHelper#expand_plugin_macros）がそのまま解釈できる
-  # （Issue#1105でdiv_begin/div_end対応、Issue#1107でmember対応）。
+  # （Issue#1105でdiv_begin/div_end対応、Issue#1107でmember対応、Issue#1123でmember2対応）。
   # div は現時点では未対応だが、CustomPage側での対応を予定しているため、
   # TODOコメント化せず元の記法のまま残す。
   # include は旧FreeStyleWiki記法と引数の意味が異なる（IncludePluginConverter参照）ため対象外。
-  SUPPORTED_PLUGINS = %w[snapshot item div_begin div member].freeze
+  SUPPORTED_PLUGINS = %w[snapshot item div_begin div member member2].freeze
+
+  # 複数行プラグイン（現状member2のみ）。1行目に閉じの"}}"がない場合、次に現れる
+  # "}}"のみの行までを1つのブロックとして扱う（ApplicationHelper#expand_multiline_plugin_macros
+  # と同じ判定）。flag_unsupported_pluginsの単純な行内gsubは、ブロック内に{{fn ...}}のような
+  # 単行プラグインがネストしていると最初に現れた"}}"で閉じたと誤認し、記法を途中で
+  # 切断してしまう（Issue#1123）ため、先にこの記法をプレースホルダへ退避しておく。
+  MULTILINE_SUPPORTED_PLUGINS = %w[member2].freeze
 
   # 旧FreeStyleWikiの {{include ページ名,セクション名}} は「他ページの内容をページ名で
   # 丸ごと埋め込む」記法だが、新CustomPageの {{include}} マクロ
@@ -192,7 +199,10 @@ class CustomPageDraftGenerator
   # コメントで目印を付けて後で人手対応してもらう。include は個別に検証する
   # （IncludePluginConverter参照）ため、ここでは判定対象から除く。
   def flag_unsupported_plugins(text)
-    text.gsub(/\{\{(\w[\w-]*)\s+(.+?)\}\}/m) do
+    blocks = []
+    text = protect_multiline_plugin_blocks(text, blocks)
+
+    text = text.gsub(/\{\{(\w[\w-]*)\s+(.+?)\}\}/m) do
       match = Regexp.last_match(0)
       plugin_name = Regexp.last_match(1)
       args = Regexp.last_match(2)
@@ -203,6 +213,27 @@ class CustomPageDraftGenerator
       @warnings << "未対応プラグイン #{plugin_name} を検出しました（要手動対応）"
       "<!-- TODO: 要手動対応 元記法: #{match} -->"
     end
+
+    restore_multiline_plugin_blocks(text, blocks)
+  end
+
+  # {{member2 ...}}のような複数行プラグイン記法を丸ごとプレースホルダに退避する。
+  # 終端は単独で"}}"だけの行（ブロック内に{{fn ...}}等がネストしていても、
+  # それ単体を終端と誤認しない）。
+  def protect_multiline_plugin_blocks(text, blocks)
+    names = Regexp.union(MULTILINE_SUPPORTED_PLUGINS)
+    text.gsub(/\{\{(?:#{names})(?:[ \t]+[^\n]*)?\n.*?\n[ \t]*\}\}[ \t]*$/m) do |block|
+      token = "⟦MULTILINE_PLUGIN_#{blocks.length}⟧"
+      blocks << block
+      token
+    end
+  end
+
+  def restore_multiline_plugin_blocks(text, blocks)
+    blocks.each_with_index do |block, index|
+      text = text.sub("⟦MULTILINE_PLUGIN_#{index}⟧") { block }
+    end
+    text
   end
 
   # convert_headings で挿入した空行により3行以上の連続改行ができた場合、空行1つに正規化する

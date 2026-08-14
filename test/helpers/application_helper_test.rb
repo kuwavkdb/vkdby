@@ -249,4 +249,91 @@ class ApplicationHelperTest < ActionView::TestCase
 
     assert_no_match(/undefined/, result)
   end
+
+  test '{{member2}}はold_keyが一致しない場合、複数行のdataをメンバー自身の経歴として出力する' do
+    result = markdown(<<~MARKDOWN)
+      {{member2 Bass,森川泰敬
+      → [GLAMOROUS HONEY](/glamorous-honey){{fn 2006/05/10加入}}
+      }}
+    MARKDOWN
+
+    assert_match(/森川泰敬/, result)
+    assert_match(/GLAMOROUS HONEY/, result)
+    assert_match(%r{href="/glamorous-honey"}, result)
+    assert_match(%r{2006/05/10加入}, result)
+  end
+
+  test '{{member2}}はブロック内にネストした{{fn ...}}を終端の"}}"と誤認しない' do
+    result = markdown(<<~MARKDOWN)
+      前
+
+      {{member2 Bass,森川泰敬
+      → [GLAMOROUS HONEY](/glamorous-honey){{fn 2006/05/10加入}}
+      、[別ユニット](/other-unit)
+      }}
+
+      後
+    MARKDOWN
+
+    assert_match(/前/, result)
+    assert_match(/後/, result)
+    assert_match(/別ユニット/, result)
+  end
+
+  test '{{member2}}はold_keyが一致するPersonが見つかればmemberプラグインと同様にそのPersonの経歴を出力する' do
+    Person.create!(name: 'のる', key: 'member2-plugin-person',
+                   old_key: URI.encode_www_form_component('のる(ex-ふりぃ)'.encode('EUC-JP')))
+
+    result = markdown(<<~MARKDOWN)
+      {{member2 Vocal,のる,のる(ex-ふりぃ)
+      この行はold_key一致時には使われない
+      }}
+    MARKDOWN
+
+    assert_match(%r{href="/member2-plugin-person"}, result)
+    assert_no_match(/この行はold_key一致時には使われない/, result)
+  end
+
+  test '{{member2}}はold_key省略時、常にdataをメンバー自身の経歴として扱う' do
+    result = markdown(<<~MARKDOWN)
+      {{member2 Guitar,テストギタリスト
+      [別ユニット2](/other-unit2)
+      }}
+    MARKDOWN
+
+    assert_match(/テストギタリスト/, result)
+    assert_match(/別ユニット2/, result)
+  end
+
+  test '{{member2 パート,表示名,old_key}}（1行・dataなし）はmemberプラグイン相当として動作する' do
+    Person.create!(name: 'のる', key: 'member2-plugin-person-inline',
+                   old_key: URI.encode_www_form_component('のる4'.encode('EUC-JP')))
+
+    result = markdown('{{member2 Vocal,のる,のる4}}')
+
+    assert_match(%r{href="/member2-plugin-person-inline"}, result)
+  end
+
+  test '{{member2 パート,表示名,old_key,SNS}}（4番目のパラメータ）はold_keyの一致有無にかかわらずSNSリンクを表示する' do
+    result = markdown(<<~MARKDOWN)
+      {{member2 Bass,泉,泉(ex-蟋蟀),http://ameblo.jp/bass-izumi/
+      → [蟋蟀](/koorogi) → 個人/フリー
+      }}
+    MARKDOWN
+
+    assert_match(%r{href="http://ameblo.jp/bass-izumi/"}, result)
+    assert_match(/蟋蟀/, result)
+  end
+
+  test '{{member2}}のold_keyが"-"（未指定）の場合はPersonを検索せずdataを経歴として扱う' do
+    result = markdown(<<~MARKDOWN)
+      {{member2 Guitar,神谷 英希,-
+      → [くりから。](/kurikara)(一期) → (隠密華撃団) → [くりから。](/kurikara)(二期) →
+      }}
+    MARKDOWN
+
+    assert_match(/神谷 英希/, result)
+    assert_match(/くりから。/, result)
+    assert_match(/隠密華撃団/, result)
+  end
 end
