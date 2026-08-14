@@ -57,24 +57,29 @@
 
       <div>
         <dt class="font-mono text-xs bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded px-2 py-1 inline-block">
-          {{member パート,表示名,old_key}}
+          {{member パート,表示名,old_key,リンク}}
         </dt>
-        <dd class="mt-1 text-xs text-gray-600 dark:text-gray-400">
-          old_key（旧サイトのページ名。未エンコードでよい）が一致する人物を検索し、ユニットページと同じ経歴カードを埋め込みます（例: <code>{{member Vocal,のる,のる(ex-ふりぃ)}}</code>）。
-          old_keyが不明・不要な場合は <code>-</code> を指定します。
+        <dd class="mt-1 text-xs text-gray-600 dark:text-gray-400 space-y-1">
+          <p>
+            old_key（旧サイトのページ名。未エンコードでよい）が一致する人物を検索し、ユニットページと同じ経歴カードを埋め込みます（例: <code>{{member Vocal,のる,のる(ex-ふりぃ)}}</code>）。
+            old_keyが不明・不要な場合は <code>-</code> を指定します。
+          </p>
+          <p>
+            リンク（4番目のパラメータ、省略可）は <code>http(s)://…</code> のURL、または <code>@xxxx</code> のXアカウントを指定できます（例: <code>{{member Vocal,のる,のる(ex-ふりぃ),@noru_xxx}}</code>）。
+          </p>
         </dd>
       </div>
 
       <div>
         <dt class="font-mono text-xs bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded px-2 py-1 inline-block">
-          {{member2 パート,表示名,old_key,SNS …}}
+          {{member2 パート,表示名,old_key,リンク …}}
         </dt>
         <dd class="mt-1 text-xs text-gray-600 dark:text-gray-400 space-y-1">
           <p><code>member</code>の複数行版です。1行目の末尾に閉じの<code>}}</code>を書かず、経歴本文を続けて書き、単独で<code>}}</code>だけの行で閉じます。</p>
           <ul class="list-disc list-inside space-y-0.5">
             <li>old_keyが人物と一致する場合、その人物の経歴カードを表示します（2行目以降は使われません）</li>
             <li>一致しない場合（old_keyが空・<code>-</code>を含む）、2行目以降をそのメンバーの経歴として表示します</li>
-            <li>SNS（4番目のパラメータ）は一致の有無にかかわらず表示されます</li>
+            <li>リンク（4番目のパラメータ。URLまたは<code>@xxxx</code>のXアカウント）はold_keyの一致有無にかかわらず表示されます</li>
           </ul>
           <pre class="mt-1 font-mono text-xs bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded px-2 py-1 overflow-x-auto">{{member2 Bass,森川泰敬
 → [GLAMOROUS HONEY](/glamorous-honey){{fn 2006/05/10加入}}

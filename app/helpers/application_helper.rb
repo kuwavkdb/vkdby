@@ -242,18 +242,20 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     register_plugin_placeholder(placeholders, html)
   end
 
-  # {{member パート,表示名,old_key}}（old_keyは未エンコード）
-  # 例: {{member Vocal,のる,のる(ex-ふりぃ)}}
+  # {{member パート,表示名,old_key,リンク}}（old_keyは未エンコード。リンクは省略可）
+  # リンクはURL（http(s)://…）またはXアカウント（@xxxx）を指定する
+  # （MemberRowComponentが@始まりをXアカウントとして自動判定しX(Twitter)へのリンクを表示する）。
+  # 例: {{member Vocal,のる,のる(ex-ふりぃ),@noru_xxx}}
   # old_keyをEUC-JPエンコードしてPeopleを検索し、Unitページのメンバー行
   # （MemberRowComponent）と同じ経歴カードを出力する。
   def expand_member_plugin(args, _sectionable, placeholders, _open_tags)
-    part, display_name, raw_old_key = args.split(',', 3).map { |v| v&.strip }
+    part, display_name, raw_old_key, link = args.split(',', 4).map { |v| v&.strip }
     return '' if part.blank? || display_name.blank? || raw_old_key.blank?
 
     person = Person.kept.find_by(old_key: encode_member_old_key(raw_old_key))
     return '' unless person
 
-    member = MemberPluginRow.new(part: part, name: display_name, person: person)
+    member = MemberPluginRow.new(part: part, name: display_name, person: person, sns: link.presence && [link])
     html = render(MemberRowComponent.new(member: member, hide_status: true))
     register_plugin_placeholder(placeholders, html)
   end
@@ -284,8 +286,9 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     end
   end
 
-  # {{member2 パート,表示名,old_key,SNS\nメンバー経歴\n}}
-  # （old_key・SNSは未エンコード・省略可。old_keyは"-"でも未指定扱い）
+  # {{member2 パート,表示名,old_key,リンク\nメンバー経歴\n}}
+  # （old_key・リンクは未エンコード・省略可。old_keyは"-"でも未指定扱い）
+  # リンクはURL（http(s)://…）またはXアカウント（@xxxx）を指定する（member参照）。
   # 例:
   #   {{member2 Bass,森川泰敬
   #   → [GLAMOROUS HONEY](/glamorous-honey){{fn 2006/05/10加入}}
@@ -294,10 +297,10 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # 一致しない（またはold_key省略・"-"指定）場合は、ブロック内のdata（1行目以降）を
   # そのメンバー自身の経歴として扱い、経歴カードを出力する（[Label](URL)形式のリンクや
   # {{fn ...}}のような注記プラグインを含められる。WikiParser#parse_history_string参照）。
-  # SNSはold_keyの一致有無にかかわらず指定があれば表示する。
+  # リンクはold_keyの一致有無にかかわらず指定があれば表示する。
   # 単独行（{{member2 パート,表示名,old_key}}）で使った場合はdataなしのmemberプラグイン相当になる。
   def expand_member2_plugin(args, _sectionable, placeholders, _open_tags, data = nil)
-    part, display_name, raw_old_key, sns_value = args.to_s.split(',', 4).map { |v| v&.strip }
+    part, display_name, raw_old_key, link = args.to_s.split(',', 4).map { |v| v&.strip }
     return '' if part.blank? || display_name.blank?
 
     raw_old_key = nil if raw_old_key.blank? || raw_old_key == '-'
@@ -307,7 +310,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
       part: part,
       name: display_name,
       person: person,
-      sns: sns_value.presence && [sns_value],
+      sns: link.presence && [link],
       inline_history: person ? nil : data.to_s.strip.presence
     )
 
