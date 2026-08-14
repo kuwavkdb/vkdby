@@ -4,32 +4,37 @@
 # 生成するタスク。ローカル環境での実行を想定している（本番DBとは分離されているため、
 # ここで作った下書きは人手で本番の管理画面へコピー＆ペーストして仕上げる運用）。
 namespace :custom_page_drafts do
-  desc '仕訳済み(page_type=custom_page)のWikipageからCustomPage下書きを生成する'
+  desc '仕訳済み(page_type=custom_page)のWikipageからCustomPage下書きを生成する（WIKIPAGE_ID指定時は仕訳を無視して対象のWikipageを直接生成する）'
   task generate: :environment do
     wikipage_id = ENV['WIKIPAGE_ID']
     preview = ENV['PREVIEW'] == '1'
 
-    scope = WikiPageImport.where(page_type: 'custom_page').includes(:wikipage)
-    scope = scope.where(wikipage_id: wikipage_id) if wikipage_id
+    generated = 0
+    skipped = 0
+
+    wikipages =
+      if wikipage_id
+        # WIKIPAGE_ID指定時は WikiPageImport の仕訳(page_type)に関わらず、指定したWikipageを直接対象にする
+        Wikipage.where(id: wikipage_id).to_a
+      else
+        WikiPageImport.where(page_type: 'custom_page').includes(:wikipage).find_each.filter_map do |wpi|
+          wp = wpi.wikipage
+          unless wp
+            puts "[SKIP] WikiPageImport##{wpi.id}: wikipage not found"
+            skipped += 1
+          end
+          wp
+        end
+      end
 
     output_dir = Rails.root.join('tmp/custom_page_drafts')
     FileUtils.mkdir_p(output_dir)
 
-    puts "Target: #{scope.count} records"
+    puts "Target: #{wikipages.size} records"
     puts "Output: #{output_dir}"
     puts 'Mode: PREVIEW (ローカルDBにも active:false のCustomPageを作成/更新します)' if preview
 
-    generated = 0
-    skipped = 0
-
-    scope.find_each do |wpi|
-      wp = wpi.wikipage
-      unless wp
-        puts "[SKIP] WikiPageImport##{wpi.id}: wikipage not found"
-        skipped += 1
-        next
-      end
-
+    wikipages.each do |wp|
       if wp.wiki.blank?
         puts "[SKIP] #{wp.name} (ID: #{wp.id}): 本文なし"
         skipped += 1

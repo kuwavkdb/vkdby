@@ -9,9 +9,75 @@
 class CustomPageDraftGenerator
   Draft = Struct.new(:wikipage_id, :key, :title, :old_key, :body, :warnings, keyword_init: true)
 
-  # CustomPage の markdown ヘルパー（ApplicationHelper#expand_plugin_macros）が
-  # そのまま解釈できるプラグイン。変換せず残す。
-  SUPPORTED_PLUGINS = %w[include snapshot item].freeze
+  # 変換せずそのまま残すプラグイン。
+  # snapshot / item は CustomPage の markdown ヘルパー（ApplicationHelper#expand_plugin_macros）が
+  # そのまま解釈できる。div_begin / div / member は現時点では未対応だが、CustomPage側での対応を
+  # 予定しているため、TODOコメント化せず元の記法のまま残す。
+  # include は旧FreeStyleWiki記法と引数の意味が異なる（IncludePluginConverter参照）ため対象外。
+  SUPPORTED_PLUGINS = %w[snapshot item div_begin div member].freeze
+
+  # 旧FreeStyleWikiの {{include ページ名,セクション名}} は「他ページの内容をページ名で
+  # 丸ごと埋め込む」記法だが、新CustomPageの {{include}} マクロ
+  # （ApplicationHelper#expand_include_plugin）は
+  # {{include unit:ID,セクション名}} / {{include person:ID,セクション名}} で
+  # 実在する Section を差し込む用途に変わっており意味が異なる。
+  # プラグイン名が一致するだけで素通りさせると、変換先が見つからず警告なしに
+  # 本文が消えてしまう（Issue#1106）ため、実際に差し込み先の Section まで
+  # 解決できた場合のみ新形式に変換し、できなければ要手動対応の警告を積む。
+  class IncludePluginConverter
+    def initialize(warnings)
+      @warnings = warnings
+    end
+
+    def convert(match, args)
+      identifier, section_name = args.include?(',') ? args.split(',', 2) : [nil, args]
+      identifier = identifier&.strip
+      section_name = section_name&.strip
+
+      return unsupported(match, 'カンマなし(自己参照形式)は変換できません') if identifier.blank?
+
+      target = resolve_target(identifier)
+      return unsupported(match, "参照先 #{identifier.inspect} を解決できません") unless target
+
+      section = target.sections.kept.find_by(name: section_name)
+      return unsupported(match, "#{target.class.name}##{target.id} にセクション「#{section_name}」が見つかりません") unless section
+
+      "{{include #{identifier_for(target)},#{section_name}}}"
+    end
+
+    private
+
+    # ・unit:ID / person:ID: 新形式そのまま
+    # ・それ以外: 旧FreeStyleWikiのページ名指定とみなし、WikiPageImportの仕訳結果から辿る
+    def resolve_target(identifier)
+      if identifier.start_with?('unit:')
+        Unit.kept.find_by(id: identifier.delete_prefix('unit:'))
+      elsif identifier.start_with?('person:')
+        Person.kept.find_by(id: identifier.delete_prefix('person:'))
+      else
+        resolve_target_by_page_name(identifier)
+      end
+    end
+
+    def resolve_target_by_page_name(page_name)
+      wikipage = Wikipage.find_by(name: page_name)
+      wpi = wikipage && WikiPageImport.find_by(wikipage_id: wikipage.id, status: 'imported')
+
+      case wpi&.import_target_type
+      when 'Unit' then Unit.kept.find_by(id: wpi.import_target_id)
+      when 'Person' then Person.kept.find_by(id: wpi.import_target_id)
+      end
+    end
+
+    def identifier_for(target)
+      target.is_a?(Unit) ? "unit:#{target.id}" : "person:#{target.id}"
+    end
+
+    def unsupported(match, reason)
+      @warnings << "未対応プラグイン include を検出しました（#{reason}／要手動対応）"
+      "<!-- TODO: 要手動対応 元記法: #{match} -->"
+    end
+  end
 
   def self.generate(wikipage)
     new(wikipage).generate
@@ -20,6 +86,7 @@ class CustomPageDraftGenerator
   def initialize(wikipage)
     @wikipage = wikipage
     @warnings = []
+    @include_converter = IncludePluginConverter.new(@warnings)
   end
 
   def generate
@@ -56,7 +123,7 @@ class CustomPageDraftGenerator
     text.lines.reject { |line| line.strip.start_with?('//') }.join
   end
 
-  # PukiWiki記法では ! の数が多いほど上位の見出し（!!! が最大）。
+  # FreeStyleWiki記法では ! の数が多いほど上位の見出し（!!! が最大）。
   # !!! → #, !! → ##, ! → ### に変換する。
   # 直前が箇条書き等の場合、空行を挟まないとMarkdown上でリスト項目の続きとして
   # 解釈されてしまう（見出しとして認識されない）ため、見出しの前に必ず空行を入れる。
@@ -119,12 +186,16 @@ class CustomPageDraftGenerator
     text.gsub(/==(.+?)==/) { "~~#{Regexp.last_match(1)}~~" }
   end
 
-  # include / snapshot 以外のプラグイン記法はそのまま残すと崩れるため、
-  # コメントで目印を付けて後で人手対応してもらう
+  # include / snapshot / item 以外のプラグイン記法はそのまま残すと崩れるため、
+  # コメントで目印を付けて後で人手対応してもらう。include は個別に検証する
+  # （IncludePluginConverter参照）ため、ここでは判定対象から除く。
   def flag_unsupported_plugins(text)
-    text.gsub(/\{\{(\w[\w-]*)\s+.+?\}\}/m) do
+    text.gsub(/\{\{(\w[\w-]*)\s+(.+?)\}\}/m) do
       match = Regexp.last_match(0)
       plugin_name = Regexp.last_match(1)
+      args = Regexp.last_match(2)
+
+      next @include_converter.convert(match, args) if plugin_name == 'include'
       next match if SUPPORTED_PLUGINS.include?(plugin_name)
 
       @warnings << "未対応プラグイン #{plugin_name} を検出しました（要手動対応）"

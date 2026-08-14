@@ -89,11 +89,64 @@ class CustomPageDraftGeneratorTest < ActiveSupport::TestCase
     assert_includes draft.body, '~~受領証が届き次第画像を差し替えます~~'
   end
 
-  test 'include/snapshot/item プラグインはそのまま残る' do
-    draft = generate(name: 'test', wiki: '{{include about,概要}} {{snapshot merry,1}} {{item B004X86P9U}}')
-    assert_includes draft.body, '{{include about,概要}}'
+  test 'snapshot/item プラグインはそのまま残る' do
+    draft = generate(name: 'test', wiki: '{{snapshot merry,1}} {{item B004X86P9U}}')
     assert_includes draft.body, '{{snapshot merry,1}}'
     assert_includes draft.body, '{{item B004X86P9U}}'
+  end
+
+  test 'div_begin/div/member プラグインは今後対応予定のためTODO化せずそのまま残る' do
+    wiki = <<~WIKI
+      {{div_begin class="closable" rel="メンバー"}}
+      {{member Vocal,のる,のる(ex-ふりぃ)}}
+      {{div style,background-color:#422;,友達募集}}
+      {{div_end}}
+    WIKI
+    draft = generate(name: 'test', wiki: wiki)
+    assert_includes draft.body, '{{div_begin class="closable" rel="メンバー"}}'
+    assert_includes draft.body, '{{member Vocal,のる,のる(ex-ふりぃ)}}'
+    assert_includes draft.body, '{{div style,background-color:#422;,友達募集}}'
+    assert_includes draft.body, '{{div_end}}'
+    assert_empty draft.warnings
+  end
+
+  test '{{include unit:ID,セクション名}} は対象のUnitに同名のSectionがあればそのまま残る' do
+    unit = Unit.create!(name: 'テストバンド2', key: 'test-band2-for-draft-generator')
+    unit.sections.create!(name: '概要', wiki_text: '本文')
+    draft = generate(name: 'test', wiki: "{{include unit:#{unit.id},概要}}")
+    assert_includes draft.body, "{{include unit:#{unit.id},概要}}"
+    assert_empty draft.warnings
+  end
+
+  test '{{include person:ID,セクション名}} は対象のPersonに同名のSectionがなければTODOコメントに置き換えられ警告が積まれる' do
+    person = Person.create!(name: 'テスト次郎', key: 'test-jiro-for-draft-generator')
+    draft = generate(name: 'test', wiki: "{{include person:#{person.id},概要}}")
+    assert_includes draft.body, '<!-- TODO: 要手動対応 元記法:'
+    assert(draft.warnings.any? { |w| w.include?('include') && w.include?('概要') })
+  end
+
+  test '{{include ページ名,セクション名}} 形式（旧FreeStyleWiki記法）は、仕訳済みWikipageからUnit/Personを解決できればID指定形式に変換される' do
+    unit = Unit.create!(name: 'テストバンド3', key: 'test-band3-for-draft-generator')
+    unit.sections.create!(name: '経歴', wiki_text: '本文')
+    wikipage = Wikipage.create!(name: 'テストバンド3(旧ページ名)', wiki: '本文')
+    WikiPageImport.create!(wikipage: wikipage, page_type: 'unit', status: 'imported',
+                           import_target_type: 'Unit', import_target_id: unit.id)
+
+    draft = generate(name: 'test', wiki: '{{include テストバンド3(旧ページ名),経歴}}')
+    assert_includes draft.body, "{{include unit:#{unit.id},経歴}}"
+    assert_empty draft.warnings
+  end
+
+  test '{{include ページ名,セクション名}} 形式で参照先のUnit/Personが解決できない場合はTODOコメントに置き換えられ警告が積まれる' do
+    draft = generate(name: 'test', wiki: '{{include 存在しないページ,経歴}}')
+    assert_includes draft.body, '<!-- TODO: 要手動対応 元記法: {{include 存在しないページ,経歴}} -->'
+    assert(draft.warnings.any? { |w| w.include?('include') })
+  end
+
+  test '{{include セクション名}} 形式（カンマなし・自己参照）はTODOコメントに置き換えられ警告が積まれる' do
+    draft = generate(name: 'test', wiki: '{{include 概要}}')
+    assert_includes draft.body, '<!-- TODO: 要手動対応 元記法: {{include 概要}} -->'
+    assert(draft.warnings.any? { |w| w.include?('include') })
   end
 
   test '未対応プラグインはTODOコメントに置き換えられ警告が積まれる' do
