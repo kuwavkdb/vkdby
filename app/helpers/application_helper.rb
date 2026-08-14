@@ -94,6 +94,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     return '' if text.blank?
 
     placeholders = {}
+    text = protect_html_comments(text, placeholders)
     text = expand_plugin_macros(text, sectionable:, placeholders:)
 
     renderer = ExternalAwareHtmlRenderer.new(site_host: request.host, hard_wrap: true)
@@ -179,6 +180,18 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
 
       send(handler, args, sectionable, placeholders, [], data)
     end
+  end
+
+  # <!-- ... --> はRedcarpetが行頭からの生HTMLブロックとして認識した場合のみ
+  # そのまま出力されるが、リスト項目中や文中など行頭以外に書かれた場合は通常の
+  # テキストとしてHTMLエスケープされ、コメント記法がそのまま可視文字として
+  # 出力されてしまう（Issue#1116）。CustomPageDraftGenerator（下書き自動生成）が
+  # 「要手動対応」の目印として `- <!-- TODO: ... -->` のようにリスト項目中へ
+  # コメントを挿入するケースがあり、これが本文としてそのまま表示されていた。
+  # 出現位置によらずコメントは常に非表示になるべきなので、Markdown解析前に
+  # プレースホルダーへ退避し、解析後に生のHTMLコメントとして復元する。
+  def protect_html_comments(text, placeholders)
+    text.gsub(/<!--.*?-->/m) { register_plugin_placeholder(placeholders, Regexp.last_match(0)) }
   end
 
   # レンダリング済みHTMLをMarkdown解析後に復元するためのプレースホルダーを発行する。

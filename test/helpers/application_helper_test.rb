@@ -36,6 +36,34 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(/\{\{unknown foo,bar\}\}/, result)
   end
 
+  test 'リスト項目中のHTMLコメントはエスケープされず生のHTMLコメントとして出力される（Issue#1116）' do
+    result = markdown("- 通常の項目\n- <!-- TODO: 要手動対応 元記法: {{category イベント}} -->\n- 別の項目")
+
+    assert_no_match(/&lt;!--/, result)
+    assert_match(/<!-- TODO: 要手動対応 元記法: \{\{category イベント\}\} -->/, result)
+    assert_match(/通常の項目/, result)
+    assert_match(/別の項目/, result)
+  end
+
+  test '文中のHTMLコメントはエスケープされず生のHTMLコメントとして出力される（Issue#1116）' do
+    result = markdown('前の文<!-- 隠しコメント -->後の文')
+
+    assert_no_match(/&lt;!--/, result)
+    assert_match(/前の文<!-- 隠しコメント -->後の文/, result)
+  end
+
+  test '行頭単独のHTMLコメントは従来どおり生HTMLコメントとして出力される' do
+    result = markdown("本文\n\n<!-- 行頭コメント -->\n\n続き")
+
+    assert_match(/<!-- 行頭コメント -->/, result)
+  end
+
+  test 'HTMLコメント内のプラグイン記法は展開されずコメントごとそのまま残る（Issue#1116）' do
+    result = markdown('<!-- {{unknown foo,bar}} -->')
+
+    assert_match(/<!-- \{\{unknown foo,bar\}\} -->/, result)
+  end
+
   test '{{snapshot key,id}}で公開スナップショットのメンバーが埋め込まれる' do
     unit = Unit.create!(key: 'snapshot-plugin-unit', name: 'テストユニット', status: 'active')
     snapshot = unit.unit_snapshots.create!(snapshot_date: '2020-01-01', current: true, active: true)
