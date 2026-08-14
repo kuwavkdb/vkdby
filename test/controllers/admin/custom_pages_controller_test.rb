@@ -30,6 +30,23 @@ module Admin
       assert_equal '%B5%C1%B1%E7%B3%E8%C6%B0', custom_page.old_key
     end
 
+    test 'new画面の下部にMarkdownプラグインのヘルプが表示される' do
+      get new_admin_custom_page_path
+
+      assert_response :success
+      assert_select 'summary', text: /Markdownプラグイン一覧/
+      assert_match(/\{\{member2/, response.body)
+    end
+
+    test 'edit画面の下部にMarkdownプラグインのヘルプが表示される' do
+      custom_page = CustomPage.create!(key: 'help-test', title: 'ヘルプテスト', body: '本文')
+
+      get edit_admin_custom_page_path(custom_page)
+
+      assert_response :success
+      assert_select 'summary', text: /Markdownプラグイン一覧/
+    end
+
     test 'index with system=only shows only system pages' do
       CustomPage.find_or_create_by!(key: 'footer') { |p| p.title = 'フッター' }
       CustomPage.create!(key: 'events', title: 'イベント')
