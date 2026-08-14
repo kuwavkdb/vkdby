@@ -120,15 +120,31 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   PLUGIN_HANDLERS = {
     'include' => :expand_include_plugin,
     'snapshot' => :expand_snapshot_plugin,
-    'item' => :expand_item_plugin
+    'item' => :expand_item_plugin,
+    'div_begin' => :expand_div_begin_plugin,
+    'div_end' => :expand_div_end_plugin
   }.freeze
 
+  # パラメータ（{{プラグイン名 ...}} の "..." 部分）を省略した記法
+  # （例: {{div_end}}）も許可するプラグイン
+  PLUGINS_WITHOUT_REQUIRED_ARGS = %w[div_begin div_end].freeze
+
   def expand_plugin_macros(text, sectionable: nil, placeholders: {})
-    text.gsub(/\{\{(\w[\w-]*)\s+(.+?)\}\}/m) do
+    # {{div_begin}}で開いたタグの種類（:div / :details）を対応する{{div_end}}まで
+    # 覚えておくためのスタック。gsubはテキストを先頭から順に処理するため、
+    # 通常のネストした記法であればこの単純なスタックで正しく対応付けられる。
+    open_tags = []
+
+    text.gsub(/\{\{(\w[\w-]*)(?:\s+(.+?))?\}\}/m) do
       plugin_name = Regexp.last_match(1)
-      args = Regexp.last_match(2).strip
+      args = Regexp.last_match(2)&.strip
       handler = PLUGIN_HANDLERS[plugin_name]
-      handler ? send(handler, args, sectionable, placeholders) : Regexp.last_match(0)
+
+      if handler && (args.present? || PLUGINS_WITHOUT_REQUIRED_ARGS.include?(plugin_name))
+        send(handler, args, sectionable, placeholders, open_tags)
+      else
+        Regexp.last_match(0)
+      end
     end
   end
 
@@ -154,7 +170,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # {{include person:ID,セクション名}} → Person (ID指定)
   # {{include ,セクション名}}          → 自身のページ (key省略・カンマあり)
   # {{include セクション名}}           → 自身のページ (key省略・カンマなし)
-  def expand_include_plugin(args, sectionable, _placeholders)
+  def expand_include_plugin(args, sectionable, _placeholders, _open_tags)
     identifier, section_name = args.include?(',') ? args.split(',', 2) : [nil, args]
     identifier = identifier&.strip
     section_name = section_name.strip
@@ -174,7 +190,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   end
 
   # {{snapshot ユニットkey,snapshot_id}}
-  def expand_snapshot_plugin(args, _sectionable, placeholders)
+  def expand_snapshot_plugin(args, _sectionable, placeholders, _open_tags)
     unit_key, snapshot_id = args.split(',', 2).map(&:strip)
     return '' if unit_key.blank? || snapshot_id.blank?
 
@@ -187,7 +203,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   end
 
   # {{item ASIN}}
-  def expand_item_plugin(args, _sectionable, placeholders)
+  def expand_item_plugin(args, _sectionable, placeholders, _open_tags)
     asin = args.strip
     return '' if asin.blank?
 
@@ -196,5 +212,45 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
 
     html = render(ItemCardComponent.new(item_card: item)).to_s
     register_plugin_placeholder(placeholders, html)
+  end
+
+  # HTML属性インジェクション対策のため、div_beginで出力できる属性は class / subject のみに限定する。
+  # それ以外の記述（例: {{div_begin onclick="..."}}）は無視する。
+  DIV_BEGIN_ALLOWED_ATTRS = %w[class subject].freeze
+
+  # {{div_begin class="value"}}                     → <div class="value">
+  # {{div_begin}}                                    → <div>
+  # {{div_begin class="closable" subject="見出し"}} → 折りたたみ表示（初期状態は閉じている）。
+  #   <details class="closable"><summary>見出し</summary> を出力し、
+  #   ラベルのクリックで開閉する（class="closable" と subject の両方が揃った場合のみ）。
+  #   開閉マーカーは<summary>のブラウザ標準表示に任せる。
+  def expand_div_begin_plugin(args, _sectionable, placeholders, open_tags)
+    attrs = parse_allowed_attrs(args, DIV_BEGIN_ALLOWED_ATTRS)
+    class_value = attrs['class']
+    subject_value = attrs['subject']
+
+    html = if class_value == 'closable' && subject_value.present?
+             open_tags.push(:details)
+             "<details class=\"closable\"><summary>#{CGI.escapeHTML(subject_value)}</summary>"
+           else
+             open_tags.push(:div)
+             class_value.present? ? %(<div class="#{CGI.escapeHTML(class_value)}">) : '<div>'
+           end
+    register_plugin_placeholder(placeholders, html)
+  end
+
+  # {{div_end}} → 対応する{{div_begin}}の種類に応じて </div> または </details> を出力する
+  def expand_div_end_plugin(_args, _sectionable, placeholders, open_tags)
+    html = open_tags.pop == :details ? '</details>' : '</div>'
+    register_plugin_placeholder(placeholders, html)
+  end
+
+  # "key=\"value\"" または "key='value'" 形式の属性のうち allowed_names に含まれるものだけを抽出する
+  def parse_allowed_attrs(args, allowed_names)
+    attrs = {}
+    args.to_s.scan(/(\w[\w-]*)\s*=\s*(?:"([^"]*)"|'([^']*)')/) do |name, double_quoted, single_quoted|
+      attrs[name] = double_quoted || single_quoted || '' if allowed_names.include?(name)
+    end
+    attrs
   end
 end

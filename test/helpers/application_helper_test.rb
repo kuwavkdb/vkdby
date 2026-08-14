@@ -131,4 +131,87 @@ class ApplicationHelperTest < ActionView::TestCase
 
     assert_match(/前後/, result)
   end
+
+  test '{{div_begin class="..."}}と{{div_end}}でdivタグが出力される' do
+    result = markdown(<<~MARKDOWN)
+      {{div_begin class="closable"}}
+
+      本文
+
+      {{div_end}}
+    MARKDOWN
+
+    assert_match(/<div class="closable">/, result)
+    assert_match(%r{</div>}, result)
+    assert_match(/本文/, result)
+  end
+
+  test '{{div_begin}}（属性なし）はclass属性なしのdivタグを出力する' do
+    result = markdown('{{div_begin}}本文{{div_end}}')
+
+    assert_match(/<div>/, result)
+    assert_no_match(/class=/, result)
+  end
+
+  test '{{div_begin}}はclass以外の属性を無視する（属性インジェクション対策）' do
+    result = markdown('{{div_begin onclick="alert(1)"}}本文{{div_end}}')
+
+    assert_no_match(/onclick/, result)
+  end
+
+  test '{{div_begin class="..."}}のclass値はHTMLエスケープされる' do
+    result = markdown('{{div_begin class="a&b"}}本文{{div_end}}')
+
+    assert_match(/class="a&amp;b"/, result)
+  end
+
+  test '{{div_begin class="closable" subject="..."}}は折りたたみ(details/summary)で出力される' do
+    result = markdown(<<~MARKDOWN)
+      {{div_begin class="closable" subject="メンバー"}}
+
+      本文
+
+      {{div_end}}
+    MARKDOWN
+
+    assert_match(/<details class="closable">/, result)
+    assert_match(%r{<summary>メンバー</summary>}, result)
+    assert_match(%r{</details>}, result)
+    assert_no_match(%r{</div>}, result)
+    # 初期状態は折りたたみ（open属性なし）であること
+    assert_no_match(/<details[^>]*\bopen\b/, result)
+  end
+
+  test 'subject指定でもclass="closable"がなければ通常のdivのまま(折りたたみにならない)' do
+    result = markdown('{{div_begin subject="メンバー"}}本文{{div_end}}')
+
+    assert_no_match(/<details/, result)
+    assert_no_match(/summary/, result)
+    assert_match(/<div>/, result)
+  end
+
+  test '{{div_begin class="closable" subject="..."}}のsubject値はHTMLエスケープされる' do
+    result = markdown('{{div_begin class="closable" subject="a&b"}}本文{{div_end}}')
+
+    assert_match(%r{<summary>a&amp;b</summary>}, result)
+  end
+
+  test '{{div_begin}}のネストで対応する{{div_end}}が正しいタグを閉じる' do
+    result = markdown(<<~MARKDOWN)
+      {{div_begin class="closable" subject="外側"}}
+
+      {{div_begin class="inner"}}
+
+      本文
+
+      {{div_end}}
+
+      {{div_end}}
+    MARKDOWN
+
+    assert_match(/<details class="closable">/, result)
+    assert_match(/<div class="inner">/, result)
+    assert_match(%r{</div>}, result)
+    assert_match(%r{</details>}, result)
+  end
 end

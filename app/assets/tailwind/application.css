@@ -43,6 +43,23 @@
     td { padding: 0.5em 0.75em; border: 1px solid #e4e4e7; }
     tr:nth-child(even) td { background-color: #fafafa; }
     img { max-width: 100%; height: auto; border-radius: 0.25em; margin: 0.5em 0; }
+
+    /* {{div_begin class="closable" subject="..."}} プラグイン（折りたたみ表示） */
+    /* 開閉マーカーはブラウザ標準の<summary>表示に任せる */
+    details.closable {
+      margin: 1em 0;
+    }
+    details.closable summary {
+      cursor: pointer;
+      font-weight: 600;
+      padding: 0.25em;
+    }
+    details.closable summary:focus-visible {
+      outline: 2px solid #d97706;
+      outline-offset: 2px;
+      border-radius: 0.25em;
+    }
+    details.closable[open] summary { margin-bottom: 0.25em; }
   }
 
   @variant dark {
@@ -58,6 +75,7 @@
       th { background-color: #18181b; border-color: #27272a; color: #71717a; }
       td { border-color: #27272a; }
       tr:nth-child(even) td { background-color: #18181b; }
+      details.closable summary:focus-visible { outline-color: #f59e0b; }
     }
   }
 
