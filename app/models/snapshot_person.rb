@@ -40,7 +40,11 @@ class SnapshotPerson < ApplicationRecord
 
   default_scope { kept }
 
-  belongs_to :unit_snapshot
+  # touch: true は {{snapshot}}プラグイン（application_helper.rb）のキャッシュキーが
+  # UnitSnapshot#updated_at を参照しているための対応。SnapshotPerson単体の
+  # 作成・更新・削除・discard/undiscardのたびに親UnitSnapshotのupdated_atも更新され、
+  # キャッシュが自動的に無効化される。
+  belongs_to :unit_snapshot, touch: true
   belongs_to :person, optional: true
 
   enum :status, { undefined: 0, active: 1, pending: 2, left: 3, concerned: 4, pre: 5 }

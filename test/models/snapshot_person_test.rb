@@ -27,6 +27,8 @@
 require 'test_helper'
 
 class SnapshotPersonTest < ActiveSupport::TestCase
+  include ActiveSupport::Testing::TimeHelpers
+
   test 'valid snapshot_person with person' do
     sp = snapshot_people(:one)
     assert sp.valid?
@@ -57,5 +59,43 @@ class SnapshotPersonTest < ActiveSupport::TestCase
   test 'name returns person.name when person_name is blank' do
     sp = snapshot_people(:one)
     assert_equal people(:one).name, sp.name
+  end
+
+  # {{snapshot}}プラグイン（application_helper.rb）のキャッシュキーは
+  # UnitSnapshot#updated_at を参照しているため、SnapshotPersonの作成・更新・削除で
+  # 親UnitSnapshotのupdated_atも更新される（touch: true）必要がある。
+  test '作成時に親unit_snapshotのupdated_atをtouchする' do
+    snapshot = unit_snapshots(:one)
+    original_updated_at = snapshot.updated_at
+
+    travel_to(original_updated_at + 1.minute) do
+      snapshot.snapshot_people.create!(person_name: 'タッチテスト', part: :vocal, status: :active)
+    end
+
+    assert_not_equal original_updated_at, snapshot.reload.updated_at
+  end
+
+  test '更新時に親unit_snapshotのupdated_atをtouchする' do
+    sp = snapshot_people(:one)
+    snapshot = sp.unit_snapshot
+    original_updated_at = snapshot.updated_at
+
+    travel_to(original_updated_at + 1.minute) do
+      sp.update!(person_name: '更新後の名前')
+    end
+
+    assert_not_equal original_updated_at, snapshot.reload.updated_at
+  end
+
+  test '削除時に親unit_snapshotのupdated_atをtouchする' do
+    sp = snapshot_people(:one)
+    snapshot = sp.unit_snapshot
+    original_updated_at = snapshot.updated_at
+
+    travel_to(original_updated_at + 1.minute) do
+      sp.destroy!
+    end
+
+    assert_not_equal original_updated_at, snapshot.reload.updated_at
   end
 end

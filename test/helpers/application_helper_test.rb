@@ -4,6 +4,7 @@ require 'test_helper'
 
 class ApplicationHelperTest < ActionView::TestCase
   include ApplicationHelper
+  include ActiveSupport::Testing::TimeHelpers
 
   test '{{include key,section}}で指定したCustomPageのセクション本文が展開される' do
     page = CustomPage.create!(key: 'target-page', title: 'Target', active: true)
@@ -363,5 +364,79 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(/神谷 英希/, result)
     assert_match(/くりから。/, result)
     assert_match(/隠密華撃団/, result)
+  end
+
+  # 以下、issue #1115（プラグインのcache対応）関連のテスト。
+  # test環境のデフォルトcache_storeは:null_store（常にブロックを実行し何もキャッシュしない）
+  # のため、キャッシュの有無を検証するテストのみ一時的にMemoryStoreへ差し替える。
+  def with_memory_cache_store
+    original = Rails.cache
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
+    yield
+  ensure
+    Rails.cache = original
+  end
+
+  test '{{item}}はキャッシュされ、updated_atが変わらない更新には反応しない' do
+    with_memory_cache_store do
+      item = Item.create!(title: '初期タイトル', release_date: '2020-01-01',
+                          link_url: 'https://example.com/item/cache1', asin: 'B00CACHEITEM1')
+
+      first = markdown("{{item #{item.asin}}}")
+      assert_match(/初期タイトル/, first)
+
+      # updated_atを変えずにDBだけ書き換える（キャッシュキーは変化しないはず）
+      item.update_column(:title, '書き換え後タイトル')
+
+      second = markdown("{{item #{item.asin}}}")
+      assert_match(/初期タイトル/, second, 'キャッシュキーが同じなら初回レンダリング結果が再利用されるはず')
+    end
+  end
+
+  test '{{item}}はItemが更新されるとキャッシュが自動的に切り替わる' do
+    with_memory_cache_store do
+      item = Item.create!(title: '初期タイトル2', release_date: '2020-01-01',
+                          link_url: 'https://example.com/item/cache2', asin: 'B00CACHEITEM2')
+      markdown("{{item #{item.asin}}}")
+
+      travel(1.second) { item.update!(title: '更新後タイトル2') }
+
+      result = markdown("{{item #{item.asin}}}")
+      assert_match(/更新後タイトル2/, result)
+    end
+  end
+
+  test '{{member}}はPersonが更新されるとキャッシュが自動的に切り替わる' do
+    with_memory_cache_store do
+      person = Person.create!(name: 'のる', key: 'member-cache-person',
+                              old_key: URI.encode_www_form_component('cache-key-1'.encode('EUC-JP')),
+                              old_history: '旧履歴テキスト')
+
+      first = markdown('{{member Vocal,のる,cache-key-1}}')
+      assert_match(/旧履歴テキスト/, first)
+
+      travel(1.second) { person.update!(old_history: '新履歴テキスト') }
+
+      second = markdown('{{member Vocal,のる,cache-key-1}}')
+      assert_match(/新履歴テキスト/, second)
+      assert_no_match(/旧履歴テキスト/, second)
+    end
+  end
+
+  test '{{snapshot}}はsnapshot_peopleの編集で親unit_snapshotがtouchされキャッシュが切り替わる' do
+    with_memory_cache_store do
+      unit = Unit.create!(key: 'snapshot-cache-unit', name: 'キャッシュテストユニット', status: 'active')
+      snapshot = unit.unit_snapshots.create!(snapshot_date: '2020-01-01', current: true, active: true)
+      sp = snapshot.snapshot_people.create!(person_name: '旧メンバー名', part: :vocal, status: :active)
+
+      first = markdown("{{snapshot #{unit.key},#{snapshot.id}}}")
+      assert_match(/旧メンバー名/, first)
+
+      travel(1.second) { sp.update!(person_name: '新メンバー名') }
+
+      second = markdown("{{snapshot #{unit.key},#{snapshot.id}}}")
+      assert_match(/新メンバー名/, second)
+      assert_no_match(/旧メンバー名/, second)
+    end
   end
 end
