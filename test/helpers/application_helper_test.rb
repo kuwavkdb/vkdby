@@ -214,4 +214,39 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(%r{</div>}, result)
     assert_match(%r{</details>}, result)
   end
+
+  test '{{member パート,表示名,old_key}}でold_keyに一致するPersonの経歴カードが埋め込まれる' do
+    Person.create!(name: 'のる', key: 'member-plugin-person',
+                   old_key: URI.encode_www_form_component('のる(ex-ふりぃ)'.encode('EUC-JP')))
+
+    result = markdown('{{member Vocal,のる,のる(ex-ふりぃ)}}')
+
+    assert_match(/のる/, result)
+    assert_match(%r{href="/member-plugin-person"}, result)
+  end
+
+  test '{{member}}は表示名(第2引数)をそのまま表示し、Personのnameとは独立している' do
+    Person.create!(name: 'DB上の名前', key: 'member-plugin-person2',
+                   old_key: URI.encode_www_form_component('旧名'.encode('EUC-JP')))
+
+    result = markdown('{{member Vocal,表示用の名前,旧名}}')
+
+    assert_match(/表示用の名前/, result)
+    assert_no_match(/DB上の名前/, result)
+  end
+
+  test '{{member}}で一致するPersonが見つからない場合は空文字になる' do
+    result = markdown('前{{member Vocal,のる,存在しないキー}}後')
+
+    assert_match(/前後/, result)
+  end
+
+  test '{{member}}はステータスバッジを表示しない' do
+    Person.create!(name: 'のる', key: 'member-plugin-person3',
+                   old_key: URI.encode_www_form_component('のる3'.encode('EUC-JP')))
+
+    result = markdown('{{member Vocal,のる,のる3}}')
+
+    assert_no_match(/undefined/, result)
+  end
 end
