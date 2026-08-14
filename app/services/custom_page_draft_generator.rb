@@ -10,9 +10,10 @@ class CustomPageDraftGenerator
   Draft = Struct.new(:wikipage_id, :key, :title, :old_key, :body, :warnings, keyword_init: true)
 
   # 変換せずそのまま残すプラグイン。
-  # snapshot / item は CustomPage の markdown ヘルパー（ApplicationHelper#expand_plugin_macros）が
-  # そのまま解釈できる。div_begin / div / member は現時点では未対応だが、CustomPage側での対応を
-  # 予定しているため、TODOコメント化せず元の記法のまま残す。
+  # snapshot / item / div_begin は CustomPage の markdown ヘルパー
+  # （ApplicationHelper#expand_plugin_macros）がそのまま解釈できる（Issue#1105でdiv_begin/div_end対応）。
+  # div / member は現時点では未対応だが、CustomPage側での対応を予定しているため、
+  # TODOコメント化せず元の記法のまま残す。
   # include は旧FreeStyleWiki記法と引数の意味が異なる（IncludePluginConverter参照）ため対象外。
   SUPPORTED_PLUGINS = %w[snapshot item div_begin div member].freeze
 
