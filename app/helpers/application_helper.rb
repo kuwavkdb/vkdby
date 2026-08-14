@@ -122,7 +122,8 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     'snapshot' => :expand_snapshot_plugin,
     'item' => :expand_item_plugin,
     'div_begin' => :expand_div_begin_plugin,
-    'div_end' => :expand_div_end_plugin
+    'div_end' => :expand_div_end_plugin,
+    'member' => :expand_member_plugin
   }.freeze
 
   # パラメータ（{{プラグイン名 ...}} の "..." 部分）を省略した記法
@@ -212,6 +213,40 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
 
     html = render(ItemCardComponent.new(item_card: item)).to_s
     register_plugin_placeholder(placeholders, html)
+  end
+
+  # {{member パート,表示名,old_key}}（old_keyは未エンコード）
+  # 例: {{member Vocal,のる,のる(ex-ふりぃ)}}
+  # old_keyをEUC-JPエンコードしてPeopleを検索し、Unitページのメンバー行
+  # （MemberRowComponent）と同じ経歴カードを出力する。
+  def expand_member_plugin(args, _sectionable, placeholders, _open_tags)
+    part, display_name, raw_old_key = args.split(',', 3).map { |v| v&.strip }
+    return '' if part.blank? || display_name.blank? || raw_old_key.blank?
+
+    person = Person.kept.find_by(old_key: encode_member_old_key(raw_old_key))
+    return '' unless person
+
+    member = MemberPluginRow.new(part: part, name: display_name, person: person)
+    html = render(MemberRowComponent.new(member: member, hide_status: true))
+    register_plugin_placeholder(placeholders, html)
+  end
+
+  # People#old_key は URI.encode_www_form_component(EUC-JP) 形式で保存されている
+  # （app/services/person_importer.rb, wikipage_importer.rb と同じ変換）
+  def encode_member_old_key(text)
+    URI.encode_www_form_component(text.encode('EUC-JP'))
+  rescue Encoding::UndefinedConversionError, Encoding::InvalidByteSequenceError
+    text
+  end
+
+  # {{member}}プラグイン用の軽量な行データ。UnitPerson/SnapshotPersonと異なりDBに
+  # 永続化しない埋め込み表示のためのラッパーで、MemberRowComponentが要求する
+  # インターフェース（part / name / person / part_alias / sns / inline_history / status / support?）
+  # のうち、プラグインが受け取らない属性はすべて未指定（nil・非サポート）として扱う。
+  MemberPluginRow = Struct.new(:part, :name, :person, :part_alias, :sns, :inline_history, :status, keyword_init: true) do
+    def support?
+      false
+    end
   end
 
   # HTML属性インジェクション対策のため、div_beginで出力できる属性は class / subject のみに限定する。
