@@ -384,6 +384,16 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(%r{href="/member-plugin-person"}, result)
   end
 
+  test '{{member}}のメンバー名は<h3>ではなくrole="heading"のdivを使う(markdown-content内の意図しない余白対策)' do
+    Person.create!(name: 'のる', key: 'member-plugin-person-noh3',
+                   old_key: URI.encode_www_form_component('のる(ex-ふりぃ)'.encode('EUC-JP')))
+
+    result = markdown('{{member Vocal,のる,のる(ex-ふりぃ)}}')
+
+    assert_no_match(/<h3/, result)
+    assert_match(/role="heading" aria-level="3"/, result)
+  end
+
   test '{{member}}は表示名(第2引数)をそのまま表示し、Personのnameとは独立している' do
     Person.create!(name: 'DB上の名前', key: 'member-plugin-person2',
                    old_key: URI.encode_www_form_component('旧名'.encode('EUC-JP')))
