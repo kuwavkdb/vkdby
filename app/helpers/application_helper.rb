@@ -133,8 +133,19 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # （例: {{div_end}}）も許可するプラグイン
   PLUGINS_WITHOUT_REQUIRED_ARGS = %w[div_begin div_end].freeze
 
-  # コンポーネントレンダリングを伴うプラグインのキャッシュ設定（plugin_cache_fetch参照）
-  PLUGIN_CACHE_VERSION = 'v1'
+  # コンポーネントレンダリングを伴うプラグインのキャッシュ設定（plugin_cache_fetch参照）。
+  # レンダリング結果（HTML構造）を変更した場合は、レコード側のcache_key_with_versionが
+  # 変わらない限りキャッシュキーが変化せず古いHTMLが返り続けるため、このバージョンを
+  # 上げてキャッシュを一括無効化すること。
+  # v2: {{snapshot}}の初期表示をsummary_preview: false化（issue #1130、1行プレビュー廃止）
+  # v3: UnitSnapshotsComponentの見出しクリック領域を拡大（issue #1130）
+  # v4: UnitSnapshotsComponentの見出しを<h2>からrole="heading"のdivに変更
+  #     （.markdown-content内での意図しない下線対策、issue #1130）
+  # v5: MemberRowComponentの行paddingを縮小（閉状態の余白対策、issue #1130）
+  # v6: MemberRowComponentのデスクトップ行paddingをさらに縮小（issue #1130）
+  # v7: MemberRowComponentのメンバー名を<h3>からrole="heading"のdivに変更
+  #     （.markdown-content内での意図しない余白対策、issue #1130）
+  PLUGIN_CACHE_VERSION = 'v7'
   PLUGIN_CACHE_TTL = 7.days
 
   # 複数行にわたるプラグイン記法（例: {{member2 ...}}）のディスパッチ先。
@@ -194,6 +205,8 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     text.gsub(/<!--.*?-->/m) { register_plugin_placeholder(placeholders, Regexp.last_match(0)) }
   end
 
+  PLUGIN_PLACEHOLDER_TOKEN = /⟦PLUGIN_PLACEHOLDER_[0-9a-f]+⟧/
+
   # レンダリング済みHTMLをMarkdown解析後に復元するためのプレースホルダーを発行する。
   # コンポーネントの生成するHTML（複数行タグ・Stimulus/htmx属性等）はRedcarpetの
   # 生HTMLブロック認識に乗らず壊れることがあるため、Markdown解析を経由させない。
@@ -204,8 +217,19 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   end
 
   def restore_plugin_placeholders(html, placeholders)
+    # {{member}}等のブロックレベルなプラグインを空行で区切らず連続して書いた場合
+    # （実際の移行ドラフトでのメンバー一覧の書き方）、Redcarpetはhard_wrapにより
+    # それらを1つの<p>...</p>にまとめ、プレースホルダー間に<br>を挿入する。
+    # その状態のまま各トークンをブロック要素（<div>等）に単純置換すると、<p>の
+    # 中に<div>が入れ子になった不正なHTMLになり、ブラウザ側の自動修復で余計な
+    # 空<p>（既定の上下マージン分の余白）が挿入されてしまう（Issue#1130）。
+    # <p>の中身がプレースホルダーのみ（<br>区切り可）の場合は、そのp/brごと
+    # 取り除いてから個々のトークンを復元することでこれを防ぐ。
+    html = html.gsub(%r{<p>((?:#{PLUGIN_PLACEHOLDER_TOKEN}(?:<br>\s*)?)+)</p>}o) do
+      Regexp.last_match(1).gsub(/<br>\s*/, "\n")
+    end
+
     placeholders.each do |token, raw_html|
-      html = html.sub("<p>#{token}</p>", raw_html)
       html = html.sub(token, raw_html)
     end
     html
@@ -255,7 +279,8 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     return '' unless snapshot
 
     html = plugin_cache_fetch('snapshot', unit.cache_key_with_version, snapshot.cache_key_with_version) do
-      render(UnitSnapshotsComponent.new(snapshots: [snapshot], unit: unit, admin: false, show_label: false)).to_s
+      render(UnitSnapshotsComponent.new(snapshots: [snapshot], unit: unit, admin: false, show_label: false,
+                                        summary_preview: false)).to_s
     end
     register_plugin_placeholder(placeholders, html)
   end
@@ -362,12 +387,25 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # それ以外の記述（例: {{div_begin onclick="..."}}）は無視する。
   DIV_BEGIN_ALLOWED_ATTRS = %w[class subject].freeze
 
+  # ユニットページのMembersセクション（UnitSnapshotsComponent）・{{snapshot}}プラグイン
+  # （summary_preview: false指定時）と同じ、角丸カード＋シェブロン開閉トグルの
+  # 外枠を出力するためのデフォルト見出しラベル。
+  DIV_BEGIN_MEMBERS_DEFAULT_LABEL = 'Members'
+
   # {{div_begin class="value"}}                     → <div class="value">
   # {{div_begin}}                                    → <div>
   # {{div_begin class="closable" subject="見出し"}} → 折りたたみ表示（初期状態は閉じている）。
   #   <details class="closable"><summary>見出し</summary> を出力し、
   #   ラベルのクリックで開閉する（class="closable" と subject の両方が揃った場合のみ）。
   #   開閉マーカーは<summary>のブラウザ標準表示に任せる。
+  # {{div_begin class="members"}}                    → ユニットページのMembersセクション
+  #   （UnitSnapshotsComponentの「現メンバー」表示）と同じ見た目（角丸カード＋シェブロン
+  #   開閉トグル）で{{member}}/{{member2}}の並びを囲む。メンバー一覧自体は常に表示され、
+  #   開閉トグルが対応するのは各メンバーの経歴表示（{{member2}}のdata等、
+  #   MemberRowComponentが出力するdata-toggle-target="content"）のみ
+  #   （初期状態は閉じている＝経歴非表示。ユニットページのMembersセクションを
+  #   折りたたんだ状態と同じ）。subjectを指定すると見出しラベルを変更できる
+  #   （省略時は"Members"）。
   def expand_div_begin_plugin(args, _sectionable, placeholders, open_tags)
     attrs = parse_allowed_attrs(args, DIV_BEGIN_ALLOWED_ATTRS)
     class_value = attrs['class']
@@ -376,6 +414,9 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     html = if class_value == 'closable' && subject_value.present?
              open_tags.push(:details)
              "<details class=\"closable\"><summary>#{CGI.escapeHTML(subject_value)}</summary>"
+           elsif class_value == 'members'
+             open_tags.push(:members)
+             render_div_begin_members_html(subject_value)
            else
              open_tags.push(:div)
              class_value.present? ? %(<div class="#{CGI.escapeHTML(class_value)}">) : '<div>'
@@ -383,9 +424,40 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     register_plugin_placeholder(placeholders, html)
   end
 
-  # {{div_end}} → 対応する{{div_begin}}の種類に応じて </div> または </details> を出力する
+  # {{div_begin class="members"}}が出力する外枠のHTML。
+  # UnitSnapshotsComponentの「現メンバー」表示（角丸カード＋シェブロン開閉トグル）と
+  # 同一のマークアップ・クラスを用いることで、同じStimulus toggleコントローラ・
+  # 同じ見た目で開閉できるようにしている。data-toggle-target="area"のみを持たせ、
+  # メンバー一覧自体は開閉に関わらず常に表示する（{{snapshot}}プラグイン・
+  # summary_preview: falseの場合と同じ挙動）。開閉のクリック領域は見出し全体
+  # （ラベル＋シェブロン）とする。
+  # 見出しは<h2>ではなくrole="heading"のdivを使用する: このHTMLは常にカスタム
+  # ページの.markdown-content内に埋め込まれるため、<h2>にするとグローバルな
+  # `.markdown-content h2`スタイル（border-bottom）が見出しテキスト幅だけの
+  # 短い下線として意図せず表示されてしまう。
+  def render_div_begin_members_html(subject_value)
+    label = CGI.escapeHTML(subject_value.presence || DIV_BEGIN_MEMBERS_DEFAULT_LABEL)
+    <<~HTML.chomp
+      <section data-controller="toggle" data-toggle-open-value="false">
+        <div class="flex items-center justify-between mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
+          <button type="button" data-action="click->toggle#toggle" class="flex items-center justify-between gap-2 flex-1 min-w-0 -mx-1 px-1 py-0.5 rounded text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400">
+            <div role="heading" aria-level="2" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">#{label}</div>
+            <svg class="w-4 h-4 shrink-0 text-slate-400 transition-transform duration-200" data-toggle-target="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+        </div>
+        <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm" data-toggle-target="area" data-action="click->toggle#expand">
+    HTML
+  end
+
+  # {{div_end}} → 対応する{{div_begin}}の種類に応じて </div> / </details> / </div></section> を出力する
   def expand_div_end_plugin(_args, _sectionable, placeholders, open_tags)
-    html = open_tags.pop == :details ? '</details>' : '</div>'
+    html = case open_tags.pop
+           when :details then '</details>'
+           when :members then "</div>\n</section>"
+           else '</div>'
+           end
     register_plugin_placeholder(placeholders, html)
   end
 

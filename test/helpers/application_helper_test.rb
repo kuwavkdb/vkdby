@@ -5,6 +5,7 @@ require 'test_helper'
 class ApplicationHelperTest < ActionView::TestCase
   include ApplicationHelper
   include ActiveSupport::Testing::TimeHelpers
+  include ViewComponent::TestHelpers
 
   test '{{include key,section}}で指定したCustomPageのセクション本文が展開される' do
     page = CustomPage.create!(key: 'target-page', title: 'Target', active: true)
@@ -74,6 +75,26 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(/テストメンバー/, result)
   end
 
+  test '{{snapshot}}はcurrent: trueのスナップショットでも、ユニットページ本体と違い初期状態は折りたたまれている' do
+    unit = Unit.create!(key: 'snapshot-plugin-unit-current-fold', name: 'テストユニット', status: 'active')
+    snapshot = unit.unit_snapshots.create!(snapshot_date: '2020-01-01', current: true, active: true)
+    snapshot.snapshot_people.create!(person_name: 'テストメンバー', part: :vocal, status: :active)
+
+    result = markdown("{{snapshot #{unit.key},#{snapshot.id}}}")
+
+    assert_match(/data-toggle-open-value="false"/, result)
+  end
+
+  test 'ユニットページ本体(summary_preview: true)では従来どおりcurrent: trueのスナップショットが初期展開される' do
+    unit = Unit.create!(key: 'unit-page-current-open', name: 'テストユニット', status: 'active')
+    snapshot = unit.unit_snapshots.create!(snapshot_date: '2020-01-01', current: true, active: true)
+    snapshot.snapshot_people.create!(person_name: 'テストメンバー', part: :vocal, status: :active)
+
+    result = render_inline(UnitSnapshotsComponent.new(snapshots: [snapshot], unit: unit)).to_html
+
+    assert_match(/data-toggle-open-value="true"/, result)
+  end
+
   test '{{snapshot key,id}}で埋め込んだ場合はバンドページと違いラベルが表示されない' do
     unit = Unit.create!(key: 'snapshot-plugin-unit-label', name: 'テストユニット', status: 'active')
     snapshot = unit.unit_snapshots.create!(snapshot_date: '2020-01-01', current: true, active: true,
@@ -127,10 +148,24 @@ class ApplicationHelperTest < ActionView::TestCase
     result = markdown("前\n\n{{snapshot #{unit.key},#{snapshot.id}}}\n\n後")
 
     # UnitSnapshotsComponentの複数行タグの属性がRedcarpetに解析されテキストとして
-    # 露出していないこと（<p>の中にhx-get等の属性テキストが漏れていないこと）を確認する
-    assert_no_match(/<p>[^<]*(?:data-toggle-target|hx-get|hx-trigger)/, result)
-    assert_match(%r{hx-get="[^"]*snapshots/#{snapshot.id}/members"}, result)
+    # 露出していないこと（<p>の中にdata-toggle-target等の属性テキストが漏れていないこと）を確認する
+    assert_no_match(/<p>[^<]*data-toggle-target/, result)
     assert_match(/テストメンバー4/, result)
+  end
+
+  test '{{snapshot}}で埋め込んだ過去スナップショットはユニットページ本体と異なり、1行プレビュー(summary)を出さずメンバー一覧をその場で表示する' do
+    unit = Unit.create!(key: 'snapshot-plugin-unit5', name: 'テストユニット5', status: 'active')
+    snapshot = unit.unit_snapshots.create!(snapshot_date: '2020-01-01', current: false, active: true)
+    snapshot.snapshot_people.create!(person_name: 'テストメンバー5', part: :vocal, status: :active)
+
+    result = markdown("{{snapshot #{unit.key},#{snapshot.id}}}")
+
+    # 1行プレビュー(summary)・hx-get遅延取得は使われない
+    assert_no_match(/data-toggle-target="summary/, result)
+    assert_no_match(/hx-get/, result)
+    # {{div_begin class="members"}}と同じく、メンバー一覧は開閉に関わらず常に表示される
+    assert_match(/data-toggle-target="area"/, result)
+    assert_match(/テストメンバー5/, result)
   end
 
   test '{{item ASIN}}でItemカードが埋め込まれる' do
@@ -244,6 +279,101 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(%r{</details>}, result)
   end
 
+  test '{{div_begin class="members"}}はユニットページのMembersセクションと同じ外枠(toggleコントローラ・角丸カード)で出力される' do
+    result = markdown(<<~MARKDOWN)
+      {{div_begin class="members"}}
+
+      {{member2 Bass,森川泰敬
+      → [GLAMOROUS HONEY](/glamorous-honey)
+      }}
+
+      {{div_end}}
+    MARKDOWN
+
+    assert_match(/<section data-controller="toggle" data-toggle-open-value="false">/, result)
+    assert_match(/role="heading" aria-level="2"[^>]*>Members</, result)
+    assert_match(/data-action="click->toggle#toggle"/, result)
+    assert_match(/rounded-2xl overflow-hidden shadow-sm" data-toggle-target="area"/, result)
+    assert_match(%r{</section>}, result)
+    assert_match(/森川泰敬/, result)
+    assert_match(/GLAMOROUS HONEY/, result)
+  end
+
+  test '{{div_begin class="members"}}はユニットページのMembersセクションと同様、メンバー一覧自体は開閉に関わらず常に表示される' do
+    result = markdown(<<~MARKDOWN)
+      {{div_begin class="members"}}
+
+      {{member2 Bass,森川泰敬
+      → [GLAMOROUS HONEY](/glamorous-honey)
+      }}
+
+      {{div_end}}
+    MARKDOWN
+
+    # 初期状態(閉)はメンバーごとの経歴表示のみが非表示になり、メンバー一覧自体は表示される
+    assert_match(/data-toggle-open-value="false"/, result)
+    assert_no_match(/data-toggle-target="summary/, result)
+    assert_match(/森川泰敬/, result)
+  end
+
+  test '空行区切りなしで連続する{{member}}は<p>や<br>で余分に囲まれない(Issue#1130の余白崩れ対策)' do
+    Person.create!(name: 'のる', key: 'members-gap-person-1',
+                   old_key: URI.encode_www_form_component('のる(ex-ふりぃ)'.encode('EUC-JP')))
+    Person.create!(name: 'Kyoki', key: 'members-gap-person-2',
+                   old_key: URI.encode_www_form_component('叶唏'.encode('EUC-JP')))
+
+    result = markdown(<<~MARKDOWN)
+      {{div_begin class="members"}}
+      {{member Vocal,のる,のる(ex-ふりぃ)}}
+      {{member Guitar,Kyoki,叶唏}}
+      {{div_end}}
+    MARKDOWN
+
+    # 各メンバー行(ブロック要素)が<p>で囲まれたり、行間に<br>が挟まったりしていないこと
+    assert_no_match(/<p>\s*<(?:section|div)/, result)
+    assert_no_match(%r{</div>\s*<br>}, result)
+    assert_no_match(%r{</div>\s*</p>}, result)
+    assert_match(/のる/, result)
+    assert_match(/Kyoki/, result)
+  end
+
+  test '{{div_begin class="members" subject="..."}}は見出しラベルを上書きできる' do
+    result = markdown('{{div_begin class="members" subject="旧メンバー"}}本文{{div_end}}')
+
+    assert_match(/role="heading" aria-level="2"[^>]*>旧メンバー</, result)
+    assert_no_match(/role="heading" aria-level="2"[^>]*>Members</, result)
+  end
+
+  test '{{div_begin class="members"}}のsubject値はHTMLエスケープされる' do
+    result = markdown('{{div_begin class="members" subject="a&b"}}本文{{div_end}}')
+
+    assert_match(/role="heading" aria-level="2"[^>]*>a&amp;b</, result)
+  end
+
+  test '{{div_begin class="members"}}の見出しは<h2>ではなくrole="heading"のdivを使う(markdown-content内の意図しない下線対策)' do
+    result = markdown('{{div_begin class="members"}}本文{{div_end}}')
+
+    assert_no_match(/<h2/, result)
+  end
+
+  test '{{div_begin class="members"}}のネストで対応する{{div_end}}が</div></section>を出力する' do
+    result = markdown(<<~MARKDOWN)
+      {{div_begin class="members"}}
+
+      {{div_begin class="inner"}}
+
+      本文
+
+      {{div_end}}
+
+      {{div_end}}
+    MARKDOWN
+
+    assert_match(/<section data-controller="toggle"/, result)
+    assert_match(/<div class="inner">/, result)
+    assert_match(%r{</section>}, result)
+  end
+
   test '{{member パート,表示名,old_key}}でold_keyに一致するPersonの経歴カードが埋め込まれる' do
     Person.create!(name: 'のる', key: 'member-plugin-person',
                    old_key: URI.encode_www_form_component('のる(ex-ふりぃ)'.encode('EUC-JP')))
@@ -252,6 +382,16 @@ class ApplicationHelperTest < ActionView::TestCase
 
     assert_match(/のる/, result)
     assert_match(%r{href="/member-plugin-person"}, result)
+  end
+
+  test '{{member}}のメンバー名は<h3>ではなくrole="heading"のdivを使う(markdown-content内の意図しない余白対策)' do
+    Person.create!(name: 'のる', key: 'member-plugin-person-noh3',
+                   old_key: URI.encode_www_form_component('のる(ex-ふりぃ)'.encode('EUC-JP')))
+
+    result = markdown('{{member Vocal,のる,のる(ex-ふりぃ)}}')
+
+    assert_no_match(/<h3/, result)
+    assert_match(/role="heading" aria-level="3"/, result)
   end
 
   test '{{member}}は表示名(第2引数)をそのまま表示し、Personのnameとは独立している' do
