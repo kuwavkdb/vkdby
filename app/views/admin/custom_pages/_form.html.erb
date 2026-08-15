@@ -59,12 +59,6 @@
     </div>
   </div>
 
-  <div class="flex items-center">
-    <%= form.check_box :active,
-        class: "form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
-    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">公開する（チェックなしは下書き）</span>
-  </div>
-
   <div class="sticky bottom-0 z-10 -mx-6 -mb-6 flex items-center justify-between gap-x-4 rounded-b-lg border-t border-gray-200 bg-white/95 px-6 py-4 backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/95">
     <div class="flex items-center gap-3">
       <% if custom_page.persisted? && current_user.admin? %>
@@ -99,6 +93,11 @@
               data-action="click->markdown-preview#serverPreview">
         プレビュー
       </button>
+      <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+        <%= form.check_box :active,
+            class: "form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
+        公開する
+      </label>
       <%= form.submit custom_page.persisted? ? "更新" : "作成",
           class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer" %>
     </div>
