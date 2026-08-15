@@ -198,6 +198,8 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     text.gsub(/<!--.*?-->/m) { register_plugin_placeholder(placeholders, Regexp.last_match(0)) }
   end
 
+  PLUGIN_PLACEHOLDER_TOKEN = /⟦PLUGIN_PLACEHOLDER_[0-9a-f]+⟧/
+
   # レンダリング済みHTMLをMarkdown解析後に復元するためのプレースホルダーを発行する。
   # コンポーネントの生成するHTML（複数行タグ・Stimulus/htmx属性等）はRedcarpetの
   # 生HTMLブロック認識に乗らず壊れることがあるため、Markdown解析を経由させない。
@@ -208,8 +210,19 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   end
 
   def restore_plugin_placeholders(html, placeholders)
+    # {{member}}等のブロックレベルなプラグインを空行で区切らず連続して書いた場合
+    # （実際の移行ドラフトでのメンバー一覧の書き方）、Redcarpetはhard_wrapにより
+    # それらを1つの<p>...</p>にまとめ、プレースホルダー間に<br>を挿入する。
+    # その状態のまま各トークンをブロック要素（<div>等）に単純置換すると、<p>の
+    # 中に<div>が入れ子になった不正なHTMLになり、ブラウザ側の自動修復で余計な
+    # 空<p>（既定の上下マージン分の余白）が挿入されてしまう（Issue#1130）。
+    # <p>の中身がプレースホルダーのみ（<br>区切り可）の場合は、そのp/brごと
+    # 取り除いてから個々のトークンを復元することでこれを防ぐ。
+    html = html.gsub(%r{<p>((?:#{PLUGIN_PLACEHOLDER_TOKEN}(?:<br>\s*)?)+)</p>}o) do
+      Regexp.last_match(1).gsub(/<br>\s*/, "\n")
+    end
+
     placeholders.each do |token, raw_html|
-      html = html.sub("<p>#{token}</p>", raw_html)
       html = html.sub(token, raw_html)
     end
     html

@@ -316,6 +316,27 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(/森川泰敬/, result)
   end
 
+  test '空行区切りなしで連続する{{member}}は<p>や<br>で余分に囲まれない(Issue#1130の余白崩れ対策)' do
+    Person.create!(name: 'のる', key: 'members-gap-person-1',
+                   old_key: URI.encode_www_form_component('のる(ex-ふりぃ)'.encode('EUC-JP')))
+    Person.create!(name: 'Kyoki', key: 'members-gap-person-2',
+                   old_key: URI.encode_www_form_component('叶唏'.encode('EUC-JP')))
+
+    result = markdown(<<~MARKDOWN)
+      {{div_begin class="members"}}
+      {{member Vocal,のる,のる(ex-ふりぃ)}}
+      {{member Guitar,Kyoki,叶唏}}
+      {{div_end}}
+    MARKDOWN
+
+    # 各メンバー行(ブロック要素)が<p>で囲まれたり、行間に<br>が挟まったりしていないこと
+    assert_no_match(/<p>\s*<(?:section|div)/, result)
+    assert_no_match(%r{</div>\s*<br>}, result)
+    assert_no_match(%r{</div>\s*</p>}, result)
+    assert_match(/のる/, result)
+    assert_match(/Kyoki/, result)
+  end
+
   test '{{div_begin class="members" subject="..."}}は見出しラベルを上書きできる' do
     result = markdown('{{div_begin class="members" subject="旧メンバー"}}本文{{div_end}}')
 
