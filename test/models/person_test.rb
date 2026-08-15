@@ -83,6 +83,35 @@ class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
     assert_equal 'Rem.', concurrent[2][:part_and_name]
   end
 
+  test 'parse_old_history parses Markdown形式のリンク[Label](URL)をexternal_urlとして扱う' do
+    # CustomPageDraftGeneratorが旧[[Label|target]]記法から変換した後の経歴テキストを想定
+    history_str = '→ [GLAMOROUS HONEY](/glamorous-honey){{fn 2006/05/10加入}}'
+    person = Person.new(old_history: history_str)
+    history = person.parse_old_history
+
+    assert_equal 1, history.size
+    item = history[0][0]
+    assert_equal 'GLAMOROUS HONEY', item[:unit_name]
+    assert_equal '/glamorous-honey', item[:external_url]
+    assert_equal ['2006/05/10加入'], item[:notes]
+  end
+
+  test 'parse_old_history はMarkdown形式のリンクに続く(Part)をpart_and_nameとして扱う' do
+    history_str = '[くりから。](/kurikara)(一期) → (隠密華撃団) → [くりから。](/kurikara)(二期)'
+    person = Person.new(old_history: history_str)
+    history = person.parse_old_history
+
+    assert_equal 3, history.size
+    assert_equal 'くりから。', history[0][0][:unit_name]
+    assert_equal '/kurikara', history[0][0][:external_url]
+    assert_equal '一期', history[0][0][:part_and_name]
+
+    assert_equal '(隠密華撃団)', history[1][0][:unit_name]
+
+    assert_equal 'くりから。', history[2][0][:unit_name]
+    assert_equal '二期', history[2][0][:part_and_name]
+  end
+
   test 'parse_old_history handles parens wrapping correctly' do
     person = Person.new(old_history: '(Solo) → (BandA)')
     history = person.parse_old_history

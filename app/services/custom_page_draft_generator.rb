@@ -6,12 +6,87 @@
 # 本番DBとローカルDBが分離しているため、このクラスはローカル環境でのみ使用し、
 # 生成した下書きは人手で本番の管理画面へ貼り付けて仕上げる運用を想定している。
 # （lib/tasks/custom_page_drafts.rake から呼び出す）
-class CustomPageDraftGenerator
+class CustomPageDraftGenerator # rubocop:disable Metrics/ClassLength
   Draft = Struct.new(:wikipage_id, :key, :title, :old_key, :body, :warnings, keyword_init: true)
 
-  # CustomPage の markdown ヘルパー（ApplicationHelper#expand_plugin_macros）が
-  # そのまま解釈できるプラグイン。変換せず残す。
-  SUPPORTED_PLUGINS = %w[include snapshot item].freeze
+  # 変換せずそのまま残すプラグイン。
+  # snapshot / item / div_begin / member / member2 は CustomPage の markdown ヘルパー
+  # （ApplicationHelper#expand_plugin_macros）がそのまま解釈できる
+  # （Issue#1105でdiv_begin/div_end対応、Issue#1107でmember対応、Issue#1123でmember2対応）。
+  # div は現時点では未対応だが、CustomPage側での対応を予定しているため、
+  # TODOコメント化せず元の記法のまま残す。
+  # include は旧FreeStyleWiki記法と引数の意味が異なる（IncludePluginConverter参照）ため対象外。
+  SUPPORTED_PLUGINS = %w[snapshot item div_begin div member member2].freeze
+
+  # 複数行プラグイン（現状member2のみ）。1行目に閉じの"}}"がない場合、次に現れる
+  # "}}"のみの行までを1つのブロックとして扱う（ApplicationHelper#expand_multiline_plugin_macros
+  # と同じ判定）。flag_unsupported_pluginsの単純な行内gsubは、ブロック内に{{fn ...}}のような
+  # 単行プラグインがネストしていると最初に現れた"}}"で閉じたと誤認し、記法を途中で
+  # 切断してしまう（Issue#1123）ため、先にこの記法をプレースホルダへ退避しておく。
+  MULTILINE_SUPPORTED_PLUGINS = %w[member2].freeze
+
+  # 旧FreeStyleWikiの {{include ページ名,セクション名}} は「他ページの内容をページ名で
+  # 丸ごと埋め込む」記法だが、新CustomPageの {{include}} マクロ
+  # （ApplicationHelper#expand_include_plugin）は
+  # {{include unit:ID,セクション名}} / {{include person:ID,セクション名}} で
+  # 実在する Section を差し込む用途に変わっており意味が異なる。
+  # プラグイン名が一致するだけで素通りさせると、変換先が見つからず警告なしに
+  # 本文が消えてしまう（Issue#1106）ため、実際に差し込み先の Section まで
+  # 解決できた場合のみ新形式に変換し、できなければ要手動対応の警告を積む。
+  class IncludePluginConverter
+    def initialize(warnings)
+      @warnings = warnings
+    end
+
+    def convert(match, args)
+      identifier, section_name = args.include?(',') ? args.split(',', 2) : [nil, args]
+      identifier = identifier&.strip
+      section_name = section_name&.strip
+
+      return unsupported(match, 'カンマなし(自己参照形式)は変換できません') if identifier.blank?
+
+      target = resolve_target(identifier)
+      return unsupported(match, "参照先 #{identifier.inspect} を解決できません") unless target
+
+      section = target.sections.kept.find_by(name: section_name)
+      return unsupported(match, "#{target.class.name}##{target.id} にセクション「#{section_name}」が見つかりません") unless section
+
+      "{{include #{identifier_for(target)},#{section_name}}}"
+    end
+
+    private
+
+    # ・unit:ID / person:ID: 新形式そのまま
+    # ・それ以外: 旧FreeStyleWikiのページ名指定とみなし、WikiPageImportの仕訳結果から辿る
+    def resolve_target(identifier)
+      if identifier.start_with?('unit:')
+        Unit.kept.find_by(id: identifier.delete_prefix('unit:'))
+      elsif identifier.start_with?('person:')
+        Person.kept.find_by(id: identifier.delete_prefix('person:'))
+      else
+        resolve_target_by_page_name(identifier)
+      end
+    end
+
+    def resolve_target_by_page_name(page_name)
+      wikipage = Wikipage.find_by(name: page_name)
+      wpi = wikipage && WikiPageImport.find_by(wikipage_id: wikipage.id, status: 'imported')
+
+      case wpi&.import_target_type
+      when 'Unit' then Unit.kept.find_by(id: wpi.import_target_id)
+      when 'Person' then Person.kept.find_by(id: wpi.import_target_id)
+      end
+    end
+
+    def identifier_for(target)
+      target.is_a?(Unit) ? "unit:#{target.id}" : "person:#{target.id}"
+    end
+
+    def unsupported(match, reason)
+      @warnings << "未対応プラグイン include を検出しました（#{reason}／要手動対応）"
+      "<!-- TODO: 要手動対応 元記法: #{match} -->"
+    end
+  end
 
   def self.generate(wikipage)
     new(wikipage).generate
@@ -20,10 +95,15 @@ class CustomPageDraftGenerator
   def initialize(wikipage)
     @wikipage = wikipage
     @warnings = []
+    @include_converter = IncludePluginConverter.new(@warnings)
   end
 
   def generate
     body = @wikipage.wiki.to_s.dup
+    # CRLF/CR改行が混じっていると複数行プラグインの終端検出等、\n・行末($)前提の
+    # 正規表現が軒並みマッチしなくなるため、以降の処理の前にLF改行へ統一する
+    # （ApplicationHelper#markdownと同様。Issue#1132）。
+    body = body.gsub(/\r\n?/, "\n")
     body = strip_hidden_blocks(body)
     body = strip_comment_lines(body)
     body = convert_headings(body)
@@ -56,7 +136,7 @@ class CustomPageDraftGenerator
     text.lines.reject { |line| line.strip.start_with?('//') }.join
   end
 
-  # PukiWiki記法では ! の数が多いほど上位の見出し（!!! が最大）。
+  # FreeStyleWiki記法では ! の数が多いほど上位の見出し（!!! が最大）。
   # !!! → #, !! → ##, ! → ### に変換する。
   # 直前が箇条書き等の場合、空行を挟まないとMarkdown上でリスト項目の続きとして
   # 解釈されてしまう（見出しとして認識されない）ため、見出しの前に必ず空行を入れる。
@@ -119,17 +199,48 @@ class CustomPageDraftGenerator
     text.gsub(/==(.+?)==/) { "~~#{Regexp.last_match(1)}~~" }
   end
 
-  # include / snapshot 以外のプラグイン記法はそのまま残すと崩れるため、
-  # コメントで目印を付けて後で人手対応してもらう
+  # include / snapshot / item 以外のプラグイン記法はそのまま残すと崩れるため、
+  # コメントで目印を付けて後で人手対応してもらう。include は個別に検証する
+  # （IncludePluginConverter参照）ため、ここでは判定対象から除く。
   def flag_unsupported_plugins(text)
-    text.gsub(/\{\{(\w[\w-]*)\s+.+?\}\}/m) do
+    blocks = []
+    text = protect_multiline_plugin_blocks(text, blocks)
+
+    text = text.gsub(/\{\{(\w[\w-]*)\s+(.+?)\}\}/m) do
       match = Regexp.last_match(0)
       plugin_name = Regexp.last_match(1)
+      args = Regexp.last_match(2)
+
+      next @include_converter.convert(match, args) if plugin_name == 'include'
       next match if SUPPORTED_PLUGINS.include?(plugin_name)
 
       @warnings << "未対応プラグイン #{plugin_name} を検出しました（要手動対応）"
       "<!-- TODO: 要手動対応 元記法: #{match} -->"
     end
+
+    restore_multiline_plugin_blocks(text, blocks)
+  end
+
+  # {{member2 ...}}のような複数行プラグイン記法を丸ごとプレースホルダに退避する。
+  # 終端は単独で"}}"だけの行（ブロック内に{{fn ...}}等がネストしていても、
+  # それ単体を終端と誤認しない）。
+  # 1行目パラメータの取り込みは"}}"の直前で止める（(?!\}\})）。ApplicationHelper#expand_multiline_plugin_macros
+  # と同じ理由（Issue#1133）で、単独行で閉じた{{member2 ...}}を後方の無関係な
+  # member2ブロックの終端まで誤って巻き込まないようにするための対策。
+  def protect_multiline_plugin_blocks(text, blocks)
+    names = Regexp.union(MULTILINE_SUPPORTED_PLUGINS)
+    text.gsub(/\{\{(?:#{names})(?:[ \t]+(?:(?!\}\})[^\n])*)?\n.*?\n[ \t]*\}\}[ \t]*$/m) do |block|
+      token = "⟦MULTILINE_PLUGIN_#{blocks.length}⟧"
+      blocks << block
+      token
+    end
+  end
+
+  def restore_multiline_plugin_blocks(text, blocks)
+    blocks.each_with_index do |block, index|
+      text = text.sub("⟦MULTILINE_PLUGIN_#{index}⟧") { block }
+    end
+    text
   end
 
   # convert_headings で挿入した空行により3行以上の連続改行ができた場合、空行1つに正規化する
