@@ -220,9 +220,12 @@ class CustomPageDraftGenerator # rubocop:disable Metrics/ClassLength
   # {{member2 ...}}のような複数行プラグイン記法を丸ごとプレースホルダに退避する。
   # 終端は単独で"}}"だけの行（ブロック内に{{fn ...}}等がネストしていても、
   # それ単体を終端と誤認しない）。
+  # 1行目パラメータの取り込みは"}}"の直前で止める（(?!\}\})）。ApplicationHelper#expand_multiline_plugin_macros
+  # と同じ理由（Issue#1133）で、単独行で閉じた{{member2 ...}}を後方の無関係な
+  # member2ブロックの終端まで誤って巻き込まないようにするための対策。
   def protect_multiline_plugin_blocks(text, blocks)
     names = Regexp.union(MULTILINE_SUPPORTED_PLUGINS)
-    text.gsub(/\{\{(?:#{names})(?:[ \t]+[^\n]*)?\n.*?\n[ \t]*\}\}[ \t]*$/m) do |block|
+    text.gsub(/\{\{(?:#{names})(?:[ \t]+(?:(?!\}\})[^\n])*)?\n.*?\n[ \t]*\}\}[ \t]*$/m) do |block|
       token = "⟦MULTILINE_PLUGIN_#{blocks.length}⟧"
       blocks << block
       token

@@ -534,6 +534,24 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(/隠密華撃団/, result)
   end
 
+  test '{{member2}}はold_key・リンクを省略した複数行ブロックの手前に単独行の{{member2}}があっても巻き込まない(Issue#1133)' do
+    Person.create!(name: 'K.', key: 'member2-regression-guitar',
+                   old_key: URI.encode_www_form_component('K.'.encode('EUC-JP')))
+
+    result = markdown(<<~MARKDOWN)
+      {{member2 Guitar,K.,K.}}
+
+      {{member2 Bass,森川泰敬
+      → [GLAMOROUS HONEY](/glamorous-honey){{fn 2006/05/10加入}}
+      }}
+    MARKDOWN
+
+    assert_match(%r{href="/member2-regression-guitar"}, result)
+    assert_match(/森川泰敬/, result)
+    assert_match(/GLAMOROUS HONEY/, result)
+    assert_no_match(/\}\}/, result)
+  end
+
   # 以下、issue #1115（プラグインのcache対応）関連のテスト。
   # test環境のデフォルトcache_storeは:null_store（常にブロックを実行し何もキャッシュしない）
   # のため、キャッシュの有無を検証するテストのみ一時的にMemoryStoreへ差し替える。

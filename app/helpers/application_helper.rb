@@ -180,10 +180,16 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # {{プラグイン名 1行目のパラメータ\n複数行のdata\n}}
   # 1行目末尾に"}}"がない（=閉じていない）場合のみ複数行プラグインとして扱う。
   # 終端は単独で"}}"だけの行。
+  # 1行目パラメータの取り込みは"}}"の直前で止める（(?!\}\})）。素朴に[^\n]*のままだと、
+  # 単独行で閉じている{{member2 ...}}（1行目末尾に"}}"がある）についても「まだ閉じていない
+  # 複数行ブロック」と誤認し、その"}}"ごと1行目パラメータとして飲み込んだ上で、後方の
+  # 無関係な{{member2}}ブロックの終端"}}"行までを丸ごとdataとして誤結合してしまう
+  # （Issue#1133: リンク・old_keyを省略した複数行のmember2が、手前の単独行member2を
+  # 巻き込んで表示が崩れるバグ）。
   def expand_multiline_plugin_macros(text, sectionable, placeholders)
     names = Regexp.union(MULTILINE_PLUGIN_HANDLERS.keys)
 
-    text.gsub(/\{\{(#{names})(?:[ \t]+([^\n]*))?\n(.*?)\n[ \t]*\}\}[ \t]*$/m) do
+    text.gsub(/\{\{(#{names})(?:[ \t]+((?:(?!\}\})[^\n])*))?\n(.*?)\n[ \t]*\}\}[ \t]*$/m) do
       plugin_name = Regexp.last_match(1)
       args = Regexp.last_match(2)&.strip
       data = Regexp.last_match(3)
