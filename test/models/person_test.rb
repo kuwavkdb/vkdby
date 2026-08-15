@@ -112,6 +112,32 @@ class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
     assert_equal '二期', history[2][0][:part_and_name]
   end
 
+  test 'parse_old_history parses旧wiki形式の外部リンク[LinkText|URL]をexternal_urlとして扱う' do
+    history_str = '[Yahoo|http://www.yahoo.co.jp]'
+    person = Person.new(old_history: history_str)
+    history = person.parse_old_history
+
+    assert_equal 1, history.size
+    item = history[0][0]
+    assert_equal 'Yahoo', item[:unit_name]
+    assert_equal 'http://www.yahoo.co.jp', item[:external_url]
+    assert_nil item[:part_and_name]
+  end
+
+  test 'parse_old_history は外部リンク[LinkText|URL]に続く(Part)をURLと混同しない' do
+    # 修正前は Markdown形式パターンが先にマッチし、"三角形の時間|https://3kkj.jp/" が
+    # unit_name に、"Vo.&Dr.Flan" が external_url に誤って入ってしまう不具合があった
+    history_str = '[三角形の時間|https://3kkj.jp/](Vo.&Dr.Flan)'
+    person = Person.new(old_history: history_str)
+    history = person.parse_old_history
+
+    assert_equal 1, history.size
+    item = history[0][0]
+    assert_equal '三角形の時間', item[:unit_name]
+    assert_equal 'https://3kkj.jp/', item[:external_url]
+    assert_equal 'Vo.&Dr.Flan', item[:part_and_name]
+  end
+
   test 'parse_old_history handles parens wrapping correctly' do
     person = Person.new(old_history: '(Solo) → (BandA)')
     history = person.parse_old_history

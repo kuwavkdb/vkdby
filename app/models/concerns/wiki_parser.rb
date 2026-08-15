@@ -74,7 +74,8 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
           }
         # Pattern 1b: [Label](target) or [Label](target)(Part) - Markdown形式のリンク
         # （CustomPageDraftGeneratorが旧[[Label|target]]記法から変換した経歴テキストなどで使用される）
-        when /\[([^\]]+)\]\(([^)]+)\)(?:\(([^)]+)\))?/
+        # Label に | を含む場合はPattern 2（旧wikiのパイプ外部リンク）を優先させるため除外する
+        when /\[([^\]|]+)\]\(([^)]+)\)(?:\(([^)]+)\))?/
           link_text = ::Regexp.last_match(1)
           target = ::Regexp.last_match(2)
           part_and_name = ::Regexp.last_match(3)
