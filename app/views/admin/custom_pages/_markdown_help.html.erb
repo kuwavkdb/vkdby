@@ -43,6 +43,15 @@
 
       <div>
         <dt class="font-mono text-xs bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded px-2 py-1 inline-block">
+          {{youtube 動画ID}}
+        </dt>
+        <dd class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          指定したYouTube動画（英数字・"-"・"_"の11文字の動画ID）を埋め込みプレーヤーとして表示します（例: <code>{{youtube C-PqwPsrDd0}}</code>）。動画IDはYouTubeの動画URLの<code>v=</code>以降の部分です。
+        </dd>
+      </div>
+
+      <div>
+        <dt class="font-mono text-xs bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded px-2 py-1 inline-block">
           {{div_begin class="値" subject="見出し"}} … {{div_end}}
         </dt>
         <dd class="mt-1 text-xs text-gray-600 dark:text-gray-400 space-y-1">
