@@ -2,27 +2,26 @@
   <% @snapshots.each do |snapshot| %>
     <section data-controller="toggle" data-toggle-open-value="<%= snapshot.current? && @summary_preview %>">
       <div class="flex items-center justify-between mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
-        <div class="flex items-center gap-2">
-          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            <%= snapshot.past? ? 'Related' : 'Members' %>
-          </h2>
-          <% if @show_label && snapshot.label.present? %>
-            <span class="text-xs font-black px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"><%= snapshot.label %></span>
-          <% end %>
-          <% if snapshot.current? %>
-            <span class="text-xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400">Current</span>
-          <% end %>
-        </div>
-        <div class="flex items-center gap-2">
-          <% if @admin && @unit %>
-            <%= link_to "Edit", edit_admin_unit_unit_snapshot_path(@unit, snapshot), class: "text-xs font-medium text-slate-400 hover:text-indigo-500 transition-colors" %>
-          <% end %>
-          <button type="button" data-action="click->toggle#toggle" class="inline-flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" title="Toggle history">
-            <svg class="w-4 h-4 transition-transform duration-200" data-toggle-target="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </button>
-        </div>
+        <button type="button" data-action="click->toggle#toggle"
+                class="flex items-center justify-between gap-2 flex-1 min-w-0 -mx-1 px-1 py-0.5 rounded text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400">
+          <span class="flex items-center gap-2 min-w-0">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <%= snapshot.past? ? 'Related' : 'Members' %>
+            </h2>
+            <% if @show_label && snapshot.label.present? %>
+              <span class="text-xs font-black px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"><%= snapshot.label %></span>
+            <% end %>
+            <% if snapshot.current? %>
+              <span class="text-xs font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400">Current</span>
+            <% end %>
+          </span>
+          <svg class="w-4 h-4 shrink-0 text-slate-400 transition-transform duration-200" data-toggle-target="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <% if @admin && @unit %>
+          <%= link_to "Edit", edit_admin_unit_unit_snapshot_path(@unit, snapshot), class: "text-xs font-medium text-slate-400 hover:text-indigo-500 transition-colors ml-2 shrink-0", onclick: "event.stopPropagation()" %>
+        <% end %>
       </div>
       <% if snapshot.current? || !@summary_preview %>
         <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm" data-toggle-target="area" data-action="click->toggle#expand">

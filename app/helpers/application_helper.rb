@@ -422,23 +422,19 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # 同一のマークアップ・クラスを用いることで、同じStimulus toggleコントローラ・
   # 同じ見た目で開閉できるようにしている。data-toggle-target="area"のみを持たせ、
   # メンバー一覧自体は開閉に関わらず常に表示する（{{snapshot}}プラグイン・
-  # summary_preview: falseの場合と同じ挙動）。
+  # summary_preview: falseの場合と同じ挙動）。開閉のクリック領域は見出し全体
+  # （ラベル＋シェブロン）とする。
   def render_div_begin_members_html(subject_value)
     label = CGI.escapeHTML(subject_value.presence || DIV_BEGIN_MEMBERS_DEFAULT_LABEL)
     <<~HTML.chomp
       <section data-controller="toggle" data-toggle-open-value="false">
         <div class="flex items-center justify-between mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
-          <div class="flex items-center gap-2">
+          <button type="button" data-action="click->toggle#toggle" class="flex items-center justify-between gap-2 flex-1 min-w-0 -mx-1 px-1 py-0.5 rounded text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400">
             <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">#{label}</h2>
-          </div>
-          <div class="flex items-center gap-2">
-            <button type="button" data-action="click->toggle#toggle" class="inline-flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" title="Toggle history">
-              <svg class="w-4 h-4 transition-transform duration-200" data-toggle-target="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-              </svg>
-              <span class="sr-only">#{label}の開閉</span>
-            </button>
-          </div>
+            <svg class="w-4 h-4 shrink-0 text-slate-400 transition-transform duration-200" data-toggle-target="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
         </div>
         <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm" data-toggle-target="area" data-action="click->toggle#expand">
     HTML
