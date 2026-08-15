@@ -239,6 +239,27 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(/前後/, result)
   end
 
+  test '{{youtube 動画ID}}でYouTube動画が埋め込まれる' do
+    result = markdown('{{youtube C-PqwPsrDd0}}')
+
+    assert_match(%r{https://www\.youtube\.com/embed/C-PqwPsrDd0}, result)
+    assert_match(/<iframe/, result)
+  end
+
+  test '{{youtube 動画ID}}で複数行タグが崩れずに埋め込まれる' do
+    result = markdown("前\n\n{{youtube C-PqwPsrDd0}}\n\n後")
+
+    assert_no_match(/<p>[^<]*<iframe/, result)
+    assert_match(/<iframe/, result)
+  end
+
+  test '{{youtube 動画ID}}で動画IDの形式が不正な場合は空文字になる' do
+    result = markdown('前{{youtube ../../etc}}後')
+
+    assert_match(/前後/, result)
+    assert_no_match(/<iframe/, result)
+  end
+
   test '{{div_begin class="..."}}と{{div_end}}でdivタグが出力される' do
     result = markdown(<<~MARKDOWN)
       {{div_begin class="closable"}}

@@ -133,7 +133,8 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     'div_begin' => :expand_div_begin_plugin,
     'div_end' => :expand_div_end_plugin,
     'member' => :expand_member_plugin,
-    'member2' => :expand_member2_plugin
+    'member2' => :expand_member2_plugin,
+    'youtube' => :expand_youtube_plugin
   }.freeze
 
   # パラメータ（{{プラグイン名 ...}} の "..." 部分）を省略した記法
@@ -314,6 +315,22 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     html = plugin_cache_fetch('item', item.cache_key_with_version) do
       render(ItemCardComponent.new(item_card: item)).to_s
     end
+    register_plugin_placeholder(placeholders, html)
+  end
+
+  # {{youtube 動画ID}}
+  # YouTube動画IDを指定して埋め込みプレーヤーを表示する（例: {{youtube C-PqwPsrDd0}}）。
+  # 動画IDはYouTube仕様上、英数字・"-"・"_"の11文字固定。それ以外の入力（URL丸ごと等）は
+  # iframeのsrc属性に渡す値として想定外のため、埋め込まず何も出力しない。
+  def expand_youtube_plugin(args, _sectionable, placeholders, _open_tags)
+    video_id = args.strip
+    return '' unless video_id.match?(/\A[\w-]{11}\z/)
+
+    html = <<~HTML.chomp
+      <div class="relative pb-[56.25%] h-0 overflow-hidden rounded-xl my-4">
+        <iframe src="https://www.youtube.com/embed/#{video_id}" title="YouTube動画" loading="lazy" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen class="absolute top-0 left-0 w-full h-full border-0"></iframe>
+      </div>
+    HTML
     register_plugin_placeholder(placeholders, html)
   end
 
