@@ -141,7 +141,8 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # v3: UnitSnapshotsComponentの見出しクリック領域を拡大（issue #1130）
   # v4: UnitSnapshotsComponentの見出しを<h2>からrole="heading"のdivに変更
   #     （.markdown-content内での意図しない下線対策、issue #1130）
-  PLUGIN_CACHE_VERSION = 'v4'
+  # v5: MemberRowComponentの行paddingを縮小（閉状態の余白対策、issue #1130）
+  PLUGIN_CACHE_VERSION = 'v5'
   PLUGIN_CACHE_TTL = 7.days
 
   # 複数行にわたるプラグイン記法（例: {{member2 ...}}）のディスパッチ先。
