@@ -410,6 +410,20 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(/前後/, result)
   end
 
+  test '{{member}}はold_keyが"-"（未指定）の場合、Personへのリンクなしで表示名・リンクのみ表示する(Issue#1132)' do
+    result = markdown('{{member Vocal,相馬 ジュン平,-,http://smjp.jugem.jp/}}')
+
+    assert_match(/相馬 ジュン平/, result)
+    assert_match(%r{href="http://smjp.jugem.jp/"}, result)
+    assert_no_match(%r{<a[^>]*>相馬 ジュン平</a>}, result)
+  end
+
+  test '{{member}}はold_key自体を省略した場合も同様にPersonへのリンクなしで表示される(Issue#1132)' do
+    result = markdown('{{member Vocal,相馬 ジュン平}}')
+
+    assert_match(/相馬 ジュン平/, result)
+  end
+
   test '{{member}}はステータスバッジを表示しない' do
     Person.create!(name: 'のる', key: 'member-plugin-person3',
                    old_key: URI.encode_www_form_component('のる3'.encode('EUC-JP')))

@@ -305,20 +305,26 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     register_plugin_placeholder(placeholders, html)
   end
 
-  # {{member パート,表示名,old_key,リンク}}（old_keyは未エンコード。リンクは省略可）
+  # {{member パート,表示名,old_key,リンク}}（old_keyは未エンコード・省略可。old_keyは"-"でも未指定扱い）
   # リンクはURL（http(s)://…）またはXアカウント（@xxxx）を指定する
   # （MemberRowComponentが@始まりをXアカウントとして自動判定しX(Twitter)へのリンクを表示する）。
   # 例: {{member Vocal,のる,のる(ex-ふりぃ),@noru_xxx}}
   # old_keyをEUC-JPエンコードしてPeopleを検索し、Unitページのメンバー行
   # （MemberRowComponent）と同じ経歴カードを出力する。
+  # old_keyが未指定（省略・"-"）の場合はPersonを検索せず、プロフィールへのリンクなしで
+  # 表示名・リンク（指定があれば）のみのメンバー行を出力する（member2のold_key省略時と同じ扱い）。
+  # old_keyが指定されているのに一致するPersonが見つからない場合は、従来通り何も出力しない
+  # （インポート時の記法ミス等を無言で不完全表示しないため）。
   def expand_member_plugin(args, _sectionable, placeholders, _open_tags)
     part, display_name, raw_old_key, link = args.split(',', 4).map { |v| v&.strip }
-    return '' if part.blank? || display_name.blank? || raw_old_key.blank?
+    return '' if part.blank? || display_name.blank?
 
-    person = Person.kept.find_by(old_key: encode_member_old_key(raw_old_key))
-    return '' unless person
+    no_old_key = raw_old_key.blank? || raw_old_key == '-'
+    person = Person.kept.find_by(old_key: encode_member_old_key(raw_old_key)) unless no_old_key
+    return '' if !no_old_key && !person
 
-    html = plugin_cache_fetch('member', person.cache_key_with_version, Digest::MD5.hexdigest(args)) do
+    person_key = person&.cache_key_with_version || 'noperson'
+    html = plugin_cache_fetch('member', person_key, Digest::MD5.hexdigest(args)) do
       member = MemberPluginRow.new(part: part, name: display_name, person: person, sns: link.presence && [link])
       render(MemberRowComponent.new(member: member, hide_status: true)).to_s
     end
