@@ -57,6 +57,12 @@ class CustomPage < ApplicationRecord
     SYSTEM_KEYS.include?(key)
   end
 
+  def vkdb_url
+    return nil if old_key.blank?
+
+    "#{Rails.application.config.old_key_url_base}/#{old_key}.html"
+  end
+
   def expire_cache
     # 現時点ではページ固有のキャッシュはないが、将来的な拡張に備えたフック
     # サイドバーキャッシュも念のため削除
