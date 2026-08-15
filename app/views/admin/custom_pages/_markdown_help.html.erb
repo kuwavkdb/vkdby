@@ -60,7 +60,23 @@
             <li><code>{{div_begin}}</code> … 属性なしの<code>&lt;div&gt;</code></li>
             <li><code>{{div_begin class="値"}}</code> … <code>class</code>付きの<code>&lt;div&gt;</code></li>
             <li><code>{{div_begin class="closable" subject="見出し"}}</code> … 折りたたみ表示（初期状態は閉じている）</li>
+            <li><code>{{div_begin class="columns"}}</code> … 囲んだ範囲を左右に並べて表示（下記参照）</li>
           </ul>
+        </dd>
+      </div>
+
+      <div>
+        <dt class="font-mono text-xs bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded px-2 py-1 inline-block">
+          {{div_begin class="columns"}} … {{div_end}}
+        </dt>
+        <dd class="mt-1 text-xs text-gray-600 dark:text-gray-400 space-y-1">
+          <p>画像や<code>{{youtube}}</code>埋め込みなどを左右2カラムに並べて表示します（スマホ幅では縦積みになります）。</p>
+          <p>囲んだ範囲の直下にある要素（画像1枚・<code>{{youtube}}</code>1つなど）がそれぞれ1つのカラムになります。1つのカラムに複数の要素をまとめたい場合は、内側をさらに<code>{{div_begin}}</code>（属性なし）で1つの<code>&lt;div&gt;</code>にまとめてください。</p>
+          <pre class="mt-1 font-mono text-xs bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded px-2 py-1 overflow-x-auto">{{div_begin class="columns"}}
+![説明](画像URL)
+
+{{youtube C-PqwPsrDd0}}
+{{div_end}}</pre>
         </dd>
       </div>
 

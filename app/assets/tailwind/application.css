@@ -60,6 +60,27 @@
       border-radius: 0.25em;
     }
     details.closable[open] summary { margin-bottom: 0.25em; }
+
+    /* {{div_begin class="columns"}} プラグイン（画像・{{youtube}}埋め込み等の左右配置）。
+       モバイル幅では縦積み、md幅以上で2カラムに並べる（issue #1146）。
+       直下の各要素（<p><img></p>や{{youtube}}のプレースホルダー等）がそのままグリッドの
+       各カラムになるため、1カラムに複数要素をまとめたい場合は{{div_begin}}（無属性）で
+       さらに内側を1つの<div>にまとめる。 */
+    .columns {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      align-items: center;
+      margin: 1em 0;
+    }
+    .columns > *:first-child { margin-top: 0; }
+    .columns > *:last-child { margin-bottom: 0; }
+  }
+
+  @media (min-width: 768px) {
+    .markdown-content .columns {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 
   @variant dark {
