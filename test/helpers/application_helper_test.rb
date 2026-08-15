@@ -5,6 +5,7 @@ require 'test_helper'
 class ApplicationHelperTest < ActionView::TestCase
   include ApplicationHelper
   include ActiveSupport::Testing::TimeHelpers
+  include ViewComponent::TestHelpers
 
   test '{{include key,section}}で指定したCustomPageのセクション本文が展開される' do
     page = CustomPage.create!(key: 'target-page', title: 'Target', active: true)
@@ -72,6 +73,26 @@ class ApplicationHelperTest < ActionView::TestCase
     result = markdown("{{snapshot #{unit.key},#{snapshot.id}}}")
 
     assert_match(/テストメンバー/, result)
+  end
+
+  test '{{snapshot}}はcurrent: trueのスナップショットでも、ユニットページ本体と違い初期状態は折りたたまれている' do
+    unit = Unit.create!(key: 'snapshot-plugin-unit-current-fold', name: 'テストユニット', status: 'active')
+    snapshot = unit.unit_snapshots.create!(snapshot_date: '2020-01-01', current: true, active: true)
+    snapshot.snapshot_people.create!(person_name: 'テストメンバー', part: :vocal, status: :active)
+
+    result = markdown("{{snapshot #{unit.key},#{snapshot.id}}}")
+
+    assert_match(/data-toggle-open-value="false"/, result)
+  end
+
+  test 'ユニットページ本体(summary_preview: true)では従来どおりcurrent: trueのスナップショットが初期展開される' do
+    unit = Unit.create!(key: 'unit-page-current-open', name: 'テストユニット', status: 'active')
+    snapshot = unit.unit_snapshots.create!(snapshot_date: '2020-01-01', current: true, active: true)
+    snapshot.snapshot_people.create!(person_name: 'テストメンバー', part: :vocal, status: :active)
+
+    result = render_inline(UnitSnapshotsComponent.new(snapshots: [snapshot], unit: unit)).to_html
+
+    assert_match(/data-toggle-open-value="true"/, result)
   end
 
   test '{{snapshot key,id}}で埋め込んだ場合はバンドページと違いラベルが表示されない' do
