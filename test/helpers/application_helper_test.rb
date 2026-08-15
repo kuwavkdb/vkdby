@@ -482,10 +482,11 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_no_match(/DB上の名前/, result)
   end
 
-  test '{{member}}で一致するPersonが見つからない場合は空文字になる' do
-    result = markdown('前{{member Vocal,のる,存在しないキー}}後')
+  test '{{member}}で一致するPersonが見つからない場合、old_key未指定と同様プロフィールリンクなしで表示される(Issue#1152)' do
+    result = markdown('{{member Vocal,のる,存在しないキー}}')
 
-    assert_match(/前後/, result)
+    assert_match(/のる/, result)
+    assert_no_match(%r{<a[^>]*>のる</a>}, result)
   end
 
   test '{{member}}はold_keyが"-"（未指定）の場合、Personへのリンクなしで表示名・リンクのみ表示する(Issue#1132)' do
