@@ -138,7 +138,8 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # 変わらない限りキャッシュキーが変化せず古いHTMLが返り続けるため、このバージョンを
   # 上げてキャッシュを一括無効化すること。
   # v2: {{snapshot}}の初期表示をsummary_preview: false化（issue #1130、1行プレビュー廃止）
-  PLUGIN_CACHE_VERSION = 'v2'
+  # v3: UnitSnapshotsComponentの見出しクリック領域を拡大（issue #1130）
+  PLUGIN_CACHE_VERSION = 'v3'
   PLUGIN_CACHE_TTL = 7.days
 
   # 複数行にわたるプラグイン記法（例: {{member2 ...}}）のディスパッチ先。
