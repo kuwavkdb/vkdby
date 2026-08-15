@@ -24,8 +24,10 @@
           </button>
         </div>
       </div>
-      <% if snapshot.current? %>
-        <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm" data-toggle-target="area" data-action="click->toggle#expand">
+      <% if snapshot.current? || !@summary_preview %>
+        <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm"
+             data-toggle-target="<%= snapshot.current? ? 'area' : 'content area' %>"
+             data-action="click->toggle#expand">
           <%= render MemberRowComponent.with_collection(snapshot.snapshot_people.sort_by(&:sort_order), hide_active: true, hide_status: snapshot.past?) %>
         </div>
       <% else %>

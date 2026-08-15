@@ -255,7 +255,8 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     return '' unless snapshot
 
     html = plugin_cache_fetch('snapshot', unit.cache_key_with_version, snapshot.cache_key_with_version) do
-      render(UnitSnapshotsComponent.new(snapshots: [snapshot], unit: unit, admin: false, show_label: false)).to_s
+      render(UnitSnapshotsComponent.new(snapshots: [snapshot], unit: unit, admin: false, show_label: false,
+                                        summary_preview: false)).to_s
     end
     register_plugin_placeholder(placeholders, html)
   end
@@ -362,11 +363,9 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # それ以外の記述（例: {{div_begin onclick="..."}}）は無視する。
   DIV_BEGIN_ALLOWED_ATTRS = %w[class subject].freeze
 
-  # ユニットページのMembersセクション（UnitSnapshotsComponentの「現メンバー」表示、
-  # {{snapshot}}プラグインと共通の見た目）と同じ、角丸カード＋シェブロン開閉トグルの
-  # 外枠を出力するためのラベル。トグルの開閉自体はStimulusのtoggleコントローラが行い、
-  # 対応するのはこの外枠内にある{{member}}/{{member2}}の経歴表示
-  # （MemberRowComponentが出力するdata-toggle-target="content"）。
+  # ユニットページのMembersセクション（UnitSnapshotsComponent）・{{snapshot}}プラグイン
+  # （summary_preview: false指定時）と同じ、角丸カード＋シェブロン開閉トグルの
+  # 外枠を出力するためのデフォルト見出しラベル。
   DIV_BEGIN_MEMBERS_DEFAULT_LABEL = 'Members'
 
   # {{div_begin class="value"}}                     → <div class="value">
@@ -376,9 +375,11 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   #   ラベルのクリックで開閉する（class="closable" と subject の両方が揃った場合のみ）。
   #   開閉マーカーは<summary>のブラウザ標準表示に任せる。
   # {{div_begin class="members"}}                    → ユニットページのMembersセクションと
-  #   同じ見た目（角丸カード＋シェブロン開閉トグル）で{{member}}/{{member2}}の並びを囲む
-  #   （初期状態は閉じている＝経歴非表示）。subjectを指定すると見出しラベルを変更できる
-  #   （省略時は"Members"）。
+  #   同じ見た目（角丸カード＋シェブロン開閉トグル）で{{member}}/{{member2}}の並びを囲む。
+  #   初期状態は閉じており、カード全体（メンバー一覧すべて）が非表示になる
+  #   （{{snapshot}}プラグインのsummary_preview: falseと同じ「カード全体を折りたたむ」方式。
+  #   ユニットページ本体のMembersセクションのようなメンバー名1行プレビューは出さない）。
+  #   subjectを指定すると見出しラベルを変更できる（省略時は"Members"）。
   def expand_div_begin_plugin(args, _sectionable, placeholders, open_tags)
     attrs = parse_allowed_attrs(args, DIV_BEGIN_ALLOWED_ATTRS)
     class_value = attrs['class']
@@ -398,9 +399,11 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   end
 
   # {{div_begin class="members"}}が出力する外枠のHTML。
-  # ユニットページのMembersセクション（UnitSnapshotsComponentの「現メンバー」表示）と
-  # 同一のマークアップ・クラスを用いることで、同じStimulus toggleコントローラ・
-  # 同じ見た目で開閉できるようにしている。
+  # UnitSnapshotsComponentの角丸カード＋シェブロン開閉トグルと同一のマークアップ・
+  # クラスを用いることで、同じStimulus toggleコントローラ・同じ見た目で開閉できる
+  # ようにしている。data-toggle-target="content area"により、開閉トグルはカード全体
+  # （中の{{member}}/{{member2}}すべて）を対象にする
+  # （{{snapshot}}プラグイン＝summary_preview: falseの場合と同じ挙動）。
   def render_div_begin_members_html(subject_value)
     label = CGI.escapeHTML(subject_value.presence || DIV_BEGIN_MEMBERS_DEFAULT_LABEL)
     <<~HTML.chomp
@@ -418,7 +421,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
             </button>
           </div>
         </div>
-        <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm" data-toggle-target="area" data-action="click->toggle#expand">
+        <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm" data-toggle-target="content area" data-action="click->toggle#expand">
     HTML
   end
 

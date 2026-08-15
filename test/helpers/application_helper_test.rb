@@ -127,10 +127,26 @@ class ApplicationHelperTest < ActionView::TestCase
     result = markdown("前\n\n{{snapshot #{unit.key},#{snapshot.id}}}\n\n後")
 
     # UnitSnapshotsComponentの複数行タグの属性がRedcarpetに解析されテキストとして
-    # 露出していないこと（<p>の中にhx-get等の属性テキストが漏れていないこと）を確認する
-    assert_no_match(/<p>[^<]*(?:data-toggle-target|hx-get|hx-trigger)/, result)
-    assert_match(%r{hx-get="[^"]*snapshots/#{snapshot.id}/members"}, result)
+    # 露出していないこと（<p>の中にdata-toggle-target等の属性テキストが漏れていないこと）を確認する
+    assert_no_match(/<p>[^<]*data-toggle-target/, result)
     assert_match(/テストメンバー4/, result)
+  end
+
+  test '{{snapshot}}で埋め込んだ過去スナップショットはユニットページ本体と異なり、1行プレビュー(summary)ではなくカード全体折りたたみになる' do
+    unit = Unit.create!(key: 'snapshot-plugin-unit5', name: 'テストユニット5', status: 'active')
+    snapshot = unit.unit_snapshots.create!(snapshot_date: '2020-01-01', current: false, active: true)
+    snapshot.snapshot_people.create!(person_name: 'テストメンバー5', part: :vocal, status: :active)
+
+    result = markdown("{{snapshot #{unit.key},#{snapshot.id}}}")
+
+    # 1行プレビュー(summary)・hx-get遅延取得は使われない
+    assert_no_match(/data-toggle-target="summary/, result)
+    assert_no_match(/hx-get/, result)
+    # {{div_begin class="members"}}と同じ「カード全体折りたたみ」のマークアップ
+    assert_match(/data-toggle-target="content area"/, result)
+    assert_match(/data-toggle-open-value="false"/, result)
+    # 遅延取得ではなくその場でメンバー行が描画される
+    assert_match(/テストメンバー5/, result)
   end
 
   test '{{item ASIN}}でItemカードが埋め込まれる' do
@@ -258,11 +274,17 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(/<section data-controller="toggle" data-toggle-open-value="false">/, result)
     assert_match(%r{<h2[^>]*>Members</h2>}, result)
     assert_match(/data-action="click->toggle#toggle"/, result)
-    assert_match(/class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm" data-toggle-target="area"/,
-                 result)
+    assert_match(/rounded-2xl overflow-hidden shadow-sm" data-toggle-target="content area"/, result)
     assert_match(%r{</section>}, result)
     assert_match(/森川泰敬/, result)
     assert_match(/GLAMOROUS HONEY/, result)
+  end
+
+  test '{{div_begin class="members"}}は初期状態でカード全体が折りたたまれ(閉じた状態)、メンバー名の1行プレビューは出さない' do
+    result = markdown('{{div_begin class="members"}}本文{{div_end}}')
+
+    assert_match(/data-toggle-open-value="false"/, result)
+    assert_no_match(/data-toggle-target="summary/, result)
   end
 
   test '{{div_begin class="members" subject="..."}}は見出しラベルを上書きできる' do
