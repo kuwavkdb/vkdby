@@ -362,12 +362,23 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # それ以外の記述（例: {{div_begin onclick="..."}}）は無視する。
   DIV_BEGIN_ALLOWED_ATTRS = %w[class subject].freeze
 
+  # ユニットページのMembersセクション（UnitSnapshotsComponentの「現メンバー」表示、
+  # {{snapshot}}プラグインと共通の見た目）と同じ、角丸カード＋シェブロン開閉トグルの
+  # 外枠を出力するためのラベル。トグルの開閉自体はStimulusのtoggleコントローラが行い、
+  # 対応するのはこの外枠内にある{{member}}/{{member2}}の経歴表示
+  # （MemberRowComponentが出力するdata-toggle-target="content"）。
+  DIV_BEGIN_MEMBERS_DEFAULT_LABEL = 'Members'
+
   # {{div_begin class="value"}}                     → <div class="value">
   # {{div_begin}}                                    → <div>
   # {{div_begin class="closable" subject="見出し"}} → 折りたたみ表示（初期状態は閉じている）。
   #   <details class="closable"><summary>見出し</summary> を出力し、
   #   ラベルのクリックで開閉する（class="closable" と subject の両方が揃った場合のみ）。
   #   開閉マーカーは<summary>のブラウザ標準表示に任せる。
+  # {{div_begin class="members"}}                    → ユニットページのMembersセクションと
+  #   同じ見た目（角丸カード＋シェブロン開閉トグル）で{{member}}/{{member2}}の並びを囲む
+  #   （初期状態は閉じている＝経歴非表示）。subjectを指定すると見出しラベルを変更できる
+  #   （省略時は"Members"）。
   def expand_div_begin_plugin(args, _sectionable, placeholders, open_tags)
     attrs = parse_allowed_attrs(args, DIV_BEGIN_ALLOWED_ATTRS)
     class_value = attrs['class']
@@ -376,6 +387,9 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     html = if class_value == 'closable' && subject_value.present?
              open_tags.push(:details)
              "<details class=\"closable\"><summary>#{CGI.escapeHTML(subject_value)}</summary>"
+           elsif class_value == 'members'
+             open_tags.push(:members)
+             render_div_begin_members_html(subject_value)
            else
              open_tags.push(:div)
              class_value.present? ? %(<div class="#{CGI.escapeHTML(class_value)}">) : '<div>'
@@ -383,9 +397,38 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     register_plugin_placeholder(placeholders, html)
   end
 
-  # {{div_end}} → 対応する{{div_begin}}の種類に応じて </div> または </details> を出力する
+  # {{div_begin class="members"}}が出力する外枠のHTML。
+  # ユニットページのMembersセクション（UnitSnapshotsComponentの「現メンバー」表示）と
+  # 同一のマークアップ・クラスを用いることで、同じStimulus toggleコントローラ・
+  # 同じ見た目で開閉できるようにしている。
+  def render_div_begin_members_html(subject_value)
+    label = CGI.escapeHTML(subject_value.presence || DIV_BEGIN_MEMBERS_DEFAULT_LABEL)
+    <<~HTML.chomp
+      <section data-controller="toggle" data-toggle-open-value="false">
+        <div class="flex items-center justify-between mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
+          <div class="flex items-center gap-2">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">#{label}</h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" data-action="click->toggle#toggle" class="inline-flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" title="Toggle history">
+              <svg class="w-4 h-4 transition-transform duration-200" data-toggle-target="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+              <span class="sr-only">#{label}の開閉</span>
+            </button>
+          </div>
+        </div>
+        <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm" data-toggle-target="area" data-action="click->toggle#expand">
+    HTML
+  end
+
+  # {{div_end}} → 対応する{{div_begin}}の種類に応じて </div> / </details> / </div></section> を出力する
   def expand_div_end_plugin(_args, _sectionable, placeholders, open_tags)
-    html = open_tags.pop == :details ? '</details>' : '</div>'
+    html = case open_tags.pop
+           when :details then '</details>'
+           when :members then "</div>\n</section>"
+           else '</div>'
+           end
     register_plugin_placeholder(placeholders, html)
   end
 

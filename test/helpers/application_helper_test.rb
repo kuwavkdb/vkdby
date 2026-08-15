@@ -244,6 +244,58 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(%r{</details>}, result)
   end
 
+  test '{{div_begin class="members"}}はユニットページのMembersセクションと同じ外枠(toggleコントローラ・角丸カード)で出力される' do
+    result = markdown(<<~MARKDOWN)
+      {{div_begin class="members"}}
+
+      {{member2 Bass,森川泰敬
+      → [GLAMOROUS HONEY](/glamorous-honey)
+      }}
+
+      {{div_end}}
+    MARKDOWN
+
+    assert_match(/<section data-controller="toggle" data-toggle-open-value="false">/, result)
+    assert_match(%r{<h2[^>]*>Members</h2>}, result)
+    assert_match(/data-action="click->toggle#toggle"/, result)
+    assert_match(/class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm" data-toggle-target="area"/,
+                 result)
+    assert_match(%r{</section>}, result)
+    assert_match(/森川泰敬/, result)
+    assert_match(/GLAMOROUS HONEY/, result)
+  end
+
+  test '{{div_begin class="members" subject="..."}}は見出しラベルを上書きできる' do
+    result = markdown('{{div_begin class="members" subject="旧メンバー"}}本文{{div_end}}')
+
+    assert_match(%r{<h2[^>]*>旧メンバー</h2>}, result)
+    assert_no_match(%r{<h2[^>]*>Members</h2>}, result)
+  end
+
+  test '{{div_begin class="members"}}のsubject値はHTMLエスケープされる' do
+    result = markdown('{{div_begin class="members" subject="a&b"}}本文{{div_end}}')
+
+    assert_match(%r{<h2[^>]*>a&amp;b</h2>}, result)
+  end
+
+  test '{{div_begin class="members"}}のネストで対応する{{div_end}}が</div></section>を出力する' do
+    result = markdown(<<~MARKDOWN)
+      {{div_begin class="members"}}
+
+      {{div_begin class="inner"}}
+
+      本文
+
+      {{div_end}}
+
+      {{div_end}}
+    MARKDOWN
+
+    assert_match(/<section data-controller="toggle"/, result)
+    assert_match(/<div class="inner">/, result)
+    assert_match(%r{</section>}, result)
+  end
+
   test '{{member パート,表示名,old_key}}でold_keyに一致するPersonの経歴カードが埋め込まれる' do
     Person.create!(name: 'のる', key: 'member-plugin-person',
                    old_key: URI.encode_www_form_component('のる(ex-ふりぃ)'.encode('EUC-JP')))
