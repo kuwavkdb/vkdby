@@ -410,6 +410,20 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(/前後/, result)
   end
 
+  test '{{member}}はold_keyが"-"（未指定）の場合、Personへのリンクなしで表示名・リンクのみ表示する(Issue#1132)' do
+    result = markdown('{{member Vocal,相馬 ジュン平,-,http://smjp.jugem.jp/}}')
+
+    assert_match(/相馬 ジュン平/, result)
+    assert_match(%r{href="http://smjp.jugem.jp/"}, result)
+    assert_no_match(%r{<a[^>]*>相馬 ジュン平</a>}, result)
+  end
+
+  test '{{member}}はold_key自体を省略した場合も同様にPersonへのリンクなしで表示される(Issue#1132)' do
+    result = markdown('{{member Vocal,相馬 ジュン平}}')
+
+    assert_match(/相馬 ジュン平/, result)
+  end
+
   test '{{member}}はステータスバッジを表示しない' do
     Person.create!(name: 'のる', key: 'member-plugin-person3',
                    old_key: URI.encode_www_form_component('のる3'.encode('EUC-JP')))
@@ -448,6 +462,18 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(/GLAMOROUS HONEY/, result)
     assert_match(%r{href="/glamorous-honey"}, result)
     assert_match(%r{2006/05/10加入}, result)
+  end
+
+  test '{{member2}}はCRLF改行の本文でも複数行ブロックとして正しく終端を検出する(Issue#1132)' do
+    # Windows由来の貼り付け等でCRLFが混じると、"}}"直後が\rになり$にマッチしなくなり、
+    # 複数行ブロックの終端を見失って表示が崩れていた（実際のCustomPage本文で発覚）。
+    md = "{{member2 Bass,森川泰敬\r\n→ [GLAMOROUS HONEY](/glamorous-honey){{fn 2006/05/10加入}}\r\n}}\r\n"
+    result = markdown(md)
+
+    assert_match(/森川泰敬/, result)
+    assert_match(/GLAMOROUS HONEY/, result)
+    assert_match(%r{2006/05/10加入}, result)
+    assert_no_match(/\}\}/, result)
   end
 
   test '{{member2}}はブロック内にネストした{{fn ...}}を終端の"}}"と誤認しない' do
@@ -532,6 +558,24 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(/神谷 英希/, result)
     assert_match(/くりから。/, result)
     assert_match(/隠密華撃団/, result)
+  end
+
+  test '{{member2}}はold_key・リンクを省略した複数行ブロックの手前に単独行の{{member2}}があっても巻き込まない(Issue#1133)' do
+    Person.create!(name: 'K.', key: 'member2-regression-guitar',
+                   old_key: URI.encode_www_form_component('K.'.encode('EUC-JP')))
+
+    result = markdown(<<~MARKDOWN)
+      {{member2 Guitar,K.,K.}}
+
+      {{member2 Bass,森川泰敬
+      → [GLAMOROUS HONEY](/glamorous-honey){{fn 2006/05/10加入}}
+      }}
+    MARKDOWN
+
+    assert_match(%r{href="/member2-regression-guitar"}, result)
+    assert_match(/森川泰敬/, result)
+    assert_match(/GLAMOROUS HONEY/, result)
+    assert_no_match(/\}\}/, result)
   end
 
   # 以下、issue #1115（プラグインのcache対応）関連のテスト。

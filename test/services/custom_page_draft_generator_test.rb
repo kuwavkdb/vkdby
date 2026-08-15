@@ -129,6 +129,36 @@ class CustomPageDraftGeneratorTest < ActiveSupport::TestCase
     assert_empty draft.warnings
   end
 
+  test 'CRLF改行のwikiでも{{member2 ...}}（複数行）の終端を見失わない（Issue#1132）' do
+    wiki = "{{member2 Bass,森川泰敬\r\n→ [GLAMOROUS HONEY|/glamorous-honey]{{fn 2006/05/10加入}}\r\n}}\r\n"
+    draft = generate(name: 'test', wiki: wiki)
+
+    assert_includes draft.body, <<~EXPECTED.strip
+      {{member2 Bass,森川泰敬
+      → [GLAMOROUS HONEY](/glamorous-honey){{fn 2006/05/10加入}}
+      }}
+    EXPECTED
+    assert_empty draft.warnings
+  end
+
+  test '単独行の{{member2 ...}}の後に複数行の{{member2 ...}}があっても巻き込まれない（Issue#1133）' do
+    wiki = <<~WIKI
+      {{member2 Guitar,K.,K.}}
+      {{member2 Bass,森川泰敬
+      → [GLAMOROUS HONEY|/glamorous-honey]{{fn 2006/05/10加入}}
+      }}
+    WIKI
+    draft = generate(name: 'test', wiki: wiki)
+
+    assert_includes draft.body, '{{member2 Guitar,K.,K.}}'
+    assert_includes draft.body, <<~EXPECTED.strip
+      {{member2 Bass,森川泰敬
+      → [GLAMOROUS HONEY](/glamorous-honey){{fn 2006/05/10加入}}
+      }}
+    EXPECTED
+    assert_empty draft.warnings
+  end
+
   test '{{include unit:ID,セクション名}} は対象のUnitに同名のSectionがあればそのまま残る' do
     unit = Unit.create!(name: 'テストバンド2', key: 'test-band2-for-draft-generator')
     unit.sections.create!(name: '概要', wiki_text: '本文')

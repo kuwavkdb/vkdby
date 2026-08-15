@@ -93,6 +93,13 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   def markdown(text, sectionable: nil)
     return '' if text.blank?
 
+    # CRLF/CR改行（Windows由来の貼り付け等）が混じっていると、複数行プラグインの
+    # 終端検出（expand_multiline_plugin_macrosの"\n[ \t]*\}\}[ \t]*$"）等、本文中の
+    # \n・行末($)を前提にした正規表現が軒並みマッチしなくなり表示が崩れる
+    # （Issue#1132: CRLFの場合"}}"の直後が\rになり$にマッチしない）ため、
+    # 以降の処理はすべてLF改行に統一されている前提で行う。
+    text = text.gsub(/\r\n?/, "\n")
+
     placeholders = {}
     text = protect_html_comments(text, placeholders)
     text = expand_plugin_macros(text, sectionable:, placeholders:)
@@ -180,10 +187,16 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # {{プラグイン名 1行目のパラメータ\n複数行のdata\n}}
   # 1行目末尾に"}}"がない（=閉じていない）場合のみ複数行プラグインとして扱う。
   # 終端は単独で"}}"だけの行。
+  # 1行目パラメータの取り込みは"}}"の直前で止める（(?!\}\})）。素朴に[^\n]*のままだと、
+  # 単独行で閉じている{{member2 ...}}（1行目末尾に"}}"がある）についても「まだ閉じていない
+  # 複数行ブロック」と誤認し、その"}}"ごと1行目パラメータとして飲み込んだ上で、後方の
+  # 無関係な{{member2}}ブロックの終端"}}"行までを丸ごとdataとして誤結合してしまう
+  # （Issue#1133: リンク・old_keyを省略した複数行のmember2が、手前の単独行member2を
+  # 巻き込んで表示が崩れるバグ）。
   def expand_multiline_plugin_macros(text, sectionable, placeholders)
     names = Regexp.union(MULTILINE_PLUGIN_HANDLERS.keys)
 
-    text.gsub(/\{\{(#{names})(?:[ \t]+([^\n]*))?\n(.*?)\n[ \t]*\}\}[ \t]*$/m) do
+    text.gsub(/\{\{(#{names})(?:[ \t]+((?:(?!\}\})[^\n])*))?\n(.*?)\n[ \t]*\}\}[ \t]*$/m) do
       plugin_name = Regexp.last_match(1)
       args = Regexp.last_match(2)&.strip
       data = Regexp.last_match(3)
@@ -299,20 +312,26 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     register_plugin_placeholder(placeholders, html)
   end
 
-  # {{member パート,表示名,old_key,リンク}}（old_keyは未エンコード。リンクは省略可）
+  # {{member パート,表示名,old_key,リンク}}（old_keyは未エンコード・省略可。old_keyは"-"でも未指定扱い）
   # リンクはURL（http(s)://…）またはXアカウント（@xxxx）を指定する
   # （MemberRowComponentが@始まりをXアカウントとして自動判定しX(Twitter)へのリンクを表示する）。
   # 例: {{member Vocal,のる,のる(ex-ふりぃ),@noru_xxx}}
   # old_keyをEUC-JPエンコードしてPeopleを検索し、Unitページのメンバー行
   # （MemberRowComponent）と同じ経歴カードを出力する。
+  # old_keyが未指定（省略・"-"）の場合はPersonを検索せず、プロフィールへのリンクなしで
+  # 表示名・リンク（指定があれば）のみのメンバー行を出力する（member2のold_key省略時と同じ扱い）。
+  # old_keyが指定されているのに一致するPersonが見つからない場合は、従来通り何も出力しない
+  # （インポート時の記法ミス等を無言で不完全表示しないため）。
   def expand_member_plugin(args, _sectionable, placeholders, _open_tags)
     part, display_name, raw_old_key, link = args.split(',', 4).map { |v| v&.strip }
-    return '' if part.blank? || display_name.blank? || raw_old_key.blank?
+    return '' if part.blank? || display_name.blank?
 
-    person = Person.kept.find_by(old_key: encode_member_old_key(raw_old_key))
-    return '' unless person
+    no_old_key = raw_old_key.blank? || raw_old_key == '-'
+    person = Person.kept.find_by(old_key: encode_member_old_key(raw_old_key)) unless no_old_key
+    return '' if !no_old_key && !person
 
-    html = plugin_cache_fetch('member', person.cache_key_with_version, Digest::MD5.hexdigest(args)) do
+    person_key = person&.cache_key_with_version || 'noperson'
+    html = plugin_cache_fetch('member', person_key, Digest::MD5.hexdigest(args)) do
       member = MemberPluginRow.new(part: part, name: display_name, person: person, sns: link.presence && [link])
       render(MemberRowComponent.new(member: member, hide_status: true)).to_s
     end
