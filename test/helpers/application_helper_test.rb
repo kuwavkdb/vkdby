@@ -438,6 +438,20 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(%r{</section>}, result)
   end
 
+  test '{{div_begin class="columns"}}は画像や{{youtube}}埋め込みを左右に並べるための<div class="columns">を出力する' do
+    result = markdown(<<~MARKDOWN)
+      {{div_begin class="columns"}}
+      ![説明](https://example.com/image.jpg)
+
+      {{youtube C-PqwPsrDd0}}
+      {{div_end}}
+    MARKDOWN
+
+    assert_match(/<div class="columns">/, result)
+    assert_match(%r{<img[^>]+src="https://example.com/image.jpg"}, result)
+    assert_match(%r{<iframe src="https://www.youtube.com/embed/C-PqwPsrDd0"}, result)
+  end
+
   test '{{member パート,表示名,old_key}}でold_keyに一致するPersonの経歴カードが埋め込まれる' do
     Person.create!(name: 'のる', key: 'member-plugin-person',
                    old_key: URI.encode_www_form_component('のる(ex-ふりぃ)'.encode('EUC-JP')))
