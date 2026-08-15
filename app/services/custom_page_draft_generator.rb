@@ -100,6 +100,10 @@ class CustomPageDraftGenerator # rubocop:disable Metrics/ClassLength
 
   def generate
     body = @wikipage.wiki.to_s.dup
+    # CRLF/CR改行が混じっていると複数行プラグインの終端検出等、\n・行末($)前提の
+    # 正規表現が軒並みマッチしなくなるため、以降の処理の前にLF改行へ統一する
+    # （ApplicationHelper#markdownと同様。Issue#1132）。
+    body = body.gsub(/\r\n?/, "\n")
     body = strip_hidden_blocks(body)
     body = strip_comment_lines(body)
     body = convert_headings(body)

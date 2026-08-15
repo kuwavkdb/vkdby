@@ -464,6 +464,18 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(%r{2006/05/10加入}, result)
   end
 
+  test '{{member2}}はCRLF改行の本文でも複数行ブロックとして正しく終端を検出する(Issue#1132)' do
+    # Windows由来の貼り付け等でCRLFが混じると、"}}"直後が\rになり$にマッチしなくなり、
+    # 複数行ブロックの終端を見失って表示が崩れていた（実際のCustomPage本文で発覚）。
+    md = "{{member2 Bass,森川泰敬\r\n→ [GLAMOROUS HONEY](/glamorous-honey){{fn 2006/05/10加入}}\r\n}}\r\n"
+    result = markdown(md)
+
+    assert_match(/森川泰敬/, result)
+    assert_match(/GLAMOROUS HONEY/, result)
+    assert_match(%r{2006/05/10加入}, result)
+    assert_no_match(/\}\}/, result)
+  end
+
   test '{{member2}}はブロック内にネストした{{fn ...}}を終端の"}}"と誤認しない' do
     result = markdown(<<~MARKDOWN)
       前

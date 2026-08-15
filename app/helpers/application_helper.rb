@@ -93,6 +93,13 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   def markdown(text, sectionable: nil)
     return '' if text.blank?
 
+    # CRLF/CR改行（Windows由来の貼り付け等）が混じっていると、複数行プラグインの
+    # 終端検出（expand_multiline_plugin_macrosの"\n[ \t]*\}\}[ \t]*$"）等、本文中の
+    # \n・行末($)を前提にした正規表現が軒並みマッチしなくなり表示が崩れる
+    # （Issue#1132: CRLFの場合"}}"の直後が\rになり$にマッチしない）ため、
+    # 以降の処理はすべてLF改行に統一されている前提で行う。
+    text = text.gsub(/\r\n?/, "\n")
+
     placeholders = {}
     text = protect_html_comments(text, placeholders)
     text = expand_plugin_macros(text, sectionable:, placeholders:)
