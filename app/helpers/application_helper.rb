@@ -133,8 +133,12 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # （例: {{div_end}}）も許可するプラグイン
   PLUGINS_WITHOUT_REQUIRED_ARGS = %w[div_begin div_end].freeze
 
-  # コンポーネントレンダリングを伴うプラグインのキャッシュ設定（plugin_cache_fetch参照）
-  PLUGIN_CACHE_VERSION = 'v1'
+  # コンポーネントレンダリングを伴うプラグインのキャッシュ設定（plugin_cache_fetch参照）。
+  # レンダリング結果（HTML構造）を変更した場合は、レコード側のcache_key_with_versionが
+  # 変わらない限りキャッシュキーが変化せず古いHTMLが返り続けるため、このバージョンを
+  # 上げてキャッシュを一括無効化すること。
+  # v2: {{snapshot}}の初期表示をsummary_preview: false化（issue #1130、1行プレビュー廃止）
+  PLUGIN_CACHE_VERSION = 'v2'
   PLUGIN_CACHE_TTL = 7.days
 
   # 複数行にわたるプラグイン記法（例: {{member2 ...}}）のディスパッチ先。
