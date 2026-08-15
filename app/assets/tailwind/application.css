@@ -65,16 +65,23 @@
        モバイル幅では縦積み、md幅以上で2カラムに並べる（issue #1146）。
        直下の各要素（<p><img></p>や{{youtube}}のプレースホルダー等）がそのままグリッドの
        各カラムになるため、1カラムに複数要素をまとめたい場合は{{div_begin}}（無属性）で
-       さらに内側を1つの<div>にまとめる。 */
+       さらに内側を1つの<div>にまとめる。
+       子要素（<p>等）自体のマージンは0にし、間隔はgapだけに任せる。pにデフォルトで
+       margin: 0.875em 0が付くため放置すると、md幅以上の2カラムグリッドで「DOM上たまたま
+       先頭/末尾になった要素」だけ実質マージンが小さくなり、align-items: centerと組み合わさって
+       同じ行の左右の画像（サイズが同一でも）の縦位置が数px単位でズレて見える不具合があった
+       （例: 画像を4枚並べたとき、各行の右側の画像だけ左側より約7px下にズレる）。
+       .columns自体の外枠マージンは0にし、行間・カラム間の余白はgapに一本化している。
+       img自体のマージン（下記imgルール由来の0.5em 0）は.columns内では半分の0.25em 0に
+       減らしている。row-gap/column-gapは実機で見た目を揃えて0.5rem固定にしている。 */
     .columns {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 1rem;
+      gap: 0.5rem;
       align-items: center;
-      margin: 1em 0;
     }
-    .columns > *:first-child { margin-top: 0; }
-    .columns > *:last-child { margin-bottom: 0; }
+    .columns > * { margin: 0; }
+    .columns img { margin: 0.25em 0; }
   }
 
   @media (min-width: 768px) {
