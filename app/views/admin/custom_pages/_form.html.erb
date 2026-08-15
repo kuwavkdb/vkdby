@@ -43,28 +43,7 @@
       <%= form.label :body, "本文", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
       <p class="text-xs text-gray-500 dark:text-gray-400">Markdown形式で記述できます（<code>{{include}}</code>/<code>{{snapshot}}</code>/<code>{{item}}</code> は「プレビュー」を押すと確認できます）</p>
     </div>
-    <% if custom_page.persisted? && current_user.admin? %>
-      <div class="mt-1 mb-2 flex items-center gap-3">
-        <input type="file"
-               accept="image/*"
-               class="hidden"
-               aria-hidden="true"
-               data-markdown-preview-target="imageInput"
-               data-action="change->markdown-preview#uploadImage">
-        <button type="button"
-                class="inline-flex items-center gap-1 px-3 py-1 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                data-action="click->markdown-preview#selectImage"
-                aria-label="画像をアップロードしてMarkdownに挿入">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          画像をアップロード
-        </button>
-        <span class="text-xs text-gray-500 dark:text-gray-400"
-              data-markdown-preview-target="uploadStatus"
-              aria-live="polite"></span>
-      </div>
-    <% else %>
+    <% unless custom_page.persisted? && current_user.admin? %>
       <p class="mt-1 mb-2 text-xs text-gray-400 dark:text-gray-500">画像のアップロードは保存後に利用できます</p>
     <% end %>
     <div class="mt-1 grid grid-cols-2 gap-4">
@@ -86,18 +65,42 @@
     <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">公開する（チェックなしは下書き）</span>
   </div>
 
-  <div class="sticky bottom-0 z-10 -mx-6 -mb-6 flex items-center justify-end gap-x-4 rounded-b-lg border-t border-gray-200 bg-white/95 px-6 py-4 backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/95">
-    <span class="text-xs text-gray-500 dark:text-gray-400"
-          data-markdown-preview-target="previewStatus"
-          aria-live="polite"></span>
-    <%= link_to "キャンセル", admin_custom_pages_path,
-        class: "px-4 py-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" %>
-    <button type="button"
-            class="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium border border-gray-300 rounded-md text-gray-900 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700"
-            data-action="click->markdown-preview#serverPreview">
-      プレビュー
-    </button>
-    <%= form.submit custom_page.persisted? ? "更新" : "作成",
-        class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer" %>
+  <div class="sticky bottom-0 z-10 -mx-6 -mb-6 flex items-center justify-between gap-x-4 rounded-b-lg border-t border-gray-200 bg-white/95 px-6 py-4 backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/95">
+    <div class="flex items-center gap-3">
+      <% if custom_page.persisted? && current_user.admin? %>
+        <input type="file"
+               accept="image/*"
+               class="hidden"
+               aria-hidden="true"
+               data-markdown-preview-target="imageInput"
+               data-action="change->markdown-preview#uploadImage">
+        <button type="button"
+                class="inline-flex items-center gap-1 px-3 py-1 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                data-action="click->markdown-preview#selectImage"
+                aria-label="画像をアップロードしてMarkdownに挿入">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          画像をアップロード
+        </button>
+        <span class="text-xs text-gray-500 dark:text-gray-400"
+              data-markdown-preview-target="uploadStatus"
+              aria-live="polite"></span>
+      <% end %>
+    </div>
+    <div class="flex items-center gap-x-4">
+      <span class="text-xs text-gray-500 dark:text-gray-400"
+            data-markdown-preview-target="previewStatus"
+            aria-live="polite"></span>
+      <%= link_to "キャンセル", admin_custom_pages_path,
+          class: "px-4 py-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" %>
+      <button type="button"
+              class="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium border border-gray-300 rounded-md text-gray-900 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700"
+              data-action="click->markdown-preview#serverPreview">
+        プレビュー
+      </button>
+      <%= form.submit custom_page.persisted? ? "更新" : "作成",
+          class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer" %>
+    </div>
   </div>
 <% end %>
