@@ -168,6 +168,49 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(/テストメンバー5/, result)
   end
 
+  test '{{snapshot key}}でsnapshot_idを省略した場合はcurrent: trueのスナップショットが埋め込まれる（issue #1136）' do
+    unit = Unit.create!(key: 'snapshot-plugin-unit-omit-id', name: 'テストユニット', status: 'active')
+    unit.unit_snapshots.create!(snapshot_date: '2019-01-01', current: false, active: true).tap do |s|
+      s.snapshot_people.create!(person_name: '過去メンバー', part: :vocal, status: :active)
+    end
+    current_snapshot = unit.unit_snapshots.create!(snapshot_date: '2020-01-01', current: true, active: true)
+    current_snapshot.snapshot_people.create!(person_name: '現在メンバー', part: :vocal, status: :active)
+
+    result = markdown("{{snapshot #{unit.key}}}")
+
+    assert_match(/現在メンバー/, result)
+    assert_no_match(/過去メンバー/, result)
+  end
+
+  test '{{snapshot key}}でcurrent: trueのスナップショットが存在しない場合は空文字になる' do
+    unit = Unit.create!(key: 'snapshot-plugin-unit-omit-id-none', name: 'テストユニット', status: 'active')
+    unit.unit_snapshots.create!(snapshot_date: '2020-01-01', current: false, active: true).tap do |s|
+      s.snapshot_people.create!(person_name: '過去メンバー2', part: :vocal, status: :active)
+    end
+
+    result = markdown("前{{snapshot #{unit.key}}}後")
+
+    assert_match(/前後/, result)
+    assert_no_match(/過去メンバー2/, result)
+  end
+
+  test '{{snapshot key}}でcurrent: trueのスナップショットが非公開(active: false)の場合は空文字になる' do
+    unit = Unit.create!(key: 'snapshot-plugin-unit-omit-id-inactive', name: 'テストユニット', status: 'active')
+    snapshot = unit.unit_snapshots.create!(snapshot_date: '2020-01-01', current: true, active: false)
+    snapshot.snapshot_people.create!(person_name: '非公開メンバー', part: :vocal, status: :active)
+
+    result = markdown("前{{snapshot #{unit.key}}}後")
+
+    assert_match(/前後/, result)
+    assert_no_match(/非公開メンバー/, result)
+  end
+
+  test '{{snapshot key}}でユニットkeyが存在しない場合は空文字になる' do
+    result = markdown('前{{snapshot no-such-unit}}後')
+
+    assert_match(/前後/, result)
+  end
+
   test '{{item ASIN}}でItemカードが埋め込まれる' do
     item = Item.create!(title: 'テストアルバム', release_date: '2020-01-01',
                         link_url: 'https://example.com/item/1', asin: 'B00TESTASIN')

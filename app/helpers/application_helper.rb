@@ -283,12 +283,17 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   end
 
   # {{snapshot ユニットkey,snapshot_id}}
+  # snapshot_idを省略した場合（{{snapshot ユニットkey}}）はcurrent: trueのスナップショットを採用する（issue #1136）
   def expand_snapshot_plugin(args, _sectionable, placeholders, _open_tags)
     unit_key, snapshot_id = args.split(',', 2).map(&:strip)
-    return '' if unit_key.blank? || snapshot_id.blank?
+    return '' if unit_key.blank?
 
     unit = Unit.kept.find_by(key: unit_key)
-    snapshot = unit&.unit_snapshots&.active&.find_by(id: snapshot_id)
+    snapshot = if snapshot_id.present?
+                 unit&.unit_snapshots&.active&.find_by(id: snapshot_id)
+               else
+                 unit&.unit_snapshots&.active&.find_by(current: true)
+               end
     return '' unless snapshot
 
     html = plugin_cache_fetch('snapshot', unit.cache_key_with_version, snapshot.cache_key_with_version) do
