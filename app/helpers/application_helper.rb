@@ -374,12 +374,14 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   #   <details class="closable"><summary>見出し</summary> を出力し、
   #   ラベルのクリックで開閉する（class="closable" と subject の両方が揃った場合のみ）。
   #   開閉マーカーは<summary>のブラウザ標準表示に任せる。
-  # {{div_begin class="members"}}                    → ユニットページのMembersセクションと
-  #   同じ見た目（角丸カード＋シェブロン開閉トグル）で{{member}}/{{member2}}の並びを囲む。
-  #   初期状態は閉じており、カード全体（メンバー一覧すべて）が非表示になる
-  #   （{{snapshot}}プラグインのsummary_preview: falseと同じ「カード全体を折りたたむ」方式。
-  #   ユニットページ本体のMembersセクションのようなメンバー名1行プレビューは出さない）。
-  #   subjectを指定すると見出しラベルを変更できる（省略時は"Members"）。
+  # {{div_begin class="members"}}                    → ユニットページのMembersセクション
+  #   （UnitSnapshotsComponentの「現メンバー」表示）と同じ見た目（角丸カード＋シェブロン
+  #   開閉トグル）で{{member}}/{{member2}}の並びを囲む。メンバー一覧自体は常に表示され、
+  #   開閉トグルが対応するのは各メンバーの経歴表示（{{member2}}のdata等、
+  #   MemberRowComponentが出力するdata-toggle-target="content"）のみ
+  #   （初期状態は閉じている＝経歴非表示。ユニットページのMembersセクションを
+  #   折りたたんだ状態と同じ）。subjectを指定すると見出しラベルを変更できる
+  #   （省略時は"Members"）。
   def expand_div_begin_plugin(args, _sectionable, placeholders, open_tags)
     attrs = parse_allowed_attrs(args, DIV_BEGIN_ALLOWED_ATTRS)
     class_value = attrs['class']
@@ -399,11 +401,11 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   end
 
   # {{div_begin class="members"}}が出力する外枠のHTML。
-  # UnitSnapshotsComponentの角丸カード＋シェブロン開閉トグルと同一のマークアップ・
-  # クラスを用いることで、同じStimulus toggleコントローラ・同じ見た目で開閉できる
-  # ようにしている。data-toggle-target="content area"により、開閉トグルはカード全体
-  # （中の{{member}}/{{member2}}すべて）を対象にする
-  # （{{snapshot}}プラグイン＝summary_preview: falseの場合と同じ挙動）。
+  # UnitSnapshotsComponentの「現メンバー」表示（角丸カード＋シェブロン開閉トグル）と
+  # 同一のマークアップ・クラスを用いることで、同じStimulus toggleコントローラ・
+  # 同じ見た目で開閉できるようにしている。data-toggle-target="area"のみを持たせ、
+  # メンバー一覧自体は開閉に関わらず常に表示する（{{snapshot}}プラグイン・
+  # summary_preview: falseの場合と同じ挙動）。
   def render_div_begin_members_html(subject_value)
     label = CGI.escapeHTML(subject_value.presence || DIV_BEGIN_MEMBERS_DEFAULT_LABEL)
     <<~HTML.chomp
@@ -421,7 +423,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
             </button>
           </div>
         </div>
-        <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm" data-toggle-target="content area" data-action="click->toggle#expand">
+        <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm" data-toggle-target="area" data-action="click->toggle#expand">
     HTML
   end
 

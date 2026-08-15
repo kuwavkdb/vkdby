@@ -5,8 +5,10 @@ class UnitSnapshotsComponent < ViewComponent::Base
   # true（デフォルト。ユニットページ本体での表示）  → メンバー名の1行プレビュー＋
   #   クリック時にhx-getで遅延取得（読み込みコストを抑えるための本番向け最適化）。
   # false（{{snapshot}}プラグイン。カスタムページでの埋め込み表示）             → 1行プレビューを
-  #   出さず、{{div_begin class="members"}}と同じ「カード全体を折りたたむ」表示にする。
-  #   1件のsnapshotのみを表示する用途のためデータ量が小さく、遅延取得のコストは不要。
+  #   出さず、「現メンバー」表示と同じくメンバー一覧をその場で常時表示する
+  #   （{{div_begin class="members"}}と同じ見た目。開閉トグルはメンバーごとの経歴
+  #   表示のみを対象にする）。1件のsnapshotのみを表示する用途のためデータ量が
+  #   小さく、遅延取得のコストは不要。
   def initialize(snapshots:, unit: nil, admin: false, show_label: true, summary_preview: true)
     super()
     @snapshots = snapshots

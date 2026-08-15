@@ -132,7 +132,7 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(/テストメンバー4/, result)
   end
 
-  test '{{snapshot}}で埋め込んだ過去スナップショットはユニットページ本体と異なり、1行プレビュー(summary)ではなくカード全体折りたたみになる' do
+  test '{{snapshot}}で埋め込んだ過去スナップショットはユニットページ本体と異なり、1行プレビュー(summary)を出さずメンバー一覧をその場で表示する' do
     unit = Unit.create!(key: 'snapshot-plugin-unit5', name: 'テストユニット5', status: 'active')
     snapshot = unit.unit_snapshots.create!(snapshot_date: '2020-01-01', current: false, active: true)
     snapshot.snapshot_people.create!(person_name: 'テストメンバー5', part: :vocal, status: :active)
@@ -142,10 +142,8 @@ class ApplicationHelperTest < ActionView::TestCase
     # 1行プレビュー(summary)・hx-get遅延取得は使われない
     assert_no_match(/data-toggle-target="summary/, result)
     assert_no_match(/hx-get/, result)
-    # {{div_begin class="members"}}と同じ「カード全体折りたたみ」のマークアップ
-    assert_match(/data-toggle-target="content area"/, result)
-    assert_match(/data-toggle-open-value="false"/, result)
-    # 遅延取得ではなくその場でメンバー行が描画される
+    # {{div_begin class="members"}}と同じく、メンバー一覧は開閉に関わらず常に表示される
+    assert_match(/data-toggle-target="area"/, result)
     assert_match(/テストメンバー5/, result)
   end
 
@@ -274,17 +272,27 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(/<section data-controller="toggle" data-toggle-open-value="false">/, result)
     assert_match(%r{<h2[^>]*>Members</h2>}, result)
     assert_match(/data-action="click->toggle#toggle"/, result)
-    assert_match(/rounded-2xl overflow-hidden shadow-sm" data-toggle-target="content area"/, result)
+    assert_match(/rounded-2xl overflow-hidden shadow-sm" data-toggle-target="area"/, result)
     assert_match(%r{</section>}, result)
     assert_match(/森川泰敬/, result)
     assert_match(/GLAMOROUS HONEY/, result)
   end
 
-  test '{{div_begin class="members"}}は初期状態でカード全体が折りたたまれ(閉じた状態)、メンバー名の1行プレビューは出さない' do
-    result = markdown('{{div_begin class="members"}}本文{{div_end}}')
+  test '{{div_begin class="members"}}はユニットページのMembersセクションと同様、メンバー一覧自体は開閉に関わらず常に表示される' do
+    result = markdown(<<~MARKDOWN)
+      {{div_begin class="members"}}
 
+      {{member2 Bass,森川泰敬
+      → [GLAMOROUS HONEY](/glamorous-honey)
+      }}
+
+      {{div_end}}
+    MARKDOWN
+
+    # 初期状態(閉)はメンバーごとの経歴表示のみが非表示になり、メンバー一覧自体は表示される
     assert_match(/data-toggle-open-value="false"/, result)
     assert_no_match(/data-toggle-target="summary/, result)
+    assert_match(/森川泰敬/, result)
   end
 
   test '{{div_begin class="members" subject="..."}}は見出しラベルを上書きできる' do
