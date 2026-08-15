@@ -139,7 +139,9 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # 上げてキャッシュを一括無効化すること。
   # v2: {{snapshot}}の初期表示をsummary_preview: false化（issue #1130、1行プレビュー廃止）
   # v3: UnitSnapshotsComponentの見出しクリック領域を拡大（issue #1130）
-  PLUGIN_CACHE_VERSION = 'v3'
+  # v4: UnitSnapshotsComponentの見出しを<h2>からrole="heading"のdivに変更
+  #     （.markdown-content内での意図しない下線対策、issue #1130）
+  PLUGIN_CACHE_VERSION = 'v4'
   PLUGIN_CACHE_TTL = 7.days
 
   # 複数行にわたるプラグイン記法（例: {{member2 ...}}）のディスパッチ先。
@@ -425,13 +427,17 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # メンバー一覧自体は開閉に関わらず常に表示する（{{snapshot}}プラグイン・
   # summary_preview: falseの場合と同じ挙動）。開閉のクリック領域は見出し全体
   # （ラベル＋シェブロン）とする。
+  # 見出しは<h2>ではなくrole="heading"のdivを使用する: このHTMLは常にカスタム
+  # ページの.markdown-content内に埋め込まれるため、<h2>にするとグローバルな
+  # `.markdown-content h2`スタイル（border-bottom）が見出しテキスト幅だけの
+  # 短い下線として意図せず表示されてしまう。
   def render_div_begin_members_html(subject_value)
     label = CGI.escapeHTML(subject_value.presence || DIV_BEGIN_MEMBERS_DEFAULT_LABEL)
     <<~HTML.chomp
       <section data-controller="toggle" data-toggle-open-value="false">
         <div class="flex items-center justify-between mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
           <button type="button" data-action="click->toggle#toggle" class="flex items-center justify-between gap-2 flex-1 min-w-0 -mx-1 px-1 py-0.5 rounded text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">#{label}</h2>
+            <div role="heading" aria-level="2" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">#{label}</div>
             <svg class="w-4 h-4 shrink-0 text-slate-400 transition-transform duration-200" data-toggle-target="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>

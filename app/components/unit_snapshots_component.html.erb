@@ -5,9 +5,13 @@
         <button type="button" data-action="click->toggle#toggle"
                 class="flex items-center justify-between gap-2 flex-1 min-w-0 -mx-1 px-1 py-0.5 rounded text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400">
           <span class="flex items-center gap-2 min-w-0">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <%# role="heading"のdivを使用（<h2>にしない）: {{snapshot}}プラグイン経由で
+                custom_pages/show.html.erbの.markdown-content内に埋め込まれる際、
+                グローバルな`.markdown-content h2`スタイル（border-bottom）が
+                見出しテキスト幅だけの短い下線として意図せず表示されてしまうため %>
+            <div role="heading" aria-level="2" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               <%= snapshot.past? ? 'Related' : 'Members' %>
-            </h2>
+            </div>
             <% if @show_label && snapshot.label.present? %>
               <span class="text-xs font-black px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"><%= snapshot.label %></span>
             <% end %>

@@ -291,7 +291,7 @@ class ApplicationHelperTest < ActionView::TestCase
     MARKDOWN
 
     assert_match(/<section data-controller="toggle" data-toggle-open-value="false">/, result)
-    assert_match(%r{<h2[^>]*>Members</h2>}, result)
+    assert_match(/role="heading" aria-level="2"[^>]*>Members</, result)
     assert_match(/data-action="click->toggle#toggle"/, result)
     assert_match(/rounded-2xl overflow-hidden shadow-sm" data-toggle-target="area"/, result)
     assert_match(%r{</section>}, result)
@@ -340,14 +340,20 @@ class ApplicationHelperTest < ActionView::TestCase
   test '{{div_begin class="members" subject="..."}}は見出しラベルを上書きできる' do
     result = markdown('{{div_begin class="members" subject="旧メンバー"}}本文{{div_end}}')
 
-    assert_match(%r{<h2[^>]*>旧メンバー</h2>}, result)
-    assert_no_match(%r{<h2[^>]*>Members</h2>}, result)
+    assert_match(/role="heading" aria-level="2"[^>]*>旧メンバー</, result)
+    assert_no_match(/role="heading" aria-level="2"[^>]*>Members</, result)
   end
 
   test '{{div_begin class="members"}}のsubject値はHTMLエスケープされる' do
     result = markdown('{{div_begin class="members" subject="a&b"}}本文{{div_end}}')
 
-    assert_match(%r{<h2[^>]*>a&amp;b</h2>}, result)
+    assert_match(/role="heading" aria-level="2"[^>]*>a&amp;b</, result)
+  end
+
+  test '{{div_begin class="members"}}の見出しは<h2>ではなくrole="heading"のdivを使う(markdown-content内の意図しない下線対策)' do
+    result = markdown('{{div_begin class="members"}}本文{{div_end}}')
+
+    assert_no_match(/<h2/, result)
   end
 
   test '{{div_begin class="members"}}のネストで対応する{{div_end}}が</div></section>を出力する' do
