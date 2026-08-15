@@ -93,4 +93,29 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, 'Snapshot Embed Member'
   end
+
+  test 'Management Information is hidden from a logged-out visitor' do
+    page = CustomPage.create!(key: 'management-info-hidden-test-page', title: 'Management Info Hidden Test',
+                              active: true, body: 'body')
+
+    get custom_page_path(key: page.key)
+
+    assert_response :success
+    assert_not_includes response.body, 'Management Information'
+  end
+
+  test 'Management Information shows ID, Key and a link to old_key on the old wiki for a super_operator' do
+    post login_path, params: { email: users(:one).email, password: 'password' }
+    page = CustomPage.create!(key: 'management-info-visible-test-page', title: 'Management Info Visible Test',
+                              active: true, body: 'body', old_key: 'management-info-visible-old-key')
+
+    get custom_page_path(key: page.key)
+
+    assert_response :success
+    assert_includes response.body, 'Management Information'
+    assert_includes response.body, page.id.to_s
+    assert_includes response.body, page.key
+    assert_includes response.body,
+                    "#{Rails.application.config.old_key_url_base}/#{page.old_key}.html"
+  end
 end
