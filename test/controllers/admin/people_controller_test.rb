@@ -169,6 +169,33 @@ module Admin
       assert Person.exists?(id: @person.id)
     end
 
+    test 'purge is rejected when the person is still linked via unit_people' do
+      login_as_admin
+      unit = Unit.create!(name: 'Some Band', key: 'some-band-purge-test', status: :active)
+      unit.unit_people.create!(person: @person, status: :active, part: :vocal)
+      @person.discard
+
+      delete purge_admin_person_path(@person)
+
+      assert_redirected_to admin_people_path(redirect_source: 'only')
+      assert_equal 'ユニットのメンバー情報が残っているため物理削除できません。', flash[:alert]
+      assert Person.exists?(id: @person.id)
+    end
+
+    test 'purge is rejected when the person is still linked via snapshot_people' do
+      login_as_admin
+      unit = Unit.create!(name: 'Some Band', key: 'some-band-snapshot-purge-test', status: :active)
+      unit_snapshot = unit.unit_snapshots.create!(snapshot_date: Date.current)
+      unit_snapshot.snapshot_people.create!(person: @person, status: :active, part: :vocal)
+      @person.discard
+
+      delete purge_admin_person_path(@person)
+
+      assert_redirected_to admin_people_path(redirect_source: 'only')
+      assert_equal 'ユニットスナップショットのメンバー情報が残っているため物理削除できません。', flash[:alert]
+      assert Person.exists?(id: @person.id)
+    end
+
     test 'purging a redirect-source stub allows reverting the key' do
       login_as_admin
       @person.change_key!('new-key-for-purge-revert-test')

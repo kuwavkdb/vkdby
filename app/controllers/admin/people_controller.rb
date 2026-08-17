@@ -119,16 +119,30 @@ module Admin
         return
       end
 
+      # Person側から見た unit_people/snapshot_people は必ず person_id が紐づいた実在のメンバー情報なので、
+      # 1件でも残っていれば物理削除しない(Unit側のインライン仮メンバー情報とは異なり道連れ削除はしない)。
+      if @person.unit_people.exists?
+        redirect_to admin_people_path(redirect_source: 'only'), alert: 'ユニットのメンバー情報が残っているため物理削除できません。'
+        return
+      end
+
+      if @person.snapshot_people.exists?
+        redirect_to admin_people_path(redirect_source: 'only'), alert: 'ユニットスナップショットのメンバー情報が残っているため物理削除できません。'
+        return
+      end
+
       key_was = @person.key
       destination_was = @person.destination_key
-      @person.destroy!
-      UpdateLog.create!(
-        user: current_user,
-        action: 'purge',
-        loggable_type: 'Person',
-        loggable_id: @person.id,
-        diff: { 'key' => [key_was, nil], 'destination_key' => [destination_was, nil] }
-      )
+      ActiveRecord::Base.transaction do
+        @person.destroy!
+        UpdateLog.create!(
+          user: current_user,
+          action: 'purge',
+          loggable_type: 'Person',
+          loggable_id: @person.id,
+          diff: { 'key' => [key_was, nil], 'destination_key' => [destination_was, nil] }
+        )
+      end
       redirect_to admin_people_path(redirect_source: 'only'), notice: 'リダイレクト元レコードを物理削除しました。'
     end
 

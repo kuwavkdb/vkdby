@@ -135,16 +135,26 @@ module Admin
         return
       end
 
+      # 実在のPersonに紐づくメンバー情報(unit_people)が残っている場合は物理削除できない。
+      # person_id が nil のインライン仮メンバー情報のみの場合は destroy_all で道連れに削除する。
+      if @unit.unit_people.where.not(person_id: nil).exists?
+        redirect_to admin_units_path(redirect_source: 'only'), alert: '実在のPersonに紐づくメンバー情報が残っているため物理削除できません。'
+        return
+      end
+
       key_was = @unit.key
       destination_was = @unit.destination_key
-      @unit.destroy!
-      UpdateLog.create!(
-        user: current_user,
-        action: 'purge',
-        loggable_type: 'Unit',
-        loggable_id: @unit.id,
-        diff: { 'key' => [key_was, nil], 'destination_key' => [destination_was, nil] }
-      )
+      ActiveRecord::Base.transaction do
+        @unit.unit_people.destroy_all
+        @unit.destroy!
+        UpdateLog.create!(
+          user: current_user,
+          action: 'purge',
+          loggable_type: 'Unit',
+          loggable_id: @unit.id,
+          diff: { 'key' => [key_was, nil], 'destination_key' => [destination_was, nil] }
+        )
+      end
       redirect_to admin_units_path(redirect_source: 'only'), notice: 'リダイレクト元レコードを物理削除しました。'
     end
 

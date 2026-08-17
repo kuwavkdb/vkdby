@@ -143,6 +143,32 @@ module Admin
       assert Unit.exists?(id: @unit.id)
     end
 
+    test 'purge is rejected when a unit_people row still references a real person' do
+      login_as_admin
+      person = Person.create!(name: 'Real Member', key: 'real-member-purge-test', status: :active)
+      @unit.unit_people.create!(person: person, status: :active, part: :vocal)
+      @unit.discard
+
+      delete purge_admin_unit_path(@unit)
+
+      assert_redirected_to admin_units_path(redirect_source: 'only')
+      assert_equal '実在のPersonに紐づくメンバー情報が残っているため物理削除できません。', flash[:alert]
+      assert Unit.exists?(id: @unit.id)
+    end
+
+    test 'purge destroys unit_people rows that only hold inline placeholder data' do
+      login_as_admin
+      unit_person = @unit.unit_people.create!(person_name: 'Inline Member', status: :active, part: :vocal)
+      @unit.discard
+
+      delete purge_admin_unit_path(@unit)
+
+      assert_redirected_to admin_units_path(redirect_source: 'only')
+      assert_equal 'リダイレクト元レコードを物理削除しました。', flash[:notice]
+      assert_not Unit.exists?(id: @unit.id)
+      assert_not UnitPerson.exists?(id: unit_person.id)
+    end
+
     test 'purging a redirect-source stub allows reverting the key' do
       login_as_admin
       @unit.change_key!('new-key-for-purge-revert-test')
