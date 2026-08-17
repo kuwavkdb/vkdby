@@ -22,7 +22,7 @@
     </div>
 
     <% if @query.present? %>
-      <% if @units.any? || @people.any? %>
+      <% if @units.any? || @people.any? || @custom_pages.any? %>
         <!-- Units Section -->
         <% if @units.any? %>
           <section class="mb-8">
@@ -58,12 +58,40 @@
             </div>
           </section>
         <% end %>
+
+        <!-- Custom Pages Section -->
+        <% if @custom_pages.any? %>
+          <section class="mt-8">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-indigo-500">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                </svg>
+                Pages
+              </h2>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <% @custom_pages.each do |page| %>
+                <%= link_to custom_page_path(page.key), class: "block rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" do %>
+                  <%= page.title %>
+                <% end %>
+              <% end %>
+            </div>
+          </section>
+        <% end %>
       <% else %>
         <div class="py-20 text-center">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600 mb-4">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
           <p class="text-slate-400 dark:text-slate-500 font-bold">「<%= @query %>」の検索結果が見つかりませんでした。</p>
+
+          <% if Rails.application.config.google_cse_id.present? %>
+            <div class="mt-8 max-w-md mx-auto text-left">
+              <p class="mb-3 text-sm font-bold text-slate-500 dark:text-slate-400 text-center">Googleでサイト内を検索する</p>
+              <%= render "layouts/google_cse_form", query: @query %>
+            </div>
+          <% end %>
         </div>
       <% end %>
     <% else %>

@@ -20,4 +20,49 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, 'XYZ789'
   end
+
+  test 'index finds a published custom page by title' do
+    page = CustomPage.create!(key: 'search-target-page-test', title: 'Search Target Page', body: 'body', active: true)
+
+    get search_path(q: 'Search Target Page')
+
+    assert_response :success
+    assert_includes response.body, custom_page_path(page.key)
+  end
+
+  test 'index does not find an unpublished custom page' do
+    page = CustomPage.create!(key: 'unpublished-search-page-test', title: 'Unpublished Search Page', body: 'body', active: false)
+
+    get search_path(q: 'Unpublished Search Page')
+
+    assert_response :success
+    assert_not_includes response.body, custom_page_path(page.key)
+  end
+
+  test 'index does not find a system page' do
+    page = CustomPage.find_or_create_by!(key: 'footer') { |p| p.title = 'Footer System Page' }
+    page.update!(title: 'Footer System Page', body: 'body', active: true)
+
+    get search_path(q: 'Footer System Page')
+
+    assert_response :success
+    assert_not_includes response.body, custom_page_path(page.key)
+  end
+
+  test 'index shows the Google custom search form when nothing matches' do
+    get search_path(q: 'no-such-result-search-controller-test')
+
+    assert_response :success
+    assert_includes response.body, '検索結果が見つかりませんでした'
+    assert_includes response.body, 'cse.google.com/cse'
+  end
+
+  test 'index does not show the Google custom search form when there are results' do
+    Unit.create!(name: 'HasResultUnit', key: 'has-result-unit-search-test', status: :active)
+
+    get search_path(q: 'HasResultUnit')
+
+    assert_response :success
+    assert_not_includes response.body, 'cse.google.com/cse'
+  end
 end
