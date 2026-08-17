@@ -1,0 +1,16 @@
+<%# Google Custom Search Engine(cse.google.com)の埋め込みウィジェット。
+    別ドメインへ遷移せず、検索ボックス・検索結果ともにページ内にインライン表示される。
+    404ページ・横断検索ページから共通で呼び出す。
+    locals:
+      query - あらかじめ実行しておく検索クエリ(省略可。指定するとウィジェット読み込み時に自動実行される) %>
+<% if Rails.application.config.google_cse_id.present? %>
+  <div class="gcse-search"></div>
+  <% if local_assigns[:query].present? %>
+    <script>
+      // ウィジェット初期化前にURLフラグメントへ検索語をセットしておくと、
+      // 読み込み時にその内容で自動的に検索が実行される(Google公式の仕様)。
+      window.location.hash = "gsc.tab=0&gsc.q=<%= ERB::Util.url_encode(query) %>&gsc.sort=";
+    </script>
+  <% end %>
+  <script async src="https://cse.google.com/cse.js?cx=<%= Rails.application.config.google_cse_id %>"></script>
+<% end %>
