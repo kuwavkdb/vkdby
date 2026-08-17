@@ -120,13 +120,18 @@ module Admin
     end
 
     def purge
-      unless @unit.redirect_source?
-        redirect_to admin_units_path(redirect_source: 'only'), alert: 'リダイレクト元のレコードのみ物理削除できます。'
+      unless @unit.discarded?
+        redirect_to admin_units_path(redirect_source: 'only'), alert: '論理削除済みのレコードのみ物理削除できます。'
         return
       end
 
       if Item.by_artist_key(@unit.key).exists?
         redirect_to admin_units_path(redirect_source: 'only'), alert: 'このキーはまだ作品から参照されているため物理削除できません。'
+        return
+      end
+
+      if Unit.with_discarded.where(destination_key: @unit.key).exists?
+        redirect_to admin_units_path(redirect_source: 'only'), alert: 'このキーはリダイレクト先として参照されているため物理削除できません。'
         return
       end
 
