@@ -31,8 +31,7 @@ module KeyChangeable
     end
   end
 
-  # discard 済み・destination_key ありのリダイレクト元レコードかどうか(issue #891)。
-  # 物理削除できる対象をこの条件に厳密に限定する。
+  # discard 済み・destination_key ありのリダイレクト元レコードかどうか。
   def redirect_source?
     discarded? && destination_key.present?
   end

@@ -81,13 +81,13 @@ module Admin
       assert Unit.exists?(id: stub.id)
     end
 
-    test 'purge is rejected for a non redirect-source record' do
+    test 'purge is rejected for a record that is not discarded' do
       login_as_admin
 
       delete purge_admin_unit_path(@unit)
 
       assert_redirected_to admin_units_path(redirect_source: 'only')
-      assert_equal 'リダイレクト元のレコードのみ物理削除できます。', flash[:alert]
+      assert_equal '論理削除済みのレコードのみ物理削除できます。', flash[:alert]
       assert Unit.exists?(id: @unit.id)
     end
 
@@ -104,6 +104,18 @@ module Admin
       assert UpdateLog.exists?(loggable_type: 'Unit', loggable_id: stub.id, action: 'purge')
     end
 
+    test 'purge deletes a plain discarded record without a destination_key' do
+      login_as_admin
+      @unit.discard
+
+      delete purge_admin_unit_path(@unit)
+
+      assert_redirected_to admin_units_path(redirect_source: 'only')
+      assert_equal 'リダイレクト元レコードを物理削除しました。', flash[:notice]
+      assert_not Unit.exists?(id: @unit.id)
+      assert UpdateLog.exists?(loggable_type: 'Unit', loggable_id: @unit.id, action: 'purge')
+    end
+
     test 'purge is rejected when the key is still referenced by an item' do
       login_as_admin
       @unit.change_key!('new-key-for-purge-item-test')
@@ -116,6 +128,45 @@ module Admin
       assert_redirected_to admin_units_path(redirect_source: 'only')
       assert_equal 'このキーはまだ作品から参照されているため物理削除できません。', flash[:alert]
       assert Unit.exists?(id: stub.id)
+    end
+
+    test 'purge is rejected when the key is still used as another redirect destination' do
+      login_as_admin
+      @unit.discard
+      Unit.create!(name: 'Newer Unit', key: 'newer-unit-controller-test', status: :active,
+                   destination_key: @unit.key).discard
+
+      delete purge_admin_unit_path(@unit)
+
+      assert_redirected_to admin_units_path(redirect_source: 'only')
+      assert_equal 'このキーはリダイレクト先として参照されているため物理削除できません。', flash[:alert]
+      assert Unit.exists?(id: @unit.id)
+    end
+
+    test 'purge is rejected when a unit_people row still references a real person' do
+      login_as_admin
+      person = Person.create!(name: 'Real Member', key: 'real-member-purge-test', status: :active)
+      @unit.unit_people.create!(person: person, status: :active, part: :vocal)
+      @unit.discard
+
+      delete purge_admin_unit_path(@unit)
+
+      assert_redirected_to admin_units_path(redirect_source: 'only')
+      assert_equal '実在のPersonに紐づくメンバー情報が残っているため物理削除できません。', flash[:alert]
+      assert Unit.exists?(id: @unit.id)
+    end
+
+    test 'purge destroys unit_people rows that only hold inline placeholder data' do
+      login_as_admin
+      unit_person = @unit.unit_people.create!(person_name: 'Inline Member', status: :active, part: :vocal)
+      @unit.discard
+
+      delete purge_admin_unit_path(@unit)
+
+      assert_redirected_to admin_units_path(redirect_source: 'only')
+      assert_equal 'リダイレクト元レコードを物理削除しました。', flash[:notice]
+      assert_not Unit.exists?(id: @unit.id)
+      assert_not UnitPerson.exists?(id: unit_person.id)
     end
 
     test 'purging a redirect-source stub allows reverting the key' do
