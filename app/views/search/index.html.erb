@@ -87,9 +87,9 @@
           <p class="text-slate-400 dark:text-slate-500 font-bold">「<%= @query %>」の検索結果が見つかりませんでした。</p>
 
           <% if Rails.application.config.google_cse_id.present? %>
-            <div class="mt-8 max-w-md mx-auto text-left">
+            <div class="mt-8 max-w-2xl mx-auto text-left">
               <p class="mb-3 text-sm font-bold text-slate-500 dark:text-slate-400 text-center">Googleでサイト内を検索する</p>
-              <%= render "layouts/google_cse_form", query: @query %>
+              <%= render "layouts/google_cse_search", query: @query %>
             </div>
           <% end %>
         </div>

@@ -49,20 +49,22 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, custom_page_path(page.key)
   end
 
-  test 'index shows the Google custom search form when nothing matches' do
+  test 'index shows the inline Google custom search widget when nothing matches' do
     get search_path(q: 'no-such-result-search-controller-test')
 
     assert_response :success
     assert_includes response.body, '検索結果が見つかりませんでした'
-    assert_includes response.body, 'cse.google.com/cse'
+    assert_includes response.body, '<div class="gcse-search">'
+    assert_match(%r{cse\.google\.com/cse\.js\?cx=}, response.body)
+    assert_match(/window\.location\.hash = "gsc\.tab=0&gsc\.q=no-such-result-search-controller-test&gsc\.sort="/, response.body)
   end
 
-  test 'index does not show the Google custom search form when there are results' do
+  test 'index does not show the Google custom search widget when there are results' do
     Unit.create!(name: 'HasResultUnit', key: 'has-result-unit-search-test', status: :active)
 
     get search_path(q: 'HasResultUnit')
 
     assert_response :success
-    assert_not_includes response.body, 'cse.google.com/cse'
+    assert_not_includes response.body, 'gcse-search'
   end
 end
