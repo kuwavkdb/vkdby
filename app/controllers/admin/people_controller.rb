@@ -104,8 +104,8 @@ module Admin
     end
 
     def purge
-      unless @person.redirect_source?
-        redirect_to admin_people_path(redirect_source: 'only'), alert: 'リダイレクト元のレコードのみ物理削除できます。'
+      unless @person.discarded?
+        redirect_to admin_people_path(redirect_source: 'only'), alert: '論理削除済みのレコードのみ物理削除できます。'
         return
       end
 
@@ -114,16 +114,35 @@ module Admin
         return
       end
 
+      if Person.with_discarded.where(destination_key: @person.key).exists?
+        redirect_to admin_people_path(redirect_source: 'only'), alert: 'このキーはリダイレクト先として参照されているため物理削除できません。'
+        return
+      end
+
+      # Person側から見た unit_people/snapshot_people は必ず person_id が紐づいた実在のメンバー情報なので、
+      # 1件でも残っていれば物理削除しない(Unit側のインライン仮メンバー情報とは異なり道連れ削除はしない)。
+      if @person.unit_people.exists?
+        redirect_to admin_people_path(redirect_source: 'only'), alert: 'ユニットのメンバー情報が残っているため物理削除できません。'
+        return
+      end
+
+      if @person.snapshot_people.exists?
+        redirect_to admin_people_path(redirect_source: 'only'), alert: 'ユニットスナップショットのメンバー情報が残っているため物理削除できません。'
+        return
+      end
+
       key_was = @person.key
       destination_was = @person.destination_key
-      @person.destroy!
-      UpdateLog.create!(
-        user: current_user,
-        action: 'purge',
-        loggable_type: 'Person',
-        loggable_id: @person.id,
-        diff: { 'key' => [key_was, nil], 'destination_key' => [destination_was, nil] }
-      )
+      ActiveRecord::Base.transaction do
+        @person.destroy!
+        UpdateLog.create!(
+          user: current_user,
+          action: 'purge',
+          loggable_type: 'Person',
+          loggable_id: @person.id,
+          diff: { 'key' => [key_was, nil], 'destination_key' => [destination_was, nil] }
+        )
+      end
       redirect_to admin_people_path(redirect_source: 'only'), notice: 'リダイレクト元レコードを物理削除しました。'
     end
 
