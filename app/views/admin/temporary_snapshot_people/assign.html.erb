@@ -51,6 +51,9 @@
                 <input type="radio" name="unit_snapshot_id" value="<%= snapshot.id %>" class="mt-1 form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600">
                 <span class="text-sm text-gray-700 dark:text-gray-300">
                   <%= snapshot.display_label || "(ラベル・日付未設定)" %>
+                  <% if snapshot.current? %>
+                    <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">Current</span>
+                  <% end %>
                   <span class="text-gray-400 dark:text-gray-500">— <%= snapshot.member_names.presence || "メンバーなし" %></span>
                 </span>
               </label>
