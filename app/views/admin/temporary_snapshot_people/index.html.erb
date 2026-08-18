@@ -1,0 +1,66 @@
+<% title = "テンポラリスナップショットプール" %>
+<% content_for :title, title %>
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="text-xl font-semibold text-gray-900 dark:text-white"><%= title %></h1>
+  </div>
+  <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">
+    どのユニット・スナップショットに紐付けるべきか判定できなかったメンバー情報の一時置き場です。内容を確認のうえ、適切なユニットのスナップショットへ振り分けてください。
+  </p>
+
+  <% if @unit %>
+    <div class="mt-4 flex items-center gap-2 text-sm">
+      <span class="text-gray-700 dark:text-gray-300">絞り込み中: <strong><%= @unit.name %></strong></span>
+      <%= link_to "絞り込みを解除", admin_temporary_snapshot_people_path, class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
+    </div>
+  <% end %>
+
+  <div class="mt-6 overflow-x-auto bg-white shadow rounded-lg dark:bg-gray-900">
+    <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
+      <thead class="bg-gray-50 dark:bg-gray-800">
+        <tr>
+          <th scope="col" class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">名前</th>
+          <th scope="col" class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">ヒントユニット</th>
+          <th scope="col" class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">パート</th>
+          <th scope="col" class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">ステータス</th>
+          <th scope="col" class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">出所</th>
+          <th scope="col" class="relative py-2 pl-3 pr-4 sm:pr-6"><span class="sr-only">操作</span></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200 bg-white dark:bg-gray-900 dark:divide-gray-700">
+        <% @temporary_snapshot_people.each do |tsp| %>
+          <tr>
+            <td class="whitespace-nowrap px-3 py-3 text-sm text-gray-900 dark:text-gray-200">
+              <%= tsp.name %>
+              <% if tsp.person %>
+                <%= link_to "(Person)", edit_admin_person_path(tsp.person), class: "text-xs text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
+              <% end %>
+            </td>
+            <td class="whitespace-nowrap px-3 py-3 text-sm text-gray-500 dark:text-gray-400">
+              <% if tsp.hint_unit %>
+                <%= link_to tsp.hint_unit.name, edit_admin_unit_path(tsp.hint_unit), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
+              <% else %>
+                <span class="text-gray-400 dark:text-gray-500">なし</span>
+              <% end %>
+            </td>
+            <td class="whitespace-nowrap px-3 py-3 text-sm text-gray-500 dark:text-gray-400"><%= tsp.part.humanize %></td>
+            <td class="whitespace-nowrap px-3 py-3 text-sm text-gray-500 dark:text-gray-400"><%= tsp.status.humanize %></td>
+            <td class="whitespace-nowrap px-3 py-3 text-sm text-gray-500 dark:text-gray-400"><%= tsp.source %></td>
+            <td class="relative whitespace-nowrap py-3 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+              <%= link_to "振り分ける", assign_admin_temporary_snapshot_person_path(tsp), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-4" %>
+              <%= button_to "削除", admin_temporary_snapshot_person_path(tsp), method: :delete,
+                    class: "text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 bg-transparent border-0 p-0 cursor-pointer inline",
+                    form: { style: "display:inline" },
+                    onclick: "return confirm('プールから削除します。よろしいですか？')" %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @temporary_snapshot_people.empty? %>
+          <tr>
+            <td colspan="6" class="px-3 py-6 text-center text-sm text-gray-500 dark:text-gray-400">プールは空です。</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
