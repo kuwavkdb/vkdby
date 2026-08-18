@@ -45,8 +45,23 @@ module Admin
         end
       end
 
-      assert_redirected_to admin_temporary_snapshot_people_path
+      assert_redirected_to admin_temporary_snapshot_people_path(
+        assigned_unit_id: @unit.id, assigned_unit_snapshot_id: @snapshot.id
+      )
       assert_equal 'テスト太郎', @snapshot.reload.snapshot_people.last.person_name
+    end
+
+    test 'should show a link to the assigned unit snapshot after assigning' do
+      post assign_admin_temporary_snapshot_person_path(@temporary_snapshot_person), params: {
+        unit_id: @unit.id,
+        unit_snapshot_id: @snapshot.id,
+        part: 'vocal',
+        status: 'left'
+      }
+      follow_redirect!
+
+      assert_response :success
+      assert_select "a[href='#{edit_admin_unit_unit_snapshot_path(@unit, @snapshot)}']"
     end
 
     test 'should assign to a newly created snapshot when none selected' do
@@ -59,7 +74,9 @@ module Admin
         }
       end
 
-      assert_redirected_to admin_temporary_snapshot_people_path
+      assert_redirected_to admin_temporary_snapshot_people_path(
+        assigned_unit_id: @unit.id, assigned_unit_snapshot_id: UnitSnapshot.last.id
+      )
     end
 
     test 'should not assign without a target unit' do

@@ -8,6 +8,9 @@ module Admin
       @temporary_snapshot_people = TemporarySnapshotPerson.includes(:person, :hint_unit).order(:created_at)
       @unit = Unit.kept.find_by(id: params[:unit_id])
       @temporary_snapshot_people = @temporary_snapshot_people.where(hint_unit_id: @unit.id) if @unit
+
+      @assigned_unit = Unit.kept.find_by(id: params[:assigned_unit_id])
+      @assigned_unit_snapshot = @assigned_unit&.unit_snapshots&.find_by(id: params[:assigned_unit_snapshot_id])
     end
 
     def assign
@@ -30,8 +33,9 @@ module Admin
       if snapshot_person.save
         record_update_log(snapshot_person, action: 'create')
         @temporary_snapshot_person.destroy
-        redirect_to admin_temporary_snapshot_people_path,
-                    notice: "#{@unit.name} のスナップショットへ振り分けました。"
+        redirect_to admin_temporary_snapshot_people_path(
+          assigned_unit_id: @unit.id, assigned_unit_snapshot_id: unit_snapshot.id
+        ), notice: "#{@unit.name} のスナップショットへ振り分けました。"
       else
         @unit_snapshots = @unit.unit_snapshots.chronological
         flash.now[:alert] = "振り分けに失敗しました: #{snapshot_person.errors.full_messages.join('、')}"
