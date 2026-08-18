@@ -8,11 +8,15 @@
     どのユニット・スナップショットに紐付けるべきか判定できなかったメンバー情報の一時置き場です。内容を確認のうえ、適切なユニットのスナップショットへ振り分けてください。
   </p>
 
-  <% if @assigned_unit && @assigned_unit_snapshot %>
-    <div class="mt-4 rounded-md bg-green-50 dark:bg-green-950 p-4 text-sm text-green-800 dark:text-green-200">
-      <%= link_to "#{@assigned_unit.name} のスナップショットを管理画面で確認する →",
-            edit_admin_unit_unit_snapshot_path(@assigned_unit, @assigned_unit_snapshot),
-            class: "font-medium underline hover:no-underline" %>
+  <% if @assigned_unit && @assigned_unit_snapshots.present? %>
+    <div class="mt-4 rounded-md bg-green-50 dark:bg-green-950 p-4 text-sm text-green-800 dark:text-green-200 space-y-1">
+      <% @assigned_unit_snapshots.each do |snapshot| %>
+        <div>
+          <%= link_to "#{@assigned_unit.name} のスナップショット（#{snapshot.display_label || '日付未設定'}）を管理画面で確認する →",
+                edit_admin_unit_unit_snapshot_path(@assigned_unit, snapshot),
+                class: "font-medium underline hover:no-underline" %>
+        </div>
+      <% end %>
     </div>
   <% end %>
 
