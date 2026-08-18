@@ -143,5 +143,27 @@ module Admin
       get admin_temporary_snapshot_people_path
       assert_redirected_to login_path
     end
+
+    test 'should order by created_at by default' do
+      zunit = Unit.create!(name: 'Zユニット', key: 'z-unit')
+      later = TemporarySnapshotPerson.create!(person_name: 'あとから追加', part: :vocal, status: :left, hint_unit: zunit)
+
+      get admin_temporary_snapshot_people_path
+      assert_response :success
+      assert_operator response.body.index(@temporary_snapshot_person.name),
+                      :<, response.body.index(later.name)
+    end
+
+    test 'should order by hint unit name when sort=hint_unit' do
+      aunit = Unit.create!(name: 'Aユニット', key: 'a-unit')
+      earlier_by_unit = TemporarySnapshotPerson.create!(
+        person_name: 'ユニット順で先頭', part: :vocal, status: :left, hint_unit: aunit
+      )
+
+      get admin_temporary_snapshot_people_path(sort: 'hint_unit')
+      assert_response :success
+      assert_operator response.body.index(earlier_by_unit.name),
+                      :<, response.body.index(@temporary_snapshot_person.name)
+    end
   end
 end
