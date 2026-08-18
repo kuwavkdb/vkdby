@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_08_071018) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_18_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -262,6 +262,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_08_071018) do
     t.index ["name"], name: "index_tag_indices_on_name", unique: true
   end
 
+  create_table "temporary_snapshot_people", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "hint_unit_id"
+    t.text "inline_history"
+    t.string "name_alias"
+    t.string "old_person_key"
+    t.integer "part", default: 0, null: false
+    t.string "part_alias"
+    t.bigint "person_id"
+    t.string "person_key"
+    t.string "person_name"
+    t.json "sns"
+    t.string "source", default: "career_history_import", null: false
+    t.integer "status", default: 1, null: false
+    t.boolean "support", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["hint_unit_id"], name: "index_temporary_snapshot_people_on_hint_unit_id"
+    t.index ["old_person_key"], name: "index_temporary_snapshot_people_on_old_person_key"
+    t.index ["person_id"], name: "index_temporary_snapshot_people_on_person_id"
+    t.index ["person_key"], name: "index_temporary_snapshot_people_on_person_key"
+  end
+
   create_table "trends", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.text "content"
@@ -429,6 +451,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_08_071018) do
   add_foreign_key "snapshot_people", "unit_snapshots"
   add_foreign_key "tag_index_items", "tag_indices"
   add_foreign_key "tag_indices", "index_groups"
+  add_foreign_key "temporary_snapshot_people", "people"
+  add_foreign_key "temporary_snapshot_people", "units", column: "hint_unit_id"
   add_foreign_key "unit_logs", "units"
   add_foreign_key "unit_people", "people"
   add_foreign_key "unit_people", "units"

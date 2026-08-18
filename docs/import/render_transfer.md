@@ -42,3 +42,15 @@ direnv allow .
 実行すると確認プロンプトが表示されます。`y` を入力すると転送が開始されます。
 
 転送対象テーブル: `units`, `unit_people`, `people`, `trends`, `items`, `sections`, `links`, `index_groups`, `tag_index_items`, `tag_indices`, `snapshot_people`, `unit_snapshots`, `users`
+
+## 特定テーブルのみの転送
+
+新規追加したテーブルなど、特定の1テーブルだけをRenderに転送したい場合は個別スクリプトを用意する。
+
+- `temporary_snapshot_people` テーブルのみを転送する場合:
+
+  ```bash
+  ./script/transfer_temporary_snapshot_people_to_render.sh
+  ```
+
+  Render側で対象テーブルのマイグレーションが適用済み（デプロイ済み）であることが前提。
