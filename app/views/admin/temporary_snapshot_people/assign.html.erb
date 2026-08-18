@@ -5,7 +5,7 @@
   <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">
     パート: <%= @temporary_snapshot_person.part.humanize %> / ステータス: <%= @temporary_snapshot_person.status.humanize %>
     <% if @temporary_snapshot_person.hint_unit %>
-      / 元のヒントユニット: <%= @temporary_snapshot_person.hint_unit.name %>
+      / 元のヒントユニット: <%= link_to @temporary_snapshot_person.hint_unit.name, edit_admin_unit_path(@temporary_snapshot_person.hint_unit), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
     <% end %>
   </p>
 
