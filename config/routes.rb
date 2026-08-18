@@ -42,6 +42,12 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
         end
       end
     end
+    resources :temporary_snapshot_people, only: %i[index destroy] do
+      member do
+        get :assign
+        post :assign
+      end
+    end
     resources :people do
       collection do
         get :search
