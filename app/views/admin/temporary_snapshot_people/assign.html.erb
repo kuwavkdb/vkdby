@@ -44,11 +44,11 @@
         <input type="hidden" name="unit_id" value="<%= @unit.id %>">
 
         <div>
-          <span class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">振り分け先スナップショット</span>
+          <span class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">振り分け先スナップショット（複数選択可）</span>
           <div class="space-y-2">
             <% @unit_snapshots.each do |snapshot| %>
               <label class="flex items-start gap-2">
-                <input type="radio" name="unit_snapshot_id" value="<%= snapshot.id %>" class="mt-1 form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600">
+                <input type="checkbox" name="unit_snapshot_ids[]" value="<%= snapshot.id %>" class="mt-1 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
                 <span class="text-sm text-gray-700 dark:text-gray-300">
                   <%= snapshot.display_label || "(ラベル・日付未設定)" %>
                   <% if snapshot.current? %>
@@ -59,7 +59,7 @@
               </label>
             <% end %>
             <label class="flex items-start gap-2">
-              <input type="radio" name="unit_snapshot_id" value="" class="mt-1 form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" <%= 'checked' if @unit_snapshots.empty? %>>
+              <input type="checkbox" name="create_new_snapshot" value="1" class="mt-1 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600" <%= 'checked' if @unit_snapshots.empty? %>>
               <span class="text-sm text-gray-700 dark:text-gray-300">新しいスナップショットを作成する</span>
             </label>
           </div>

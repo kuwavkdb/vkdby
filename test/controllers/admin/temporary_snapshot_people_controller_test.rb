@@ -8,6 +8,7 @@ module Admin
       post login_path, params: { email: users(:one).email, password: 'password' }
       @unit = units(:one)
       @snapshot = unit_snapshots(:one)
+      @other_snapshot = unit_snapshots(:two)
       @temporary_snapshot_person = TemporarySnapshotPerson.create!(
         person_name: 'テスト太郎',
         part: :vocal,
@@ -38,7 +39,7 @@ module Admin
         assert_difference('TemporarySnapshotPerson.count', -1) do
           post assign_admin_temporary_snapshot_person_path(@temporary_snapshot_person), params: {
             unit_id: @unit.id,
-            unit_snapshot_id: @snapshot.id,
+            unit_snapshot_ids: [@snapshot.id],
             part: 'vocal',
             status: 'left'
           }
@@ -46,15 +47,31 @@ module Admin
       end
 
       assert_redirected_to admin_temporary_snapshot_people_path(
-        assigned_unit_id: @unit.id, assigned_unit_snapshot_id: @snapshot.id
+        assigned_unit_id: @unit.id, assigned_unit_snapshot_ids: [@snapshot.id]
       )
       assert_equal 'テスト太郎', @snapshot.reload.snapshot_people.last.person_name
     end
 
-    test 'should show a link to the assigned unit snapshot after assigning' do
+    test 'should assign to multiple snapshots at once' do
+      assert_difference('SnapshotPerson.count', 2) do
+        assert_difference('TemporarySnapshotPerson.count', -1) do
+          post assign_admin_temporary_snapshot_person_path(@temporary_snapshot_person), params: {
+            unit_id: @unit.id,
+            unit_snapshot_ids: [@snapshot.id, @other_snapshot.id],
+            part: 'vocal',
+            status: 'left'
+          }
+        end
+      end
+
+      assert_equal 'テスト太郎', @snapshot.reload.snapshot_people.last.person_name
+      assert_equal 'テスト太郎', @other_snapshot.reload.snapshot_people.last.person_name
+    end
+
+    test 'should show links to all assigned unit snapshots after assigning' do
       post assign_admin_temporary_snapshot_person_path(@temporary_snapshot_person), params: {
         unit_id: @unit.id,
-        unit_snapshot_id: @snapshot.id,
+        unit_snapshot_ids: [@snapshot.id, @other_snapshot.id],
         part: 'vocal',
         status: 'left'
       }
@@ -62,21 +79,47 @@ module Admin
 
       assert_response :success
       assert_select "a[href='#{edit_admin_unit_unit_snapshot_path(@unit, @snapshot)}']"
+      assert_select "a[href='#{edit_admin_unit_unit_snapshot_path(@unit, @other_snapshot)}']"
     end
 
-    test 'should assign to a newly created snapshot when none selected' do
+    test 'should assign to a newly created snapshot when create_new_snapshot is checked' do
       assert_difference('UnitSnapshot.count', 1) do
         post assign_admin_temporary_snapshot_person_path(@temporary_snapshot_person), params: {
           unit_id: @unit.id,
-          unit_snapshot_id: '',
+          create_new_snapshot: '1',
           part: 'vocal',
           status: 'left'
         }
       end
 
       assert_redirected_to admin_temporary_snapshot_people_path(
-        assigned_unit_id: @unit.id, assigned_unit_snapshot_id: UnitSnapshot.last.id
+        assigned_unit_id: @unit.id, assigned_unit_snapshot_ids: [UnitSnapshot.last.id]
       )
+    end
+
+    test 'should combine an existing snapshot and a newly created one' do
+      assert_difference('UnitSnapshot.count', 1) do
+        assert_difference('SnapshotPerson.count', 2) do
+          post assign_admin_temporary_snapshot_person_path(@temporary_snapshot_person), params: {
+            unit_id: @unit.id,
+            unit_snapshot_ids: [@snapshot.id],
+            create_new_snapshot: '1',
+            part: 'vocal',
+            status: 'left'
+          }
+        end
+      end
+    end
+
+    test 'should not assign without selecting any snapshot' do
+      assert_no_difference('SnapshotPerson.count') do
+        post assign_admin_temporary_snapshot_person_path(@temporary_snapshot_person), params: {
+          unit_id: @unit.id,
+          part: 'vocal',
+          status: 'left'
+        }
+      end
+      assert_response :unprocessable_entity
     end
 
     test 'should not assign without a target unit' do
@@ -99,6 +142,28 @@ module Admin
       delete logout_path
       get admin_temporary_snapshot_people_path
       assert_redirected_to login_path
+    end
+
+    test 'should order by created_at by default' do
+      zunit = Unit.create!(name: 'Zユニット', key: 'z-unit')
+      later = TemporarySnapshotPerson.create!(person_name: 'あとから追加', part: :vocal, status: :left, hint_unit: zunit)
+
+      get admin_temporary_snapshot_people_path
+      assert_response :success
+      assert_operator response.body.index(@temporary_snapshot_person.name),
+                      :<, response.body.index(later.name)
+    end
+
+    test 'should order by hint unit name when sort=hint_unit' do
+      aunit = Unit.create!(name: 'Aユニット', key: 'a-unit')
+      earlier_by_unit = TemporarySnapshotPerson.create!(
+        person_name: 'ユニット順で先頭', part: :vocal, status: :left, hint_unit: aunit
+      )
+
+      get admin_temporary_snapshot_people_path(sort: 'hint_unit')
+      assert_response :success
+      assert_operator response.body.index(earlier_by_unit.name),
+                      :<, response.body.index(@temporary_snapshot_person.name)
     end
   end
 end

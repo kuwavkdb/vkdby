@@ -5,12 +5,24 @@ module Admin
     before_action :set_temporary_snapshot_person, only: %i[destroy assign]
 
     def index
-      @temporary_snapshot_people = TemporarySnapshotPerson.includes(:person, :hint_unit).order(:created_at)
+      @sort = params[:sort] == 'hint_unit' ? 'hint_unit' : 'default'
+      @temporary_snapshot_people = TemporarySnapshotPerson.includes(:person, :hint_unit)
+      @temporary_snapshot_people = if @sort == 'hint_unit'
+                                     @temporary_snapshot_people.references(:hint_unit)
+                                                               .order(Arel.sql('units.name ASC NULLS LAST'), :created_at)
+                                   else
+                                     @temporary_snapshot_people.order(:created_at)
+                                   end
       @unit = Unit.kept.find_by(id: params[:unit_id])
       @temporary_snapshot_people = @temporary_snapshot_people.where(hint_unit_id: @unit.id) if @unit
+      @temporary_snapshot_people = @temporary_snapshot_people.to_a
 
       @assigned_unit = Unit.kept.find_by(id: params[:assigned_unit_id])
-      @assigned_unit_snapshot = @assigned_unit&.unit_snapshots&.find_by(id: params[:assigned_unit_snapshot_id])
+      @assigned_unit_snapshots = if @assigned_unit
+                                   @assigned_unit.unit_snapshots.where(id: Array(params[:assigned_unit_snapshot_ids]))
+                                 else
+                                   UnitSnapshot.none
+                                 end
     end
 
     def assign
@@ -26,20 +38,18 @@ module Admin
         return
       end
 
-      unit_snapshot = target_unit_snapshot
+      target_snapshots = build_target_snapshots
+      if target_snapshots.empty?
+        render_assign_errors(['振り分け先のスナップショットを1つ以上選択してください。'])
+        return
+      end
 
-      snapshot_person = unit_snapshot.snapshot_people.build(snapshot_person_attributes)
+      snapshot_people = target_snapshots.map { |snapshot| snapshot.snapshot_people.build(snapshot_person_attributes) }
 
-      if snapshot_person.save
-        record_update_log(snapshot_person, action: 'create')
-        @temporary_snapshot_person.destroy
-        redirect_to admin_temporary_snapshot_people_path(
-          assigned_unit_id: @unit.id, assigned_unit_snapshot_id: unit_snapshot.id
-        ), notice: "#{@unit.name} のスナップショットへ振り分けました。"
+      if target_snapshots.all?(&:valid?)
+        save_assignment(target_snapshots, snapshot_people)
       else
-        @unit_snapshots = @unit.unit_snapshots.chronological
-        flash.now[:alert] = "振り分けに失敗しました: #{snapshot_person.errors.full_messages.join('、')}"
-        render :assign, status: :unprocessable_entity
+        render_assign_errors(target_snapshots.flat_map { |s| s.errors.full_messages }.uniq)
       end
     end
 
@@ -54,12 +64,30 @@ module Admin
       @temporary_snapshot_person = TemporarySnapshotPerson.find(params[:id])
     end
 
-    def target_unit_snapshot
-      if params[:unit_snapshot_id].present?
-        @unit.unit_snapshots.find(params[:unit_snapshot_id])
-      else
-        @unit.unit_snapshots.create!(current: false, active: false, past: true)
-      end
+    def build_target_snapshots
+      selected_ids = Array(params[:unit_snapshot_ids]).reject(&:blank?)
+      create_new = ActiveModel::Type::Boolean.new.cast(params[:create_new_snapshot])
+
+      target_snapshots = @unit.unit_snapshots.where(id: selected_ids).to_a
+      target_snapshots << @unit.unit_snapshots.new(current: false, active: false, past: true) if create_new
+      target_snapshots
+    end
+
+    def save_assignment(target_snapshots, snapshot_people)
+      ActiveRecord::Base.transaction { target_snapshots.each(&:save!) }
+      snapshot_people.each { |sp| record_update_log(sp, action: 'create') }
+      @temporary_snapshot_person.destroy
+
+      redirect_to admin_temporary_snapshot_people_path(
+        assigned_unit_id: @unit.id,
+        assigned_unit_snapshot_ids: snapshot_people.map(&:unit_snapshot_id)
+      ), notice: "#{@unit.name} の#{snapshot_people.size}件のスナップショットへ振り分けました。"
+    end
+
+    def render_assign_errors(messages)
+      @unit_snapshots = @unit.unit_snapshots.chronological
+      flash.now[:alert] = "振り分けに失敗しました: #{messages.join('、')}"
+      render :assign, status: :unprocessable_entity
     end
 
     def snapshot_person_attributes
