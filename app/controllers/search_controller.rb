@@ -22,9 +22,14 @@ class SearchController < ApplicationController
       @people = Person.kept.where(people_condition, q: search_pattern)
                       .order(relevance_order, updated_at: :desc)
                       .limit(15)
+      @custom_pages = CustomPage.published.non_system_pages
+                                .where('title ILIKE :q OR body ILIKE :q', q: search_pattern)
+                                .order(updated_at: :desc)
+                                .limit(15)
     else
       @units = []
       @people = []
+      @custom_pages = []
     end
   end
 end

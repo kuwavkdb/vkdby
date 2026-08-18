@@ -8,6 +8,16 @@
             class: "text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
     </div>
   </div>
+
+  <% temporary_count = TemporarySnapshotPerson.where(hint_unit_id: unit.id).count %>
+  <% if temporary_count.positive? %>
+    <div class="mb-4">
+      <%= link_to admin_temporary_snapshot_people_path(unit_id: unit.id),
+            class: "inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 hover:bg-amber-200 dark:bg-amber-900 dark:text-amber-200 dark:hover:bg-amber-800" do %>
+        テンポラリプールに<%= temporary_count %>件あります →
+      <% end %>
+    </div>
+  <% end %>
   <% if unit_snapshots.any? %>
     <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">

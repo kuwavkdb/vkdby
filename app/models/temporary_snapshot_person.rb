@@ -1,0 +1,75 @@
+# frozen_string_literal: true
+
+# == Schema Information
+#
+# Table name: temporary_snapshot_people
+#
+#  id              :bigint           not null, primary key
+#  inline_history  :text
+#  name_alias      :string
+#  old_person_key  :string
+#  part            :integer          default("vocal"), not null
+#  part_alias      :string
+#  person_key      :string
+#  person_name     :string
+#  sns             :json
+#  source          :string           default("career_history_import"), not null
+#  status          :integer          default("active"), not null
+#  support         :boolean          default(FALSE), not null
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#  hint_unit_id    :bigint
+#  person_id       :bigint
+#
+# Indexes
+#
+#  index_temporary_snapshot_people_on_hint_unit_id    (hint_unit_id)
+#  index_temporary_snapshot_people_on_old_person_key  (old_person_key)
+#  index_temporary_snapshot_people_on_person_id       (person_id)
+#  index_temporary_snapshot_people_on_person_key      (person_key)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (hint_unit_id => units.id)
+#  fk_rails_...  (person_id => people.id)
+#
+# 全ユニット共通の一時プール。person_importer#parse_career_history など、
+# どのユニットの・どのスナップショットに紐付けるべきか機械的に判定できない
+# メンバー情報を一旦ここに保持し、管理画面から手動で SnapshotPerson へ振り分ける。
+# 詳細: https://github.com/kuwavkdb/vkdby/issues/1167
+class TemporarySnapshotPerson < ApplicationRecord
+  belongs_to :person, optional: true
+  belongs_to :hint_unit, class_name: 'Unit', optional: true
+
+  enum :status, { undefined: 0, active: 1, pending: 2, left: 3, concerned: 4, pre: 5 }
+  enum :part, { vocal: 0, guitar: 1, bass: 2, drums: 3, keyboard: 4, dj: 5, unknown: 99 }
+
+  validates :status, presence: true
+  validates :part, presence: true
+  validate :person_or_name_presence
+
+  before_validation :find_person_by_key, if: -> { person_id.blank? && person_key.present? }
+
+  def name
+    name_alias.presence || person_name.presence || person&.name
+  end
+
+  def key
+    person&.key || person_key
+  end
+
+  private
+
+  def person_or_name_presence
+    return unless person_id.blank? && person_name.blank?
+
+    errors.add(:base, 'Person or Person Name must be present')
+  end
+
+  def find_person_by_key
+    found_person = Person.find_by(key: person_key)
+    return unless found_person
+
+    self.person = found_person
+  end
+end
