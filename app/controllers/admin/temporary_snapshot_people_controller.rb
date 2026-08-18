@@ -5,9 +5,17 @@ module Admin
     before_action :set_temporary_snapshot_person, only: %i[destroy assign]
 
     def index
-      @temporary_snapshot_people = TemporarySnapshotPerson.includes(:person, :hint_unit).order(:created_at)
+      @sort = params[:sort] == 'hint_unit' ? 'hint_unit' : 'default'
+      @temporary_snapshot_people = TemporarySnapshotPerson.includes(:person, :hint_unit)
+      @temporary_snapshot_people = if @sort == 'hint_unit'
+                                     @temporary_snapshot_people.references(:hint_unit)
+                                                               .order(Arel.sql('units.name ASC NULLS LAST'), :created_at)
+                                   else
+                                     @temporary_snapshot_people.order(:created_at)
+                                   end
       @unit = Unit.kept.find_by(id: params[:unit_id])
       @temporary_snapshot_people = @temporary_snapshot_people.where(hint_unit_id: @unit.id) if @unit
+      @temporary_snapshot_people = @temporary_snapshot_people.to_a
 
       @assigned_unit = Unit.kept.find_by(id: params[:assigned_unit_id])
       @assigned_unit_snapshots = if @assigned_unit

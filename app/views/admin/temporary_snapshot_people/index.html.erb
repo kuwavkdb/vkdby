@@ -2,7 +2,10 @@
 <% content_for :title, title %>
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <div class="flex items-center justify-between mb-4">
-    <h1 class="text-xl font-semibold text-gray-900 dark:text-white"><%= title %></h1>
+    <h1 class="text-xl font-semibold text-gray-900 dark:text-white">
+      <%= title %>
+      <span class="ml-1 text-base font-normal text-gray-500 dark:text-gray-400">（<%= @temporary_snapshot_people.size %>件）</span>
+    </h1>
   </div>
   <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">
     どのユニット・スナップショットに紐付けるべきか判定できなかったメンバー情報の一時置き場です。内容を確認のうえ、適切なユニットのスナップショットへ振り分けてください。
@@ -20,10 +23,19 @@
     </div>
   <% end %>
 
+  <div class="mt-4 flex items-center gap-2 text-sm">
+    <span class="text-gray-700 dark:text-gray-300">並び順:</span>
+    <% %w[default hint_unit].each do |sort_key| %>
+      <%= link_to sort_key == 'hint_unit' ? "ヒントユニット順" : "登録順",
+            admin_temporary_snapshot_people_path(unit_id: params[:unit_id], sort: sort_key),
+            class: "px-2 py-1 rounded-md #{@sort == sort_key ? 'bg-indigo-600 text-white' : 'text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950'}" %>
+    <% end %>
+  </div>
+
   <% if @unit %>
     <div class="mt-4 flex items-center gap-2 text-sm">
       <span class="text-gray-700 dark:text-gray-300">絞り込み中: <strong><%= @unit.name %></strong></span>
-      <%= link_to "絞り込みを解除", admin_temporary_snapshot_people_path, class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
+      <%= link_to "絞り込みを解除", admin_temporary_snapshot_people_path(sort: @sort), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
     </div>
   <% end %>
 
@@ -35,7 +47,6 @@
           <th scope="col" class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">ヒントユニット</th>
           <th scope="col" class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">パート</th>
           <th scope="col" class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">ステータス</th>
-          <th scope="col" class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">出所</th>
           <th scope="col" class="relative py-2 pl-3 pr-4 sm:pr-6"><span class="sr-only">操作</span></th>
         </tr>
       </thead>
@@ -57,7 +68,6 @@
             </td>
             <td class="whitespace-nowrap px-3 py-3 text-sm text-gray-500 dark:text-gray-400"><%= tsp.part.humanize %></td>
             <td class="whitespace-nowrap px-3 py-3 text-sm text-gray-500 dark:text-gray-400"><%= tsp.status.humanize %></td>
-            <td class="whitespace-nowrap px-3 py-3 text-sm text-gray-500 dark:text-gray-400"><%= tsp.source %></td>
             <td class="relative whitespace-nowrap py-3 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
               <%= link_to "振り分ける", assign_admin_temporary_snapshot_person_path(tsp), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-4" %>
               <%= button_to "削除", admin_temporary_snapshot_person_path(tsp), method: :delete,
@@ -69,7 +79,7 @@
         <% end %>
         <% if @temporary_snapshot_people.empty? %>
           <tr>
-            <td colspan="6" class="px-3 py-6 text-center text-sm text-gray-500 dark:text-gray-400">プールは空です。</td>
+            <td colspan="5" class="px-3 py-6 text-center text-sm text-gray-500 dark:text-gray-400">プールは空です。</td>
           </tr>
         <% end %>
       </tbody>
