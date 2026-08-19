@@ -3,7 +3,15 @@
 <div class="container mx-auto px-4 py-8">
   <div class="max-w-5xl mx-auto">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold dark:text-white"><%= title %></h1>
+      <h1 class="text-2xl font-bold dark:text-white">
+        <% if @unit.key.present? %>
+          <%= link_to @unit.name, profile_path(@unit.key),
+                class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300",
+                target: "_blank", rel: "noopener" %>
+        <% else %>
+          <%= @unit.name %>
+        <% end %> のスナップショット編集
+      </h1>
       <%= link_to "一覧に戻る", admin_unit_unit_snapshots_path(@unit),
             class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
     </div>
