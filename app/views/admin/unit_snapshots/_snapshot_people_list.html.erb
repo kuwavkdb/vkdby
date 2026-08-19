@@ -5,16 +5,16 @@
 
   <% if snapshot_people.any? %>
     <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg dark:ring-gray-700">
-      <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
+      <table class="min-w-full table-fixed divide-y divide-gray-300 dark:divide-gray-700">
         <thead class="bg-gray-50 dark:bg-gray-800">
           <tr>
             <th scope="col" class="relative py-3.5 pl-4 pr-3 sm:pl-6 w-10">
               <span class="sr-only">Sort</span>
             </th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Name</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Part</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Status</th>
-            <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+            <th scope="col" class="w-2/5 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Name</th>
+            <th scope="col" class="w-1/5 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Part</th>
+            <th scope="col" class="w-24 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Status</th>
+            <th scope="col" class="relative w-20 py-3.5 pl-3 pr-4 sm:pr-6">
               <span class="sr-only">Actions</span>
             </th>
           </tr>
@@ -29,7 +29,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </td>
-              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900 dark:text-gray-200">
+              <td class="px-3 py-4 text-sm text-gray-900 dark:text-gray-200 break-all">
                 <% if sp.person %>
                   <%= link_to sp.name, edit_admin_person_path(sp.person), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
                 <% else %>
@@ -42,7 +42,7 @@
                   <span class="ml-1 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">Support</span>
                 <% end %>
               </td>
-              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
+              <td class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 break-all">
                 <%= sp.part_alias.presence || sp.part.humanize %>
               </td>
               <td class="whitespace-nowrap px-3 py-4 text-sm">
@@ -61,15 +61,15 @@
                 </span>
               </td>
               <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-3">
-                <%= link_to "Edit",
+                <%= link_to "編集",
                       edit_admin_unit_unit_snapshot_snapshot_person_path(unit, unit_snapshot, sp),
                       class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
-                <%= button_to "Remove",
+                <%= button_to "削除",
                       admin_unit_unit_snapshot_snapshot_person_path(unit, unit_snapshot, sp),
                       method: :delete,
                       class: "text-red-600 hover:text-red-900 bg-transparent border-0 cursor-pointer p-0 inline dark:text-red-400 dark:hover:text-red-300",
                       form_class: "inline",
-                      onclick: "return confirm('Remove this member?')" %>
+                      onclick: "return confirm('このメンバーを削除しますか？')" %>
               </td>
             </tr>
           <% end %>
