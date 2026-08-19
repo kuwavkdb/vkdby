@@ -14,7 +14,7 @@ module TrendsHelper
   def twitter_url?(url)
     return false if url.blank?
 
-    url.match?(%r{^https?://(?:www\.)?(?:twitter\.com|x\.com)/[^/]+/status/\d+})
+    url.match?(Link::TWITTER_STATUS_URL_PATTERN)
   end
 
   def twitter_embed(_url, quote)

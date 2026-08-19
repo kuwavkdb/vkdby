@@ -54,6 +54,7 @@
           <div class="hidden md:block">
             <%= render LinksComponent.new(links: @links_for_list) %>
             <%= render SpotifyEmbedComponent.new(links: @links) %>
+            <%= render TwitterEmbedComponent.new(links: @twitter_links) %>
           </div>
           <div class="mt-4">
             <%= render 'layouts/google_adsense_square' %>
@@ -208,6 +209,7 @@
       <div id="links" class="md:hidden">
         <%= render LinksComponent.new(links: @links_for_list) %>
         <%= render SpotifyEmbedComponent.new(links: @links) %>
+        <%= render TwitterEmbedComponent.new(links: @twitter_links) %>
       </div>
 
       <section id="update-log" class="mt-8">
