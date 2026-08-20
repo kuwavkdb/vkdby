@@ -123,6 +123,8 @@
                                   </svg>
                                   <span class="sr-only">(外部サイト)</span>
                                 <% end %>
+                              <% elsif item[:internal_url].present? %>
+                                <%= link_to sanitize_with_ruby(item[:unit_name]), item[:internal_url], class: "text-unit dark:text-blue-400 underline decoration-unit/25 dark:decoration-blue-400/40 underline-offset-2 hover:decoration-unit dark:hover:decoration-blue-400 transition-colors" %>
                               <% elsif item[:old_key].present? %>
                                 <%= link_to sanitize_with_ruby(item[:unit_name]), "/#{item[:old_key]}.html", class: "text-unit dark:text-blue-400 underline decoration-unit/25 dark:decoration-blue-400/40 underline-offset-2 hover:decoration-unit dark:hover:decoration-blue-400 transition-colors" %>
                               <% else %>

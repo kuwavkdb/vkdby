@@ -83,8 +83,9 @@ class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
     assert_equal 'Rem.', concurrent[2][:part_and_name]
   end
 
-  test 'parse_old_history parses Markdown形式のリンク[Label](URL)をexternal_urlとして扱う' do
+  test 'parse_old_history はMarkdown形式のリンク[Label](target)のtargetがサイト内相対パスの場合internal_urlとして扱う' do
     # CustomPageDraftGeneratorが旧[[Label|target]]記法から変換した後の経歴テキストを想定
+    # （issue #1190: 以前はサイト内リンクもexternal_url扱いになり外部リンクアイコンが付いてしまっていた）
     history_str = '→ [GLAMOROUS HONEY](/glamorous-honey){{fn 2006/05/10加入}}'
     person = Person.new(old_history: history_str)
     history = person.parse_old_history
@@ -92,7 +93,8 @@ class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
     assert_equal 1, history.size
     item = history[0][0]
     assert_equal 'GLAMOROUS HONEY', item[:unit_name]
-    assert_equal '/glamorous-honey', item[:external_url]
+    assert_equal '/glamorous-honey', item[:internal_url]
+    assert_nil item[:external_url]
     assert_equal ['2006/05/10加入'], item[:notes]
   end
 
@@ -103,13 +105,34 @@ class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
 
     assert_equal 3, history.size
     assert_equal 'くりから。', history[0][0][:unit_name]
-    assert_equal '/kurikara', history[0][0][:external_url]
+    assert_equal '/kurikara', history[0][0][:internal_url]
+    assert_nil history[0][0][:external_url]
     assert_equal '一期', history[0][0][:part_and_name]
 
     assert_equal '(隠密華撃団)', history[1][0][:unit_name]
 
     assert_equal 'くりから。', history[2][0][:unit_name]
     assert_equal '二期', history[2][0][:part_and_name]
+  end
+
+  test 'parse_old_history はMarkdown形式のリンク[Label](URL)のURLが絶対URLの場合はexternal_urlのまま扱う' do
+    history_str = '[公式サイト](https://example.com/)'
+    person = Person.new(old_history: history_str)
+    history = person.parse_old_history
+
+    item = history[0][0]
+    assert_equal 'https://example.com/', item[:external_url]
+    assert_nil item[:internal_url]
+  end
+
+  test 'parse_old_history は旧wiki形式の外部リンク[LinkText|URL]のURLがサイト内相対パスの場合internal_urlとして扱う' do
+    history_str = '[くりから。|/kurikara]'
+    person = Person.new(old_history: history_str)
+    history = person.parse_old_history
+
+    item = history[0][0]
+    assert_equal '/kurikara', item[:internal_url]
+    assert_nil item[:external_url]
   end
 
   test 'parse_old_history parses旧wiki形式の外部リンク[LinkText|URL]をexternal_urlとして扱う' do
