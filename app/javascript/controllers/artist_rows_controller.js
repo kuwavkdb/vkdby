@@ -218,8 +218,13 @@ export default class extends Controller {
            data-destination-key="${this.escapeHtml(item.destination_key || "")}">
         <div class="font-medium text-gray-900 dark:text-gray-100">${this.escapeHtml(item.name)}</div>
         ${item.name_kana ? `<div class="text-xs text-gray-500 dark:text-gray-400">${this.escapeHtml(item.name_kana)}</div>` : ""}
+        ${item.key || item.destination_key ? `
+          <div class="flex items-center gap-2 text-xs">
+            ${item.key ? `<span class="text-gray-500 dark:text-gray-400">key: ${this.escapeHtml(item.key)}</span>` : ""}
+            ${item.destination_key ? `<span class="text-amber-600 dark:text-amber-400">→ ${this.escapeHtml(item.destination_key)}</span>` : ""}
+          </div>
+        ` : ""}
         ${item.history_summary ? `<div class="text-xs text-gray-500 dark:text-gray-400">${this.escapeHtml(item.history_summary)}</div>` : ""}
-        ${item.destination_key ? `<div class="text-xs text-amber-600 dark:text-amber-400">→ ${this.escapeHtml(item.destination_key)}</div>` : ""}
       </div>
     `).join("") + freeTextHtml
 

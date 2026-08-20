@@ -21,7 +21,27 @@
 require 'test_helper'
 
 class LinkTest < ActiveSupport::TestCase
-  # test "the truth" do
-  #   assert true
-  # end
+  test 'twitter_status_url? is true for a twitter.com status URL' do
+    link = Link.new(url: 'https://twitter.com/nonameactorsjp/status/892008297930268674')
+
+    assert link.twitter_status_url?
+  end
+
+  test 'twitter_status_url? is true for an x.com status URL' do
+    link = Link.new(url: 'https://x.com/nonameactorsjp/status/892008297930268674')
+
+    assert link.twitter_status_url?
+  end
+
+  test 'twitter_status_url? is false for a plain twitter.com profile URL' do
+    link = Link.new(url: 'https://twitter.com/nonameactorsjp')
+
+    refute link.twitter_status_url?
+  end
+
+  test 'twitter_status_url? is false for a blank URL' do
+    link = Link.new(url: nil)
+
+    refute link.twitter_status_url?
+  end
 end

@@ -1,0 +1,15 @@
+<% if render? %>
+  <section class="mt-8 mb-6">
+    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
+      X (Twitter)
+    </h2>
+    <div class="grid gap-4">
+      <% @twitter_links.each do |link| %>
+        <blockquote class="twitter-tweet">
+          <a href="<%= link.url %>"></a>
+        </blockquote>
+      <% end %>
+    </div>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </section>
+<% end %>
