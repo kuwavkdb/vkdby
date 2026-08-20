@@ -19,9 +19,16 @@
 #  index_links_on_linkable  (linkable_type,linkable_id)
 #
 class Link < ApplicationRecord
+  # X(Twitter) の個別ツイートURL（twitter.com / x.com どちらも対象）
+  TWITTER_STATUS_URL_PATTERN = %r{^https?://(?:www\.)?(?:twitter\.com|x\.com)/[^/]+/status/\d+}
+
   belongs_to :linkable, polymorphic: true
 
   validates :url, presence: true
+
+  def twitter_status_url?
+    url.present? && url.match?(TWITTER_STATUS_URL_PATTERN)
+  end
 
   def youtube_video_id
     return nil unless url.present?

@@ -25,7 +25,10 @@ export default class extends Controller {
         const host = url.hostname.replace(/^www\./i, "").toLowerCase()
         const path = url.pathname
 
-        if (host === "x.com" || host === "twitter.com") return "X"
+        if (host === "x.com" || host === "twitter.com") {
+            if (/^\/[^/]+\/status\/\d+/.test(path)) return "X Post"
+            return "X"
+        }
         if (host === "open.spotify.com") return "Spotify"
         if (host === "youtube.com" || host === "m.youtube.com") {
             if (/^\/(?:watch|shorts\/)/.test(path)) return "YouTube Movie"
