@@ -21,7 +21,7 @@
         <% tags_in_group = grouped[group]&.sort_by { |t| t.order_in_group || Float::INFINITY } %>
         <% next if tags_in_group.blank? %>
         <div>
-          <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1"><%= group.name %></p>
+          <p class="sticky top-0 z-20 bg-white dark:bg-gray-800 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1"><%= group.name %></p>
           <div class="flex flex-wrap gap-3">
             <% tags_in_group.each do |tag| %>
               <label class="inline-flex items-center gap-1.5 cursor-pointer">
@@ -41,7 +41,7 @@
       <% ungrouped = grouped[nil]&.sort_by { |t| t.order_in_group || Float::INFINITY } %>
       <% if ungrouped.present? %>
         <div>
-          <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">グループなし</p>
+          <p class="sticky top-0 z-20 bg-white dark:bg-gray-800 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">グループなし</p>
           <div class="flex flex-wrap gap-3">
             <% ungrouped.each do |tag| %>
               <label class="inline-flex items-center gap-1.5 cursor-pointer">
