@@ -320,6 +320,21 @@ module Admin
       assert_equal 'active', @unit.reload.status
     end
 
+    test 'edit shows unit snapshots with current first, then ordered by display order' do
+      third = @unit.unit_snapshots.create!(label: 'Snapshot Third', snapshot_date: '2024-03-01', snapshot_index: 3)
+      first = @unit.unit_snapshots.create!(label: 'Snapshot First', snapshot_date: '2024-01-01', snapshot_index: 1)
+      current = @unit.unit_snapshots.create!(label: 'Snapshot Current', snapshot_date: '2024-02-01', snapshot_index: 2,
+                                             current: true)
+
+      get edit_admin_unit_path(@unit)
+
+      assert_response :success
+      body = response.body
+      positions = [current, first, third].map { |snapshot| body.index(snapshot.label) }
+      assert positions.all?, 'expected all snapshot labels to appear in the response body'
+      assert_equal positions, positions.sort
+    end
+
     private
 
     def login_as_admin
