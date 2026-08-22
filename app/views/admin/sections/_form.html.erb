@@ -84,12 +84,7 @@
             data-action="click->markdown-preview#serverPreview">
       プレビュー
     </button>
-    <% cancel_path = case sectionable
-                     when Unit       then edit_admin_unit_path(sectionable)
-                     when Person     then edit_admin_person_path(sectionable)
-                     when CustomPage then edit_admin_custom_page_path(sectionable)
-                     end %>
-    <%= link_to "キャンセル", cancel_path,
+    <%= link_to "キャンセル", sectionable_path(sectionable),
           class: "px-4 py-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" %>
     <%= form.submit class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer" %>
   </div>

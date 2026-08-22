@@ -50,5 +50,25 @@ module Admin
       assert_response :success
       assert_select "button[data-action*='markdown-preview#serverPreview']", text: 'プレビュー'
     end
+
+    test 'edit画面の右上に紐づくUnitへの導線リンクがある' do
+      unit = Unit.create!(name: 'Linked Unit', key: 'sections-linked-unit', status: :active)
+      section = unit.sections.create!(name: 'about', markdown: '本文')
+
+      get edit_admin_section_path(section)
+
+      assert_response :success
+      assert_select "a[href='#{edit_admin_unit_path(unit)}']", text: /Linked Unit/
+    end
+
+    test 'edit画面の削除ボタンはページ下部に配置される（issue #1193 フォローアップ）' do
+      unit = Unit.create!(name: 'Delete Button Unit', key: 'sections-delete-button-unit', status: :active)
+      section = unit.sections.create!(name: 'about', markdown: '本文')
+
+      get edit_admin_section_path(section)
+
+      assert_response :success
+      assert_select "form[action='#{admin_section_path(section)}'] button", text: '削除'
+    end
   end
 end
