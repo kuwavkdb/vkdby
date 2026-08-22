@@ -48,7 +48,7 @@ module Admin
       get edit_admin_section_path(section)
 
       assert_response :success
-      assert_select "button[data-action*='markdown-preview#serverPreview']", text: 'プレビュー'
+      assert_select "button[data-action*='markdown-preview#serverPreview']", text: 'Markdownプレビュー'
     end
 
     test 'edit画面の右上に紐づくUnitへの導線リンクがある' do

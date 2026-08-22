@@ -13,9 +13,9 @@ module SectionsHelper
 
   def sectionable_label(sectionable)
     case sectionable
-    when Unit       then "Unit: #{sectionable.name}"
-    when Person     then "Person: #{sectionable.name}"
-    when CustomPage then "Custom Page: #{sectionable.title}"
+    when Unit       then "ユニット「#{sectionable.name}」の編集へ"
+    when Person     then "人物「#{sectionable.name}」の編集へ"
+    when CustomPage then "カスタムページ「#{sectionable.title}」の編集へ"
     end
   end
 end
