@@ -10,7 +10,7 @@
 
   <div class="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed wiki-content">
     <% if @section.markdown.present? %>
-      <%= markdown(@section.markdown) %>
+      <%= markdown(@section.markdown, sectionable: @section.sectionable) %>
     <% else %>
       <%= format_wiki_content(@section.wiki_text) %>
     <% end %>

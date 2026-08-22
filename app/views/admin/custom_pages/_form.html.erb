@@ -41,7 +41,7 @@
   <div>
     <div class="flex justify-between items-baseline">
       <%= form.label :body, "本文", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-      <p class="text-xs text-gray-500 dark:text-gray-400">Markdown形式で記述できます（<code>{{include}}</code>/<code>{{snapshot}}</code>/<code>{{item}}</code> は「プレビュー」を押すと確認できます）</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400">Markdown形式で記述できます（<code>{{include}}</code>/<code>{{snapshot}}</code>/<code>{{item}}</code> は「Markdownプレビュー」を押すと確認できます）</p>
     </div>
     <% unless custom_page.persisted? && current_user.admin? %>
       <p class="mt-1 mb-2 text-xs text-gray-400 dark:text-gray-500">画像のアップロードは保存後に利用できます</p>
@@ -91,7 +91,7 @@
       <button type="button"
               class="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium border border-gray-300 rounded-md text-gray-900 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700"
               data-action="click->markdown-preview#serverPreview">
-        プレビュー
+        Markdownプレビュー
       </button>
       <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
         <%= form.check_box :active,
