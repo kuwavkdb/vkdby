@@ -5,17 +5,21 @@
 # Table name: sections
 #
 #  id               :bigint           not null, primary key
+#  active           :boolean          default(TRUE), not null
+#  discarded_at     :datetime
+#  markdown         :text
 #  name             :string
-#  wiki_text        :text
-#  sort_order       :integer
 #  sectionable_type :string           not null
-#  sectionable_id   :bigint           not null
+#  sort_order       :integer
+#  wiki_text        :text
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
+#  sectionable_id   :bigint           not null
 #
 # Indexes
 #
-#  index_sections_on_sectionable  (sectionable_type,sectionable_id)
+#  index_sections_on_discarded_at  (discarded_at)
+#  index_sections_on_sectionable   (sectionable_type,sectionable_id)
 #
 class Section < ApplicationRecord
   include Discard::Model
@@ -24,6 +28,9 @@ class Section < ApplicationRecord
   has_many_attached :images
 
   validates :name, presence: true
+
+  # 公開ビューに表示してよいセクション（discardとは独立。削除はせず一時的に非公開にしたい場合に使う）
+  scope :publicly_visible, -> { where(active: true) }
 
   after_commit :expire_including_pages_cache, on: %i[create update destroy]
 

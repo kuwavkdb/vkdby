@@ -31,6 +31,31 @@ module Admin
       assert_equal '<p>こんにちは</p>', response.parsed_body['html'].strip
     end
 
+    test 'preview does not expand include plugin for an inactive section' do
+      unit = Unit.create!(name: 'Preview Inactive Include Unit', key: 'sections-preview-inactive-include-unit',
+                          status: :active)
+      unit.sections.create!(name: 'greeting', markdown: 'こんにちは', active: false)
+
+      post preview_admin_sections_path, params: {
+        sectionable_type: 'Unit', sectionable_id: unit.id, body: '{{include ,greeting}}'
+      }
+
+      assert_response :success
+      assert_equal '', response.parsed_body['html'].strip
+    end
+
+    test 'update can toggle active off and on' do
+      unit = Unit.create!(name: 'Toggle Active Unit', key: 'sections-toggle-active-unit', status: :active)
+      section = unit.sections.create!(name: 'about', markdown: '本文')
+
+      patch admin_section_path(section), params: { section: { active: false } }
+      assert_redirected_to edit_admin_unit_path(unit)
+      assert_not section.reload.active?
+
+      patch admin_section_path(section), params: { section: { active: true } }
+      assert section.reload.active?
+    end
+
     test 'edit画面の下部にMarkdownヘルプが表示される' do
       unit = Unit.create!(name: 'Help Display Unit', key: 'sections-help-display-unit', status: :active)
       section = unit.sections.create!(name: 'about', markdown: '本文')
