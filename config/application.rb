@@ -44,6 +44,13 @@ module Vkdby
     # Only relevant during the migration period; remove once the old site is retired.
     config.old_key_url_base = ENV.fetch('OLD_KEY_URL_BASE', 'https://wiki.vkdb.jp')
 
+    # Canonical host for <link rel="canonical"> on unit/person pages (issue #1208).
+    # Currently running on a pre-production subdomain that differs from the production
+    # domain (www.vkdb.jp); set to prevent the subdomain from being indexed as the
+    # canonical source. TODO: once the production domain switch is complete, remove
+    # this setting and the canonical tag output that references it.
+    config.canonical_host = ENV.fetch('CANONICAL_HOST', nil)
+
     # Google Custom Search Engine ID, offered as a supplementary web-wide search
     # option alongside the internal DB search on error pages (issue #962).
     config.google_cse_id = ENV.fetch('GOOGLE_CSE_ID', '012501366286233936630:nhzl-0aow2y')
