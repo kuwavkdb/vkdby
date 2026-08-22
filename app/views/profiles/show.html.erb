@@ -1,6 +1,11 @@
 <% content_for :title, @resource.name_kana.present? ? "#{@resource.name}（#{@resource.name_kana}）" : @resource.name %>
 <% content_for :head do %>
   <style>.page-nav-scroll::-webkit-scrollbar { display: none; }</style>
+  <% if Rails.application.config.canonical_host.present? %>
+    <%# TODO: 本番ドメイン（www.vkdb.jp）への切り替え完了後、この canonical タグ出力と
+        config.canonical_host（CANONICAL_HOST）ごと削除する（issue #1208） %>
+    <%= tag.link rel: "canonical", href: "https://#{Rails.application.config.canonical_host}#{request.path}" %>
+  <% end %>
 <% end %>
 <div class="flex justify-center">
   <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl md:overflow-hidden w-full min-w-0 max-w-5xl animate-in slide-in-from-bottom-5 duration-700" data-google-adsense-noads>
