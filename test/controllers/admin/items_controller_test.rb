@@ -49,6 +49,19 @@ module Admin
       assert item.reload.various_artists?
     end
 
+    test 'create redirects to the edit page of the newly created item' do
+      post admin_items_path, params: {
+        item: {
+          title: 'Test Item',
+          release_date: Date.today,
+          link_url: "https://example.com/item-#{SecureRandom.hex(4)}"
+        }
+      }
+
+      item = Item.order(:id).last
+      assert_redirected_to edit_admin_item_path(item)
+    end
+
     test 'new does not auto-confirm an artist passed via query params, even with an artist_key' do
       get new_admin_item_path, params: {
         artist_name: 'シド',
