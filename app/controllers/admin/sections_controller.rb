@@ -58,6 +58,15 @@ module Admin
       head :ok
     end
 
+    # {{include}}/{{snapshot}}/{{item}} 等のプラグイン記法を含め、実際の公開ページと
+    # 同じApplicationHelper#markdownでレンダリングしたHTMLを返す（issue #1193）。
+    # sectionable_type/sectionable_idはフォームのhidden_field_tagから送られる
+    # （set_sectionableが@sectionableを解決する）ため、{{include}}の
+    # 「識別子省略＝自分自身」記法も編集中の内容でプレビューできる。
+    def preview
+      render json: { html: helpers.markdown(params[:body].to_s, sectionable: @sectionable) }
+    end
+
     private
 
     def set_sectionable

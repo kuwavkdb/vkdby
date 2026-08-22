@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["textarea", "previewContent", "imageInput", "uploadStatus", "previewStatus"]
-  static values = { uploadUrl: String, previewUrl: String, customPageId: String }
+  static values = { uploadUrl: String, previewUrl: String, customPageId: String, sectionableType: String, sectionableId: String }
 
   async connect() {
     const { marked } = await import("marked")
@@ -33,6 +33,13 @@ export default class extends Controller {
     formData.append("body", this.textareaTarget.value)
     if (this.hasCustomPageIdValue && this.customPageIdValue) {
       formData.append("id", this.customPageIdValue)
+    }
+    // Section（Unit/Person付随セクション）のプレビューでは、{{include}}の
+    // 「識別子省略＝自分自身」記法を解決するためsectionableをここで伝える
+    // （section_idではなくsectionable自体を渡す。新規作成中はsection未保存のため）。
+    if (this.hasSectionableTypeValue && this.sectionableTypeValue) {
+      formData.append("sectionable_type", this.sectionableTypeValue)
+      formData.append("sectionable_id", this.sectionableIdValue)
     }
 
     try {

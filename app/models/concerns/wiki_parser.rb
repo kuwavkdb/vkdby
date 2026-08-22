@@ -7,7 +7,8 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
   # 戻り値: [
   #   [
   #     { unit_name: "ユニット名", part_and_name: "Part" or "Part+PersonName" or "PersonName",
-  #       old_key: "EUC-JPエンコードされたユニット名", external_url: "外部URL", note: "備考(日付など)" },
+  #       old_key: "EUC-JPエンコードされたユニット名", external_url: "外部URL",
+  #       internal_url: "サイト内相対パス", note: "備考(日付など)" },
   #     ... (同時期の活動)
   #   ],
   #   ...
@@ -73,11 +74,12 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
             notes: metadata[:notes]
           }
         # Pattern 1b: [Label](target) or [Label](target)(Part) - Markdown形式のリンク
-        # （CustomPageDraftGeneratorが旧[[Label|target]]記法から変換した経歴テキストなどで使用される）
+        # （CustomPageDraftGeneratorが旧[[Label|target]]記法から変換した経歴テキストなどで使用される。
+        # targetが"/xxx"のようなサイト内相対パスの場合はinternal_url、それ以外はexternal_urlとして扱う）
         # Label に | を含む場合はPattern 2（旧wikiのパイプ外部リンク）を優先させるため除外する
         when /\[([^\]|]+)\]\(([^)]+)\)(?:\(([^)]+)\))?/
           link_text = ::Regexp.last_match(1)
-          target = ::Regexp.last_match(2)
+          target = ::Regexp.last_match(2).strip
           part_and_name = ::Regexp.last_match(3)
 
           display_link_text = wrapped_in_parens ? "(#{link_text.strip})" : link_text.strip
@@ -85,13 +87,14 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
           concurrent_items << {
             unit_name: display_link_text,
             part_and_name: part_and_name&.strip,
-            external_url: target.strip,
+            **link_url_attribute(target),
             notes: metadata[:notes]
           }
         # Pattern 2: [LinkText|URL] or [LinkText|URL](Part) - External link
+        # （URLがサイト内相対パスの場合はinternal_urlとして扱う）
         when /\[([^\]|]+)\|([^\]]+)\](?:\(([^)]+)\))?/
           link_text = ::Regexp.last_match(1)
-          url = ::Regexp.last_match(2)
+          url = ::Regexp.last_match(2).strip
           part_and_name = ::Regexp.last_match(3)
 
           # If wrapped in parentheses, add them to display
@@ -100,7 +103,7 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
           concurrent_items << {
             unit_name: display_link_text,
             part_and_name: part_and_name&.strip,
-            external_url: url.strip,
+            **link_url_attribute(url),
             notes: metadata[:notes]
           }
         # Pattern 3: Plain text - No link, display as-is (including parentheses)
@@ -120,6 +123,13 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
   end
 
   private
+
+  # リンク先がサイト内の相対パスならinternal_url、それ以外（外部URL）ならexternal_urlとして
+  # ハッシュを組み立てる。表示側（profiles/show.html.erb, history_row_component.html.erb）は
+  # internal_urlの場合は外部リンクアイコン・target="_blank"を付けずにサイト内リンクとして描画する
+  def link_url_attribute(url)
+    SiteLinkClassifier.relative_or_safe_link?(url) ? { internal_url: url } : { external_url: url }
+  end
 
   def process_plugins(text, metadata = {})
     text.gsub(/\{\{([^}]+)\}\}/) do |match|

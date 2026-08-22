@@ -108,7 +108,8 @@ class Person < ApplicationRecord
   # old_historyをパースして履歴アイテムの配列を返す
   # 戻り値: [
   #   [
-  #     { unit_name: "ユニット名", part_and_name: "Part" or "Part+PersonName" or "PersonName", old_key: "EUC-JPエンコードされたユニット名", external_url: "外部URL" },
+  #     { unit_name: "ユニット名", part_and_name: "Part" or "Part+PersonName" or "PersonName",
+  #       old_key: "EUC-JPエンコードされたユニット名", external_url: "外部URL", internal_url: "サイト内相対パス" },
   #     ... (同時期の活動)
   #   ],
   #   ...

@@ -1,8 +1,16 @@
 <% title = "セクション編集: #{@section.name}" %>
 <% content_for :title, title %>
 <div class="container mx-auto px-2 py-4 max-w-4xl">
-  <div class="flex items-center justify-between mb-6">
+  <div class="sticky top-0 z-30 -mx-2 px-2 py-4 mb-6 flex justify-between items-center bg-zinc-50/95 dark:bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-800">
     <h1 class="text-2xl font-bold dark:text-white"><%= title %></h1>
+    <%= link_to sectionable_label(@sectionable), sectionable_path(@sectionable),
+          class: "text-sm font-medium text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" %>
+  </div>
+  <%= render "form", section: @section, sectionable: @sectionable %>
+
+  <%= render "admin/shared/markdown_help" %>
+
+  <div class="mt-6 flex justify-start">
     <% if @section.discarded? %>
       <%= button_to "復元",
             undiscard_admin_section_path(@section),
@@ -16,5 +24,4 @@
             class: "inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 dark:text-red-300 dark:bg-red-900/50 dark:hover:bg-red-900 rounded-md transition-colors" %>
     <% end %>
   </div>
-  <%= render "form", section: @section, sectionable: @sectionable %>
 </div>

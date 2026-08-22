@@ -34,6 +34,16 @@ module Admin
       assert_match @unit.name, response.body
     end
 
+    test 'should list assign target snapshots ordered by snapshot_index, matching the snapshot list order' do
+      @snapshot.update!(snapshot_index: 2)
+      @other_snapshot.update!(snapshot_index: 1)
+
+      get assign_admin_temporary_snapshot_person_path(@temporary_snapshot_person)
+      assert_response :success
+      assert_operator response.body.index(@other_snapshot.display_label),
+                      :<, response.body.index(@snapshot.display_label)
+    end
+
     test 'should assign to an existing snapshot and remove from pool' do
       assert_difference('SnapshotPerson.count', 1) do
         assert_difference('TemporarySnapshotPerson.count', -1) do

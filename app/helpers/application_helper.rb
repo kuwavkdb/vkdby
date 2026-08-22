@@ -26,7 +26,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     private
 
     def external_url?(url)
-      return false if url.blank? || url.start_with?('/', '#', 'mailto:')
+      return false if url.blank? || SiteLinkClassifier.relative_or_safe_link?(url)
       return true unless url.match?(%r{\Ahttps?://})
 
       URI.parse(url).host != @site_host
@@ -117,7 +117,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   private
 
   def external_url?(url)
-    return false if url.blank? || url.start_with?('/', '#', 'mailto:')
+    return false if url.blank? || SiteLinkClassifier.relative_or_safe_link?(url)
     return true unless url.match?(%r{\Ahttps?://})
 
     URI.parse(url).host != request.host

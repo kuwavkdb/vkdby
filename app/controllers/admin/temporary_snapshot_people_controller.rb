@@ -28,7 +28,7 @@ module Admin
     def assign
       target_unit_id = params[:unit_id].presence || @temporary_snapshot_person.hint_unit_id
       @unit = Unit.kept.find_by(id: target_unit_id)
-      @unit_snapshots = @unit ? @unit.unit_snapshots.chronological : UnitSnapshot.none
+      @unit_snapshots = @unit ? @unit.unit_snapshots.order(:snapshot_index) : UnitSnapshot.none
 
       return unless request.post?
 
@@ -85,7 +85,7 @@ module Admin
     end
 
     def render_assign_errors(messages)
-      @unit_snapshots = @unit.unit_snapshots.chronological
+      @unit_snapshots = @unit.unit_snapshots.order(:snapshot_index)
       flash.now[:alert] = "振り分けに失敗しました: #{messages.join('、')}"
       render :assign, status: :unprocessable_entity
     end
