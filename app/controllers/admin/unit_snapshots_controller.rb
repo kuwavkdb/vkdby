@@ -6,8 +6,9 @@ module Admin
     before_action :set_unit_snapshot, only: %i[edit update destroy copy copy_to_unit]
 
     def index
+      # ユニットページ（ProfilesController#load_unit_data）の表示順に合わせる
       @unit_snapshots = @unit.unit_snapshots.includes(snapshot_people: :person)
-                             .order(:snapshot_index)
+                             .order(past: :asc, current: :desc, snapshot_index: :asc)
     end
 
     def new
@@ -102,7 +103,7 @@ module Admin
     end
 
     def unit_snapshot_params
-      params.require(:unit_snapshot).permit(:snapshot_date, :label, :current, :active)
+      params.require(:unit_snapshot).permit(:snapshot_date, :label, :current, :active, :past)
     end
 
     def copy_snapshot_to(target_unit)
