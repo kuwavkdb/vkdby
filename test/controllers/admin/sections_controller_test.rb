@@ -83,5 +83,18 @@ module Admin
       assert_response :success
       assert_select '.sticky.top-0 h1', text: /セクション追加/
     end
+
+    test 'フッタのキャンセル・プレビューボタンの並び順がCustomPage編集画面と統一されている' do
+      unit = Unit.create!(name: 'Button Order Unit', key: 'sections-button-order-unit', status: :active)
+      section = unit.sections.create!(name: 'about', markdown: '本文')
+
+      get edit_admin_section_path(section)
+
+      assert_response :success
+      cancel_index = response.body.index('キャンセル')
+      preview_index = response.body.index('Markdownプレビュー')
+      assert_operator cancel_index, :<, preview_index,
+                      'キャンセルボタンはプレビューボタンより前に表示されるべき（CustomPage編集画面と同じ並び）'
+    end
   end
 end
