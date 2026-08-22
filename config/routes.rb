@@ -99,6 +99,7 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
       end
       collection do
         patch :reorder
+        post :preview
       end
     end
 
