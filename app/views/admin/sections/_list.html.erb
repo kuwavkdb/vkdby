@@ -36,6 +36,8 @@
                 <%= section.name %>
                 <% if discarded %>
                   <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">削除済み</span>
+                <% elsif !section.active? %>
+                  <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">非公開</span>
                 <% end %>
               </td>
               <td class="whitespace-nowrap px-3 py-3 text-sm text-gray-500 dark:text-gray-400">

@@ -26,7 +26,7 @@
         <% if (@resource.is_a?(Person) && @old_history_items.present?) || (@resource.is_a?(Unit) && @history.present?) %>
           <a href="#history" class="flex items-center py-3 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors shrink-0">History</a>
         <% end %>
-        <% if @resource.sections.kept.exists? %>
+        <% if @resource.sections.kept.publicly_visible.exists? %>
           <a href="#sections" class="flex items-center py-3 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors shrink-0">Notes</a>
         <% end %>
         <% if @items.present? %>
@@ -176,9 +176,9 @@
             <% end %>
           <% end %>
 
-          <% if @resource.sections.kept.exists? %>
+          <% if @resource.sections.kept.publicly_visible.exists? %>
             <div id="sections">
-              <%= render SectionComponent.with_collection(@resource.sections.kept.order(:sort_order), admin: defined?(logged_in?) && logged_in?) %>
+              <%= render SectionComponent.with_collection(@resource.sections.kept.publicly_visible.order(:sort_order), admin: defined?(logged_in?) && logged_in?) %>
             </div>
           <% end %>
         </div>

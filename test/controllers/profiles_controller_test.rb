@@ -85,6 +85,18 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, '諸事情により掲載を停止しております。'
   end
 
+  test 'shows an active section but hides an inactive section' do
+    unit = Unit.create!(name: 'Section Visibility Unit', key: 'unit-section-visibility', status: :active)
+    unit.sections.create!(name: 'Visible Note', markdown: 'active section body')
+    unit.sections.create!(name: 'Hidden Note', markdown: 'inactive section body', active: false)
+
+    get profile_path(unit.key)
+
+    assert_response :success
+    assert_includes response.body, 'active section body'
+    assert_not_includes response.body, 'inactive section body'
+  end
+
   test 'unit trend list shows the recorded name when it differs from the current unit name' do
     unit = Unit.create!(name: 'Renamed Trend Unit', key: 'unit-trend-name-badge', status: :active)
     Trend.create!(title: 'Trend before rename', date: Date.current, publish_start_at: Time.current,
