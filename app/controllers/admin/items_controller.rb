@@ -38,7 +38,7 @@ module Admin
       @item.artists = build_artists_from_json(params[:item][:artists_json])
 
       if @item.save
-        redirect_to admin_items_path, notice: 'Item created successfully.'
+        redirect_to edit_admin_item_path(@item), notice: 'Item created successfully.'
       else
         render :new, status: :unprocessable_entity
       end
