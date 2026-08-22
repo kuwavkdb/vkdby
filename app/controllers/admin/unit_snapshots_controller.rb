@@ -102,7 +102,7 @@ module Admin
     end
 
     def unit_snapshot_params
-      params.require(:unit_snapshot).permit(:snapshot_date, :label, :current, :active)
+      params.require(:unit_snapshot).permit(:snapshot_date, :label, :current, :active, :past)
     end
 
     def copy_snapshot_to(target_unit)
