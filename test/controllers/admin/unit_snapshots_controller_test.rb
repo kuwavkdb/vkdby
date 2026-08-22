@@ -15,6 +15,18 @@ module Admin
       assert_response :success
     end
 
+    test 'should list snapshots ordered to match the unit page and show RELATED badge for past snapshots' do
+      other_snapshot = unit_snapshots(:two)
+      @snapshot.update!(past: true, snapshot_index: 1)
+      other_snapshot.update!(past: false, snapshot_index: 2)
+
+      get admin_unit_unit_snapshots_path(@unit)
+      assert_response :success
+      assert_operator response.body.index(other_snapshot.display_label),
+                      :<, response.body.index(@snapshot.display_label)
+      assert_match 'RELATED', response.body
+    end
+
     test 'should get new' do
       get new_admin_unit_unit_snapshot_path(@unit)
       assert_response :success
@@ -45,11 +57,12 @@ module Admin
 
     test 'should update unit_snapshot' do
       patch admin_unit_unit_snapshot_path(@unit, @snapshot), params: {
-        unit_snapshot: { label: 'Updated Label' }
+        unit_snapshot: { label: 'Updated Label', past: true }
       }
       assert_redirected_to admin_unit_unit_snapshots_path(@unit)
       @snapshot.reload
       assert_equal 'Updated Label', @snapshot.label
+      assert @snapshot.past?
     end
 
     test 'should destroy unit_snapshot' do
