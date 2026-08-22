@@ -70,5 +70,18 @@ module Admin
       assert_response :success
       assert_select "form[action='#{admin_section_path(section)}'] button", text: '削除'
     end
+
+    test 'edit/new画面のヘッダーが上部に固定表示される（sticky）' do
+      unit = Unit.create!(name: 'Sticky Header Unit', key: 'sections-sticky-header-unit', status: :active)
+      section = unit.sections.create!(name: 'about', markdown: '本文')
+
+      get edit_admin_section_path(section)
+      assert_response :success
+      assert_select '.sticky.top-0 h1', text: /セクション編集/
+
+      get new_admin_section_path(sectionable_type: 'Unit', sectionable_id: unit.id)
+      assert_response :success
+      assert_select '.sticky.top-0 h1', text: /セクション追加/
+    end
   end
 end
