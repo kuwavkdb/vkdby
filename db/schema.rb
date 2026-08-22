@@ -359,7 +359,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_120000) do
     t.bigint "unit_id", null: false
     t.datetime "updated_at", null: false
     t.index ["unit_id", "current", "snapshot_index"], name: "index_unit_snapshots_on_unit_id_and_current_and_index"
-    t.index ["unit_id", "past", "current", "snapshot_index"], name: "index_unit_snapshots_on_unit_id_and_past_and_current_and_index"
+    t.index ["unit_id", "past", "current", "snapshot_index"], name: "index_unit_snapshots_on_unit_id_and_past_and_current_and_index", order: { current: :desc }
     t.index ["unit_id"], name: "index_unit_snapshots_on_unit_id"
   end
 
