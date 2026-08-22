@@ -335,6 +335,18 @@ module Admin
       assert_equal positions, positions.sort
     end
 
+    test 'edit shows past snapshots after non-past snapshots' do
+      related = @unit.unit_snapshots.create!(label: 'Snapshot Related', snapshot_date: '2020-01-01',
+                                             snapshot_index: 1, past: true)
+      members = @unit.unit_snapshots.create!(label: 'Snapshot Members', snapshot_date: '2024-01-01',
+                                             snapshot_index: 2, past: false)
+
+      get edit_admin_unit_path(@unit)
+
+      assert_response :success
+      assert_operator response.body.index(members.label), :<, response.body.index(related.label)
+    end
+
     private
 
     def login_as_admin
