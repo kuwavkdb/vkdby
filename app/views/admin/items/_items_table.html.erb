@@ -18,7 +18,7 @@
     </thead>
     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
       <% @items.each do |item| %>
-        <tr>
+        <tr class="<%= item.discarded? ? 'bg-red-50 dark:bg-red-950/40' : '' %>">
           <% if @show_bulk_artist_ui %>
             <% matched_and_unlinked = (item.artists || []).any? { |a| a[@match_type].to_s == @match_value && a['key'].blank? } %>
             <td class="px-4 py-4">
@@ -28,6 +28,9 @@
           <% end %>
           <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
             <%= link_to item.title, item_path(item), class: "text-indigo-600 hover:text-indigo-900 max-w-xs line-clamp-2 block" %>
+            <% if item.discarded? %>
+              <span class="ml-1 text-xs text-red-500">削除済み</span>
+            <% end %>
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"><%= item.release_date %></td>
           <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
@@ -71,11 +74,17 @@
             <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 break-words"><%= item.asin %></td>
           <% end %>
           <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-            <% if current_user.super_operator_or_above? %>
-              <%= link_to "Edit", edit_admin_item_path(item), class: "text-indigo-600 hover:text-indigo-900 mr-4" %>
-            <% end %>
-            <% if current_user.admin? %>
-              <%= link_to "Delete", admin_item_path(item), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "text-red-600 hover:text-red-900" %>
+            <% if item.discarded? %>
+              <% if current_user.admin? %>
+                <%= link_to "復元", undiscard_admin_item_path(item), data: { turbo_method: :patch, turbo_confirm: "「#{item.title}」を復元します。よろしいですか？" }, class: "text-green-600 hover:text-green-900" %>
+              <% end %>
+            <% else %>
+              <% if current_user.super_operator_or_above? %>
+                <%= link_to "Edit", edit_admin_item_path(item), class: "text-indigo-600 hover:text-indigo-900 mr-4" %>
+              <% end %>
+              <% if current_user.admin? %>
+                <%= link_to "Delete", admin_item_path(item), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "text-red-600 hover:text-red-900" %>
+              <% end %>
             <% end %>
           </td>
         </tr>

@@ -286,6 +286,70 @@ module Admin
       assert_nil item.reload.artists.first['key']
     end
 
+    test 'destroy soft-deletes the item instead of destroying the record' do
+      delete logout_path
+      post login_path, params: { email: users(:admin).email, password: 'password' }
+      item = Item.create!(title: 'Target Item', release_date: Date.today,
+                          link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+
+      delete admin_item_path(item)
+
+      assert_redirected_to admin_items_path
+      assert item.reload.discarded?
+      assert Item.with_discarded.exists?(item.id)
+    end
+
+    test 'destroy requires admin role' do
+      item = Item.create!(title: 'Target Item', release_date: Date.today,
+                          link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+
+      delete admin_item_path(item)
+
+      assert_redirected_to root_path
+      assert_not item.reload.discarded?
+    end
+
+    test 'undiscard restores a discarded item' do
+      delete logout_path
+      post login_path, params: { email: users(:admin).email, password: 'password' }
+      item = Item.create!(title: 'Target Item', release_date: Date.today,
+                          link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+      item.discard
+
+      patch undiscard_admin_item_path(item)
+
+      assert_redirected_to admin_items_path
+      assert_not item.reload.discarded?
+    end
+
+    test 'index does not show discarded items by default' do
+      kept = Item.create!(title: 'Kept Item', release_date: Date.today,
+                          link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+      discarded = Item.create!(title: 'Discarded Item', release_date: Date.today,
+                               link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+      discarded.discard
+
+      get admin_items_path
+
+      assert_response :success
+      assert_includes response.body, kept.title
+      assert_not_includes response.body, discarded.title
+    end
+
+    test 'index with discarded=only shows only discarded items' do
+      kept = Item.create!(title: 'Kept Item', release_date: Date.today,
+                          link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+      discarded = Item.create!(title: 'Discarded Item', release_date: Date.today,
+                               link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+      discarded.discard
+
+      get admin_items_path(discarded: 'only')
+
+      assert_response :success
+      assert_includes response.body, discarded.title
+      assert_not_includes response.body, kept.title
+    end
+
     test 'bulk_artist_update requires super_operator role' do
       delete logout_path
       operator = User.create!(email: 'operator-bulk-artist-test@example.com', name: 'Operator', password: 'password', role: :operator)

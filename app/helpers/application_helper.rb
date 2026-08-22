@@ -309,7 +309,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     asin = args.strip
     return '' if asin.blank?
 
-    item = Item.find_by(asin: asin)
+    item = Item.kept.find_by(asin: asin)
     return '' unless item
 
     html = plugin_cache_fetch('item', item.cache_key_with_version) do

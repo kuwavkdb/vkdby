@@ -51,8 +51,8 @@ class TrendsController < ApplicationController
                     .find_by(current: true)
 
     scopes = []
-    scopes << Item.by_artist_key(unit.key) if unit.key.present?
-    scopes << Item.by_artist_old_key(unit.old_key) if unit.old_key.present?
+    scopes << Item.kept.by_artist_key(unit.key) if unit.key.present?
+    scopes << Item.kept.by_artist_old_key(unit.old_key) if unit.old_key.present?
     @items = scopes.reduce(:or).order(release_date: :desc).limit(8) if scopes.any?
 
     @unit_trends = Trend.where('units @> ?', [{ unit_id: unit.id }].to_json)

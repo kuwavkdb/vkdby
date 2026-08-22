@@ -7,6 +7,7 @@
 #  id              :bigint           not null, primary key
 #  artists         :jsonb            not null
 #  asin            :string
+#  discarded_at    :datetime
 #  image_url       :string
 #  link_url        :string           not null
 #  release_date    :date             not null
@@ -21,6 +22,7 @@
 #  index_items_on_artists       (artists) USING gin
 #  index_items_on_artists_trgm  (((artists)::text) gin_trgm_ops) USING gin
 #  index_items_on_asin          (asin) UNIQUE
+#  index_items_on_discarded_at  (discarded_at)
 #  index_items_on_link_url      (link_url) UNIQUE
 #  index_items_on_release_date  (release_date)
 #  index_items_on_title         (title)
@@ -28,7 +30,7 @@
 #
 require 'test_helper'
 
-class ItemTest < ActiveSupport::TestCase
+class ItemTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
   test 'by_artist_old_key finds an item whose artists array contains the old_key' do
     item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-old-key',
                         artists: [{ 'name' => 'ムック', 'alias' => 'MUCC', 'old_key' => '%A5%E0%A5%C3%A5%AF' }])
@@ -143,5 +145,26 @@ class ItemTest < ActiveSupport::TestCase
     assert_equal false, result
     item.reload
     assert_equal [{ 'name' => 'ムック', 'old_key' => '%A5%E0%A5%C3%A5%AF' }], item.artists
+  end
+
+  test 'discard sets discarded_at and excludes the item from kept, but with_discarded still includes it' do
+    item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-discard')
+
+    item.discard
+
+    assert item.discarded?
+    assert_not_includes Item.kept, item
+    assert_includes Item.discarded, item
+    assert_includes Item.with_discarded, item
+  end
+
+  test 'undiscard clears discarded_at and returns the item to kept' do
+    item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-undiscard')
+    item.discard
+
+    item.undiscard
+
+    assert_not item.discarded?
+    assert_includes Item.kept, item
   end
 end

@@ -53,7 +53,7 @@
 | **画像管理**（`/admin/images`） | index / show / destroy（全アクション） |
 | **画像アップロード**（Section 編集） | upload_image |
 | **画像アップロード**（Custom Page 編集） | upload_image |
-| Items — 削除 | destroy |
+| Items — 削除・復元 | destroy / undiscard |
 | Users 管理 | 全アクション |
 | Operation Logs（ログイン履歴） | index（全アクション） |
 | Wiki Page Imports | 全アクション |
