@@ -9,5 +9,21 @@
     <div class="bg-white shadow rounded-lg p-6">
       <%= render "form", item: @item %>
     </div>
+
+    <% if current_user.admin? %>
+      <div class="mt-4 flex justify-end">
+        <% if @item.discarded? %>
+          <%= button_to "復元", undiscard_admin_item_path(@item), method: :patch,
+              form_class: "inline",
+              onclick: "return confirm('「#{@item.title}」を復元しますか？')",
+              class: "px-3 py-1.5 text-sm text-white bg-green-600 hover:bg-green-700 rounded cursor-pointer border-0" %>
+        <% else %>
+          <%= button_to "論理削除", admin_item_path(@item), method: :delete,
+              form_class: "inline",
+              onclick: "return confirm('「#{@item.title}」を論理削除しますか？')",
+              class: "px-3 py-1.5 text-sm text-white bg-red-600 hover:bg-red-700 rounded cursor-pointer border-0" %>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 </div>

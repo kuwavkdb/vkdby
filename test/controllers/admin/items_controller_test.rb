@@ -74,6 +74,42 @@ module Admin
       assert_match(/artist-name-hidden[^>]*value="名称のみのアーティスト"/, response.body)
     end
 
+    test 'edit shows a 論理削除 button for admin on a kept item' do
+      delete logout_path
+      post login_path, params: { email: users(:admin).email, password: 'password' }
+      item = Item.create!(title: 'Test Item', release_date: Date.today,
+                          link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+
+      get edit_admin_item_path(item)
+
+      assert_response :success
+      assert_includes response.body, '論理削除'
+      assert_not_includes response.body, '復元'
+    end
+
+    test 'edit shows a 復元 button for admin on a discarded item' do
+      delete logout_path
+      post login_path, params: { email: users(:admin).email, password: 'password' }
+      item = Item.create!(title: 'Test Item', release_date: Date.today,
+                          link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+      item.discard
+
+      get edit_admin_item_path(item)
+
+      assert_response :success
+      assert_includes response.body, '復元'
+    end
+
+    test 'edit does not show the 論理削除 button for a non-admin' do
+      item = Item.create!(title: 'Test Item', release_date: Date.today,
+                          link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+
+      get edit_admin_item_path(item)
+
+      assert_response :success
+      assert_not_includes response.body, '論理削除'
+    end
+
     test 'index does not show the bulk artist replace UI without an artist search condition' do
       Item.create!(title: 'Some Item', release_date: Date.today,
                    link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
