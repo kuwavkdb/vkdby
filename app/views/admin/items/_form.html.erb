@@ -154,7 +154,7 @@
   </div>
 
   <div class="flex justify-end gap-x-4">
-    <%= link_to "Cancel", admin_items_path, class: "px-4 py-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" %>
-    <%= form.submit class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+    <%= link_to "キャンセル", admin_items_path, class: "px-4 py-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" %>
+    <%= form.submit item.persisted? ? "更新" : "作成", class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
   </div>
 <% end %>
