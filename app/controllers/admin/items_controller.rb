@@ -66,13 +66,13 @@ module Admin
     def destroy
       @item.discard
       record_update_log(@item, action: 'discard')
-      redirect_to admin_items_path, notice: 'Item deleted successfully.'
+      redirect_to edit_admin_item_path(@item), notice: 'Item deleted successfully.'
     end
 
     def undiscard
       @item.undiscard
       record_update_log(@item, action: 'undiscard')
-      redirect_to admin_items_path, notice: 'Item restored successfully.'
+      redirect_to edit_admin_item_path(@item), notice: 'Item restored successfully.'
     end
 
     def bulk_artist_update

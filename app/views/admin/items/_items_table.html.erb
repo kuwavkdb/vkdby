@@ -76,14 +76,19 @@
           <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
             <% if item.discarded? %>
               <% if current_user.admin? %>
-                <%= link_to "復元", undiscard_admin_item_path(item), data: { turbo_method: :patch, turbo_confirm: "「#{item.title}」を復元します。よろしいですか？" }, class: "text-green-600 hover:text-green-900" %>
+                <%= button_to "復元", undiscard_admin_item_path(item), method: :patch,
+                      form_class: "inline",
+                      class: "text-green-600 hover:text-green-900 bg-transparent border-0 p-0 cursor-pointer" %>
               <% end %>
             <% else %>
               <% if current_user.super_operator_or_above? %>
                 <%= link_to "Edit", edit_admin_item_path(item), class: "text-indigo-600 hover:text-indigo-900 mr-4" %>
               <% end %>
               <% if current_user.admin? %>
-                <%= link_to "論理削除", admin_item_path(item), data: { turbo_method: :delete, turbo_confirm: "「#{item.title}」を論理削除しますか？" }, class: "text-red-600 hover:text-red-900" %>
+                <%= button_to "論理削除", admin_item_path(item), method: :delete,
+                      form_class: "inline",
+                      onclick: "return confirm('「#{item.title}」を論理削除しますか？')",
+                      class: "text-red-600 hover:text-red-900 bg-transparent border-0 p-0 cursor-pointer" %>
               <% end %>
             <% end %>
           </td>

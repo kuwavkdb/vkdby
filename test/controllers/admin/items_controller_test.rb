@@ -322,7 +322,7 @@ module Admin
       assert_nil item.reload.artists.first['key']
     end
 
-    test 'destroy soft-deletes the item instead of destroying the record' do
+    test 'destroy soft-deletes the item and redirects to the edit screen so the item is not lost' do
       delete logout_path
       post login_path, params: { email: users(:admin).email, password: 'password' }
       item = Item.create!(title: 'Target Item', release_date: Date.today,
@@ -330,7 +330,7 @@ module Admin
 
       delete admin_item_path(item)
 
-      assert_redirected_to admin_items_path
+      assert_redirected_to edit_admin_item_path(item)
       assert item.reload.discarded?
       assert Item.with_discarded.exists?(item.id)
     end
@@ -345,7 +345,7 @@ module Admin
       assert_not item.reload.discarded?
     end
 
-    test 'undiscard restores a discarded item' do
+    test 'undiscard restores a discarded item and redirects to the edit screen' do
       delete logout_path
       post login_path, params: { email: users(:admin).email, password: 'password' }
       item = Item.create!(title: 'Target Item', release_date: Date.today,
@@ -354,7 +354,7 @@ module Admin
 
       patch undiscard_admin_item_path(item)
 
-      assert_redirected_to admin_items_path
+      assert_redirected_to edit_admin_item_path(item)
       assert_not item.reload.discarded?
     end
 
