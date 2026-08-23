@@ -20,7 +20,12 @@ module Admin
               else             Item.kept
               end
       scope = scope.order(release_date: :desc)
-      scope = scope.where('title ILIKE :q OR asin ILIKE :q', q: "%#{@q}%") if @q.present?
+      if @q.present?
+        scope = scope.where(
+          'title ILIKE :q OR asin ILIKE :q OR artists::text ILIKE :q',
+          q: "%#{normalize_search_query(@q)}%"
+        )
+      end
       scope = scope.public_send(:"by_artist_#{@match_type}", @match_value) if @match_type.present? && @match_value.present?
       @pagy, @items = pagy(scope)
 

@@ -133,6 +133,32 @@ module Admin
       assert_not_includes response.body, '論理削除'
     end
 
+    test 'index filters by artist name with q param' do
+      matching = Item.create!(title: 'Matching Item', release_date: Date.today,
+                              link_url: "https://example.com/item-#{SecureRandom.hex(4)}",
+                              artists: [{ 'name' => 'ムック' }])
+      other = Item.create!(title: 'Other Item', release_date: Date.today,
+                           link_url: "https://example.com/item-#{SecureRandom.hex(4)}",
+                           artists: [{ 'name' => 'Other Artist' }])
+
+      get admin_items_path(q: 'ムック')
+
+      assert_response :success
+      assert_includes response.body, matching.title
+      assert_not_includes response.body, other.title
+    end
+
+    test 'index filters by artist name with full-width alphanumeric q param' do
+      matching = Item.create!(title: 'Matching Item', release_date: Date.today,
+                              link_url: "https://example.com/item-#{SecureRandom.hex(4)}",
+                              artists: [{ 'name' => 'ABC123' }])
+
+      get admin_items_path(q: 'ＡＢＣ１２３')
+
+      assert_response :success
+      assert_includes response.body, matching.title
+    end
+
     test 'index does not show the bulk artist replace UI without an artist search condition' do
       Item.create!(title: 'Some Item', release_date: Date.today,
                    link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
