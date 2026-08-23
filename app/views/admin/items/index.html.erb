@@ -4,7 +4,7 @@
   <div class="flex items-center justify-between mb-4">
     <h1 class="text-2xl font-bold"><%= title %></h1>
     <% if current_user.super_operator_or_above? %>
-      <%= link_to "Add Item", new_admin_item_path, class: "px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700" %>
+      <%= link_to "新規追加", new_admin_item_path, class: "px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700" %>
     <% end %>
   </div>
 
@@ -12,8 +12,8 @@
     <%= f.hidden_field :discarded, value: params[:discarded] %>
     <div class="flex flex-wrap items-end gap-2">
       <div>
-        <%= label_tag :q, "タイトル / ASIN で検索", class: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" %>
-        <%= text_field_tag :q, params[:q], placeholder: "タイトルまたはASIN", class: "rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-base w-64 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+        <%= label_tag :q, "タイトル / ASIN / アーティスト名で検索", class: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" %>
+        <%= text_field_tag :q, params[:q], placeholder: "タイトル・ASIN・アーティスト名（部分一致）", class: "rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-base w-96 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
       </div>
     </div>
 
@@ -31,7 +31,7 @@
       <%= submit_tag "検索", class: "px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600" %>
     </div>
     <p class="text-xs text-gray-500 dark:text-gray-400">
-      Item に紐づいているアーティストの old_key / key / name / alias（表示名）で絞り込みます。一致した Item にはチェックボックスが表示され、まとめて別の Unit/Person に差し替えられます。
+      Item に紐づいているアーティストの old_key / key / name / alias（表示名）との完全一致で絞り込みます。一致した Item にはチェックボックスが表示され、まとめて別の Unit/Person に差し替えられます。
     </p>
   <% end %>
 
