@@ -279,7 +279,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
               CustomPage.published.find_by(key: identifier)
             end
 
-    section = owner&.sections&.kept&.find_by(name: section_name)
+    section = owner&.sections&.kept&.publicly_visible&.find_by(name: section_name)
     section&.markdown.presence || section&.wiki_text.presence || ''
   end
 
@@ -309,7 +309,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     asin = args.strip
     return '' if asin.blank?
 
-    item = Item.find_by(asin: asin)
+    item = Item.kept.find_by(asin: asin)
     return '' unless item
 
     html = plugin_cache_fetch('item', item.cache_key_with_version) do

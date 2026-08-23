@@ -69,7 +69,7 @@ class LegacyRedirectsController < ApplicationController
   end
 
   def item_redirect
-    item = Item.find_by(asin: params[:asin])
+    item = Item.kept.find_by(asin: params[:asin])
     if item
       redirect_to item_url(item), status: :moved_permanently
     else

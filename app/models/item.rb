@@ -7,6 +7,7 @@
 #  id              :bigint           not null, primary key
 #  artists         :jsonb            not null
 #  asin            :string
+#  discarded_at    :datetime
 #  image_url       :string
 #  link_url        :string           not null
 #  release_date    :date             not null
@@ -21,12 +22,15 @@
 #  index_items_on_artists       (artists) USING gin
 #  index_items_on_artists_trgm  (((artists)::text) gin_trgm_ops) USING gin
 #  index_items_on_asin          (asin) UNIQUE
+#  index_items_on_discarded_at  (discarded_at)
 #  index_items_on_link_url      (link_url) UNIQUE
 #  index_items_on_release_date  (release_date)
 #  index_items_on_title         (title)
 #  index_items_on_title_trgm    (title) USING gin
 #
 class Item < ApplicationRecord
+  include Discard::Model
+
   validates :title, presence: true
   validates :release_date, presence: true
   validates :link_url, presence: true, uniqueness: true

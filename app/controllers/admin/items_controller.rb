@@ -1,20 +1,31 @@
 # frozen_string_literal: true
 
 module Admin
-  class ItemsController < Admin::BaseController
+  class ItemsController < Admin::BaseController # rubocop:disable Metrics/ClassLength
     MATCH_TYPES = %w[old_key key name alias].freeze
 
     before_action :require_super_operator, only: %i[new create edit update bulk_artist_update]
-    before_action :require_admin, only: %i[destroy]
-    before_action :set_item, only: %i[edit update destroy]
+    before_action :require_admin, only: %i[destroy undiscard]
+    before_action :set_item, only: %i[edit update destroy undiscard]
 
     def index
       @q = params[:q]
       @match_type = params[:match_type].presence_in(MATCH_TYPES)
       @match_value = params[:match_value].to_s.strip
+      @show_discarded = params[:discarded]
 
-      scope = Item.all.order(release_date: :desc)
-      scope = scope.where('title ILIKE :q OR asin ILIKE :q', q: "%#{@q}%") if @q.present?
+      scope = case @show_discarded
+              when 'only' then Item.discarded
+              when 'all'  then Item.with_discarded
+              else             Item.kept
+              end
+      scope = scope.order(release_date: :desc)
+      if @q.present?
+        scope = scope.where(
+          'title ILIKE :q OR asin ILIKE :q OR artists::text ILIKE :q',
+          q: "%#{normalize_search_query(@q)}%"
+        )
+      end
       scope = scope.public_send(:"by_artist_#{@match_type}", @match_value) if @match_type.present? && @match_value.present?
       @pagy, @items = pagy(scope)
 
@@ -38,7 +49,7 @@ module Admin
       @item.artists = build_artists_from_json(params[:item][:artists_json])
 
       if @item.save
-        redirect_to admin_items_path, notice: 'Item created successfully.'
+        redirect_to edit_admin_item_path(@item), notice: 'Item created successfully.'
       else
         render :new, status: :unprocessable_entity
       end
@@ -58,8 +69,15 @@ module Admin
     end
 
     def destroy
-      @item.destroy
-      redirect_to admin_items_path, notice: 'Item deleted successfully.'
+      @item.discard
+      record_update_log(@item, action: 'discard')
+      redirect_to edit_admin_item_path(@item), notice: 'Item deleted successfully.'
+    end
+
+    def undiscard
+      @item.undiscard
+      record_update_log(@item, action: 'undiscard')
+      redirect_to edit_admin_item_path(@item), notice: 'Item restored successfully.'
     end
 
     def bulk_artist_update
@@ -83,7 +101,7 @@ module Admin
     private
 
     def set_item
-      @item = Item.find(params[:id])
+      @item = Item.with_discarded.find(params[:id])
     end
 
     def item_params

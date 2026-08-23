@@ -116,8 +116,8 @@ class ProfilesController < ApplicationController
 
   def load_items
     scopes = []
-    scopes << Item.by_artist_key(@resource.key) if @resource.key.present?
-    scopes << Item.by_artist_old_key(@resource.old_key) if @resource.old_key.present?
+    scopes << Item.kept.by_artist_key(@resource.key) if @resource.key.present?
+    scopes << Item.kept.by_artist_old_key(@resource.old_key) if @resource.old_key.present?
     return if scopes.empty?
 
     query = scopes.reduce(:or)

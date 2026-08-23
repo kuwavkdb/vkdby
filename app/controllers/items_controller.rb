@@ -2,7 +2,7 @@
 
 class ItemsController < ApplicationController
   def show
-    @item = Item.find(params[:id])
+    @item = Item.kept.find(params[:id])
 
     scoped_artists = @item.artists.filter_map { |a| [a, artist_item_scope(a)] if artist_item_scope(a) }
 
@@ -22,7 +22,7 @@ class ItemsController < ApplicationController
   end
 
   def index
-    base_scope = filter_by_artist(Item.all)
+    base_scope = filter_by_artist(Item.kept)
     base_scope = filter_by_query(base_scope)
 
     @year_counts = base_scope.where.not(release_date: nil)
@@ -48,12 +48,12 @@ class ItemsController < ApplicationController
   def artist_item_scope(artist)
     if artist['key'].present? || artist['old_key'].present?
       scopes = [
-        (Item.by_artist_key(artist['key']) if artist['key'].present?),
-        (Item.by_artist_old_key(artist['old_key']) if artist['old_key'].present?)
+        (Item.kept.by_artist_key(artist['key']) if artist['key'].present?),
+        (Item.kept.by_artist_old_key(artist['old_key']) if artist['old_key'].present?)
       ].compact
       scopes.reduce(:or)
     elsif artist['name'].present?
-      Item.by_artist_name(artist['name'])
+      Item.kept.by_artist_name(artist['name'])
     end
   end
 

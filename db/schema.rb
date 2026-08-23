@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_140001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -89,6 +89,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_130000) do
     t.jsonb "artists", default: [], null: false
     t.string "asin"
     t.datetime "created_at", null: false
+    t.datetime "discarded_at"
     t.string "image_url"
     t.string "link_url", null: false
     t.integer "old_item_id"
@@ -99,6 +100,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_130000) do
     t.index "((artists)::text) gin_trgm_ops", name: "index_items_on_artists_trgm", using: :gin
     t.index ["artists"], name: "index_items_on_artists", using: :gin
     t.index ["asin"], name: "index_items_on_asin", unique: true
+    t.index ["discarded_at"], name: "index_items_on_discarded_at"
     t.index ["link_url"], name: "index_items_on_link_url", unique: true
     t.index ["release_date"], name: "index_items_on_release_date"
     t.index ["title"], name: "index_items_on_title"
@@ -201,6 +203,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_130000) do
   end
 
   create_table "sections", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "discarded_at"
     t.text "markdown"

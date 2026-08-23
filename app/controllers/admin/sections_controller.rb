@@ -97,7 +97,7 @@ module Admin
     end
 
     def section_params
-      params.require(:section).permit(:name, :wiki_text, :markdown, :sort_order)
+      params.require(:section).permit(:name, :wiki_text, :markdown, :sort_order, :active)
     end
   end
 end

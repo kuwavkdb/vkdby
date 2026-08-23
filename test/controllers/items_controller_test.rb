@@ -167,6 +167,33 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Me
     assert_not_includes response.body, 'オムニバス の全作品を見る'
   end
 
+  test 'index does not list a discarded item' do
+    item = Item.create!(
+      title: "Discarded Item #{SecureRandom.hex(4)}",
+      release_date: '2026-03-01',
+      link_url: "http://example.com/discarded-index-item-#{SecureRandom.hex(4)}"
+    )
+    item.discard
+
+    get items_path(q: item.title)
+
+    assert_response :success
+    assert_not_includes response.body, item_path(item)
+  end
+
+  test 'show returns 404 for a discarded item' do
+    item = Item.create!(
+      title: 'Discarded Show Item',
+      release_date: '2026-03-01',
+      link_url: "http://example.com/discarded-show-item-#{SecureRandom.hex(4)}"
+    )
+    item.discard
+
+    get item_path(item)
+
+    assert_response :not_found
+  end
+
   test 'index filters by artist name with q param' do
     item = Item.create!(
       title: 'Searchable Artist Item',

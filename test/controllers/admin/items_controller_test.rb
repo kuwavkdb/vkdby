@@ -49,6 +49,19 @@ module Admin
       assert item.reload.various_artists?
     end
 
+    test 'create redirects to the edit page of the newly created item' do
+      post admin_items_path, params: {
+        item: {
+          title: 'Test Item',
+          release_date: Date.today,
+          link_url: "https://example.com/item-#{SecureRandom.hex(4)}"
+        }
+      }
+
+      item = Item.order(:id).last
+      assert_redirected_to edit_admin_item_path(item)
+    end
+
     test 'new does not auto-confirm an artist passed via query params, even with an artist_key' do
       get new_admin_item_path, params: {
         artist_name: 'シド',
@@ -72,6 +85,78 @@ module Admin
 
       assert_response :success
       assert_match(/artist-name-hidden[^>]*value="名称のみのアーティスト"/, response.body)
+    end
+
+    test 'edit shows a 論理削除 button for admin on a kept item' do
+      delete logout_path
+      post login_path, params: { email: users(:admin).email, password: 'password' }
+      item = Item.create!(title: 'Test Item', release_date: Date.today,
+                          link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+
+      get edit_admin_item_path(item)
+
+      assert_response :success
+      assert_includes response.body, '論理削除'
+      assert_not_includes response.body, '復元'
+    end
+
+    test 'edit shows a link back to the item list' do
+      item = Item.create!(title: 'Test Item', release_date: Date.today,
+                          link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+
+      get edit_admin_item_path(item)
+
+      assert_response :success
+      assert_match(%r{<a[^>]*href="#{Regexp.escape(admin_items_path)}"[^>]*>一覧へ戻る</a>}, response.body)
+    end
+
+    test 'edit shows a 復元 button for admin on a discarded item' do
+      delete logout_path
+      post login_path, params: { email: users(:admin).email, password: 'password' }
+      item = Item.create!(title: 'Test Item', release_date: Date.today,
+                          link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+      item.discard
+
+      get edit_admin_item_path(item)
+
+      assert_response :success
+      assert_includes response.body, '復元'
+    end
+
+    test 'edit does not show the 論理削除 button for a non-admin' do
+      item = Item.create!(title: 'Test Item', release_date: Date.today,
+                          link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+
+      get edit_admin_item_path(item)
+
+      assert_response :success
+      assert_not_includes response.body, '論理削除'
+    end
+
+    test 'index filters by artist name with q param' do
+      matching = Item.create!(title: 'Matching Item', release_date: Date.today,
+                              link_url: "https://example.com/item-#{SecureRandom.hex(4)}",
+                              artists: [{ 'name' => 'ムック' }])
+      other = Item.create!(title: 'Other Item', release_date: Date.today,
+                           link_url: "https://example.com/item-#{SecureRandom.hex(4)}",
+                           artists: [{ 'name' => 'Other Artist' }])
+
+      get admin_items_path(q: 'ムック')
+
+      assert_response :success
+      assert_includes response.body, matching.title
+      assert_not_includes response.body, other.title
+    end
+
+    test 'index filters by artist name with full-width alphanumeric q param' do
+      matching = Item.create!(title: 'Matching Item', release_date: Date.today,
+                              link_url: "https://example.com/item-#{SecureRandom.hex(4)}",
+                              artists: [{ 'name' => 'ABC123' }])
+
+      get admin_items_path(q: 'ＡＢＣ１２３')
+
+      assert_response :success
+      assert_includes response.body, matching.title
     end
 
     test 'index does not show the bulk artist replace UI without an artist search condition' do
@@ -284,6 +369,70 @@ module Admin
       assert_redirected_to admin_items_path(match_type: 'old_key', match_value: '%A5%E0%A5%C3%A5%AF')
       assert_equal '置換先のUnit/Personを選択してください', flash[:alert]
       assert_nil item.reload.artists.first['key']
+    end
+
+    test 'destroy soft-deletes the item and redirects to the edit screen so the item is not lost' do
+      delete logout_path
+      post login_path, params: { email: users(:admin).email, password: 'password' }
+      item = Item.create!(title: 'Target Item', release_date: Date.today,
+                          link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+
+      delete admin_item_path(item)
+
+      assert_redirected_to edit_admin_item_path(item)
+      assert item.reload.discarded?
+      assert Item.with_discarded.exists?(item.id)
+    end
+
+    test 'destroy requires admin role' do
+      item = Item.create!(title: 'Target Item', release_date: Date.today,
+                          link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+
+      delete admin_item_path(item)
+
+      assert_redirected_to root_path
+      assert_not item.reload.discarded?
+    end
+
+    test 'undiscard restores a discarded item and redirects to the edit screen' do
+      delete logout_path
+      post login_path, params: { email: users(:admin).email, password: 'password' }
+      item = Item.create!(title: 'Target Item', release_date: Date.today,
+                          link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+      item.discard
+
+      patch undiscard_admin_item_path(item)
+
+      assert_redirected_to edit_admin_item_path(item)
+      assert_not item.reload.discarded?
+    end
+
+    test 'index does not show discarded items by default' do
+      kept = Item.create!(title: 'Kept Item', release_date: Date.today,
+                          link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+      discarded = Item.create!(title: 'Discarded Item', release_date: Date.today,
+                               link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+      discarded.discard
+
+      get admin_items_path
+
+      assert_response :success
+      assert_includes response.body, kept.title
+      assert_not_includes response.body, discarded.title
+    end
+
+    test 'index with discarded=only shows only discarded items' do
+      kept = Item.create!(title: 'Kept Item', release_date: Date.today,
+                          link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+      discarded = Item.create!(title: 'Discarded Item', release_date: Date.today,
+                               link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+      discarded.discard
+
+      get admin_items_path(discarded: 'only')
+
+      assert_response :success
+      assert_includes response.body, discarded.title
+      assert_not_includes response.body, kept.title
     end
 
     test 'bulk_artist_update requires super_operator role' do

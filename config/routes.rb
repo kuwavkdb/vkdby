@@ -74,6 +74,9 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
       collection do
         patch :bulk_artist_update
       end
+      member do
+        patch :undiscard
+      end
     end
 
     resources :tag_indices, except: %i[index show] do
