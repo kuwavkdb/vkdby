@@ -47,6 +47,11 @@ gem 'thruster', require: false
 gem 'aws-sdk-s3', require: false
 gem 'image_processing', '~> 2.0'
 gem 'mini_magick'
+# 画像添付ファイルのメタデータ解析（width/height抽出）用。Dockerfileでlibvips(C library)を
+# インストール済みだが、ruby側のバインディングgemが無いためActiveStorageの画像解析
+# （ActiveStorage::Analyzer::ImageAnalyzer::Vips）が動作せずwidth/heightが取得できていなかった
+# （issue #1215）。mini_magickが要求するImageMagick CLIは未インストールのためvipsを採用する。
+gem 'ruby-vips'
 gem 'view_component'
 
 group :development, :test do

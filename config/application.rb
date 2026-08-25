@@ -13,9 +13,14 @@ module Vkdby
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.1
 
-    # Use mini_magick for Active Storage variants; the app bundles mini_magick,
-    # not the vips gem that Rails 8.1's load_defaults selects by default.
-    config.active_storage.variant_processor = :mini_magick
+    # Use vips for Active Storage variants/analysis. The Docker image installs the
+    # libvips C library but not ImageMagick, so with the default :mini_magick processor
+    # ActiveStorage::Analyzer::ImageAnalyzer::Vips#accept? (which checks
+    # `ActiveStorage.variant_processor == :vips`) never matched, and the ImageMagick
+    # fallback analyzer silently failed to extract width/height (no `identify`/`magick`
+    # CLI available) — markdown-embedded images ended up without width/height metadata,
+    # causing CLS on pages that render them (issue #1215).
+    config.active_storage.variant_processor = :vips
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
