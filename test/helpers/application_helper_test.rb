@@ -730,4 +730,64 @@ class ApplicationHelperTest < ActionView::TestCase
       assert_no_match(/旧メンバー名/, second)
     end
   end
+
+  # 以下、issue #1215（markdown本文内画像のCLS・LCP対策）関連のテスト。
+  test 'Active Storageのblobリダイレクトを指す画像は、blobのmetadata(width/height)からwidth/height属性が付与される(issue #1215)' do
+    blob = create_image_blob(width: 400, height: 150)
+
+    result = markdown("![alt](#{rails_blob_path(blob, only_path: true)})")
+
+    assert_match(/<img[^>]+width="400"[^>]+height="150"/, result)
+  end
+
+  test 'blobのmetadataにwidth/heightが記録されていない場合はwidth/height属性を付与しない(issue #1215)' do
+    blob = create_image_blob(width: nil, height: nil)
+
+    result = markdown("![alt](#{rails_blob_path(blob, only_path: true)})")
+
+    assert_no_match(/width=/, result)
+    assert_no_match(/height=/, result)
+  end
+
+  test 'Active Storage以外の外部URL画像はwidth/height属性を付与しない(issue #1215)' do
+    result = markdown('![alt](https://example.com/image.jpg)')
+
+    assert_no_match(/width=/, result)
+    assert_no_match(/height=/, result)
+  end
+
+  test 'prioritize_first_image: true の場合、本文最初の画像のみfetchpriority="high"が付与される(issue #1215)' do
+    blob = create_image_blob(width: 400, height: 150)
+    src = rails_blob_path(blob, only_path: true)
+
+    result = markdown("![1つ目](#{src})\n\n![2つ目](#{src})", prioritize_first_image: true)
+
+    images = result.scan(/<img[^>]*>/)
+    assert_equal 2, images.size
+    assert_match(/fetchpriority="high"/, images[0])
+    assert_no_match(/fetchpriority/, images[1])
+  end
+
+  test 'prioritize_first_imageを指定しない場合はfetchpriorityを付与しない(issue #1215)' do
+    blob = create_image_blob(width: 400, height: 150)
+
+    result = markdown("![alt](#{rails_blob_path(blob, only_path: true)})")
+
+    assert_no_match(/fetchpriority/, result)
+  end
+
+  private
+
+  def create_image_blob(width:, height:)
+    blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new('dummy'),
+      filename: 'test.png',
+      content_type: 'image/png'
+    )
+    metadata = blob.metadata.merge('identified' => true, 'analyzed' => true)
+    metadata['width'] = width if width
+    metadata['height'] = height if height
+    blob.update!(metadata: metadata)
+    blob
+  end
 end

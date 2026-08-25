@@ -15,12 +15,33 @@ module Vkdby
 
     # Use mini_magick for Active Storage variants; the app bundles mini_magick,
     # not the vips gem that Rails 8.1's load_defaults selects by default.
+    #
+    # We do NOT switch this to :vips just to enable image analysis (width/height
+    # extraction, issue #1215): ActiveStorage::Blob variant-transformer setup in
+    # Rails 8.1's engine.rb only rescues LoadError messages matching /libvips/ or
+    # /image_processing/, but image_processing's own error text is
+    # "ImageProcessing::Vips requires..." (capitalized, no underscore) — it doesn't
+    # match, so the rescue falls through to `raise` and boot crashes on any machine
+    # without libvips installed (dev machines, CI). See
+    # lib/active_storage_ext/safe_vips_image_analyzer.rb for how we use vips for
+    # analysis only, decoupled from variant_processor.
     config.active_storage.variant_processor = :mini_magick
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
-    config.autoload_lib(ignore: %w[assets tasks])
+    # active_storage_ext: extension classes reopening ActiveStorage internals
+    # (see below) whose constant names don't follow the file path convention
+    # Zeitwerk expects, so they're required manually instead of autoloaded.
+    config.autoload_lib(ignore: %w[assets tasks active_storage_ext])
+
+    # Register a vips-based ActiveStorage image analyzer that works regardless of
+    # variant_processor, so markdown-embedded images get width/height metadata
+    # (CLS fix, issue #1215) without requiring variant_processor: :vips (see above).
+    # Safe when libvips itself isn't installed: the analyzer's own require is
+    # guarded and it silently yields no metadata rather than failing analysis.
+    require_relative '../lib/active_storage_ext/safe_vips_image_analyzer'
+    config.active_storage.analyzers.unshift(ActiveStorage::Analyzer::ImageAnalyzer::SafeVips)
 
     # Add app/assets/builds to the asset load path
     config.assets.paths << Rails.root.join('app/assets/builds')
