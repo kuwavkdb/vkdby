@@ -67,13 +67,18 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     # メタデータ（width/height）を引く。外部URLの画像や、解析が行われていない
     # （metadataにwidth/heightが記録されていない）blobの場合はnilを返し、
     # 呼び出し側はwidth/height属性を出力しない（ベストエフォート）。
-    # signed_idごとにRails.cacheへ結果をキャッシュする（画像が差し替えられた場合は
-    # blob自体・signed_idが変わるため自然に無効化される。issue #1215）。
+    # 見つかった場合のみsigned_idごとにRails.cacheへ結果をキャッシュする（画像が
+    # 差し替えられた場合はblob自体・signed_idが変わるため自然に無効化される。issue #1215）。
+    # skip_nil: true必須: 解析未完了（width/height無し）の結果までキャッシュしてしまうと、
+    # その後の解析（rakeタスクや新規アップロード時の非同期解析）でメタデータが埋まっても
+    # 「無し」という結果がTTL分（最大7日）居座り続けページに反映されない
+    # （実運用でblobをrakeタスクで解析済みにした後もwidth/heightが出ない事象で発覚）。
     def image_dimensions_for(link)
       match = link.to_s.match(IMAGE_BLOB_URL_PATTERN)
       return nil unless match
 
-      Rails.cache.fetch(['markdown_image_dimensions', match[1]], expires_in: IMAGE_DIMENSIONS_CACHE_TTL) do
+      Rails.cache.fetch(['markdown_image_dimensions', match[1]], expires_in: IMAGE_DIMENSIONS_CACHE_TTL,
+                                                                 skip_nil: true) do
         blob = ActiveStorage::Blob.find_signed(match[1])
         width = blob&.metadata&.[]('width')
         height = blob&.metadata&.[]('height')
