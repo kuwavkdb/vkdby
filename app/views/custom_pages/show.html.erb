@@ -21,7 +21,7 @@
           </div>
           <div class="p-5 md:p-8">
             <div class="markdown-content max-w-none">
-              <%= markdown(@page.body, sectionable: @page) %>
+              <%= markdown(@page.body, sectionable: @page, prioritize_first_image: true) %>
             </div>
 
             <%= render ManagementInformationComponent.new(resource: @page) %>

@@ -47,6 +47,15 @@ gem 'thruster', require: false
 gem 'aws-sdk-s3', require: false
 gem 'image_processing', '~> 2.0'
 gem 'mini_magick'
+# 画像添付ファイルのメタデータ解析（width/height抽出）用。Dockerfileでlibvips(C library)を
+# インストール済みだが、ruby側のバインディングgemが無いためActiveStorageの画像解析
+# （ActiveStorage::Analyzer::ImageAnalyzer::Vips）が動作せずwidth/heightが取得できていなかった
+# （issue #1215）。mini_magickが要求するImageMagick CLIは未インストールのためvipsを採用する。
+# require: false必須: ActiveStorage側(active_storage/analyzer/image_analyzer/vips.rb)が
+# 自前でrequire "ruby-vips"をLoadErrorごとrescueして安全に読み込むため、Bundler.require由来の
+# 即時requireを無効化しない場合、libvips(共有ライブラリ)が入っていない環境（CIのtest/system-test/
+# scan_js等）でアプリ起動自体がBundler::GemRequireErrorで落ちてしまう。
+gem 'ruby-vips', require: false
 gem 'view_component'
 
 group :development, :test do

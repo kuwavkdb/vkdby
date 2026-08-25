@@ -5,8 +5,20 @@ require 'digest'
 
 module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   class ExternalAwareHtmlRenderer < Redcarpet::Render::HTML
-    def initialize(site_host:, **options)
+    # Active StorageのBlobリダイレクト/プロキシURL（rails_blob_path等が生成する
+    # /rails/active_storage/blobs/redirect/:signed_id/:filename 形式）からsigned_id部分を
+    # 抜き出すためのパターン。管理画面（Admin::ImagesController#show）で発行されるURLを
+    # 本文中に貼り付ける運用のため、markdown内画像はほぼ必ずこの形式になる。
+    IMAGE_BLOB_URL_PATTERN = %r{/rails/active_storage/blobs/(?:redirect|proxy)/([^/?]+)}
+    IMAGE_DIMENSIONS_CACHE_TTL = 7.days
+
+    # prioritize_first_image: 本文中最初に出現する画像にfetchpriority="high"を付与するか
+    # （LCP対策、issue #1215）。ページ内で複数箇所のmarkdownを描画する場合に全箇所で
+    # 「最初の画像」が高優先度になってしまわないよう、呼び出し側で本文カラムのみtrueにする。
+    def initialize(site_host:, prioritize_first_image: false, **options)
       @site_host = site_host
+      @prioritize_first_image = prioritize_first_image
+      @first_image_rendered = false
       super(**options)
     end
 
@@ -23,6 +35,16 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
       "<a href=\"#{safe_link}\"#{extra_attrs}>#{safe_link}</a>"
     end
 
+    # Redcarpetのデフォルト実装(html.c#rndr_image)を踏襲しつつ、
+    # width/height（Active Storageのblobメタデータから判明する場合）とfetchpriorityを追加する
+    # （issue #1215: markdown本文内画像のwidth/height未指定によるCLS・LCP悪化）。
+    def image(link, title, alt_text)
+      safe_link = CGI.escapeHTML(link.to_s)
+      alt_attr = CGI.escapeHTML(alt_text.to_s)
+      title_attr = title.present? ? " title=\"#{CGI.escapeHTML(title)}\"" : ''
+      "<img src=\"#{safe_link}\" alt=\"#{alt_attr}\"#{title_attr}#{dimension_attrs(link)}#{fetchpriority_attr}>"
+    end
+
     private
 
     def external_url?(url)
@@ -32,6 +54,46 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
       URI.parse(url).host != @site_host
     rescue URI::InvalidURIError
       true
+    end
+
+    def dimension_attrs(link)
+      width, height = image_dimensions_for(link)
+      return '' unless width.present? && height.present?
+
+      " width=\"#{width}\" height=\"#{height}\""
+    end
+
+    # Active Storageのblobリダイレクト/プロキシURLからsigned_idを取り出し、対応するblobの
+    # メタデータ（width/height）を引く。外部URLの画像や、解析が行われていない
+    # （metadataにwidth/heightが記録されていない）blobの場合はnilを返し、
+    # 呼び出し側はwidth/height属性を出力しない（ベストエフォート）。
+    # 見つかった場合のみsigned_idごとにRails.cacheへ結果をキャッシュする（画像が
+    # 差し替えられた場合はblob自体・signed_idが変わるため自然に無効化される。issue #1215）。
+    # skip_nil: true必須: 解析未完了（width/height無し）の結果までキャッシュしてしまうと、
+    # その後の解析（rakeタスクや新規アップロード時の非同期解析）でメタデータが埋まっても
+    # 「無し」という結果がTTL分（最大7日）居座り続けページに反映されない
+    # （実運用でblobをrakeタスクで解析済みにした後もwidth/heightが出ない事象で発覚）。
+    def image_dimensions_for(link)
+      match = link.to_s.match(IMAGE_BLOB_URL_PATTERN)
+      return nil unless match
+
+      Rails.cache.fetch(['markdown_image_dimensions', match[1]], expires_in: IMAGE_DIMENSIONS_CACHE_TTL,
+                                                                 skip_nil: true) do
+        blob = ActiveStorage::Blob.find_signed(match[1])
+        width = blob&.metadata&.[]('width')
+        height = blob&.metadata&.[]('height')
+        width.present? && height.present? ? [width, height] : nil
+      end
+    rescue StandardError
+      nil
+    end
+
+    def fetchpriority_attr
+      return '' unless @prioritize_first_image
+      return '' if @first_image_rendered
+
+      @first_image_rendered = true
+      ' fetchpriority="high"'
     end
   end
 
@@ -90,7 +152,11 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     CGI.unescapeHTML(text.to_s).gsub('&', '&amp;').gsub('<', '&lt;').html_safe
   end
 
-  def markdown(text, sectionable: nil)
+  # prioritize_first_image: 本文中最初の画像にfetchpriority="high"を付与するか
+  # （LCP対策、issue #1215）。ヘッダー/フッターの短いメッセージや、1ページに複数回
+  # 展開されるSection（ユニット/人物ページ）では意図せず複数箇所が高優先度になり得るため、
+  # 呼び出し側（現状はCustomPageの本文カラムのみ）で明示的にtrueを渡す。
+  def markdown(text, sectionable: nil, prioritize_first_image: false)
     return '' if text.blank?
 
     # CRLF/CR改行（Windows由来の貼り付け等）が混じっていると、複数行プラグインの
@@ -104,7 +170,8 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     text = protect_html_comments(text, placeholders)
     text = expand_plugin_macros(text, sectionable:, placeholders:)
 
-    renderer = ExternalAwareHtmlRenderer.new(site_host: request.host, hard_wrap: true)
+    renderer = ExternalAwareHtmlRenderer.new(site_host: request.host, hard_wrap: true,
+                                             prioritize_first_image: prioritize_first_image)
     html = Redcarpet::Markdown.new(renderer,
                                    autolink: true,
                                    tables: true,
