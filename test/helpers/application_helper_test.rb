@@ -756,6 +756,22 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_no_match(/height=/, result)
   end
 
+  test '解析未完了(width/height無し)の結果はキャッシュされず、後から解析が完了すれば反映される(issue #1215)' do
+    with_memory_cache_store do
+      blob = create_image_blob(width: nil, height: nil)
+      src = rails_blob_path(blob, only_path: true)
+
+      before = markdown("![alt](#{src})")
+      assert_no_match(/width=/, before)
+
+      # rakeタスク(active_storage:analyze_images)相当: 後からmetadataが埋まるケース
+      blob.update!(metadata: blob.metadata.merge('width' => 400, 'height' => 150))
+
+      after = markdown("![alt](#{src})")
+      assert_match(/<img[^>]+width="400"[^>]+height="150"/, after)
+    end
+  end
+
   test 'prioritize_first_image: true の場合、本文最初の画像のみfetchpriority="high"が付与される(issue #1215)' do
     blob = create_image_blob(width: 400, height: 150)
     src = rails_blob_path(blob, only_path: true)
