@@ -61,6 +61,12 @@ module Vkdby
     # Site name used in page titles
     config.site_name = ENV.fetch('SITE_NAME', 'vkdb.jp')
 
+    # Default meta description for pages that don't set content_for(:description) (issue #1223)
+    config.site_description = ENV.fetch(
+      'SITE_DESCRIPTION',
+      'ヴィジュアル系バンド・アーティストのデータベース。ユニットやメンバーの結成・脱退・改名などの活動履歴、プロフィール、動向、年表を掲載しています。'
+    )
+
     # Base URL for old-key links to the legacy site (issue #946).
     # Only relevant during the migration period; remove once the old site is retired.
     config.old_key_url_base = ENV.fetch('OLD_KEY_URL_BASE', 'https://wiki.vkdb.jp')
