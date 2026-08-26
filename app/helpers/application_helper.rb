@@ -152,6 +152,16 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     CGI.unescapeHTML(text.to_s).gsub('&', '&amp;').gsub('<', '&lt;').html_safe
   end
 
+  # meta descriptionはHTML属性値（content="..."）として出力するため、page_title_textと違い
+  # "&"と"<"だけでなく">"や引用符も含めてエスケープする必要がある。
+  # content_for(:description, ...)にプレーン文字列を渡した場合も、page_title_textと同様に
+  # ActionViewの内部バッファ格納時に一度HTMLエスケープされる可能性があるため、
+  # 一度デコードしてから属性値として正しくエスケープし直す。
+  # 検索結果のスニペットとして不自然に途切れないよう、150〜160字程度に切り詰める。
+  def meta_description_text(text)
+    ERB::Util.html_escape(CGI.unescapeHTML(text.to_s).truncate(160, separator: ' '))
+  end
+
   # prioritize_first_image: 本文中最初の画像にfetchpriority="high"を付与するか
   # （LCP対策、issue #1215）。ヘッダー/フッターの短いメッセージや、1ページに複数回
   # 展開されるSection（ユニット/人物ページ）では意図せず複数箇所が高優先度になり得るため、
