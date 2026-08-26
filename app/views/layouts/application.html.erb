@@ -2,6 +2,7 @@
 <html class="motion-safe:scroll-smooth">
   <head>
     <title><%= page_title_text(content_for?(:title) ? "#{yield(:title)} - #{Rails.application.config.site_name}" : Rails.application.config.site_name) %></title>
+    <meta name="description" content="<%= meta_description_text(content_for?(:description) ? yield(:description) : Rails.application.config.site_description) %>">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Vkdby">
@@ -47,7 +48,7 @@
           <div class="flex">
             <div class="flex-shrink-0 flex items-center">
               <%= link_to root_path, class: "flex items-center" do %>
-                <%= image_tag "vkdb_logo.png", alt: "VKDB.jp", class: "max-h-10 w-auto", width: 400, height: 147 %>
+                <%= image_tag "vkdb_logo.png", alt: "VKDB.jp", class: "max-h-10 w-auto", width: 218, height: 80 %>
               <% end %>
             </div>
             <!-- Search Form (Desktop) - Next to logo -->
@@ -240,7 +241,14 @@
           <!-- Mobile Navigation: Two separate hamburger menus -->
           <div class="flex items-center gap-2 sm:hidden">
             <!-- Left Hamburger: Common Navigation (Units, People, Trends, Items) -->
-            <div data-controller="mobile-menu">
+            <div data-controller="mobile-menu" class="flex items-center">
+              <!-- Search hint icon: opens the same panel as the hamburger, scrolled to the search form -->
+              <button type="button" class="bg-transparent inline-flex items-center justify-center p-2 rounded text-zinc-500 hover:text-indigo-600 dark:text-zinc-400 dark:hover:text-indigo-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none transition-colors" aria-controls="common-nav-menu" aria-expanded="false" data-action="click->mobile-menu#toggle">
+                <span class="sr-only">Open search</span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+              </button>
               <button type="button" class="bg-transparent inline-flex items-center justify-center p-2 rounded text-zinc-500 hover:text-indigo-600 dark:text-zinc-400 dark:hover:text-indigo-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none transition-colors" aria-controls="common-nav-menu" aria-expanded="false" data-action="click->mobile-menu#toggle">
                 <span class="sr-only">Open navigation menu</span>
                 <!-- Icon when menu is closed -->
