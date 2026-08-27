@@ -39,6 +39,10 @@ class CustomPage < ApplicationRecord
   validates :key, presence: true, uniqueness: true,
                   format: { with: /\A[a-z0-9_-]+\z/, message: '半角英数字・アンダースコア・ハイフンのみ使用可' }
   validates :title, presence: true
+  # old_keyはDB(index_custom_pages_on_old_key)にunique制約があるが、管理画面から直接編集可能な
+  # ため、Rails側の検証がないと重複入力時にRecordNotUnique(PG::UniqueViolation)が未捕捉の例外
+  # としてそのまま500エラーになっていた（issue #1244）
+  validates :old_key, uniqueness: true, allow_blank: true
   validate :no_circular_includes, if: :body_changed?
 
   scope :published, -> { kept.where(active: true) }
