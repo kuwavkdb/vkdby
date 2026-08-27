@@ -49,6 +49,10 @@ class Unit < ApplicationRecord
 
   validates :status, presence: true
   validates :key, uniqueness: { case_sensitive: false }, allow_blank: true
+  # old_keyはDB(index_units_on_old_key)にunique制約があるが、管理画面から直接編集可能なため、
+  # Rails側の検証がないと重複入力時にRecordNotUnique(PG::UniqueViolation)が未捕捉の例外として
+  # そのまま500エラーになる（issue #1244でCustomPageに見つかった同種の不具合）
+  validates :old_key, uniqueness: true, allow_blank: true
   validate :key_immutable, on: :update
 
   STATUS_TRANSLATIONS = {
