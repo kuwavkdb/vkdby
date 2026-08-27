@@ -27,6 +27,15 @@ module Vkdby
     # analysis only, decoupled from variant_processor.
     config.active_storage.variant_processor = :mini_magick
 
+    # Serve Active Storage files via the proxy route (streamed through the app)
+    # instead of the default redirecting route (issue #1241). url_for(blob/attachment)
+    # — used by Admin::ImagesController#show to produce the URL that gets pasted into
+    # markdown content (Units/People/CustomPages) — now generates
+    # /rails/active_storage/blobs/proxy/... URLs, avoiding an extra 302 hop to the
+    # storage service (Cloudflare R2) on every image request. Only affects URLs
+    # generated from now on; URLs already embedded in existing content are unaffected.
+    config.active_storage.resolve_model_to_route = :rails_storage_proxy
+
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
