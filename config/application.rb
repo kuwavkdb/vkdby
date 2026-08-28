@@ -76,6 +76,11 @@ module Vkdby
       'ヴィジュアル系バンド・アーティストのデータベース。ユニットやメンバーの結成・脱退・改名などの活動履歴、プロフィール、動向、年表を掲載しています。'
     )
 
+    # Default OGP/Twitter Card image for pages that don't set a page-specific image
+    # (issue #1253). Unit/Person page images taking priority over this default is a
+    # follow-up, same phased approach as meta description (issue #1223).
+    config.site_ogp_image_path = ENV.fetch('SITE_OGP_IMAGE_PATH', '/icon.png')
+
     # Base URL for old-key links to the legacy site (issue #946).
     # Only relevant during the migration period; remove once the old site is retired.
     config.old_key_url_base = ENV.fetch('OLD_KEY_URL_BASE', 'https://wiki.vkdb.jp')
