@@ -170,10 +170,13 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     ERB::Util.html_escape(CGI.unescapeHTML(text.to_s))
   end
 
-  # og:image / twitter:image のデフォルト画像の絶対URL（issue #1253）。
-  # Unit/Personページ等でプロフィール画像を優先的に使う対応は将来のフェーズで行う
-  # （meta descriptionのページ別対応が#1223→#1235と段階的に進められたのと同様の進め方）。
+  # og:image / twitter:image の絶対URL（issue #1253）。
+  # ページ側が content_for(:og_image, url) をセットしていればそちらを優先し
+  # （Unit/Personページはユニット名/メンバー名入りのバナー画像、issue #1259）、
+  # なければ全ページ共通のデフォルト画像にフォールバックする。
   def og_image_url
+    return content_for(:og_image) if content_for?(:og_image)
+
     "#{request.base_url}#{Rails.application.config.site_ogp_image_path}"
   end
 

@@ -812,6 +812,14 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_equal "http://test.host#{Rails.application.config.site_ogp_image_path}", result
   end
 
+  test 'og_image_urlはcontent_for(:og_image)がセットされていればそちらを優先する（issue #1259）' do
+    content_for(:og_image, 'https://example.com/units/1/ogp.png')
+
+    result = og_image_url
+
+    assert_equal 'https://example.com/units/1/ogp.png', result
+  end
+
   private
 
   def create_image_blob(width:, height:)

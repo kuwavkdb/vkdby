@@ -33,6 +33,7 @@
 require 'test_helper'
 
 class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
+  include ActiveJob::TestHelper
   test 'parse_old_history parses simple history' do
     person = Person.new(old_history: 'BandA → BandB')
     history = person.parse_old_history
@@ -356,5 +357,24 @@ class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
 
     assert_includes Person.published, published_person
     assert_not_includes Person.published, unpublished_person
+  end
+
+  test 'ogp_image_relative_url generates and attaches an image on first call (issue #1259)' do
+    person = Person.create!(name: 'First Call Person', key: 'person-ogp-first', status: :active)
+
+    result = stub_class_method(OgpImageGenerator, :call, 'dummy-png-bytes') { person.ogp_image_relative_url }
+
+    assert person.ogp_image.attached?
+    assert_match %r{\A/rails/active_storage/}, result
+  end
+
+  test 'updating name purges the previously generated ogp_image so it regenerates next time' do
+    person = Person.create!(name: 'Old Name Person', key: 'person-ogp-purge', status: :active)
+    stub_class_method(OgpImageGenerator, :call, 'dummy-png-bytes') { person.ogp_image_relative_url }
+    assert person.ogp_image.attached?
+
+    assert_enqueued_with(job: ActiveStorage::PurgeJob) do
+      person.update!(name: 'New Name Person')
+    end
   end
 end
