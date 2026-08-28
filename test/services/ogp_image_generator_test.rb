@@ -16,8 +16,8 @@ class OgpImageGeneratorTest < ActiveSupport::TestCase
 
     assert_not_nil result
     image = Vips::Image.new_from_buffer(result, '')
-    assert_equal 1500, image.width
-    assert_equal 500, image.height
+    assert_equal 1200, image.width
+    assert_equal 628, image.height
   end
 
   test 'returns nil instead of raising when text rendering fails' do

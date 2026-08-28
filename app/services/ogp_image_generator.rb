@@ -3,10 +3,14 @@
 # Unit/Personページのog:image/twitter:image用に、ユニット名・メンバー名を合成した
 # バナー画像（PNG）を生成する（issue #1259）。
 #
-# テンプレート画像（app/assets/images/ogp_banner_template.png）は右側にロゴ・マスコットが
-# 配置され、左側が名前を差し込むための余白になっているデザイン。合成にはmini_magick/
-# ImageMagick CLIではなくruby-vipsを使う。ImageMagick CLIは本アプリの実行環境に
-# インストールされていない（Gemfileのruby-vips導入時のコメント参照）ため。
+# テンプレート画像（app/assets/images/ogp_banner_template.png）は右下にロゴ・マスコットが
+# 配置され、左側〜上部が名前を差し込むための余白になっているデザイン。サイズは1200x628
+# （約1.91:1）で、X(Twitter)のsummary_large_imageカードが期待する比率に合わせてあり、
+# SNS側でクロップされないようリサイズ・トリミングは不要（issue #1262。以前の
+# 1500x500テンプレートは比率が合わずXで左右がクロップされていた）。
+#
+# 合成にはmini_magick/ImageMagick CLIではなくruby-vipsを使う。ImageMagick CLIは
+# 本アプリの実行環境にインストールされていない（Gemfileのruby-vips導入時のコメント参照）ため。
 #
 # libvips本体（共有ライブラリ）が入っていない環境（開発機・CI等）でも
 # アプリを落とさないよう、ActiveStorageのvips画像解析（lib/active_storage_ext/
@@ -17,9 +21,10 @@ class OgpImageGenerator
   TEMPLATE_PATH = Rails.root.join('app/assets/images/ogp_banner_template.png').freeze
 
   # テンプレート画像内の、名前を差し込む黄色い余白部分の座標（サンプリングして決定。
-  # ロゴ・マスコットが画像内で最も左に張り出す位置がx=960前後のため、50pxの余白を
-  # 見込んでbox幅を860に設定している）
-  TEXT_BOX = { left: 50, top: 50, width: 860, height: 400 }.freeze
+  # ロゴ・マスコットが画像内で最も左に張り出す位置がx=895前後のため、50pxの余白を
+  # 見込んでbox幅を800に設定している。heightは箱いっぱいに広げるとオートフィットが
+  # 縦方向を優先してしまい行数が増えすぎる・文字が肥大化しすぎるため、280に抑えている）
+  TEXT_BOX = { left: 50, top: 60, width: 800, height: 280 }.freeze
 
   # テンプレート内のロゴ・マスコットと同系統のネイビー（テンプレート画像からサンプリング）
   TEXT_COLOR = [20, 46, 108].freeze
