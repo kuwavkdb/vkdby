@@ -1,9 +1,27 @@
 <!DOCTYPE html>
-<html class="motion-safe:scroll-smooth">
+<html lang="ja" class="motion-safe:scroll-smooth">
   <head>
-    <title><%= page_title_text(content_for?(:title) ? "#{yield(:title)} - #{Rails.application.config.site_name}" : Rails.application.config.site_name) %></title>
-    <meta name="description" content="<%= meta_description_text(content_for?(:description) ? yield(:description) : Rails.application.config.site_description) %>">
+    <% og_title = content_for?(:title) ? yield(:title) : Rails.application.config.site_name %>
+    <% og_description = content_for?(:description) ? yield(:description) : Rails.application.config.site_description %>
+    <title><%= page_title_text(content_for?(:title) ? "#{og_title} - #{Rails.application.config.site_name}" : og_title) %></title>
+    <meta name="description" content="<%= meta_description_text(og_description) %>">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <%# OGP / Twitter Card（issue #1253）。title/descriptionは上のcontent_for(:title)/(:description)
+        の仕組みをそのまま流用。og:imageは当面全ページ共通のデフォルト画像のみ（Unit/Person
+        ページ等でのプロフィール画像優先は将来のフェーズで対応、issue #1223→#1235と同様の進め方）。
+        og:typeはcontent_for(:og_type)で個別ページから上書きできるようにしてあるが、
+        現時点ではトップページ以外を一律articleとするデフォルトのみで運用する。 %>
+    <meta property="og:title" content="<%= meta_content_text(og_title) %>">
+    <meta property="og:description" content="<%= meta_description_text(og_description) %>">
+    <meta property="og:image" content="<%= og_image_url %>">
+    <meta property="og:url" content="<%= request.original_url %>">
+    <meta property="og:type" content="<%= meta_content_text(content_for?(:og_type) ? yield(:og_type) : (request.path == root_path ? 'website' : 'article')) %>">
+    <meta property="og:site_name" content="<%= Rails.application.config.site_name %>">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<%= meta_content_text(og_title) %>">
+    <meta name="twitter:description" content="<%= meta_description_text(og_description) %>">
+    <meta name="twitter:image" content="<%= og_image_url %>">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Vkdby">
     <meta name="mobile-web-app-capable" content="yes">

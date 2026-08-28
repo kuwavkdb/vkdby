@@ -27,6 +27,15 @@ module Vkdby
     # analysis only, decoupled from variant_processor.
     config.active_storage.variant_processor = :mini_magick
 
+    # Serve Active Storage files via the proxy route (streamed through the app)
+    # instead of the default redirecting route (issue #1241). url_for(blob/attachment)
+    # — used by Admin::ImagesController#show to produce the URL that gets pasted into
+    # markdown content (Units/People/CustomPages) — now generates
+    # /rails/active_storage/blobs/proxy/... URLs, avoiding an extra 302 hop to the
+    # storage service (Cloudflare R2) on every image request. Only affects URLs
+    # generated from now on; URLs already embedded in existing content are unaffected.
+    config.active_storage.resolve_model_to_route = :rails_storage_proxy
+
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
@@ -66,6 +75,11 @@ module Vkdby
       'SITE_DESCRIPTION',
       'ヴィジュアル系バンド・アーティストのデータベース。ユニットやメンバーの結成・脱退・改名などの活動履歴、プロフィール、動向、年表を掲載しています。'
     )
+
+    # Default OGP/Twitter Card image for pages that don't set a page-specific image
+    # (issue #1253). Unit/Person page images taking priority over this default is a
+    # follow-up, same phased approach as meta description (issue #1223).
+    config.site_ogp_image_path = ENV.fetch('SITE_OGP_IMAGE_PATH', '/icon.png')
 
     # Base URL for old-key links to the legacy site (issue #946).
     # Only relevant during the migration period; remove once the old site is retired.
