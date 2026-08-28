@@ -1,4 +1,10 @@
 <% content_for :title, @resource.name_kana.present? ? "#{@resource.name}（#{@resource.name_kana}）" : @resource.name %>
+<%# ユニット名/メンバー名入りのog:image（issue #1259）。生成できない場合（libvips未導入等）は
+    ogp_image_relative_urlがnilを返し、application_helper#og_image_urlのデフォルト画像
+    フォールバックに任せる %>
+<% if (ogp_image_path = @resource.ogp_image_relative_url) %>
+  <% content_for :og_image, "#{request.base_url}#{ogp_image_path}" %>
+<% end %>
 <% content_for :head do %>
   <style>.page-nav-scroll::-webkit-scrollbar { display: none; }</style>
   <% if Rails.application.config.canonical_host.present? %>

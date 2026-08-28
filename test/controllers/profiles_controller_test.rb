@@ -111,6 +111,26 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "<link rel=\"canonical\" href=\"https://www.vkdb.jp#{profile_path(unit.key)}\">"
   end
 
+  test 'renders og:image pointing at the generated per-unit banner (issue #1259)' do
+    skip 'libvips is not installed in this environment' unless ActiveStorage::VIPS_AVAILABLE
+
+    unit = Unit.create!(name: 'OGP Image Unit', key: 'unit-ogp-image', status: :active)
+    get profile_path(unit.key)
+
+    assert_response :success
+    assert_includes response.body, 'property="og:image" content="http://www.example.com/rails/active_storage/'
+  end
+
+  test 'falls back to the default og:image when the per-page image cannot be generated' do
+    unit = Unit.create!(name: 'Fallback Image Unit', key: 'unit-ogp-fallback', status: :active)
+
+    stub_class_method(OgpImageGenerator, :call, nil) { get profile_path(unit.key) }
+
+    assert_response :success
+    assert_includes response.body,
+                    "property=\"og:image\" content=\"http://www.example.com#{Rails.application.config.site_ogp_image_path}\""
+  end
+
   test 'unit trend list shows the recorded name when it differs from the current unit name' do
     unit = Unit.create!(name: 'Renamed Trend Unit', key: 'unit-trend-name-badge', status: :active)
     Trend.create!(title: 'Trend before rename', date: Date.current, publish_start_at: Time.current,
