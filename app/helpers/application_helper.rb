@@ -162,6 +162,21 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     ERB::Util.html_escape(CGI.unescapeHTML(text.to_s).truncate(160, separator: ' '))
   end
 
+  # og:title / twitter:title やog:type等、meta_description_textと同じくHTML属性値
+  # （content="..."）として出力するがdescriptionと違い切り詰めは不要なmeta content用。
+  # エスケープの理由・手順はmeta_description_textと同様（一度デコードしてから属性値として
+  # 再エスケープする）。
+  def meta_content_text(text)
+    ERB::Util.html_escape(CGI.unescapeHTML(text.to_s))
+  end
+
+  # og:image / twitter:image のデフォルト画像の絶対URL（issue #1253）。
+  # Unit/Personページ等でプロフィール画像を優先的に使う対応は将来のフェーズで行う
+  # （meta descriptionのページ別対応が#1223→#1235と段階的に進められたのと同様の進め方）。
+  def og_image_url
+    "#{request.base_url}#{Rails.application.config.site_ogp_image_path}"
+  end
+
   # prioritize_first_image: 本文中最初の画像にfetchpriority="high"を付与するか
   # （LCP対策、issue #1215）。ヘッダー/フッターの短いメッセージや、1ページに複数回
   # 展開されるSection（ユニット/人物ページ）では意図せず複数箇所が高優先度になり得るため、

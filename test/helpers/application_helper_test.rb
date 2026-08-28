@@ -792,6 +792,26 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_no_match(/fetchpriority/, result)
   end
 
+  test 'meta_content_textはHTML属性値として引用符や不等号をエスケープする' do
+    result = meta_content_text(%(Title "quoted" <b>&amp;</b>))
+
+    assert_equal 'Title &quot;quoted&quot; &lt;b&gt;&amp;&lt;/b&gt;', result
+  end
+
+  test 'meta_content_textはmeta_description_textと違い160字で切り詰めない（issue #1253）' do
+    long_text = 'あ' * 200
+
+    result = meta_content_text(long_text)
+
+    assert_equal 200, result.length
+  end
+
+  test 'og_image_urlはconfig.site_ogp_image_pathをrequest.base_urlに連結した絶対URLを返す（issue #1253）' do
+    result = og_image_url
+
+    assert_equal "http://test.host#{Rails.application.config.site_ogp_image_path}", result
+  end
+
   private
 
   def create_image_blob(width:, height:)
