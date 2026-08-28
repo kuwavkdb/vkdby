@@ -38,6 +38,7 @@ class Person < ApplicationRecord
   include WikiParser
   include KeyChangeable
   include Unpublishable
+  include OgpImageAttachable
   has_many :links, as: :linkable, dependent: :destroy
   has_many :wiki_page_imports, as: :import_target
   has_many :unit_people

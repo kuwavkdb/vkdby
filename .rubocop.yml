@@ -20,3 +20,5 @@ Metrics/ClassLength:
     - 'test/services/custom_page_draft_generator_test.rb'
     - 'test/helpers/application_helper_test.rb'
     - 'test/controllers/admin/temporary_snapshot_people_controller_test.rb'
+    - 'test/models/unit_test.rb'
+    - 'test/controllers/profiles_controller_test.rb'

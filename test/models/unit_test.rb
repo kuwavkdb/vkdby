@@ -28,6 +28,8 @@
 require 'test_helper'
 
 class UnitTest < ActiveSupport::TestCase
+  include ActiveJob::TestHelper
+
   test 'key can be set on create' do
     unit = Unit.create!(name: 'New Unit', key: 'new-unit-key-test', status: :active)
 
@@ -123,5 +125,49 @@ class UnitTest < ActiveSupport::TestCase
 
     assert_includes Unit.published, published_unit
     assert_not_includes Unit.published, unpublished_unit
+  end
+
+  test 'ogp_image_relative_url generates and attaches an image on first call (issue #1259)' do
+    unit = Unit.create!(name: 'First Call Unit', key: 'unit-ogp-first', status: :active)
+
+    result = stub_class_method(OgpImageGenerator, :call, 'dummy-png-bytes') { unit.ogp_image_relative_url }
+
+    assert unit.ogp_image.attached?
+    assert_match %r{\A/rails/active_storage/}, result
+  end
+
+  test 'ogp_image_relative_url reuses the previously generated image without regenerating' do
+    unit = Unit.create!(name: 'Reuse Unit', key: 'unit-ogp-reuse', status: :active)
+    call_count = 0
+    generator = lambda { |_name|
+      call_count += 1
+      'dummy-png-bytes'
+    }
+
+    stub_class_method(OgpImageGenerator, :call, generator) do
+      unit.ogp_image_relative_url
+      unit.ogp_image_relative_url
+    end
+
+    assert_equal 1, call_count
+  end
+
+  test 'ogp_image_relative_url returns nil and attaches nothing when the generator returns nil' do
+    unit = Unit.create!(name: 'No Vips Unit', key: 'unit-ogp-no-vips', status: :active)
+
+    result = stub_class_method(OgpImageGenerator, :call, nil) { unit.ogp_image_relative_url }
+
+    assert_nil result
+    assert_not unit.ogp_image.attached?
+  end
+
+  test 'updating name purges the previously generated ogp_image so it regenerates next time' do
+    unit = Unit.create!(name: 'Old Name Unit', key: 'unit-ogp-purge', status: :active)
+    stub_class_method(OgpImageGenerator, :call, 'dummy-png-bytes') { unit.ogp_image_relative_url }
+    assert unit.ogp_image.attached?
+
+    assert_enqueued_with(job: ActiveStorage::PurgeJob) do
+      unit.update!(name: 'New Name Unit')
+    end
   end
 end

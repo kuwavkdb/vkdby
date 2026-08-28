@@ -15,8 +15,10 @@ FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 WORKDIR /rails
 
 # Install base packages
+# fonts-noto-cjk: needed at runtime for ruby-vips to render Japanese text into OGP banner
+# images (issue #1259). Without it, libvips/pango has no CJK glyphs to draw with.
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl default-mysql-client libjemalloc2 libvips && \
+    apt-get install --no-install-recommends -y curl default-mysql-client libjemalloc2 libvips fonts-noto-cjk && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
