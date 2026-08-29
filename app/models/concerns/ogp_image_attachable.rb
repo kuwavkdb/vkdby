@@ -10,8 +10,15 @@
 # 合成するテキストの取得元はUnit/Personの`name`カラムがデフォルト。`name`カラムを持たない
 # モデル（CustomPageの`title`等）はinclude先で`ogp_image_attachable_text`と
 # `ogp_image_attachable_text_changed?`をoverrideする。
+#
+# 添付（R2への書き込み）が失敗した場合、例外はrescueしてログに残し、デフォルト画像への
+# フォールバックに委ねる（呼び出し元をエラーにしない）。また、失敗直後にFAILURE_COOLDOWN
+# の間は再試行せず生成処理自体をスキップする。R2側の障害等でattachが失敗し続ける状況で、
+# アクセスの度に重いvips処理を繰り返して負荷をかけ続けないようにするため（issue #1267）。
 module OgpImageAttachable
   extend ActiveSupport::Concern
+
+  FAILURE_COOLDOWN = 1.hour
 
   included do
     has_one_attached :ogp_image
@@ -43,18 +50,40 @@ module OgpImageAttachable
 
   def ensure_ogp_image!
     return if ogp_image.attached?
+    return if ogp_image_attach_recently_failed?
 
     png = OgpImageGenerator.call(ogp_image_attachable_text)
     return unless png
 
+    attach_ogp_image(png)
+  end
+
+  def attach_ogp_image(png)
     ogp_image.attach(
       io: StringIO.new(png),
       filename: "ogp-#{self.class.name.underscore}-#{id}.png",
       content_type: 'image/png'
     )
+  rescue StandardError => e
+    Rails.logger.error(
+      "OgpImageAttachable: 画像の添付に失敗しました (#{self.class.name}##{id}): #{e.class}: #{e.message}"
+    )
+    mark_ogp_image_attach_failed
   end
 
   def purge_ogp_image
     ogp_image.purge_later
+  end
+
+  def ogp_image_attach_recently_failed?
+    Rails.cache.exist?(ogp_image_attach_failure_cache_key)
+  end
+
+  def mark_ogp_image_attach_failed
+    Rails.cache.write(ogp_image_attach_failure_cache_key, true, expires_in: FAILURE_COOLDOWN)
+  end
+
+  def ogp_image_attach_failure_cache_key
+    "ogp_image_attach_failure/#{self.class.name}/#{id}"
   end
 end
