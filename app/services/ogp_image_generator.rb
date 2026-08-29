@@ -50,16 +50,26 @@ class OgpImageGenerator
     ActiveStorage::VIPS_AVAILABLE
   end
 
-  # fonts-noto-cjk（Dockerfileでインストール）が実際に配置するCJK対応フォントファイルへの
-  # パス。見つかった場合はfontconfigの一般名解決を経由せず、`Vips::Image.text`の`fontfile:`
-  # でこのファイルを直接読み込む。以前はFONT（'Sans Bold'というfontconfigの一般名）の解決に
-  # 任せており、「本番ではNoto Sans CJK JPに解決される想定」というコメントの通り未検証の
-  # 前提だった。実際には本番（Docker、LANG未設定）でfontconfigの言語ベースの汎用名解決が
-  # 期待通りCJK対応フォントに落ちず、日本語テキストが文字化けする不具合があった（issue #1268）。
-  # ローカル（開発機・CI等）にはこのファイルが無いためnilになり、その場合は従来通りFONTの
+  # CJK対応フォントファイルへのパス。見つかった場合はfontconfigの一般名解決を経由せず、
+  # `Vips::Image.text`の`fontfile:`でこのファイルを直接読み込む。
+  #
+  # 以前はFONT（'Sans Bold'というfontconfigの一般名）の解決に任せており、「本番では
+  # Noto Sans CJK JPに解決される想定」というコメントの通り未検証の前提だった。実際には
+  # 本番（www.vkdb.jp）はDockerfile/Kamalではなく`bin/render-build.sh`経由のRenderネイティブ
+  # Rubyランタイムで動いており、CJKフォントがOSレベルに一つも入っておらず、日本語テキストが
+  # グリフ欠落（豆腐＋コードポイント表示）になる不具合があった（issue #1268）。
+  #
+  # そのため`bin/render-build.sh`がビルド時にNoto Sans CJK JP Bold単体のフォントファイルを
+  # ダウンロードしvendor/fonts/に配置しており、まずそちらを探す（リポジトリには同梱しない
+  # 方針のためgitignore対象）。Dockerfile/Kamal経由でfonts-noto-cjkがインストールされた
+  # 環境向けに、システムのフォントディレクトリも従来通りフォールバックとして探す。
+  # ローカル（開発機・CI等）にはどちらも無いためnilになり、その場合は従来通りFONTの
   # 汎用名解決にフォールバックする。vips_available?と同じ理由で、定数ではなくテストから
   # stub_class_methodでstubできるメソッド経由にしている。
   def self.cjk_font_file
+    vendor_font = Rails.root.join('vendor/fonts/NotoSansCJKjp-Bold.otf')
+    return vendor_font.to_s if vendor_font.exist?
+
     Dir.glob('/usr/share/fonts/**/NotoSansCJK*Bold*.{ttc,otf,ttf}').first
   end
 

@@ -49,3 +49,7 @@
 .envrc
 *.dump
 /plan
+
+# CJK font downloaded at build time for OgpImageGenerator (issue #1268). Not committed
+# per the "don't bundle font files in the repo" policy; see bin/render-build.sh.
+/vendor/fonts
