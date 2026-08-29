@@ -8,8 +8,10 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
 
     <%# OGP / Twitter Card（issue #1253）。title/descriptionは上のcontent_for(:title)/(:description)
-        の仕組みをそのまま流用。og:imageは当面全ページ共通のデフォルト画像のみ（Unit/Person
-        ページ等でのプロフィール画像優先は将来のフェーズで対応、issue #1223→#1235と同様の進め方）。
+        の仕組みをそのまま流用。og:imageはデフォルトで全ページ共通の画像だが、Unit/Personの
+        プロフィールページ（issue #1259）とCustomPage（issue #1263、システムページを除く）は
+        content_for(:og_image)で名前/タイトル入りバナー画像に上書きする
+        （application_helper#og_image_url参照）。
         og:typeはcontent_for(:og_type)で個別ページから上書きできるようにしてあるが、
         現時点ではトップページ以外を一律articleとするデフォルトのみで運用する。 %>
     <meta property="og:title" content="<%= meta_content_text(og_title) %>">

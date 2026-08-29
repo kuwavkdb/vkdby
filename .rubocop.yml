@@ -22,3 +22,4 @@ Metrics/ClassLength:
     - 'test/controllers/admin/temporary_snapshot_people_controller_test.rb'
     - 'test/models/unit_test.rb'
     - 'test/controllers/profiles_controller_test.rb'
+    - 'test/controllers/custom_pages_controller_test.rb'
