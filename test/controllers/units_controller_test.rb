@@ -20,4 +20,14 @@ class UnitsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.parsed_body.pluck('name'), 'ABC123'
   end
+
+  # issue #1277: keyが空のUnitが混ざっていても、公開側の一覧ページ(UnitCardComponent)が
+  # profile_path(key)のUrlGenerationErrorで落ちないことを保険的に確認する
+  test 'index still renders when a unit has a blank key' do
+    Unit.new(name: 'Legacy Blank Key Unit', status: :active).save(validate: false)
+
+    get units_path
+
+    assert_response :success
+  end
 end

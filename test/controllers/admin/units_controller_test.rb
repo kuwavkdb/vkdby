@@ -39,6 +39,26 @@ module Admin
       assert_equal 'brand-new-unit-key', Unit.last.key
     end
 
+    # issue #1277: keyが空のまま作成できると、以降Unit一覧ページ(管理画面・公開ページとも)が
+    # profile_path(key)のUrlGenerationErrorで全面的に500エラーになっていた
+    test 'create rejects a blank key and re-renders the form' do
+      assert_no_difference('Unit.count') do
+        post admin_units_path, params: {
+          unit: { name: 'Blank Key Unit', key: '', status: 'active' }
+        }
+      end
+
+      assert_response :unprocessable_entity
+    end
+
+    test 'index still renders when a unit has a blank key' do
+      Unit.new(name: 'Legacy Blank Key Unit', status: :active).save(validate: false)
+
+      get admin_units_path
+
+      assert_response :success
+    end
+
     test 'change_key requires admin role' do
       patch change_key_admin_unit_path(@unit), params: { new_key: 'attempted-new-key' }
 

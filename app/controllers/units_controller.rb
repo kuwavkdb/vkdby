@@ -8,7 +8,7 @@ class UnitsController < ApplicationController
                                    .group(:tag_index_id)
                                    .count
 
-    scope = Unit.kept.where.not(name: [nil, '']).order(updated_at: :desc)
+    scope = Unit.kept.where.not(name: [nil, '']).where.not(key: [nil, '']).order(updated_at: :desc)
     if params[:q].present?
       scope = scope.where(
         'units.name ILIKE :q OR units.name_kana ILIKE :q OR units.name_log::text ILIKE :q OR units.aliases::text ILIKE :q',
