@@ -4,13 +4,15 @@ class CustomPagesController < ApplicationController
   before_action :load_sidebar_data
 
   def show
-    @page = CustomPage.published.find_by!(key: params[:key])
+    # with_attached_ogp_image: ogp_image_relative_url内のattached?判定が毎アクセスN+1で
+    # クエリを発行しないよう、attachment/blobを事前にeager loadしておく（issue #1267）。
+    @page = CustomPage.published.with_attached_ogp_image.find_by!(key: params[:key])
   rescue ActiveRecord::RecordNotFound
     render_not_found(query: params[:key])
   end
 
   def index_page
-    @page = CustomPage.published.find_by!(key: 'index')
+    @page = CustomPage.published.with_attached_ogp_image.find_by!(key: 'index')
     render :show
   rescue ActiveRecord::RecordNotFound
     render_not_found

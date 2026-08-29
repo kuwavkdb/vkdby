@@ -2,8 +2,10 @@
 
 class ProfilesController < ApplicationController
   def show
-    @resource = Unit.with_discarded.includes(:links).find_by(key: params[:key]) ||
-                Person.with_discarded.includes(:links).find_by(key: params[:key])
+    # with_attached_ogp_image: ogp_image_relative_url内のattached?判定が毎アクセスN+1で
+    # クエリを発行しないよう、attachment/blobを事前にeager loadしておく（issue #1267）。
+    @resource = Unit.with_discarded.includes(:links).with_attached_ogp_image.find_by(key: params[:key]) ||
+                Person.with_discarded.includes(:links).with_attached_ogp_image.find_by(key: params[:key])
 
     raise ActiveRecord::RecordNotFound unless @resource
 

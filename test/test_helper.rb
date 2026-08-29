@@ -29,5 +29,18 @@ module ActiveSupport
     ensure
       klass.define_singleton_method(method_name, original)
     end
+
+    # stub_class_methodのインスタンスメソッド版。ActiveStorage::Attached::One#attach等、
+    # 対象の特異メソッドとして差し替えるのが難しい（呼び出しの度にProxyが再生成され得る）
+    # メソッドをクラスごと差し替えたい場合に使う（issue #1267: attach失敗時の挙動のテスト）。
+    def stub_instance_method(klass, method_name, value)
+      original = klass.instance_method(method_name)
+      klass.define_method(method_name) do |*args|
+        value.respond_to?(:call) ? value.call(*args) : value
+      end
+      yield
+    ensure
+      klass.define_method(method_name, original)
+    end
   end
 end
