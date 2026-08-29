@@ -28,6 +28,38 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(%r{<span class="inline-block[^"]*">\s*</span>}, response.body)
   end
 
+  test 'renders og:image pointing at the generated title banner (issue #1263)' do
+    skip 'libvips is not installed in this environment' unless ActiveStorage::VIPS_AVAILABLE
+
+    page = CustomPage.create!(key: 'ogp-image-test-page', title: 'OGP Image Test Page', active: true, body: 'body')
+
+    get custom_page_path(key: page.key)
+
+    assert_response :success
+    assert_includes response.body, 'property="og:image" content="http://www.example.com/rails/active_storage/'
+  end
+
+  test 'falls back to the default og:image when the per-page image cannot be generated' do
+    page = CustomPage.create!(key: 'ogp-fallback-test-page', title: 'OGP Fallback Test Page', active: true,
+                              body: 'body')
+
+    stub_class_method(OgpImageGenerator, :call, nil) { get custom_page_path(key: page.key) }
+
+    assert_response :success
+    assert_includes response.body,
+                    "property=\"og:image\" content=\"http://www.example.com#{Rails.application.config.site_ogp_image_path}\""
+  end
+
+  test 'system pages keep the default og:image instead of a title banner' do
+    page = CustomPage.create!(key: 'index', title: 'トップページ', active: true, body: 'body')
+
+    get custom_page_path(key: page.key)
+
+    assert_response :success
+    assert_includes response.body,
+                    "property=\"og:image\" content=\"http://www.example.com#{Rails.application.config.site_ogp_image_path}\""
+  end
+
   test 'index page shows the today teaser link with correct href and bilingual text' do
     CustomPage.create!(key: 'index', title: 'トップページ', active: true, body: 'body')
     today = Date.current

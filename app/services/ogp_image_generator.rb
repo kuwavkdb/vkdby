@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-# Unit/Personページのog:image/twitter:image用に、ユニット名・メンバー名を合成した
-# バナー画像（PNG）を生成する（issue #1259）。
+# Unit/Person/CustomPageページのog:image/twitter:image用に、ユニット名・メンバー名・
+# ページタイトルを合成したバナー画像（PNG）を生成する（issue #1259、CustomPage対応は#1263）。
 #
-# テンプレート画像（app/assets/images/ogp_banner_template.png）は右下にロゴ・マスコットが
+# テンプレート画像（public/ogp_banner_template.png）は右下にロゴ・マスコットが
 # 配置され、左側〜上部が名前を差し込むための余白になっているデザイン。サイズは1200x628
 # （約1.91:1）で、X(Twitter)のsummary_large_imageカードが期待する比率に合わせてあり、
 # SNS側でクロップされないようリサイズ・トリミングは不要（issue #1262。以前の
@@ -18,7 +18,9 @@
 # ガードする。独自にrequire "ruby-vips"のrescueは行わない
 # （config/application.rbでのanalyzer登録時に必ず読み込まれ、起動後は定義済みのため）。
 class OgpImageGenerator
-  TEMPLATE_PATH = Rails.root.join('app/assets/images/ogp_banner_template.png').freeze
+  # デフォルトのog:image（config.site_ogp_image_path）としてもこのファイルをそのまま使う
+  # （public/配下に置くことで、名前入りバナー生成前の状態がサイト共通デフォルト画像になる）。
+  TEMPLATE_PATH = Rails.root.join('public/ogp_banner_template.png').freeze
 
   # テンプレート画像内の、名前を差し込む黄色い余白部分の座標（サンプリングして決定。
   # ロゴ・マスコットが画像内で最も左に張り出す位置がx=895前後のため、50pxの余白を
