@@ -35,6 +35,7 @@ description: developブランチから release/v0.yyyy.mmdd ブランチを切�
      - 例: 最新タグが `v0.2026.0227` → `release/v0.2026.0227.2`
      - 例: 最新タグが `v0.2026.0227.2` → `release/v0.2026.0227.3`
    - 最新タグが今日の日付文字列を含まない場合: `release/v0.<date>` をそのまま使う
+   - 確定したブランチ名から `release/` を除いた部分を `<version>` とする（例: `v0.2026.0227.2`）。サフィックスが付与された場合は必ず `<version>` にも反映すること
 
 5. リリースブランチを作成する
    ```
@@ -47,9 +48,9 @@ description: developブランチから release/v0.yyyy.mmdd ブランチを切�
    ```
 
 7. PRを作成する（ベースブランチは `main`）
-   収集した issue 一覧を PR の本文に含める。フォーマット:
+   収集した issue 一覧を PR の本文に含める。タイトルの `## Release` には手順4で確定した `<version>`（サフィックス込み）を使うこと。フォーマット:
    ```
-   ## Release v0.<date>
+   ## Release <version>
 
    ### 含まれる変更
 
