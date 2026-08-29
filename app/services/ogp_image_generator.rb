@@ -31,10 +31,14 @@ class OgpImageGenerator
   # テンプレート内のロゴ・マスコットと同系統のネイビー（テンプレート画像からサンプリング）
   TEXT_COLOR = [20, 46, 108].freeze
 
-  # 特定のシステムフォントを名指しせず、fontconfigの一般名（Sans Bold）に解決を委ねる。
-  # 開発機（macOS）ではHiragino等に、本番（Docker、要fonts-noto-cjk）ではNoto Sans CJK JPに
-  # 解決される想定。フォントファイルをリポジトリに同梱しない方針（ライセンス・肥大化回避）。
+  # フォールバック用の汎用フォント名。fontconfigの一般名（Sans Bold）への解決に委ねる
+  # （後述のcjk_font_fileが見つからない環境向け）。開発機（macOS）ではHiragino等に解決される。
   FONT = 'Sans Bold'
+
+  # cjk_font_fileを`fontfile:`で読み込む際に、pango側でそのファイル内から選択させる
+  # フォントファミリー名。Noto CJKフォントの命名規則上、日本語向けフェイスは
+  # 「Noto Sans CJK JP」で固定（Noto Sans CJK KR/SC/TC/HKと並ぶ地域別ファミリー名の1つ）。
+  CJK_FONT_FAMILY = 'Noto Sans CJK JP'
 
   def self.call(name)
     new(name).call
@@ -44,6 +48,19 @@ class OgpImageGenerator
   # 再現できるよう、定数参照ではなくstub可能なメソッド経由にしている。
   def self.vips_available?
     ActiveStorage::VIPS_AVAILABLE
+  end
+
+  # fonts-noto-cjk（Dockerfileでインストール）が実際に配置するCJK対応フォントファイルへの
+  # パス。見つかった場合はfontconfigの一般名解決を経由せず、`Vips::Image.text`の`fontfile:`
+  # でこのファイルを直接読み込む。以前はFONT（'Sans Bold'というfontconfigの一般名）の解決に
+  # 任せており、「本番ではNoto Sans CJK JPに解決される想定」というコメントの通り未検証の
+  # 前提だった。実際には本番（Docker、LANG未設定）でfontconfigの言語ベースの汎用名解決が
+  # 期待通りCJK対応フォントに落ちず、日本語テキストが文字化けする不具合があった（issue #1268）。
+  # ローカル（開発機・CI等）にはこのファイルが無いためnilになり、その場合は従来通りFONTの
+  # 汎用名解決にフォールバックする。vips_available?と同じ理由で、定数ではなくテストから
+  # stub_class_methodでstubできるメソッド経由にしている。
+  def self.cjk_font_file
+    Dir.glob('/usr/share/fonts/**/NotoSansCJK*Bold*.{ttc,otf,ttf}').first
   end
 
   def initialize(name)
@@ -66,15 +83,23 @@ class OgpImageGenerator
 
   def compose_image
     base = Vips::Image.new_from_file(TEMPLATE_PATH.to_s)
-    text_mask = Vips::Image.text(
-      @name.to_s,
-      font: FONT,
-      width: TEXT_BOX[:width],
-      height: TEXT_BOX[:height],
-      align: :low
-    )
+    text_mask = Vips::Image.text(@name.to_s, **text_options)
     colored_text = text_mask.new_from_image(TEXT_COLOR).bandjoin(text_mask).copy(interpretation: :srgb)
 
     base.composite2(colored_text, :over, x: TEXT_BOX[:left], y: TEXT_BOX[:top])
+  end
+
+  def text_options
+    options = { width: TEXT_BOX[:width], height: TEXT_BOX[:height], align: :low }
+    cjk_font_file = self.class.cjk_font_file
+
+    if cjk_font_file
+      options[:font] = CJK_FONT_FAMILY
+      options[:fontfile] = cjk_font_file
+    else
+      options[:font] = FONT
+    end
+
+    options
   end
 end

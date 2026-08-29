@@ -23,11 +23,17 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Set production environment variables and enable jemalloc for reduced memory usage and latency.
+# LANG=C.UTF-8: without a locale set, fontconfig's language-based generic font matching
+# (used when OgpImageGenerator falls back to the "Sans Bold" generic name) can't tell the
+# container prefers CJK, which contributed to Japanese OGP banner text rendering with the
+# wrong font in production (issue #1268). glibc ships C.UTF-8 out of the box, no locale-gen
+# needed.
 ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle" \
     BUNDLE_WITHOUT="development" \
-    LD_PRELOAD="/usr/local/lib/libjemalloc.so"
+    LD_PRELOAD="/usr/local/lib/libjemalloc.so" \
+    LANG="C.UTF-8"
 
 # Throw-away build stage to reduce size of final image
 FROM base AS build
