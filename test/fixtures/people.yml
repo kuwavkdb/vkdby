@@ -33,6 +33,7 @@
 one:
   name: MyString
   name_kana: MyString
+  key: fixture-person-one
   birthday: 2026-01-11
   blood: MyString
   hometown: MyString
@@ -41,6 +42,7 @@ one:
 two:
   name: MyString
   name_kana: MyString
+  key: fixture-person-two
   birthday: 2026-01-11
   blood: MyString
   hometown: MyString

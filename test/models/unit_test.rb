@@ -30,6 +30,13 @@ require 'test_helper'
 class UnitTest < ActiveSupport::TestCase
   include ActiveJob::TestHelper
 
+  test 'key is required on create' do
+    unit = Unit.new(name: 'No Key Unit', status: :active)
+
+    assert_not unit.save
+    assert_includes unit.errors[:key], 'を入力してください'
+  end
+
   test 'key can be set on create' do
     unit = Unit.create!(name: 'New Unit', key: 'new-unit-key-test', status: :active)
 
