@@ -177,4 +177,42 @@ class UnitTest < ActiveSupport::TestCase
       unit.update!(name: 'New Name Unit')
     end
   end
+
+  test 'with_attached_ogp_image avoids an N+1 query when checking attached? (issue #1267)' do
+    unit = Unit.create!(name: 'Eager Load Unit', key: 'unit-ogp-eager', status: :active)
+    stub_class_method(OgpImageGenerator, :call, 'dummy-png-bytes') { unit.ogp_image_relative_url }
+
+    reloaded = Unit.with_attached_ogp_image.find(unit.id)
+
+    assert_no_queries do
+      assert reloaded.ogp_image.attached?
+    end
+  end
+
+  test 'attach failure is rescued and does not retry within the cooldown (issue #1267)' do
+    unit = Unit.create!(name: 'Attach Fail Unit', key: 'unit-ogp-attach-fail', status: :active)
+
+    original_cache = Rails.cache
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
+
+    generator_call_count = 0
+    generator = lambda { |_name|
+      generator_call_count += 1
+      'dummy-png-bytes'
+    }
+
+    result = nil
+    stub_instance_method(ActiveStorage::Attached::One, :attach, ->(*) { raise 'boom' }) do
+      stub_class_method(OgpImageGenerator, :call, generator) do
+        result = unit.ogp_image_relative_url
+        unit.ogp_image_relative_url
+      end
+    end
+
+    assert_nil result
+    assert_not unit.ogp_image.attached?
+    assert_equal 1, generator_call_count, 'クールダウン中は再度generatorが呼ばれないはず'
+  ensure
+    Rails.cache = original_cache
+  end
 end
