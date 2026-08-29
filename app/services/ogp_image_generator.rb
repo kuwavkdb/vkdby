@@ -68,9 +68,23 @@ class OgpImageGenerator
   # stub_class_methodでstubできるメソッド経由にしている。
   def self.cjk_font_file
     vendor_font = Rails.root.join('vendor/fonts/NotoSansCJKjp-Bold.otf')
-    return vendor_font.to_s if vendor_font.exist?
+    if vendor_font.exist?
+      Rails.logger.info("OgpImageGenerator: vendor font found at #{vendor_font}")
+      return vendor_font.to_s
+    end
 
-    Dir.glob('/usr/share/fonts/**/NotoSansCJK*Bold*.{ttc,otf,ttf}').first
+    system_font = Dir.glob('/usr/share/fonts/**/NotoSansCJK*Bold*.{ttc,otf,ttf}').first
+    return system_font if system_font
+
+    # 診断用ログ（issue #1268）。本番(Render)でCJKフォントが見つからない理由を切り分けるため、
+    # vendor/fonts自体の有無・中身も出す。原因特定後は削除してよい。
+    vendor_dir = vendor_font.dirname
+    vendor_dir_contents = vendor_dir.exist? ? Dir.children(vendor_dir).inspect : '(vendor/fontsディレクトリが存在しない)'
+    Rails.logger.warn(
+      "OgpImageGenerator: CJKフォントが見つからないため font: '#{FONT}' にフォールバックします。 " \
+      "vendor_font=#{vendor_font} vendor_dir_contents=#{vendor_dir_contents}"
+    )
+    nil
   end
 
   def initialize(name)
