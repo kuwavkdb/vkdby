@@ -77,9 +77,11 @@ module Vkdby
     )
 
     # Default OGP/Twitter Card image for pages that don't set a page-specific image
-    # (issue #1253). Unit/Person page images taking priority over this default is a
-    # follow-up, same phased approach as meta description (issue #1223).
-    config.site_ogp_image_path = ENV.fetch('SITE_OGP_IMAGE_PATH', '/icon.png')
+    # (issue #1253). Unit/Person and CustomPage pages override this with a name/title
+    # banner (issue #1259, #1263); this default uses the same banner template image
+    # (public/ogp_banner_template.png, see OgpImageGenerator::TEMPLATE_PATH) without
+    # any text composited on it, rather than the small square site icon (issue #1263).
+    config.site_ogp_image_path = ENV.fetch('SITE_OGP_IMAGE_PATH', '/ogp_banner_template.png')
 
     # Base URL for old-key links to the legacy site (issue #946).
     # Only relevant during the migration period; remove once the old site is retired.

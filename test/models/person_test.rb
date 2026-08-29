@@ -271,6 +271,13 @@ class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
     assert_equal '%44%65%76%65%6C%6F%70+%4F%6E%65%2527%73+%46%61%63%75%6C%74%69%65%73', item[:old_key]
   end
 
+  test 'key is required on create' do
+    person = Person.new(name: 'No Key Person', status: :active)
+
+    assert_not person.save
+    assert_includes person.errors[:key], 'を入力してください'
+  end
+
   test 'key uniqueness is case-insensitive' do
     Person.create!(name: 'Existing Person', key: 'case-key-test', status: :active)
     person = Person.new(name: 'Duplicate Person', key: 'Case-Key-Test', status: :active)

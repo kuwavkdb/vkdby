@@ -54,6 +54,17 @@ module Admin
       assert_equal 'brand-new-person-key', Person.last.key
     end
 
+    # issue #1277: Unitと同様、keyが空のまま作成できると一覧ページがUrlGenerationErrorで落ちる
+    test 'create rejects a blank key and re-renders the form' do
+      assert_no_difference('Person.count') do
+        post admin_people_path, params: {
+          person: { name: 'Blank Key Person', key: '', status: 'active' }
+        }
+      end
+
+      assert_response :unprocessable_entity
+    end
+
     test 'update does not change key even when key param is submitted' do
       patch admin_person_path(@person), params: {
         person: { name: 'Renamed Person', key: 'attempted-new-key' }

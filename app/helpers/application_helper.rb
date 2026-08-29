@@ -172,7 +172,8 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
 
   # og:image / twitter:image の絶対URL（issue #1253）。
   # ページ側が content_for(:og_image, url) をセットしていればそちらを優先し
-  # （Unit/Personページはユニット名/メンバー名入りのバナー画像、issue #1259）、
+  # （Unit/Personページはユニット名/メンバー名入りのバナー画像 issue #1259、
+  # CustomPageはタイトル入りバナー画像 issue #1263）、
   # なければ全ページ共通のデフォルト画像にフォールバックする。
   def og_image_url
     return content_for(:og_image) if content_for?(:og_image)

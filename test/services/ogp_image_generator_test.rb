@@ -29,4 +29,37 @@ class OgpImageGeneratorTest < ActiveSupport::TestCase
       assert_nil result
     end
   end
+
+  # text_optionsの結果だけを見る純粋なRubyのロジックテスト。実際にVips::Image.textを
+  # 呼ぶ（compose_image経由の）テストにすると、存在しないフォント名解決やfontfileの
+  # 組み合わせによってlibvips内部がクラッシュすることがあり（並列テスト実行時に確認）、
+  # 不安定になるため避けている。
+  test 'text_options uses fontfile/font instead of the generic font name when a CJK font file is found' do
+    fake_font_file = '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc'
+    options = stub_class_method(OgpImageGenerator, :cjk_font_file, fake_font_file) do
+      OgpImageGenerator.new('テストユニット').send(:text_options)
+    end
+
+    assert_equal fake_font_file, options[:fontfile]
+    assert_equal OgpImageGenerator::CJK_FONT_FAMILY, options[:font]
+  end
+
+  test 'text_options falls back to the generic font name when no CJK font file is found' do
+    options = stub_class_method(OgpImageGenerator, :cjk_font_file, nil) do
+      OgpImageGenerator.new('テストユニット').send(:text_options)
+    end
+
+    assert_nil options[:fontfile]
+    assert_equal OgpImageGenerator::FONT, options[:font]
+  end
+
+  test 'cjk_font_file returns the vendor/fonts path downloaded by bin/render-build.sh when present' do
+    vendor_font = Rails.root.join('vendor/fonts/NotoSansCJKjp-Bold.otf')
+    FileUtils.mkdir_p(vendor_font.dirname)
+    FileUtils.touch(vendor_font)
+
+    assert_equal vendor_font.to_s, OgpImageGenerator.cjk_font_file
+  ensure
+    FileUtils.rm_f(vendor_font)
+  end
 end

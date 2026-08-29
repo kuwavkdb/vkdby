@@ -49,7 +49,8 @@ class Unit < ApplicationRecord
   enum :status, { pre: 0, active: 1, freeze: 2, disbanded: 3, unknown: 99 }
 
   validates :status, presence: true
-  validates :key, uniqueness: { case_sensitive: false }, allow_blank: true
+  # keyが空だと一覧ページのprofile_path(key)がUrlGenerationErrorで落ちるため必須（issue #1277）
+  validates :key, presence: true, uniqueness: { case_sensitive: false }
   # old_keyはDB(index_units_on_old_key)にunique制約があるが、管理画面から直接編集可能なため、
   # Rails側の検証がないと重複入力時にRecordNotUnique(PG::UniqueViolation)が未捕捉の例外として
   # そのまま500エラーになる（issue #1244でCustomPageに見つかった同種の不具合）

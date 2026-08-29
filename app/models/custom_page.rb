@@ -23,6 +23,7 @@
 
 class CustomPage < ApplicationRecord
   include Discard::Model
+  include OgpImageAttachable
 
   has_many_attached :images
   has_many :sections, as: :sectionable, dependent: :destroy
@@ -87,6 +88,15 @@ class CustomPage < ApplicationRecord
   end
 
   private
+
+  # OgpImageAttachable用: CustomPageには`name`カラムがなく`title`を使う（issue #1263）。
+  def ogp_image_attachable_text
+    title
+  end
+
+  def ogp_image_attachable_text_changed?
+    saved_change_to_title?
+  end
 
   def no_circular_includes
     return if body.blank?

@@ -75,7 +75,8 @@ class Person < ApplicationRecord
 
   before_save :normalize_birthday_year
 
-  validates :key, uniqueness: { case_sensitive: false }, allow_blank: true
+  # keyが空だと一覧ページのprofile_path(key)がUrlGenerationErrorで落ちるため必須（issue #1277）
+  validates :key, presence: true, uniqueness: { case_sensitive: false }
   validate :key_immutable, on: :update
   after_create :auto_link_snapshot_people
   after_commit :expire_sidebar_cache

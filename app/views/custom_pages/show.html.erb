@@ -1,4 +1,12 @@
 <% content_for :title, @page.title %>
+<%# タイトル入りのog:image（issue #1263）。index/footer/top_message・IPブロックリスト用
+    ページ等の「システムページ」（@page.system?）はサイト共通のデフォルト画像のままにする
+    （トップページ扱いのため、issue #1253/#1259の対象外）。生成できない場合
+    （libvips未導入等）はogp_image_relative_urlがnilを返し、
+    application_helper#og_image_urlのデフォルト画像フォールバックに任せる %>
+<% if !@page.system? && (ogp_image_path = @page.ogp_image_relative_url) %>
+  <% content_for :og_image, "#{request.base_url}#{ogp_image_path}" %>
+<% end %>
 
 <div class="flex justify-center p-0 md:p-8">
   <div class="w-full max-w-7xl">
