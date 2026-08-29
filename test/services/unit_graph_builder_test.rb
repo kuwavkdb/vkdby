@@ -4,7 +4,7 @@ require 'test_helper'
 
 class UnitGraphBuilderTest < ActiveSupport::TestCase
   test 'excludes a discarded unit sharing a current member from the graph nodes' do
-    person = Person.create!(name: 'Shared Member', status: :active)
+    person = Person.create!(name: 'Shared Member', key: 'graph-shared-member', status: :active)
     unit_a = Unit.create!(name: 'Center Unit', key: 'graph-center-unit', status: :active)
     unit_b = Unit.create!(name: 'Discarded Related Unit', key: 'graph-discarded-unit', status: :active)
 

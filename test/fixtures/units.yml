@@ -28,11 +28,13 @@
 one:
   name: MyString
   name_kana: MyString
+  key: fixture-unit-one
   status: 1
   unit_type: 1
 
 two:
   name: MyString
   name_kana: MyString
+  key: fixture-unit-two
   status: 1
   unit_type: 1
