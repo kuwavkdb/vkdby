@@ -1,0 +1,91 @@
+<%# DISQUSコメント欄（issue #1288）。
+    従来サイト（wiki.vkdb.jp）でも同じshortnameのDISQUSを使用しており、
+    resourceがold_keyを持つ場合は旧サイトのURL（Unit/Person#vkdb_url）を
+    明示的にpage.urlへ渡すことで、旧サイトに投稿された過去コメントのスレッドを
+    引き継ぐ。old_keyを持たない（旧サイトに存在しなかった）resourceは
+    page.url指定を省略し、DISQUSのデフォルト動作（現在ページのURL）に任せる。
+
+    embed.jsの読み込みはIntersectionObserverでコンテナが画面内に入ってから
+    行う（重い外部スクリプト・トラッキングCookieを伴うため、初回表示時の
+    パフォーマンスへの影響を避ける）。 %>
+<% disqus_shortname = ENV['DISQUS_SHORTNAME'] %>
+<% if disqus_shortname.present? %>
+  <section id="comments" class="mt-8">
+    <div class="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
+      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Comments</h2>
+    </div>
+    <%# id="disqus_thread"にはTailwindのユーティリティクラス（bg-white dark:bg-slate-800等）を
+        使わず、styleで直接rgb値を指定する。Tailwind v4はデフォルトのカラーパレットを
+        oklch()で定義しており、DISQUSのembed.jsは自身がマウントする要素の色を
+        getComputedStyleで読み取る際にoklch()形式を解釈できずクラッシュする
+        （コンソールに"parseColor received unparseable color: oklch(...)"のエラーが出て
+        コメント欄が表示されない）。ここだけ明示的にrgb/hexで指定して回避する。 %>
+    <style>
+      #disqus_thread { background-color: #ffffff; color: #1e293b; }
+      @media (prefers-color-scheme: dark) {
+        #disqus_thread { background-color: #1e293b; color: #e2e8f0; }
+      }
+    </style>
+    <div id="disqus_thread" data-disqus-shortname="<%= disqus_shortname %>" data-disqus-page-url="<%= resource.vkdb_url %>" data-disqus-developer="<%= !Rails.env.production? %>">
+      <p class="text-sm text-slate-400 dark:text-slate-500" data-disqus-placeholder>コメントを読み込み中…</p>
+    </div>
+    <noscript>
+      Please enable JavaScript to view the
+      <a href="https://disqus.com/?ref_noscript" target="_blank" rel="noopener noreferrer">comments powered by Disqus.</a>
+    </noscript>
+    <script>
+      (function () {
+        var container = document.getElementById('disqus_thread');
+        if (!container || container.dataset.disqusLoaded) return;
+
+        function showPlaceholderError(message) {
+          var placeholder = container.querySelector('[data-disqus-placeholder]');
+          if (placeholder) placeholder.textContent = message;
+        }
+
+        function loadDisqus() {
+          if (container.dataset.disqusLoaded) return;
+          container.dataset.disqusLoaded = 'true';
+
+          // ローカル/開発環境ではdisqus_developerを立てて、DISQUS側の
+          // ドメイン許可設定を変更せずにlocalhostからの動作確認を可能にする
+          // （開発者モードのコメントは実データとして保存されない）
+          if (container.dataset.disqusDeveloper === 'true') {
+            window.disqus_developer = 1;
+          }
+
+          window.disqus_config = function () {
+            var pageUrl = container.dataset.disqusPageUrl;
+            if (pageUrl) this.page.url = pageUrl;
+          };
+
+          var d = document, s = d.createElement('script');
+          s.src = 'https://' + container.dataset.disqusShortname + '.disqus.com/embed.js';
+          s.setAttribute('data-timestamp', +new Date());
+          // 広告ブロッカーや通信エラーでembed.js自体が読み込めない場合、コンテナが
+          // 空のまま何も表示されず原因がわかりにくいため、プレースホルダーを
+          // エラーメッセージに差し替える（読み込みに成功した場合はDISQUSが
+          // コンテナの中身を丸ごと自身のiframeで上書きするため、この文言は残らない）。
+          s.onerror = function () {
+            showPlaceholderError('コメントの読み込みに失敗しました。広告ブロッカーなどが原因の可能性があります。');
+          };
+          (d.head || d.body).appendChild(s);
+        }
+
+        if ('IntersectionObserver' in window) {
+          var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                loadDisqus();
+                observer.disconnect();
+              }
+            });
+          }, { rootMargin: '200px' });
+          observer.observe(container);
+        } else {
+          loadDisqus();
+        }
+      })();
+    </script>
+  </section>
+<% end %>
