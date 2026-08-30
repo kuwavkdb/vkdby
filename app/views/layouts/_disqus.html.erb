@@ -1,14 +1,18 @@
 <%# DISQUSコメント欄（issue #1288）。
-    従来サイト（wiki.vkdb.jp）でも同じshortnameのDISQUSを使用しており、
-    resourceがold_keyを持つ場合は旧サイトのURL（Unit/Person#vkdb_url）を
-    明示的にpage.urlへ渡すことで、旧サイトに投稿された過去コメントのスレッドを
-    引き継ぐ。old_keyを持たない（旧サイトに存在しなかった）resourceは
-    page.url指定を省略し、DISQUSのデフォルト動作（現在ページのURL）に任せる。
+    従来サイトでも同じshortnameのDISQUSを使用しており、resourceがold_keyを
+    持つ場合は旧サイトのURLを明示的にpage.urlへ渡すことで、旧サイトに投稿された
+    過去コメントのスレッドを引き継ぐ。old_keyを持たない（旧サイトに存在しなかった）
+    resourceはpage.url指定を省略し、DISQUSのデフォルト動作（現在ページのURL）に任せる。
+
+    旧URLのドメインには www.vkdb.jp を使う（新旧サイトを通じての正式ドメイン）。
+    Unit/Person#vkdb_urlが指すwiki.vkdb.jpは並行稼働用のサブドメインであり、
+    DISQUSのスレッドが実際に紐づいているURLとは異なるため、ここでは使わない。
 
     embed.jsの読み込みはIntersectionObserverでコンテナが画面内に入ってから
     行う（重い外部スクリプト・トラッキングCookieを伴うため、初回表示時の
     パフォーマンスへの影響を避ける）。 %>
 <% disqus_shortname = ENV['DISQUS_SHORTNAME'] %>
+<% disqus_page_url = "https://www.vkdb.jp/#{resource.old_key}.html" if resource.old_key.present? %>
 <% if disqus_shortname.present? %>
   <section id="comments" class="mt-8">
     <div class="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
@@ -26,7 +30,7 @@
         #disqus_thread { background-color: #1e293b; color: #e2e8f0; }
       }
     </style>
-    <div id="disqus_thread" data-disqus-shortname="<%= disqus_shortname %>" data-disqus-page-url="<%= resource.vkdb_url %>" data-disqus-developer="<%= !Rails.env.production? %>">
+    <div id="disqus_thread" data-disqus-shortname="<%= disqus_shortname %>" data-disqus-page-url="<%= disqus_page_url %>" data-disqus-developer="<%= !Rails.env.production? %>">
       <p class="text-sm text-slate-400 dark:text-slate-500" data-disqus-placeholder>コメントを読み込み中…</p>
     </div>
     <noscript>

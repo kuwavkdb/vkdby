@@ -138,13 +138,13 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, 'id="comments"'
   end
 
-  test 'renders the comments section pointing at the old vkdb.jp URL when old_key is present' do
+  test 'renders the comments section pointing at the old www.vkdb.jp URL when old_key is present' do
     unit = Unit.create!(name: 'Disqus Unit', key: 'unit-disqus', old_key: 'DisqusUnit', status: :active)
     with_disqus_shortname('vkdbjp') { get profile_path(unit.key) }
     assert_response :success
     assert_includes response.body, 'id="comments"'
     assert_includes response.body, 'data-disqus-shortname="vkdbjp"'
-    assert_includes response.body, "data-disqus-page-url=\"#{unit.vkdb_url}\""
+    assert_includes response.body, 'data-disqus-page-url="https://www.vkdb.jp/DisqusUnit.html"'
   end
 
   test 'renders the comments section without a page-url override when old_key is absent' do
