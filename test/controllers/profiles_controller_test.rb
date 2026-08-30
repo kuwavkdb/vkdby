@@ -131,6 +131,41 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
                     "property=\"og:image\" content=\"http://www.example.com#{Rails.application.config.site_ogp_image_path}\""
   end
 
+  test 'does not render the comments section when DISQUS_SHORTNAME is not configured' do
+    unit = Unit.create!(name: 'No Disqus Unit', key: 'unit-no-disqus', status: :active)
+    get profile_path(unit.key)
+    assert_response :success
+    assert_not_includes response.body, 'id="comments"'
+  end
+
+  test 'renders the comments section pointing at the old vkdb.jp URL when old_key is present' do
+    unit = Unit.create!(name: 'Disqus Unit', key: 'unit-disqus', old_key: 'DisqusUnit', status: :active)
+    with_disqus_shortname('vkdbjp') { get profile_path(unit.key) }
+    assert_response :success
+    assert_includes response.body, 'id="comments"'
+    assert_includes response.body, 'data-disqus-shortname="vkdbjp"'
+    assert_includes response.body, "data-disqus-page-url=\"#{unit.vkdb_url}\""
+  end
+
+  test 'renders the comments section without a page-url override when old_key is absent' do
+    unit = Unit.create!(name: 'New Disqus Unit', key: 'unit-disqus-no-old-key', status: :active)
+    with_disqus_shortname('vkdbjp') { get profile_path(unit.key) }
+    assert_response :success
+    assert_includes response.body, 'id="comments"'
+    assert_includes response.body, 'data-disqus-page-url=""'
+  end
+
+  test 'does not render the comments section for an unpublished resource even when DISQUS_SHORTNAME is configured' do
+    unit = Unit.create!(name: 'Unpublished Disqus Unit', key: 'unit-unpublished-disqus', status: :active)
+    tag_index = TagIndex.create!(id: Rails.application.config.unpublished_tag_ids.first, name: '掲載停止')
+    TagIndexItem.create!(tag_index: tag_index, indexable: unit)
+
+    with_disqus_shortname('vkdbjp') { get profile_path(unit.key) }
+
+    assert_response :success
+    assert_not_includes response.body, 'id="comments"'
+  end
+
   test 'unit trend list shows the recorded name when it differs from the current unit name' do
     unit = Unit.create!(name: 'Renamed Trend Unit', key: 'unit-trend-name-badge', status: :active)
     Trend.create!(title: 'Trend before rename', date: Date.current, publish_start_at: Time.current,
@@ -150,5 +185,13 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     yield
   ensure
     Rails.application.config.canonical_host = original
+  end
+
+  def with_disqus_shortname(shortname)
+    original = ENV.fetch('DISQUS_SHORTNAME', nil)
+    ENV['DISQUS_SHORTNAME'] = shortname
+    yield
+  ensure
+    ENV['DISQUS_SHORTNAME'] = original
   end
 end

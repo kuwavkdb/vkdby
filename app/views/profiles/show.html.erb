@@ -49,6 +49,9 @@
         <% if @links.present? %>
           <a href="#links" class="flex items-center py-3 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors shrink-0">Links</a>
         <% end %>
+        <% if ENV['DISQUS_SHORTNAME'].present? %>
+          <a href="#comments" class="flex items-center py-3 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors shrink-0">Comments</a>
+        <% end %>
         <a href="#update-log" class="flex items-center py-3 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors shrink-0">Update Log</a>
       </div>
     </nav>
@@ -224,6 +227,8 @@
         <%= render SpotifyEmbedComponent.new(links: @links) %>
         <%= render TwitterEmbedComponent.new(links: @twitter_links) %>
       </div>
+
+      <%= render 'layouts/disqus', resource: @resource %>
 
       <section id="update-log" class="mt-8">
         <details class="group"
