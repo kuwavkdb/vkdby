@@ -38,6 +38,16 @@ class Item < ApplicationRecord
 
   after_commit :expire_new_releases_sidebar_cache
 
+  # 出力用のURL。DBのlink_urlに現在のAmazonアソシエイトタグが含まれていない場合は、
+  # asinから現在のタグ込みのURLを組み立てて返す（管理画面から手動登録された、
+  # タグ抜きのURL等をカバーするため。issue #1304）
+  def display_link_url
+    return link_url if link_url.blank?
+    return link_url if link_url.include?("/#{Rails.application.config.amazon_associate_tag}/")
+
+    AmazonUrlBuilder.build(asin).presence || link_url
+  end
+
   def artists_for_form
     require 'ostruct'
     entries = (self[:artists] || []).map { |a| ::OpenStruct.new(a) }

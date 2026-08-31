@@ -37,6 +37,13 @@ class CustomPage < ApplicationRecord
   # 参照される「システム用ページ」のkey一覧。今後増える場合はここに追加する。
   SYSTEM_KEYS = (%w[index footer top_message] + [Middleware::IpBlocker::CUSTOM_PAGE_KEY]).freeze
 
+  # old_keyを未入力で保存すると空文字列(nilではなく'')になり、DBのunique索引は
+  # NULL同士の重複は許容する一方 '' 同士は許容しないため、old_key未設定のページが
+  # 複数あると更新のたびにPG::UniqueViolationが未捕捉のまま500エラーになっていた
+  # （システムページ等、old_keyを設定しない運用のページで発生。issue #1305）。
+  # 空文字列をnilに正規化しておくことで、DB側もNULL同士として扱われ衝突しない。
+  before_validation { self.old_key = old_key.presence }
+
   validates :key, presence: true, uniqueness: true,
                   format: { with: /\A[a-z0-9_-]+\z/, message: '半角英数字・アンダースコア・ハイフンのみ使用可' }
   validates :title, presence: true
