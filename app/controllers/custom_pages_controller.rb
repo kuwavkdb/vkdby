@@ -3,6 +3,10 @@
 class CustomPagesController < ApplicationController
   before_action :load_sidebar_data
 
+  NEW_RELEASES_LIMIT = 5
+  # Item#expire_new_releases_sidebar_cacheから商品登録時のキャッシュクリアにも使う
+  NEW_RELEASES_CACHE_KEY_PREFIX = 'sidebar/new_releases'
+
   def show
     # with_attached_ogp_image: ogp_image_relative_url内のattached?判定が毎アクセスN+1で
     # クエリを発行しないよう、attachment/blobを事前にeager loadしておく（issue #1267）。
@@ -24,6 +28,7 @@ class CustomPagesController < ApplicationController
     today = Date.current
     ttl = Time.current.end_of_day - Time.current
 
+    load_new_releases(today, ttl)
     load_recent_trends(today, ttl)
 
     @recently_updated = Rails.cache.fetch('sidebar/recently_updated', expires_in: 10.minutes) do
@@ -35,6 +40,30 @@ class CustomPagesController < ApplicationController
 
     @birthday_people = Rails.cache.fetch("sidebar/birthday_people/#{today}", expires_in: ttl) do
       Person.kept.published.birthday_on(today).or(Person.kept.published.birthday_on(today + 1)).order(:name_kana).to_a
+    end
+  end
+
+  # 当日前後5日間に発売されたアイテムをサイドバー表示用に抽出する。
+  # 対象期間の件数が多くなりうるため、商品バリエーションを保つ目的で
+  # 同一アーティスト（key/old_key/nameのいずれかが一致）の商品は発売日が早い方のみを採用し、
+  # 最大NEW_RELEASES_LIMIT件まで表示する。
+  def load_new_releases(today, ttl)
+    @new_releases = Rails.cache.fetch("#{NEW_RELEASES_CACHE_KEY_PREFIX}/#{today}", expires_in: ttl) do
+      candidates = Item.kept.where(release_date: (today - 5)..(today + 5)).order(:release_date).to_a
+      used_artist_identities = Set.new
+      picked = []
+
+      candidates.each do |item|
+        break if picked.size >= NEW_RELEASES_LIMIT
+
+        identities = item.artists.to_a.filter_map { |a| a['key'].presence || a['old_key'].presence || a['name'].presence }
+        next if identities.any? { |identity| used_artist_identities.include?(identity) }
+
+        picked << item
+        used_artist_identities.merge(identities)
+      end
+
+      picked
     end
   end
 
