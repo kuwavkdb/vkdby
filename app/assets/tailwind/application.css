@@ -29,8 +29,8 @@
     ol { list-style-type: decimal; padding-left: 1.75em; margin: 0.75em 0; }
     li { margin: 0.25em 0; }
     li > ul, li > ol { margin: 0.25em 0; }
-    a { color: #d97706; text-decoration: underline; }
-    a:hover { color: #b45309; }
+    a { color: #4338ca; text-decoration: underline; }
+    a:hover { color: #3730a3; }
     strong { font-weight: 700; color: #18181b; }
     em { font-style: italic; }
     code { font-family: ui-monospace, monospace; font-size: 0.875em; background-color: #f4f4f5; color: #09090b; padding: 0.1em 0.35em; border-radius: 0.25em; }
@@ -96,6 +96,8 @@
       h1, h2, h3, h4, h5 { color: #fafafa; }
       h2 { border-bottom-color: #27272a; }
       h6 { color: #71717a; }
+      a { color: #818cf8; }
+      a:hover { color: #a5b4fc; }
       strong { color: #fafafa; }
       code { background-color: #18181b; color: #e4e4e7; }
       blockquote { border-left-color: #f59e0b; color: #71717a; background-color: #18181b; }
@@ -105,6 +107,19 @@
       tr:nth-child(even) td { background-color: #18181b; }
       details.closable summary:focus-visible { outline-color: #f59e0b; }
     }
+  }
+
+  /* ユニット/個人ページのセクション本文（section_component.html.erb）用ラッパー。
+     markdown形式の場合はmarkdown()ヘルパーが素の<a>を出力するためクラスを持たず、
+     このルールがないとリンクが地の文と同色・下線なしで視認できなかった（issue #1220）。
+     旧wiki形式（format_wiki_content）はリンクごとにインラインでtext-indigo-*クラスを
+     付けているため実質上書きされるが、同じ配色なので見た目は変わらない。 */
+  .wiki-content a { color: #4338ca; text-decoration: underline; }
+  .wiki-content a:hover { color: #3730a3; }
+
+  @variant dark {
+    .wiki-content a { color: #818cf8; }
+    .wiki-content a:hover { color: #a5b4fc; }
   }
 
   .timeline-added-name-cell {
