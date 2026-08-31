@@ -1,11 +1,11 @@
 <% content_for :title, @year_agnostic ? @date.strftime('%-m/%-d') : @date.strftime('%Y/%-m/%-d') %>
 <div class="flex justify-center">
-  <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
+  <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full min-w-0 max-w-5xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
 
     <!-- Date Header -->
     <header class="mb-8 border-b border-slate-200 dark:border-slate-700 pb-6">
-      <div class="flex justify-between items-center gap-4 mb-6">
-        <div class="flex gap-2 flex-shrink-0">
+      <div class="flex flex-wrap justify-between items-center gap-4 mb-6 sm:flex-nowrap">
+        <div class="flex flex-col items-start gap-2 order-2 sm:order-1 sm:flex-row sm:items-center sm:flex-shrink-0">
           <% prev_date = @date - 1.day %>
           <% if @year_agnostic %>
             <%= link_to "← 前日 (#{prev_date.month}/#{prev_date.day})", birthday_date_path(month: prev_date.month, day: prev_date.day),
@@ -18,7 +18,7 @@
                 class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
           <% end %>
         </div>
-        <div class="text-center flex-grow">
+        <div class="w-full text-center order-1 sm:order-2 sm:w-auto sm:flex-grow">
           <p class="text-sm text-slate-500 dark:text-slate-400 mb-2">
             <%= @year_agnostic ? "All Years Summary" : "Daily Summary" %>
           </p>
@@ -38,17 +38,17 @@
                 class: "inline-block mt-3 text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
           <% end %>
         </div>
-        <div class="flex gap-2 flex-shrink-0">
+        <div class="flex flex-col items-end gap-2 order-3 sm:flex-row sm:items-center sm:flex-shrink-0">
           <% next_date = @date + 1.day %>
           <% if @year_agnostic %>
             <%= link_to "翌日 (#{next_date.month}/#{next_date.day}) →", birthday_date_path(month: next_date.month, day: next_date.day),
                 class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
           <% else %>
             <%= link_to "翌日 (#{next_date.month}/#{next_date.day}) →", daily_path(year: next_date.year, month: next_date.month, day: next_date.day),
-                class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
+                class: "order-2 sm:order-1 text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
             <% next_year_date = @date + 1.year %>
             <%= link_to "翌年同日 →", daily_path(year: next_year_date.year, month: next_year_date.month, day: next_year_date.day),
-                class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
+                class: "order-1 sm:order-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
           <% end %>
         </div>
       </div>
