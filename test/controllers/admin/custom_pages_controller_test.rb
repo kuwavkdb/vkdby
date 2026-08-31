@@ -30,6 +30,22 @@ module Admin
       assert_equal '%B5%C1%B1%E7%B3%E8%C6%B0', custom_page.old_key
     end
 
+    # old_key未入力時、DBには空文字列(nilではなく'')が渡る。システムページ等
+    # old_keyを設定しない運用のページが複数あると、旧実装ではDBのunique索引に
+    # ''同士が衝突しPG::UniqueViolationが未捕捉のまま500エラーになっていた（issue #1305）
+    test 'update with blank old_key does not collide with another page already saved with blank old_key' do
+      footer = CustomPage.create!(key: 'footer', title: 'フッター')
+      footer.update_column(:old_key, '') # 修正前の実装で保存されうる状態を再現
+      top_message = CustomPage.create!(key: 'top_message', title: 'トップメッセージ')
+
+      patch admin_custom_page_path(top_message), params: {
+        custom_page: { old_key: '' }
+      }
+
+      assert_redirected_to edit_admin_custom_page_path(top_message)
+      assert_nil top_message.reload.old_key
+    end
+
     test 'new画面の下部にMarkdownプラグインのヘルプが表示される' do
       get new_admin_custom_page_path
 
