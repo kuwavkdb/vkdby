@@ -102,6 +102,10 @@ module Vkdby
     # Override per environment in config/environments/*.rb if needed.
     config.unpublished_tag_ids = [2643]
 
+    # Amazonアソシエイト（アフィリエイト）のトラッキングタグ。ASINからの購入リンク生成に使う
+    # （ItemConverter#build_amazon_url）。IDが変更になった場合はコード修正不要でENV側だけ差し替える
+    config.amazon_associate_tag = ENV.fetch('AMAZON_ASSOCIATE_TAG', 'vkdb07-22')
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

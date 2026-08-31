@@ -70,4 +70,14 @@ class ItemConverterTest < ActiveSupport::TestCase
     assert_equal '', encode_euc_jp('')
     assert_equal '', encode_euc_jp(nil)
   end
+
+  test 'convert(aitem) generates an Amazon link using the configured associate tag' do
+    rs = ReleaseSchedule.new(type: 'aitem', asin: 'B0EXAMPLE', title: 'Some Item',
+                             release_date: Date.current, artist: 'Some Artist')
+
+    attributes = ItemConverter.convert(rs)
+
+    assert_equal "https://www.amazon.co.jp/exec/obidos/ASIN/B0EXAMPLE/#{Rails.application.config.amazon_associate_tag}/",
+                 attributes[:link_url]
+  end
 end
