@@ -182,6 +182,31 @@ class ItemTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
     Rails.cache = original_cache
   end
 
+  test 'display_link_url returns link_url unchanged when it already has the current associate tag (issue #1304)' do
+    tag = Rails.application.config.amazon_associate_tag
+    item = Item.create!(title: 'Some Album', release_date: Date.current,
+                        link_url: "https://www.amazon.co.jp/exec/obidos/ASIN/B0EXAMPLE/#{tag}/",
+                        asin: 'B0EXAMPLE')
+
+    assert_equal item.link_url, item.display_link_url
+  end
+
+  test 'display_link_url rebuilds the URL with the current associate tag from asin when the tag is missing (issue #1304)' do
+    tag = Rails.application.config.amazon_associate_tag
+    item = Item.create!(title: 'Some Album', release_date: Date.current,
+                        link_url: 'https://www.amazon.co.jp/dp/B0EXAMPLE',
+                        asin: 'B0EXAMPLE')
+
+    assert_equal "https://www.amazon.co.jp/exec/obidos/ASIN/B0EXAMPLE/#{tag}/", item.display_link_url
+  end
+
+  test 'display_link_url falls back to the stored link_url when asin is blank (issue #1304)' do
+    item = Item.create!(title: 'Some Album', release_date: Date.current,
+                        link_url: 'https://example.com/no-asin-item')
+
+    assert_equal item.link_url, item.display_link_url
+  end
+
   test 'discarding an item expires today\'s new-releases sidebar cache (issue #1297)' do
     item = Item.create!(title: 'Cache Busting Discard Item', release_date: Date.current,
                         link_url: 'https://example.com/item-cache-bust-discard')

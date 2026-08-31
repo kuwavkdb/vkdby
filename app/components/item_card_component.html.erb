@@ -10,13 +10,13 @@
             [@item.image_url, nil]
           end
       %>
-      <% if @item.link_url.present? %>
-        <%= link_to @item.link_url, target: "_blank", rel: "noopener noreferrer" do %>
+      <% if @item.display_link_url.present? %>
+        <%= link_to @item.display_link_url, target: "_blank", rel: "noopener noreferrer" do %>
           <img src="<%= img_src %>" srcset="<%= img_srcset %>" sizes="160px"
                width="160" height="160"
                alt="<%= @item.title %>" class="w-40 h-40 object-scale-down hover:opacity-90 transition-opacity">
         <% end %>
-        <%= link_to @item.link_url, target: "_blank", rel: "noopener noreferrer",
+        <%= link_to @item.display_link_url, target: "_blank", rel: "noopener noreferrer",
             style: "position:absolute; bottom:8px; left:50%; transform:translateX(-50%);",
             class: "inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 hover:opacity-50! text-black font-bold rounded-lg transition text-xs whitespace-nowrap z-10 sm:opacity-0 sm:group-hover:opacity-100" do %>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 shrink-0">
@@ -32,13 +32,13 @@
     </div>
   <% else %>
     <div class="relative shrink-0 w-40 h-40 bg-zinc-100 dark:bg-zinc-800">
-      <% if @item.link_url.present? %>
-        <%= link_to @item.link_url, target: "_blank", rel: "noopener noreferrer",
+      <% if @item.display_link_url.present? %>
+        <%= link_to @item.display_link_url, target: "_blank", rel: "noopener noreferrer",
             "aria-label": "#{@item.title} をAmazonで購入",
             class: "absolute inset-0 flex items-center justify-center hover:opacity-90 transition-opacity" do %>
           <span class="text-zinc-400 dark:text-zinc-500 text-sm">画像なし</span>
         <% end %>
-        <%= link_to @item.link_url, target: "_blank", rel: "noopener noreferrer",
+        <%= link_to @item.display_link_url, target: "_blank", rel: "noopener noreferrer",
             style: "position:absolute; bottom:8px; left:50%; transform:translateX(-50%);",
             class: "inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-lg transition text-xs whitespace-nowrap z-10 sm:opacity-0 sm:group-hover:opacity-100" do %>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 shrink-0">
