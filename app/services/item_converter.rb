@@ -150,7 +150,7 @@ class ItemConverter
   def build_amazon_url(asin)
     return nil if asin.blank?
 
-    "https://www.amazon.co.jp/exec/obidos/ASIN/#{asin}/vkdb-22/"
+    "https://www.amazon.co.jp/exec/obidos/ASIN/#{asin}/#{Rails.application.config.amazon_associate_tag}/"
   end
 
   # plugin_text から ASIN を抽出
