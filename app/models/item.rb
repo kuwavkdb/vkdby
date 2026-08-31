@@ -36,6 +36,8 @@ class Item < ApplicationRecord
   validates :link_url, presence: true, uniqueness: true
   validates :asin, uniqueness: true, allow_blank: true
 
+  after_commit :expire_new_releases_sidebar_cache
+
   def artists_for_form
     require 'ostruct'
     entries = (self[:artists] || []).map { |a| ::OpenStruct.new(a) }
@@ -93,4 +95,12 @@ class Item < ApplicationRecord
   scope :released_on_month_day, lambda { |month, day|
     where('EXTRACT(MONTH FROM release_date) = ? AND EXTRACT(DAY FROM release_date) = ?', month, day)
   }
+
+  private
+
+  # 新規登録・更新・削除(discard/undiscard含む)のたびに当日分のサイドバーキャッシュを破棄し、
+  # 反映を待たせないようにする（issue #1297）
+  def expire_new_releases_sidebar_cache
+    Rails.cache.delete("#{CustomPagesController::NEW_RELEASES_CACHE_KEY_PREFIX}/#{Date.current}")
+  end
 end
