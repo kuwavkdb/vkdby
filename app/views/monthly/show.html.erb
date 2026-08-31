@@ -1,11 +1,11 @@
 <% content_for :title, @date.strftime('%Y/%m') %>
 <div class="flex justify-center">
-  <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
+  <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full min-w-0 max-w-5xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
 
     <!-- Month Header -->
     <header class="mb-8 border-b border-slate-200 dark:border-slate-700 pb-6">
-      <div class="flex justify-between items-center gap-4 mb-6">
-        <div class="flex gap-2 flex-shrink-0">
+      <div class="flex flex-wrap justify-between items-center gap-4 mb-6 sm:flex-nowrap">
+        <div class="flex flex-col items-start gap-2 order-2 sm:order-1 sm:flex-row sm:items-center sm:flex-shrink-0">
           <% prev_year_date = @date - 1.year %>
           <%= link_to "← 前年同月", monthly_path(year: prev_year_date.year, month: prev_year_date.month),
               class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
@@ -13,7 +13,7 @@
           <%= link_to "← 前月", monthly_path(year: prev_month.year, month: prev_month.month),
               class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
         </div>
-        <div class="text-center flex-grow">
+        <div class="w-full text-center order-1 sm:order-2 sm:w-auto sm:flex-grow">
           <p class="text-sm text-slate-500 dark:text-slate-400 mb-2">
             Monthly Summary
           </p>
@@ -21,13 +21,13 @@
             <%= link_to "#{@date.year}年", yearly_path(year: @date.year), class: "text-indigo-600 dark:text-indigo-400 underline decoration-2 underline-offset-4 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors" %><%= @date.strftime('%-m月') %>
           </h1>
         </div>
-        <div class="flex gap-2 flex-shrink-0">
+        <div class="flex flex-col items-end gap-2 order-3 sm:flex-row sm:items-center sm:flex-shrink-0">
           <% next_month = @date + 1.month %>
           <%= link_to "翌月 →", monthly_path(year: next_month.year, month: next_month.month),
-              class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
+              class: "order-2 sm:order-1 text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
           <% next_year_date = @date + 1.year %>
           <%= link_to "翌年同月 →", monthly_path(year: next_year_date.year, month: next_year_date.month),
-              class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
+              class: "order-1 sm:order-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 whitespace-nowrap focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
         </div>
       </div>
 

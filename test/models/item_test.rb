@@ -167,4 +167,33 @@ class ItemTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
     assert_not item.discarded?
     assert_includes Item.kept, item
   end
+
+  test 'saving an item expires today\'s new-releases sidebar cache (issue #1297)' do
+    cache_key = "#{CustomPagesController::NEW_RELEASES_CACHE_KEY_PREFIX}/#{Date.current}"
+    original_cache = Rails.cache
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
+    Rails.cache.write(cache_key, %w[stale])
+
+    Item.create!(title: 'Cache Busting Item', release_date: Date.current,
+                 link_url: 'https://example.com/item-cache-bust')
+
+    assert_nil Rails.cache.read(cache_key)
+  ensure
+    Rails.cache = original_cache
+  end
+
+  test 'discarding an item expires today\'s new-releases sidebar cache (issue #1297)' do
+    item = Item.create!(title: 'Cache Busting Discard Item', release_date: Date.current,
+                        link_url: 'https://example.com/item-cache-bust-discard')
+    cache_key = "#{CustomPagesController::NEW_RELEASES_CACHE_KEY_PREFIX}/#{Date.current}"
+    original_cache = Rails.cache
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
+    Rails.cache.write(cache_key, %w[stale])
+
+    item.discard
+
+    assert_nil Rails.cache.read(cache_key)
+  ensure
+    Rails.cache = original_cache
+  end
 end

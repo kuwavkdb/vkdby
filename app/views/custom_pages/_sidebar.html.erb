@@ -1,4 +1,43 @@
 <div class="space-y-4">
+  <%# New Releases %>
+  <% if @new_releases.present? %>
+    <div class="bg-white dark:bg-slate-800 shadow rounded-2xl overflow-hidden">
+      <div class="bg-slate-50 dark:bg-slate-900/30 px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">New Releases<br><span class="text-xs font-normal">新発売商品</span></h2>
+      </div>
+      <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+        <% @new_releases.each do |item| %>
+          <li>
+            <%= link_to item_path(item), class: "flex items-center gap-2.5 px-3 py-0 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" do %>
+              <div class="shrink-0 w-20 h-20 rounded bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 flex items-center justify-center overflow-hidden">
+                <% if item.image_url.present? %>
+                  <img src="<%= amazon_image?(item.image_url) ? amazon_image_url(item.image_url, 80) : item.image_url %>"
+                       width="80" height="80" alt="<%= item.title %>" class="w-20 h-20 object-scale-down">
+                <% else %>
+                  <span class="text-zinc-300 dark:text-zinc-600 text-[0.6rem] leading-tight text-center px-0.5">画像なし</span>
+                <% end %>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-slate-700 dark:text-slate-200 truncate"><%= item.title %></p>
+                <% if item.artists.present? %>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 truncate"><%= item.artists.filter_map { |a| a['alias'].presence || a['name'] }.join(' / ') %></p>
+                <% end %>
+                <p class="text-xs font-mono <%= item.release_date.future? ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500' %>">
+                  <%= item.release_date.strftime('%-m/%-d') %> <%= item.release_date.future? ? '発売予定' : '発売' %>
+                </p>
+              </div>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+      <div class="px-4 py-2 border-t border-slate-100 dark:border-slate-700 text-right">
+        <%= link_to items_path, class: "text-xs text-indigo-600 dark:text-indigo-400 hover:underline" do %>
+          もっと見る →
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
   <%# Recent Trends %>
   <div class="bg-white dark:bg-slate-800 shadow rounded-2xl overflow-hidden">
     <div class="bg-slate-50 dark:bg-slate-900/30 px-4 py-3 border-b border-slate-100 dark:border-slate-700">
@@ -75,7 +114,7 @@
                 </svg>
               <% end %>
               <span class="flex-1 text-sm text-slate-700 dark:text-slate-200 truncate"><%= item.is_a?(CustomPage) ? item.title : item.name %></span>
-              <span class="shrink-0 text-xs text-slate-400 dark:text-slate-500"><%= item.updated_at.strftime('%-m/%-d') %>更新</span>
+              <span class="shrink-0 text-xs text-slate-500 dark:text-slate-400"><%= item.updated_at.strftime('%-m/%-d') %>更新</span>
             <% end %>
           </li>
         <% end %>

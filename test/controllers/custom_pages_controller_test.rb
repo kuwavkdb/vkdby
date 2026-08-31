@@ -136,6 +136,61 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, 'Management Information'
   end
 
+  test 'sidebar shows an item released within 5 days of today' do
+    Item.create!(title: 'Sidebar New Release Item', release_date: Date.current + 3,
+                 link_url: "http://example.com/sidebar-new-release-#{SecureRandom.hex(4)}")
+    page = CustomPage.create!(key: 'new-releases-sidebar-test-page', title: 'New Releases Sidebar Test',
+                              active: true, body: 'body')
+
+    get custom_page_path(key: page.key)
+
+    assert_response :success
+    assert_includes response.body, 'Sidebar New Release Item'
+    assert_includes response.body, '新発売商品'
+  end
+
+  test 'sidebar excludes an item released outside the 5-day window' do
+    Item.create!(title: 'Sidebar Out Of Range Item', release_date: Date.current + 6,
+                 link_url: "http://example.com/sidebar-out-of-range-#{SecureRandom.hex(4)}")
+    page = CustomPage.create!(key: 'new-releases-out-of-range-test-page', title: 'New Releases Out Of Range Test',
+                              active: true, body: 'body')
+
+    get custom_page_path(key: page.key)
+
+    assert_response :success
+    assert_not_includes response.body, 'Sidebar Out Of Range Item'
+  end
+
+  test 'sidebar excludes a discarded item even within the 5-day window' do
+    item = Item.create!(title: 'Sidebar Discarded Release Item', release_date: Date.current,
+                        link_url: "http://example.com/sidebar-discarded-release-#{SecureRandom.hex(4)}")
+    item.discard
+    page = CustomPage.create!(key: 'new-releases-discarded-test-page', title: 'New Releases Discarded Test',
+                              active: true, body: 'body')
+
+    get custom_page_path(key: page.key)
+
+    assert_response :success
+    assert_not_includes response.body, 'Sidebar Discarded Release Item'
+  end
+
+  test 'sidebar keeps only the earliest item per artist within the 5-day window' do
+    Item.create!(title: 'Sidebar Same Artist Earlier Item', release_date: Date.current - 1,
+                 artists: [{ 'name' => 'Sidebar Dedup Artist' }],
+                 link_url: "http://example.com/sidebar-same-artist-earlier-#{SecureRandom.hex(4)}")
+    Item.create!(title: 'Sidebar Same Artist Later Item', release_date: Date.current + 1,
+                 artists: [{ 'name' => 'Sidebar Dedup Artist' }],
+                 link_url: "http://example.com/sidebar-same-artist-later-#{SecureRandom.hex(4)}")
+    page = CustomPage.create!(key: 'new-releases-dedup-test-page', title: 'New Releases Dedup Test',
+                              active: true, body: 'body')
+
+    get custom_page_path(key: page.key)
+
+    assert_response :success
+    assert_includes response.body, 'Sidebar Same Artist Earlier Item'
+    assert_not_includes response.body, 'Sidebar Same Artist Later Item'
+  end
+
   test 'Management Information shows ID, Key and a link to old_key on the old wiki for a super_operator' do
     post login_path, params: { email: users(:one).email, password: 'password' }
     page = CustomPage.create!(key: 'management-info-visible-test-page', title: 'Management Info Visible Test',
