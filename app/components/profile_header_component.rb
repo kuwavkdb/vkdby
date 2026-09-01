@@ -26,4 +26,12 @@ class ProfileHeaderComponent < ViewComponent::Base
   def display_aliases
     @resource.aliases.reject { |a| a.name.blank? }
   end
+
+  def edit_url
+    if @resource.is_a?(Person)
+      helpers.edit_admin_person_path(@resource)
+    elsif @resource.is_a?(Unit)
+      helpers.edit_admin_unit_path(@resource)
+    end
+  end
 end
