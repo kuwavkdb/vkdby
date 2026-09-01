@@ -1,4 +1,35 @@
-<% content_for :title, @trend.title %>
+<%
+  # ページタイトル（<title>タグ、og:title/twitter:titleも同じ値を流用）に日付とアーティスト名を含める（issue #1319）。
+  # Trend#units/#people のスナップショット名（trend_unit_display_name/trend_person_display_name）を優先し、
+  # 表示順は ユニット名 → 個人名 → タイトル（動向） → 日付。
+  # ユニット名はunit_phenomenonが、個人名はperson_phenomenonが設定されている場合のみ含める
+  # （両方設定されている場合のみ併記する）
+  trend_title_unit_names = if @trend.unit_phenomenon.present?
+                              (@trend.units || []).filter_map do |unit_data|
+                                trend_unit_display_name(unit_data, @related_units&.dig(unit_data['unit_id']))
+                              end
+                            else
+                              []
+                            end
+  trend_title_person_names = if @trend.person_phenomenon.present?
+                                (@trend.people || []).filter_map do |person_data|
+                                  trend_person_display_name(person_data, @related_people&.dig(person_data['person_id']))
+                                end
+                              else
+                                []
+                              end
+  trend_title_text = trend_title_without_trailing_parenthetical(
+    strip_tags(format_wiki_title(@trend.title, link: false))
+  ).presence
+%>
+<% content_for :title, [*trend_title_unit_names, *trend_title_person_names, trend_title_text,
+                        trend_date_label(@trend)].compact_blank.join(' ') %>
+<%# ユニット名/個人名/タイトル入りのog:image（issue #1319、Unit/Personのプロフィールページ向け実装
+    issue #1259と同じ仕組み）。生成できない場合（libvips未導入等）はogp_image_relative_urlがnilを返し、
+    application_helper#og_image_urlのデフォルト画像フォールバックに任せる %>
+<% if (ogp_image_path = @trend.ogp_image_relative_url) %>
+  <% content_for :og_image, "#{request.base_url}#{ogp_image_path}" %>
+<% end %>
 <div class="flex justify-center">
   <div class="bg-white dark:bg-zinc-900 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
     <div class="bg-amber-500 p-6 md:p-8 border-b border-amber-600/30 relative">

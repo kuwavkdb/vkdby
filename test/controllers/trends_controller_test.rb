@@ -54,6 +54,99 @@ class TrendsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, 'trend-x-share-text'
   end
 
+  test 'show page title, og:title and twitter:title include the unit and person names only when both phenomenon types are set' do
+    unit = Unit.create!(name: 'Title Unit', key: 'trend-title-unit', status: :active)
+    person = Person.create!(name: 'Title Person', key: 'trend-title-person', status: :active)
+    trend = Trend.create!(title: 'Title Trend', date: '2026-05-01', publish_start_at: Time.current,
+                          unit_phenomenon: :other, person_phenomenon: :other,
+                          units: [{ 'unit_id' => unit.id, 'name' => 'Title Unit' }],
+                          people: [{ 'person_id' => person.id, 'name' => 'Title Person' }])
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_includes response.body, '<title>Title Unit Title Person Title Trend 2026/05/01 - '
+    assert_includes response.body, 'property="og:title" content="Title Unit Title Person Title Trend 2026/05/01"'
+    assert_includes response.body, 'name="twitter:title" content="Title Unit Title Person Title Trend 2026/05/01"'
+  end
+
+  test 'show page title falls back to the person name for a person-phenomenon-only trend' do
+    person = Person.create!(name: 'Solo Title Person', key: 'trend-title-solo-person', status: :active)
+    trend = Trend.create!(title: 'Solo Title Trend', date: '2026-05-01', publish_start_at: Time.current,
+                          person_phenomenon: :other,
+                          people: [{ 'person_id' => person.id, 'name' => 'Solo Title Person' }])
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_includes response.body, '<title>Solo Title Person Solo Title Trend 2026/05/01 - '
+  end
+
+  test 'show page title excludes the person name when person_phenomenon is not set even if people are recorded' do
+    unit = Unit.create!(name: 'Unit Only Unit', key: 'trend-title-unit-only', status: :active)
+    person = Person.create!(name: 'Unlisted Person', key: 'trend-title-unlisted-person', status: :active)
+    trend = Trend.create!(title: 'Unit Only Trend', date: '2026-05-01', publish_start_at: Time.current,
+                          unit_phenomenon: :other,
+                          units: [{ 'unit_id' => unit.id, 'name' => 'Unit Only Unit' }],
+                          people: [{ 'person_id' => person.id, 'name' => 'Unlisted Person' }])
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_includes response.body, '<title>Unit Only Unit Unit Only Trend 2026/05/01 - '
+  end
+
+  test 'show page title excludes the unit name when unit_phenomenon is not set even if units are recorded' do
+    unit = Unit.create!(name: 'Unlisted Unit', key: 'trend-title-unlisted-unit', status: :active)
+    person = Person.create!(name: 'Person Only Person', key: 'trend-title-person-only', status: :active)
+    trend = Trend.create!(title: 'Person Only Trend', date: '2026-05-01', publish_start_at: Time.current,
+                          person_phenomenon: :other,
+                          units: [{ 'unit_id' => unit.id, 'name' => 'Unlisted Unit' }],
+                          people: [{ 'person_id' => person.id, 'name' => 'Person Only Person' }])
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_includes response.body, '<title>Person Only Person Person Only Trend 2026/05/01 - '
+  end
+
+  test 'show page title strips a trailing half-width parenthetical (e.g. venue name) from the trend title' do
+    unit = Unit.create!(name: 'Venue Unit', key: 'trend-title-venue-unit', status: :active)
+    trend = Trend.create!(title: '無期限活動休止(Shibuya Spotify O-EAST)', date: '2026-05-01',
+                          publish_start_at: Time.current, unit_phenomenon: :other,
+                          units: [{ 'unit_id' => unit.id, 'name' => 'Venue Unit' }])
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_includes response.body, '<title>Venue Unit 無期限活動休止 2026/05/01 - '
+    assert_includes response.body, 'content="Venue Unit 無期限活動休止 2026/05/01"'
+  end
+
+  test 'show renders og:image pointing at the generated per-trend banner' do
+    skip 'libvips is not installed in this environment' unless ActiveStorage::VIPS_AVAILABLE
+
+    unit = Unit.create!(name: 'OGP Image Unit', key: 'trend-ogp-image-unit', status: :active)
+    trend = Trend.create!(title: 'OGP Image Trend', date: Date.current, publish_start_at: Time.current,
+                          unit_phenomenon: :other, units: [{ 'unit_id' => unit.id, 'name' => 'OGP Image Unit' }])
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_includes response.body, 'property="og:image" content="http://www.example.com/rails/active_storage/'
+  end
+
+  test 'show falls back to the default og:image when the per-trend banner cannot be generated' do
+    trend = Trend.create!(title: 'Fallback Image Trend', date: Date.current, publish_start_at: Time.current,
+                          etc_phenomenon: :other)
+
+    stub_class_method(OgpImageGenerator, :call, nil) { get trend_path(trend) }
+
+    assert_response :success
+    assert_includes response.body,
+                    "property=\"og:image\" content=\"http://www.example.com#{Rails.application.config.site_ogp_image_path}\""
+  end
+
   test 'show renders the X share text for a logged in admin, including units, people, URL and hashtag' do
     unit = Unit.create!(name: 'Share Unit', key: 'trend-share-unit', status: :active)
     person = Person.create!(name: 'Share Person', key: 'trend-share-person', status: :active)
