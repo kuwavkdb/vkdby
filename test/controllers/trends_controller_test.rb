@@ -54,7 +54,7 @@ class TrendsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, 'trend-x-share-text'
   end
 
-  test 'show page title, og:title and twitter:title include the unit and person names only when both phenomenon types are set' do
+  test 'show page title, og:title and twitter:title include the unit name and date but not the person name' do
     unit = Unit.create!(name: 'Title Unit', key: 'trend-title-unit', status: :active)
     person = Person.create!(name: 'Title Person', key: 'trend-title-person', status: :active)
     trend = Trend.create!(title: 'Title Trend', date: '2026-05-01', publish_start_at: Time.current,
@@ -65,12 +65,13 @@ class TrendsControllerTest < ActionDispatch::IntegrationTest
     get trend_path(trend)
 
     assert_response :success
-    assert_includes response.body, '<title>Title Unit Title Person Title Trend 2026/05/01 - '
-    assert_includes response.body, 'property="og:title" content="Title Unit Title Person Title Trend 2026/05/01"'
-    assert_includes response.body, 'name="twitter:title" content="Title Unit Title Person Title Trend 2026/05/01"'
+    assert_includes response.body, '<title>Title Unit Title Trend 2026/05/01 - '
+    assert_includes response.body, 'property="og:title" content="Title Unit Title Trend 2026/05/01"'
+    assert_includes response.body, 'name="twitter:title" content="Title Unit Title Trend 2026/05/01"'
+    assert_not_includes response.body, '<title>Title Unit Title Person'
   end
 
-  test 'show page title falls back to the person name for a person-phenomenon-only trend' do
+  test 'show page title omits the person name for a person-only trend' do
     person = Person.create!(name: 'Solo Title Person', key: 'trend-title-solo-person', status: :active)
     trend = Trend.create!(title: 'Solo Title Trend', date: '2026-05-01', publish_start_at: Time.current,
                           person_phenomenon: :other,
@@ -79,35 +80,7 @@ class TrendsControllerTest < ActionDispatch::IntegrationTest
     get trend_path(trend)
 
     assert_response :success
-    assert_includes response.body, '<title>Solo Title Person Solo Title Trend 2026/05/01 - '
-  end
-
-  test 'show page title excludes the person name when person_phenomenon is not set even if people are recorded' do
-    unit = Unit.create!(name: 'Unit Only Unit', key: 'trend-title-unit-only', status: :active)
-    person = Person.create!(name: 'Unlisted Person', key: 'trend-title-unlisted-person', status: :active)
-    trend = Trend.create!(title: 'Unit Only Trend', date: '2026-05-01', publish_start_at: Time.current,
-                          unit_phenomenon: :other,
-                          units: [{ 'unit_id' => unit.id, 'name' => 'Unit Only Unit' }],
-                          people: [{ 'person_id' => person.id, 'name' => 'Unlisted Person' }])
-
-    get trend_path(trend)
-
-    assert_response :success
-    assert_includes response.body, '<title>Unit Only Unit Unit Only Trend 2026/05/01 - '
-  end
-
-  test 'show page title excludes the unit name when unit_phenomenon is not set even if units are recorded' do
-    unit = Unit.create!(name: 'Unlisted Unit', key: 'trend-title-unlisted-unit', status: :active)
-    person = Person.create!(name: 'Person Only Person', key: 'trend-title-person-only', status: :active)
-    trend = Trend.create!(title: 'Person Only Trend', date: '2026-05-01', publish_start_at: Time.current,
-                          person_phenomenon: :other,
-                          units: [{ 'unit_id' => unit.id, 'name' => 'Unlisted Unit' }],
-                          people: [{ 'person_id' => person.id, 'name' => 'Person Only Person' }])
-
-    get trend_path(trend)
-
-    assert_response :success
-    assert_includes response.body, '<title>Person Only Person Person Only Trend 2026/05/01 - '
+    assert_includes response.body, '<title>Solo Title Trend 2026/05/01 - '
   end
 
   test 'show page title strips a trailing half-width parenthetical (e.g. venue name) from the trend title' do

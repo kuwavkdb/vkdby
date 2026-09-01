@@ -93,9 +93,23 @@ class Trend < ApplicationRecord
   # OGP画像合成テキスト（下記ogp_image_attachable_text）の両方から参照する（issue #1319）
   TITLE_TRAILING_PARENTHETICAL_PATTERN = /\s*\([^()]*\)\z/
 
-  # タイトルから末尾の半角括弧書きを取り除いたもの
+  # タイトルに含まれるWiki記法のブラケットをプレーンテキストに置き換える（[表示], [表示|URL]）。
+  # WikiLinkHelper#parse_wiki_linksのうちリンク化しないケース（link: false）と同じ変換だが、
+  # ActionViewに依存せずModel単体で完結させるため簡略な正規表現で再実装している（issue #1319）
+  WIKI_BRACKET_PATTERNS = [
+    [/\[\[([^\[\]|]+)\|([^\[\]]+)\]\]/, '\1'], # [[表示|リンク先]] -> 表示
+    [/\[\[([^\[\]|]+)\]\]/, '\1'],             # [[リンク先]] -> リンク先
+    [%r{\[(.*?)\|(https?://.*?)\]}, '\1']      # [表示|URL] -> 表示
+  ].freeze
+
+  # タイトルからWiki記法のブラケットを取り除いたプレーンテキスト
+  def title_as_plain_text
+    WIKI_BRACKET_PATTERNS.reduce(title.to_s) { |text, (pattern, replacement)| text.gsub(pattern, replacement) }
+  end
+
+  # 上記からさらに末尾の半角括弧書きを取り除いたもの
   def title_without_trailing_parenthetical
-    title.to_s.sub(TITLE_TRAILING_PARENTHETICAL_PATTERN, '')
+    title_as_plain_text.sub(TITLE_TRAILING_PARENTHETICAL_PATTERN, '')
   end
 
   # Trend詳細ページのヘッダ・ページ<title>・OGP画像で共通して使う日付ラベル。
@@ -118,22 +132,23 @@ class Trend < ApplicationRecord
     errors.add(:base, 'At least one phenomenon (unit, person, or etc) must be present')
   end
 
-  # OgpImageAttachable用: `name`カラムを持たないため、units/peopleのスナップショット名（jsonb）＋
-  # タイトル＋日付を合成してバナーテキストにする（issue #1319）。related Unit/Personへの問い合わせは
-  # 発生させず、trend自身が保持しているスナップショット名のみを使う。
-  # ユニット名はunit_phenomenonが、個人名はperson_phenomenonが設定されている場合のみ含める
-  # （両方設定されている場合のみ併記する）。アーティスト名 → タイトル → 日付の3行構成にする
+  # OgpImageAttachable用: `name`カラムを持たないため、unitsのスナップショット名（jsonb）＋
+  # タイトル＋日付を合成してバナーテキストにする（issue #1319）。related Unitへの問い合わせは
+  # 発生させず、trend自身が保持しているスナップショット名のみを使う。個人名は含めない。
+  # ユニット名 → タイトル → 日付の3行構成にする
   def ogp_image_attachable_text
-    unit_names = unit_phenomenon.present? ? (units || []).filter_map { |u| u['name'].presence } : []
-    person_names = person_phenomenon.present? ? (people || []).filter_map { |p| p['name'].presence } : []
-    artist_names = (unit_names + person_names).join(' ').presence
+    unit_names = (units || []).filter_map { |u| u['name'].presence }.join(' ').presence
 
-    [artist_names, title_without_trailing_parenthetical.presence, date_label].compact_blank.join("\n")
+    [unit_names, title_without_trailing_parenthetical.presence, date_label].compact_blank.join("\n")
   end
 
+  # ogp_image_attachable_textが依存する属性（ユニット名/タイトル/日付）の変更のみを対象にする。
+  # ActiveStorage::Attachmentはattach/purgeのたびにrecord（Trend）をtouchする仕様のため、
+  # ここを無条件trueにするとattach→touch→after_update_commit→purge→touch→…の無限再帰で
+  # SystemStackErrorになる（実際に発生させて確認済み）。依存属性を追加した際はここも合わせて
+  # 追従させること
   def ogp_image_attachable_text_changed?
-    saved_change_to_title? || saved_change_to_units? || saved_change_to_people? ||
-      saved_change_to_unit_phenomenon? || saved_change_to_person_phenomenon? ||
+    saved_change_to_title? || saved_change_to_units? ||
       saved_change_to_date? || saved_change_to_month_unknown? || saved_change_to_day_unknown?
   end
 end
