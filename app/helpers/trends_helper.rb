@@ -11,15 +11,16 @@ module TrendsHelper
     person_data['name'].presence || person&.name
   end
 
-  # Trend詳細ページのヘッダに表示している日付ラベルを返す（issue #1313）
+  # ページ<title>/og:title/twitter:title用にタイトル末尾の半角括弧書き（会場名等の補足）を取り除く（issue #1319）。
+  # 正規表現自体はTrend#ogp_image_attachable_textと共有（Trend::TITLE_TRAILING_PARENTHETICAL_PATTERN）
+  def trend_title_without_trailing_parenthetical(text)
+    text.to_s.sub(Trend::TITLE_TRAILING_PARENTHETICAL_PATTERN, '')
+  end
+
+  # Trend詳細ページのヘッダに表示している日付ラベルを返す（issue #1313）。
+  # ロジック本体はTrend#date_labelに集約（ページ<title>・OGP画像でも使うため、issue #1319）
   def trend_date_label(trend)
-    if trend.month_unknown?
-      trend.date.strftime('%Y')
-    elsif trend.day_unknown?
-      trend.date.strftime('%Y/%m')
-    else
-      trend.date.strftime('%Y/%m/%d')
-    end
+    trend.date_label
   end
 
   # X（Twitter）へのシェア用テキストを生成する（issue #1313）
