@@ -215,4 +215,21 @@ class UnitTest < ActiveSupport::TestCase
   ensure
     Rails.cache = original_cache
   end
+
+  test 'aliases_attributes= persists the hidden flag (issue #1311)' do
+    unit = Unit.create!(name: 'Alias Hidden Unit', key: 'alias-hidden-unit-test', status: :active)
+
+    unit.aliases_attributes = {
+      '0' => { 'name' => '表示される別名', 'kana' => '', 'hidden' => '0' },
+      '1' => { 'name' => '非表示の別名', 'kana' => '', 'hidden' => '1' }
+    }
+    unit.save!
+    unit.reload
+
+    visible_alias = unit.aliases.find { |a| a.name == '表示される別名' }
+    hidden_alias = unit.aliases.find { |a| a.name == '非表示の別名' }
+
+    assert_not visible_alias.hidden
+    assert hidden_alias.hidden
+  end
 end
