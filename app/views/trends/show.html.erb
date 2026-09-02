@@ -22,7 +22,9 @@
     <div class="bg-amber-500 p-6 md:p-8 border-b border-amber-600/30 relative">
       <%= render HeaderActionLinkComponent.new(label: "Edit", url: edit_admin_trend_path(@trend),
             visible: defined?(logged_in?) && logged_in?) %>
-      <div class="flex items-center gap-3 text-sm text-amber-900 font-mono mb-2 font-bold">
+      <%# ヘッダの日付はtext-amber-900だとbg-amber-500背景とのコントラスト比が約4.2:1でWCAG AA（4.5:1）未達だった。
+          タイトル（h1）と同じtext-zinc-900に揃えてコントラスト比を約8.3:1まで改善（issue #1322） %>
+      <div class="flex items-center gap-3 text-sm text-zinc-900 font-mono mb-2 font-bold">
         <% date_path = if @trend.month_unknown?
                          yearly_path(year: @trend.date.year)
                        elsif @trend.day_unknown?
@@ -30,7 +32,7 @@
                        else
                          daily_path(year: @trend.date.year, month: @trend.date.month, day: @trend.date.day)
                        end %>
-        <%= link_to trend_date_label(@trend), date_path, class: "hover:text-zinc-900 transition-colors" %>
+        <%= link_to trend_date_label(@trend), date_path, class: "hover:underline transition-colors" %>
       </div>
       <h1 class="text-2xl font-bold text-zinc-900 flex flex-wrap items-center gap-2">
         <% if @trend.units %>
