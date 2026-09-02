@@ -1,6 +1,10 @@
 <% if current? %>
   <div class="flex items-start gap-3 text-sm">
-    <div class="shrink-0 w-24 text-slate-400 dark:text-slate-500 font-mono text-sm pt-0.5 font-bold">
+    <%# 日付列は固定幅(w-24)だとAndroid標準の等幅フォント（総称フォントmonospaceが
+        Roboto Mono等にフォールバックし、Menlo/Consolas等デスクトップ用より字幅が広い）で
+        "YYYY/MM/DD"がはみ出し、gap-3の余白を食いつぶして隣列と間隔がなくなっていた。
+        固定幅をやめてwhitespace-nowrapで折り返しのみ防止し、実際の描画幅に委ねる（issue #1322） %>
+    <div class="shrink-0 whitespace-nowrap text-slate-400 dark:text-slate-500 font-mono text-sm pt-0.5 font-bold">
       <%= @trend.date.strftime('%Y/%m/%d') %>
     </div>
     <div class="grow">
@@ -14,7 +18,7 @@
   </div>
 <% else %>
   <%= link_to trend_path(@trend), class: "flex items-start gap-3 text-sm group" do %>
-    <div class="shrink-0 w-24 text-indigo-600 dark:text-indigo-400 font-mono text-sm pt-0.5 font-bold group-hover:text-indigo-500 transition-colors">
+    <div class="shrink-0 whitespace-nowrap text-indigo-600 dark:text-indigo-400 font-mono text-sm pt-0.5 font-bold group-hover:text-indigo-500 transition-colors">
       <%= @trend.date.strftime('%Y/%m/%d') %>
     </div>
     <div class="grow">
