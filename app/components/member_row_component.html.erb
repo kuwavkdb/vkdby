@@ -11,7 +11,9 @@
             （margin: 1em 0 0.4em）が意図せず適用され、行の余白が大きく崩れるため %>
         <div role="heading" aria-level="3" class="text-base md:text-lg font-black text-slate-800 dark:text-slate-100">
           <% if @member.person && @member.person.key.present? %>
-            <%= link_to @member.name, profile_path(@member.person.key), class: "text-unit dark:text-blue-400 underline decoration-unit/25 dark:decoration-blue-400/40 underline-offset-2 hover:decoration-unit dark:hover:decoration-blue-400 transition-colors" %>
+            <%# リンク色はサイト全体の標準（.markdown-content/.wiki-content a・trend_list_row_component
+                と同じindigo-700/indigo-400系）に統一している（issue #1322） %>
+            <%= link_to @member.name, profile_path(@member.person.key), class: "text-indigo-700 dark:text-indigo-400 underline decoration-indigo-600/25 dark:decoration-indigo-400/40 underline-offset-2 hover:decoration-indigo-600 dark:hover:decoration-indigo-400 transition-colors" %>
           <% else %>
             <%= @member.name %>
           <% end %>
