@@ -44,6 +44,32 @@ module Admin
       assert_equal 'サンプルユニット(Vocal)', result['history_summary']
     end
 
+    # issue #1325: 個人名でヒットしなくてもバンド名から検索できるようにする
+    test 'search finds a member by their unit name via the current snapshot' do
+      member = Person.create!(name: 'バンド経由太郎', key: 'unit-name-search-member-test', status: :active)
+      unit = Unit.create!(name: 'サーチ対象バンド', key: 'unit-name-search-target-test', status: :active)
+      unit_snapshot = unit.unit_snapshots.create!(snapshot_date: Date.current)
+      unit_snapshot.snapshot_people.create!(person: member, status: :active, part: :vocal)
+
+      get search_admin_people_path(q: 'サーチ対象バンド')
+
+      assert_response :success
+      assert_includes response.parsed_body.pluck('key'), 'unit-name-search-member-test'
+    end
+
+    test 'search by unit name does not match a discarded unit' do
+      member = Person.create!(name: '削除ユニット経由太郎', key: 'discarded-unit-search-member-test', status: :active)
+      unit = Unit.create!(name: '削除済みバンド', key: 'discarded-unit-search-target-test', status: :active)
+      unit_snapshot = unit.unit_snapshots.create!(snapshot_date: Date.current)
+      unit_snapshot.snapshot_people.create!(person: member, status: :active, part: :vocal)
+      unit.discard
+
+      get search_admin_people_path(q: '削除済みバンド')
+
+      assert_response :success
+      assert_not_includes response.parsed_body.pluck('key'), 'discarded-unit-search-member-test'
+    end
+
     test 'create allows setting key' do
       assert_difference('Person.count') do
         post admin_people_path, params: {
