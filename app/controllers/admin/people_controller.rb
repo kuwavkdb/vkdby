@@ -168,9 +168,19 @@ module Admin
       scope = Person.kept
 
       if q.present?
+        like_q = "%#{normalize_search_query(q)}%"
+        # バンド（ユニット）名からもメンバーを検索できるようにする(issue #1325)
+        # ユニットとの紐付けは UnitSnapshot 経由の SnapshotPerson が現行の実データ(UnitPersonは更新が止まっている)
+        unit_member_ids = SnapshotPerson.joins(unit_snapshot: :unit)
+                                        .merge(Unit.kept)
+                                        .where('units.name ILIKE :q OR units.name_kana ILIKE :q', q: like_q)
+                                        .where.not(person_id: nil)
+                                        .select(:person_id)
+
         scope = scope.where(
-          'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
-          q: "%#{normalize_search_query(q)}%"
+          'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR ' \
+          'aliases::text ILIKE :q OR id IN (:unit_member_ids)',
+          q: like_q, unit_member_ids: unit_member_ids
         )
       end
 
