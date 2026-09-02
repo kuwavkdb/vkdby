@@ -8,4 +8,8 @@ class UnitCardComponent < ViewComponent::Base
     @unit = unit
     @show_details = show_details
   end
+
+  def display_aliases
+    @unit.aliases.reject { |a| a.name.blank? || a.hidden }
+  end
 end

@@ -384,4 +384,21 @@ class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
       person.update!(name: 'New Name Person')
     end
   end
+
+  test 'aliases_attributes= persists the hidden flag (issue #1311)' do
+    person = Person.create!(name: 'Alias Hidden Person', key: 'alias-hidden-person-test', status: :active)
+
+    person.aliases_attributes = {
+      '0' => { 'name' => '表示される別名', 'kana' => '', 'hidden' => '0' },
+      '1' => { 'name' => '非表示の別名', 'kana' => '', 'hidden' => '1' }
+    }
+    person.save!
+    person.reload
+
+    visible_alias = person.aliases.find { |a| a.name == '表示される別名' }
+    hidden_alias = person.aliases.find { |a| a.name == '非表示の別名' }
+
+    assert_not visible_alias.hidden
+    assert hidden_alias.hidden
+  end
 end

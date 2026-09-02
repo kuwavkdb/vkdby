@@ -208,7 +208,7 @@ module Admin
                                    tag_index_ids: [],
                                    links_attributes: %i[id text url active sort_order _destroy],
                                    name_logs_attributes: %i[name name_kana],
-                                   aliases_attributes: %i[name kana old_key],
+                                   aliases_attributes: %i[name kana old_key hidden],
                                    activity_periods_attributes: %i[from to label])
     end
 

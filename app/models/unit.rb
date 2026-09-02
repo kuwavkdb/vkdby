@@ -111,7 +111,12 @@ class Unit < ApplicationRecord
 
   def aliases_attributes=(attributes)
     self[:aliases] = attributes.values.reject { |a| a['name'].blank? }.map do |a|
-      { name: CGI.unescapeHTML(a['name'].to_s), kana: a['kana'].to_s, old_key: a['old_key'].to_s.presence }.compact
+      {
+        name: CGI.unescapeHTML(a['name'].to_s),
+        kana: a['kana'].to_s,
+        old_key: a['old_key'].to_s.presence,
+        hidden: ActiveModel::Type::Boolean.new.cast(a['hidden']).presence
+      }.compact
     end
   end
 

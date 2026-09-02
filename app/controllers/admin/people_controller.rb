@@ -217,7 +217,7 @@ module Admin
         tag_index_ids: [],
         links_attributes: %i[id text url active _destroy],
         name_logs_attributes: %i[name name_kana],
-        aliases_attributes: %i[name kana old_key]
+        aliases_attributes: %i[name kana old_key hidden]
       )
     end
   end

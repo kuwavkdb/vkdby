@@ -18,10 +18,10 @@
           <%= @unit.name %>
         <% end %>
       </h3>
-      <% if @unit.aliases.any? %>
+      <% if display_aliases.any? %>
         <span class="text-sm text-zinc-400 dark:text-zinc-500 opacity-60 mx-1 group-hover:text-unit dark:group-hover:text-unit group-hover:opacity-80 transition-all">/</span>
         <span class="text-sm text-zinc-600 dark:text-zinc-300 group-hover:text-unit dark:group-hover:text-unit group-hover:opacity-80 transition-all">
-          <% @unit.aliases.each_with_index do |a, i| %>
+          <% display_aliases.each_with_index do |a, i| %>
             <%= " / " if i > 0 %><% if a.kana.present? %><ruby><%= a.name %><rt><%= a.kana %></rt></ruby><% else %><%= a.name %><% end %>
           <% end %>
         </span>

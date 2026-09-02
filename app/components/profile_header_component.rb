@@ -24,7 +24,7 @@ class ProfileHeaderComponent < ViewComponent::Base
   end
 
   def display_aliases
-    @resource.aliases.reject { |a| a.name.blank? }
+    @resource.aliases.reject { |a| a.name.blank? || a.hidden }
   end
 
   def edit_url

@@ -11,6 +11,10 @@ class PersonCardComponent < ViewComponent::Base
 
   private
 
+  def display_aliases
+    @person.aliases.reject { |a| a.name.blank? || a.hidden }
+  end
+
   def card_classes
     'group block bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 ' \
     'hover:border-person dark:hover:border-person hover:scale-[1.01] transition-all relative overflow-hidden p-4 rounded-lg'
