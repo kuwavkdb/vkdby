@@ -17,15 +17,14 @@
     </div>
   </div>
 <% else %>
-  <%# メンバー/経歴のリンク色（text-unit + decoration-unit/25、issue #1319以前から
-      member_row_component・history_row_componentで使用）に合わせ、indigoから
-      統一した（ユーザー指摘の色ズレ対応） %>
+  <%# リンク色はサイト全体の標準（.markdown-content/.wiki-content aやmember_row_component・
+      history_row_componentと同じindigo-700/indigo-400系）に統一している（issue #1322） %>
   <%= link_to trend_path(@trend), class: "flex items-start gap-3 text-sm group" do %>
-    <div class="shrink-0 whitespace-nowrap text-unit dark:text-blue-400 font-mono text-sm pt-0.5 font-bold">
+    <div class="shrink-0 whitespace-nowrap text-indigo-700 dark:text-indigo-400 font-mono text-sm pt-0.5 font-bold">
       <%= @trend.date.strftime('%Y/%m/%d') %>
     </div>
     <div class="grow">
-      <p class="font-bold text-unit dark:text-blue-400 underline decoration-unit/25 dark:decoration-blue-400/40 underline-offset-2 group-hover:decoration-unit dark:group-hover:decoration-blue-400 transition-colors">
+      <p class="font-bold text-indigo-700 dark:text-indigo-400 underline decoration-indigo-600/25 dark:decoration-indigo-400/40 underline-offset-2 group-hover:decoration-indigo-600 dark:group-hover:decoration-indigo-400 transition-colors">
         <% unit_badges.each do |name| %>
           <span class="px-1.5 py-0.5 rounded text-[11px] align-middle bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 no-underline"><%= name %></span>
         <% end %>
