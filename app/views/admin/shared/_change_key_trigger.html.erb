@@ -14,7 +14,7 @@
       </p>
       <div class="flex gap-2 items-center">
         <%= text_field_tag :new_key, nil, form: form_id, placeholder: "新しいキー", required: true,
-              class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+              class: "block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
         <%= submit_tag "変更", form: form_id,
               onclick: "return confirm('新しいキー「' + document.getElementById('new_key').value + '」に変更しますか？この操作は元に戻せません。');",
               class: "px-3 py-1.5 text-sm text-white bg-amber-600 hover:bg-amber-700 rounded cursor-pointer border-0 whitespace-nowrap" %>
