@@ -43,3 +43,13 @@ plugin :solid_queue if ENV['SOLID_QUEUE_IN_PUMA'] && defined?(SolidQueue)
 # Specify the PID file. Defaults to tmp/pids/server.pid in development.
 # In other environments, only set the PID file if requested.
 pidfile ENV['PIDFILE'] if ENV['PIDFILE']
+
+# Render.com の512MBメモリ制限下で、OSのOOM killerに強制終了される前にグレースフルな
+# 自己再起動を行う安全策（issue #743）。詳細は lib/memory_watchdog.rb を参照。
+# after_booted はシングル/クラスター両モードで動作し、Railsアプリのブート完了後に
+# 発火するためRails.loggerなどが利用可能。
+if ENV['RAILS_ENV'] == 'production' && !ENV['DISABLE_MEMORY_WATCHDOG']
+  after_booted do
+    MemoryWatchdog.start
+  end
+end

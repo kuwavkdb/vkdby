@@ -156,6 +156,9 @@ GEM
     fugit (1.13.0)
       et-orbi (~> 1.4)
       raabro (~> 1.4)
+    get_process_mem (1.0.0)
+      bigdecimal (>= 2.0)
+      ffi (~> 1.0)
     globalid (1.4.0)
       activesupport (>= 6.1)
     highline (3.0.1)
@@ -538,6 +541,7 @@ DEPENDENCIES
   capybara
   debug
   discard (~> 2.0)
+  get_process_mem
   image_processing (~> 2.0)
   importmap-rails
   jbuilder
