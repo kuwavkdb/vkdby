@@ -11,42 +11,50 @@
   <% end %>
 
   <div>
-    <%= form.label :title, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.text_field :title, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <%= form.label :title, "タイトル", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+    <%= form.text_field :title, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
   </div>
 
-  <div class="grid grid-cols-2 gap-4">
-    <div>
-      <%= form.label :release_date, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-      <%= form.date_field :release_date, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+  <div class="flex flex-wrap items-end gap-6">
+    <div data-controller="date-picker">
+      <%= form.label :release_date, "発売日", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+      <div class="flex gap-2">
+        <%= form.text_field :release_date, value: item.release_date&.strftime('%Y/%m/%d'), class: "mt-1 block w-32 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white", data: { date_picker_target: "input", action: "input->date-picker#syncPickerFromInput" } %>
+        <button type="button" data-action="click->date-picker#open" aria-label="カレンダーから日付を選択" title="カレンダーから日付を選択" class="mt-1 flex w-11 shrink-0 items-center justify-center rounded-md border border-gray-300 shadow-sm hover:bg-gray-50 focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-500 dark:text-gray-300" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+          </svg>
+        </button>
+        <input type="date" class="sr-only" tabindex="-1" aria-hidden="true" data-date-picker-target="picker" data-action="input->date-picker#apply">
+      </div>
     </div>
     <div>
-      <%= form.label :asin, "ASIN", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-      <%= form.text_field :asin, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white",
+      <%= form.label :asin, "ASIN", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+      <%= form.text_field :asin, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white",
                                     data: { item_form_target: "asin" } %>
     </div>
   </div>
 
   <div>
-    <%= form.label :link_url, "Link URL", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.url_field :link_url, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white",
+    <%= form.label :link_url, "リンクURL", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+    <%= form.url_field :link_url, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white",
                                   data: { item_form_target: "linkUrl", action: "focus->item-form#autofillLinkUrl" } %>
   </div>
 
   <div>
-    <%= form.label :image_url, "Image URL", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.url_field :image_url, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <%= form.label :image_url, "画像URL", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+    <%= form.url_field :image_url, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
   </div>
 
   <div class="flex items-center gap-2">
     <%= form.check_box :various_artists, class: "rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700" %>
-    <%= form.label :various_artists, "Various Artists（オムニバス）", class: "text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= form.label :various_artists, "Various Artists（オムニバス）", class: "text-sm font-medium text-gray-900 dark:text-gray-100" %>
   </div>
 
   <div data-controller="artist-rows"
        data-artist-rows-url-units-value="<%= search_admin_units_path %>"
        data-artist-rows-url-people-value="<%= search_admin_people_path %>">
-    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Artists</label>
+    <label class="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">アーティスト</label>
 
     <%# Row container %>
     <div data-artist-rows-target="container" class="space-y-2">
@@ -60,7 +68,7 @@
 
           <div class="artist-search-wrapper flex-1 relative <%= 'hidden' unless search_mode %>">
             <input type="text"
-                   class="artist-search-input block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                   class="artist-search-input block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                    placeholder="ユニット名で検索..."
                    autocomplete="off"
                    value="<%= search_mode ? artist['name'] : '' %>"
@@ -86,7 +94,7 @@
 
           <%# Alias %>
           <input type="text"
-                 class="artist-alias-input w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                 class="artist-alias-input w-32 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                  placeholder="別名（任意）"
                  value="<%= artist['alias'] %>"
                  data-action="input->artist-rows#onAliasInput">
@@ -114,7 +122,7 @@
 
         <div class="artist-search-wrapper flex-1 relative">
           <input type="text"
-                 class="artist-search-input block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                 class="artist-search-input block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                  placeholder="ユニット名で検索..."
                  autocomplete="off"
                  data-action="input->artist-rows#onSearchInput keydown->artist-rows#onKeydown focus->artist-rows#onSearchFocus">
@@ -131,7 +139,7 @@
         </div>
 
         <input type="text"
-               class="artist-alias-input w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+               class="artist-alias-input w-32 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                placeholder="別名（任意）"
                data-action="input->artist-rows#onAliasInput">
 
@@ -147,13 +155,13 @@
 
     <button type="button"
             class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200"
-            data-action="click->artist-rows#addRow">+ Artist を追加</button>
+            data-action="click->artist-rows#addRow">+ アーティストを追加</button>
 
     <%= hidden_field_tag "item[artists_json]", (item.artists || []).to_json,
         data: { artist_rows_target: "hiddenField" } %>
   </div>
 
-  <div class="flex justify-end gap-x-4">
+  <div class="sticky bottom-0 z-10 -mx-6 -mb-6 flex justify-end gap-x-4 rounded-b-lg border-t border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
     <%= link_to "キャンセル", admin_items_path, class: "px-4 py-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" %>
     <%= form.submit item.persisted? ? "更新" : "作成", class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
   </div>
