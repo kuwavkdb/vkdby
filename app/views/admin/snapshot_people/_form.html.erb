@@ -2,7 +2,7 @@
   <div class="grid grid-cols-6 gap-4">
     <div class="col-span-6 sm:col-span-3">
       <div class="flex items-center justify-between gap-2">
-        <%= form.label :person_key, "Person Key", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+        <%= form.label :person_key, "Person Key", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
         <% if snapshot_person.person %>
           <%= link_to edit_admin_person_path(snapshot_person.person),
                 class: "inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 hover:bg-green-200 dark:bg-green-900 dark:text-green-200 dark:hover:bg-green-800" do %>
@@ -13,15 +13,15 @@
         <% end %>
       </div>
       <%= form.text_field :person_key,
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-xs" %>
+            class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-xs" %>
       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">保存時に同じKeyのPersonが見つかると自動で紐付きます。今すぐ紐付け先を選びたい場合は下の検索を使ってください。</p>
     </div>
 
     <div class="col-span-6 sm:col-span-3">
-      <%= form.label :old_person_key, "Old Person Key", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <%= form.label :old_person_key, "Old Person Key", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
       <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">読み取り専用・インポートデータ</p>
       <%= form.text_field :old_person_key,
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-xs bg-gray-50 dark:bg-gray-800",
+            class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-xs bg-gray-50 dark:bg-gray-800",
             readonly: true %>
     </div>
 
@@ -29,7 +29,7 @@
       <div data-controller="person-select"
            data-person-select-url-value="<%= search_admin_people_path %>"
            class="relative">
-        <%= form.label :person_id, "Person（検索）", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+        <%= form.label :person_id, "Person（検索）", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
 
         <div data-person-select-target="selected"
              class="<%= 'hidden' unless snapshot_person.person %> mt-1 flex items-center justify-between gap-2 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 px-3 py-2">
@@ -47,7 +47,7 @@
         <div data-person-select-target="searchBox" class="<%= 'hidden' if snapshot_person.person %>">
           <input type="text"
                  placeholder="名前で検索..."
-                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                 class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                  data-person-select-target="input"
                  data-action="input->person-select#search keydown->person-select#onKeydown">
           <div data-person-select-target="results"
@@ -60,49 +60,49 @@
     </div>
 
     <div class="col-span-6 sm:col-span-3">
-      <%= form.label :person_name, "名前", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <%= form.label :person_name, "名前", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
       <%= form.text_field :person_name,
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white",
+            class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white",
             placeholder: "Personに紐付けない場合に入力",
             data: { "person-select-target": "personName" } %>
       <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Personに紐付けない場合に使用します。</p>
     </div>
 
     <div class="col-span-6 sm:col-span-3">
-      <%= form.label :name_alias, "Name Alias", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <%= form.label :name_alias, "表示名（別名）", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
       <%= form.text_field :name_alias,
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white",
+            class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white",
             placeholder: "表示名を上書きする場合に入力" %>
       <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">このスナップショット上での表示名を上書きします（任意）。</p>
     </div>
 
     <div class="col-span-3 sm:col-span-2">
-      <%= form.label :part, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <%= form.label :part, "パート", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
       <%= form.select :part,
             SnapshotPerson.parts.keys.map { |k| [k.humanize, k] }, {},
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+            class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
     </div>
 
     <div class="col-span-3 sm:col-span-2">
-      <%= form.label :part_alias, "Part Alias", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <%= form.label :part_alias, "パート表記（別名）", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
       <%= form.text_field :part_alias,
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white",
+            class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white",
             placeholder: "例: Vo.&Gt." %>
     </div>
 
     <div class="col-span-3 sm:col-span-1">
-      <%= form.label :sort_order, "並び順", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <%= form.label :sort_order, "並び順", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
       <%= form.number_field :sort_order,
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+            class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
     </div>
 
     <div class="col-span-6">
-      <%= form.label :status, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <%= form.label :status, "ステータス", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
       <div class="mt-2 flex flex-wrap gap-4">
         <% SnapshotPerson.statuses.keys.each do |s| %>
           <label class="inline-flex items-center">
             <%= form.radio_button :status, s, class: "form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
-            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300"><%= s.humanize %></span>
+            <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"><%= s.humanize %></span>
           </label>
         <% end %>
       </div>
@@ -111,22 +111,22 @@
     <div class="col-span-6">
       <label class="flex items-center gap-2">
         <%= form.check_box :support, class: "rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600" %>
-        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">サポートメンバー</span>
+        <span class="text-sm font-medium text-gray-900 dark:text-gray-100">サポートメンバー</span>
       </label>
     </div>
 
     <div class="col-span-6">
-      <%= form.label :sns, "SNSアカウント", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <%= form.label :sns, "SNSアカウント", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
       <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">1行につき1アカウントを入力してください。</p>
       <%= form.text_area :sns,
             value: (snapshot_person.sns || []).join("\n"),
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-xs",
+            class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-xs",
             rows: 3,
             placeholder: "@username\nhttps://example.com/profile" %>
     </div>
 
     <div class="col-span-6">
-      <%= form.label :inline_history, "Inline History", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <%= form.label :inline_history, "経歴（このスナップショット限定）", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
       <% if snapshot_person.person_id.present? %>
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
           Personに紐付いているため編集できません。経歴は
@@ -134,19 +134,19 @@
           から編集してください。
         </p>
         <%= form.text_area :inline_history,
-              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-xs bg-gray-50 dark:bg-gray-800",
+              class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-xs bg-gray-50 dark:bg-gray-800",
               rows: 4,
               readonly: true %>
       <% else %>
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">Personに紐付いていないメンバーの経歴として登録できます。</p>
         <%= form.text_area :inline_history,
-              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-xs",
+              class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-xs",
               rows: 4 %>
       <% end %>
     </div>
   </div>
 
   <div class="flex justify-end pt-2">
-    <%= form.submit class: "inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer" %>
+    <%= form.submit snapshot_person.persisted? ? "更新" : "作成", class: "inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer" %>
   </div>
 <% end %>
