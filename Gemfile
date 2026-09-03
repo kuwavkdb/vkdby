@@ -13,6 +13,8 @@ gem 'pg', '~> 1.5'
 # mysql2 is in :development group (legacy data migration only)
 # Use the Puma web server [https://github.com/puma/puma]
 gem 'puma', '>= 5.0'
+# 本番環境で自プロセスのRSSを監視するために使用（lib/memory_watchdog.rb、issue #743）
+gem 'get_process_mem'
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
 gem 'importmap-rails'
 # Hotwire's SPA-like page accelerator [https://turbo.hotwired.dev]
