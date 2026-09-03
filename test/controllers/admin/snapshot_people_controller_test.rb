@@ -144,7 +144,7 @@ module Admin
       get edit_admin_unit_unit_snapshot_path(@unit, @snapshot)
 
       assert_response :success
-      assert_select 'h3', text: 'Add Member'
+      assert_select 'h3', text: 'メンバーを追加'
     end
   end
 end
