@@ -10,217 +10,219 @@
     </div>
   <% end %>
 
-  <!-- Date Fields -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div>
-      <%= form.label :date, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-      <%= form.date_field :date, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white", required: true %>
+  <!-- Date & Publish Settings -->
+  <div class="flex flex-wrap items-end gap-x-8 gap-y-4">
+    <div data-controller="date-picker">
+      <%= form.label :date, "日付", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+      <div class="flex gap-2">
+        <%= form.text_field :date, value: trend.date&.strftime('%Y/%m/%d'), class: "mt-1 block w-32 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white", required: true, data: { date_picker_target: "input", action: "input->date-picker#syncPickerFromInput" } %>
+        <button type="button" data-action="click->date-picker#open" aria-label="カレンダーから日付を選択" title="カレンダーから日付を選択" class="mt-1 flex w-11 shrink-0 items-center justify-center rounded-md border border-gray-300 shadow-sm hover:bg-gray-50 focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-500 dark:text-gray-300" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+          </svg>
+        </button>
+        <input type="date" class="sr-only" tabindex="-1" aria-hidden="true" data-date-picker-target="picker" data-action="input->date-picker#apply">
+      </div>
     </div>
-    <div class="flex items-end">
-      <label class="inline-flex items-center">
-        <%= form.check_box :day_unknown, class: "form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
-        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Day Unknown</span>
-      </label>
-    </div>
-    <div class="flex items-end">
-      <label class="inline-flex items-center">
-        <%= form.check_box :month_unknown, class: "form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
-        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Month Unknown</span>
-      </label>
-    </div>
-  </div>
+    <label class="inline-flex items-center">
+      <%= form.check_box :day_unknown, class: "form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
+      <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">日不明</span>
+    </label>
+    <label class="inline-flex items-center">
+      <%= form.check_box :month_unknown, class: "form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
+      <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">月不明</span>
+    </label>
 
-  <!-- Publish Settings -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
-      <%= form.label :publish_start_at, "Publish Start At", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-      <%= form.datetime_field :publish_start_at, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white", required: true %>
+      <%= form.label :publish_start_at, "公開開始日時", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+      <%= form.datetime_field :publish_start_at, class: "mt-1 block rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white", required: true %>
     </div>
-    <div class="flex items-end">
-      <label class="inline-flex items-center">
-        <%= form.check_box :active, class: "form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
-        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Active</span>
-      </label>
-    </div>
+    <label class="inline-flex items-center">
+      <%= form.check_box :active, class: "form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
+      <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">公開する</span>
+    </label>
   </div>
 
   <!-- Phenomenon Selection -->
   <div>
-    <h3 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phenomenon (少なくとも1つ選択)</h3>
+    <h3 class="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">動向種別（少なくとも1つ選択）</h3>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <!-- Unit Phenomenon -->
       <div>
-        <%= form.label :unit_phenomenon, "Unit Phenomenon", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
+        <%= form.label :unit_phenomenon, "ユニットの動向種別", class: "block text-xs font-semibold text-gray-900 dark:text-gray-100" %>
         <%= form.select :unit_phenomenon,
             options_for_select(Trend.defined_enums['unit_phenomenon'].keys.map { |k| [I18n.t("activerecord.attributes.trend.unit_phenomenon.#{k}"), k] }, trend.unit_phenomenon),
             { include_blank: "(なし)" },
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+            class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
       </div>
 
       <!-- Person Phenomenon -->
       <div>
-        <%= form.label :person_phenomenon, "Person Phenomenon", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
+        <%= form.label :person_phenomenon, "個人の動向種別", class: "block text-xs font-semibold text-gray-900 dark:text-gray-100" %>
         <%= form.select :person_phenomenon,
             options_for_select(Trend.defined_enums['person_phenomenon'].keys.map { |k| [I18n.t("activerecord.attributes.trend.person_phenomenon.#{k}"), k] }, trend.person_phenomenon),
             { include_blank: "(なし)" },
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+            class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
       </div>
 
       <!-- Etc Phenomenon -->
       <div>
-        <%= form.label :etc_phenomenon, "Etc Phenomenon", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
+        <%= form.label :etc_phenomenon, "その他の動向種別", class: "block text-xs font-semibold text-gray-900 dark:text-gray-100" %>
         <%= form.select :etc_phenomenon,
             options_for_select(Trend.defined_enums['etc_phenomenon'].keys.map { |k| [I18n.t("activerecord.attributes.trend.etc_phenomenon.#{k}"), k] }, trend.etc_phenomenon),
             { include_blank: "(なし)" },
-            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+            class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
       </div>
     </div>
   </div>
 
-  <!-- Units Autocomplete -->
-  <div data-controller="autocomplete"
-       data-autocomplete-url-value="<%= search_admin_units_path %>"
-       data-autocomplete-field-name-value="units">
-    <%= form.label :units, "Units", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <div class="mt-1 relative">
-      <input type="text"
-             data-autocomplete-target="input"
-             data-action="input->autocomplete#search keydown->autocomplete#onKeydown"
-             placeholder="Type to search units..."
-             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+  <!-- Units / People Autocomplete -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Units Autocomplete -->
+    <div data-controller="autocomplete"
+         data-autocomplete-url-value="<%= search_admin_units_path %>"
+         data-autocomplete-field-name-value="units">
+      <%= form.label :units, "ユニット", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+      <div class="mt-1 relative">
+        <input type="text"
+               data-autocomplete-target="input"
+               data-action="input->autocomplete#search keydown->autocomplete#onKeydown"
+               placeholder="ユニット名で検索..."
+               class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
 
-      <!-- Dropdown results -->
-      <div data-autocomplete-target="results"
-           class="hidden absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 max-h-60 overflow-auto">
+        <!-- Dropdown results -->
+        <div data-autocomplete-target="results"
+             class="hidden absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 max-h-60 overflow-auto">
+        </div>
       </div>
-    </div>
 
-    <!-- Selected units display -->
-    <div data-autocomplete-target="selected" class="mt-2 flex flex-wrap gap-2">
-      <% if trend.units.present? %>
-        <% trend.units.each do |unit_data| %>
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
-            <%= unit_data['name'] %>
-            <button type="button"
-                    data-action="click->autocomplete#removeItem"
-                    data-id="<%= unit_data['unit_id'] %>"
-                    class="ml-2 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">×</button>
-          </span>
+      <!-- Selected units display -->
+      <div data-autocomplete-target="selected" class="mt-2 flex flex-wrap gap-2">
+        <% if trend.units.present? %>
+          <% trend.units.each do |unit_data| %>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+              <%= unit_data['name'] %>
+              <button type="button"
+                      data-action="click->autocomplete#removeItem"
+                      data-id="<%= unit_data['unit_id'] %>"
+                      class="ml-2 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">×</button>
+            </span>
+          <% end %>
         <% end %>
-      <% end %>
+      </div>
+
+      <!-- Hidden field for JSON data -->
+      <%= form.hidden_field :units_json,
+          value: (trend.units || []).to_json,
+          data: { autocomplete_target: "hiddenField" } %>
     </div>
 
-    <!-- Hidden field for JSON data -->
-    <%= form.hidden_field :units_json,
-        value: (trend.units || []).to_json,
-        data: { autocomplete_target: "hiddenField" } %>
+    <!-- People Autocomplete -->
+    <div data-controller="autocomplete"
+         data-autocomplete-url-value="<%= search_admin_people_path %>"
+         data-autocomplete-field-name-value="people">
+      <%= form.label :people, "個人", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+      <div class="mt-1 relative">
+        <input type="text"
+               data-autocomplete-target="input"
+               data-action="input->autocomplete#search keydown->autocomplete#onKeydown"
+               placeholder="個人名またはバンド名で検索..."
+               class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+
+        <div data-autocomplete-target="results"
+             class="hidden absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 max-h-60 overflow-auto">
+        </div>
+      </div>
+
+      <div data-autocomplete-target="selected" class="mt-2 flex flex-wrap gap-2">
+        <% if trend.people.present? %>
+          <% trend.people.each do |person_data| %>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+              <%= person_data['name'] %>
+              <button type="button"
+                      data-action="click->autocomplete#removeItem"
+                      data-id="<%= person_data['person_id'] %>"
+                      class="ml-2 text-green-600 hover:text-green-800 dark:text-green-400">×</button>
+            </span>
+          <% end %>
+        <% end %>
+      </div>
+
+      <%= form.hidden_field :people_json,
+          value: (trend.people || []).to_json,
+          data: { autocomplete_target: "hiddenField" } %>
+    </div>
   </div>
 
   <!-- Snapshot Selection (Unit1組の場合のみ表示) -->
   <% if @snapshots.present? %>
     <div>
-      <%= form.label :snapshot_date, "Snapshot", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <%= form.label :snapshot_date, "スナップショット", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
       <%= form.select :snapshot_date,
           [['(自動)', '']] + @snapshots.map { |s|
             ["#{s.snapshot_date.strftime('%Y/%m/%d')} — #{s.member_names}", s.snapshot_date.to_s]
           },
           { selected: trend.snapshot_date&.to_s || '' },
-          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+          class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">指定しない場合はTrendsの日付 → カレントスナップショットの順で自動選択されます</p>
     </div>
   <% end %>
 
-  <!-- People Autocomplete -->
-  <div data-controller="autocomplete"
-       data-autocomplete-url-value="<%= search_admin_people_path %>"
-       data-autocomplete-field-name-value="people">
-    <%= form.label :people, "People", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <div class="mt-1 relative">
-      <input type="text"
-             data-autocomplete-target="input"
-             data-action="input->autocomplete#search keydown->autocomplete#onKeydown"
-             placeholder="Type to search people..."
-             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-
-      <div data-autocomplete-target="results"
-           class="hidden absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 max-h-60 overflow-auto">
-      </div>
-    </div>
-
-    <div data-autocomplete-target="selected" class="mt-2 flex flex-wrap gap-2">
-      <% if trend.people.present? %>
-        <% trend.people.each do |person_data| %>
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-            <%= person_data['name'] %>
-            <button type="button"
-                    data-action="click->autocomplete#removeItem"
-                    data-id="<%= person_data['person_id'] %>"
-                    class="ml-2 text-green-600 hover:text-green-800 dark:text-green-400">×</button>
-          </span>
-        <% end %>
-      <% end %>
-    </div>
-
-    <%= form.hidden_field :people_json,
-        value: (trend.people || []).to_json,
-        data: { autocomplete_target: "hiddenField" } %>
-  </div>
-
   <!-- Title and Content -->
   <div>
-    <%= form.label :title, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.text_field :title, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <%= form.label :title, "タイトル", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+    <%= form.text_field :title, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
   </div>
 
   <div>
-    <%= form.label :content, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.text_area :content, rows: 8, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <%= form.label :content, "本文", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+    <%= form.text_area :content, rows: 4, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Wiki形式をサポート</p>
   </div>
 
   <!-- Quote Section -->
   <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Quote (Optional)</h3>
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">引用（任意）</h3>
 
     <div class="space-y-4">
       <div>
-        <%= form.label :quote, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-        <%= form.text_area :quote, rows: 4, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+        <%= form.label :quote, "引用文", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+        <%= form.text_area :quote, rows: 4, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
       </div>
 
       <div>
-        <%= form.label :quote_title, "Quote Title", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-        <%= form.text_field :quote_title, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+        <%= form.label :quote_title, "引用元タイトル", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+        <%= form.text_field :quote_title, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
       </div>
 
       <div>
-        <%= form.label :quote_url, "Quote URL", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-        <%= form.url_field :quote_url, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+        <%= form.label :quote_url, "引用元URL", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+        <%= form.url_field :quote_url, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
       </div>
     </div>
   </div>
 
   <!-- Via Section -->
   <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Via (Optional)</h3>
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">情報元（任意）</h3>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <%= form.label :via_name, "Via Name", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-        <%= form.text_field :via_name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+        <%= form.label :via_name, "情報元名", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+        <%= form.text_field :via_name, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
       </div>
 
       <div>
-        <%= form.label :via_url, "Via URL", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-        <%= form.url_field :via_url, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+        <%= form.label :via_url, "情報元URL", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+        <%= form.url_field :via_url, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
       </div>
     </div>
   </div>
 
   <!-- Form Actions -->
-  <div class="flex justify-end gap-x-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-    <%= link_to "Cancel", admin_trends_path, class: "px-4 py-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" %>
-    <%= form.submit class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+  <div class="sticky bottom-0 z-10 -mx-6 -mb-6 flex justify-end gap-x-4 rounded-b-lg border-t border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
+    <%= link_to "キャンセル", admin_trends_path, class: "px-4 py-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" %>
+    <%= form.submit trend.persisted? ? "更新" : "作成", class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
   </div>
 <% end %>
