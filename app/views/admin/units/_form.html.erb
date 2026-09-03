@@ -11,65 +11,69 @@
   <% end %>
 
   <div>
-    <%= form.label :name, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <%= form.label :name, "名前", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+    <%= form.text_field :name, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
   </div>
 
   <div>
-    <%= form.label :name_kana, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.text_field :name_kana, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <%= form.label :name_kana, "ヨミガナ", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+    <%= form.text_field :name_kana, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
   </div>
 
   <div>
-    <%= form.label :key, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= form.label :key, "キー", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
     <% if unit.new_record? %>
-      <%= form.text_field :key, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+      <%= form.text_field :key, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
     <% else %>
-      <div class="mt-1 block w-full rounded-md bg-gray-100 border-gray-300 px-3 py-2 text-base text-gray-600 dark:bg-gray-900 dark:text-gray-400">
-        <%= unit.key || "(not set)" %>
+      <div class="mt-1 block w-full rounded-md bg-gray-100 border border-gray-300 px-2 py-2 text-base text-gray-600 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-400">
+        <%= unit.key || "(未設定)" %>
       </div>
-      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Key cannot be changed</p>
+      <% if current_user&.admin? %>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">直接編集はできません。変更する場合は下の「キー変更」から行ってください</p>
+      <% else %>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">キーは変更できません</p>
+      <% end %>
       <%= render "admin/shared/change_key_trigger", resource: unit, form_id: "change_key_form" %>
     <% end %>
   </div>
 
   <div>
-    <%= form.label :old_key, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.text_field :old_key, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <%= form.label :old_key, "旧キー", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+    <%= form.text_field :old_key, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
   </div>
 
   <div>
-    <%= form.label :destination_key, "転送先キー (destination_key)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.text_field :destination_key, placeholder: "統合先 Unit の key（旧URL転送用）", class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <%= form.label :destination_key, "転送先キー", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+    <%= form.text_field :destination_key, placeholder: "統合先 Unit の key（旧URL転送用）", class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">設定すると <code>/profile/{key}</code> へのアクセスが <code>/profile/{destination_key}</code> へ 301 リダイレクトされます。Unit のマージ・統合時に使用。</p>
   </div>
 
   <div>
-    <%= form.label :unit_type, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= form.label :unit_type, "ユニット種別", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
     <div class="mt-2 space-x-4">
       <% Unit.unit_types.keys.each do |type| %>
         <label class="inline-flex items-center">
           <%= form.radio_button :unit_type, type, class: "form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
-          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300"><%= type.humanize %></span>
+          <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"><%= type.humanize %></span>
         </label>
       <% end %>
     </div>
   </div>
 
   <div>
-    <%= form.label :status, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= form.label :status, "ステータス", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
     <div class="mt-2 flex flex-wrap gap-4">
       <% Unit.statuses.keys.each do |status| %>
         <label class="inline-flex items-center">
           <%= form.radio_button :status, status, class: "form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
-          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300"><%= Unit::STATUS_TRANSLATIONS[status] %></span>
+          <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"><%= Unit::STATUS_TRANSLATIONS[status] %></span>
         </label>
       <% end %>
     </div>
   </div>
 
   <div>
-    <h3 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name History (Log)</h3>
+    <h3 class="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">名前の履歴</h3>
     <div class="space-y-4">
       <%
         logs_for_form = unit.name_logs
@@ -78,12 +82,12 @@
       <%= form.fields_for :name_logs, logs_for_form do |log_form| %>
         <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
           <div class="flex-1 w-full">
-            <%= log_form.label :name, "Name", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
-            <%= log_form.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+            <%= log_form.label :name, "名前", class: "block text-xs font-semibold text-gray-900 dark:text-gray-100" %>
+            <%= log_form.text_field :name, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
           </div>
           <div class="flex-1 w-full">
-            <%= log_form.label :name_kana, "Kana", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
-            <%= log_form.text_field :name_kana, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+            <%= log_form.label :name_kana, "ヨミガナ", class: "block text-xs font-semibold text-gray-900 dark:text-gray-100" %>
+            <%= log_form.text_field :name_kana, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
           </div>
         </div>
       <% end %>
@@ -92,7 +96,7 @@
   </div>
 
   <div>
-    <h3 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">別名 (Aliases)</h3>
+    <h3 class="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">別名</h3>
     <div class="space-y-4">
       <%
         aliases_for_form = unit.aliases
@@ -101,29 +105,29 @@
       <%= form.fields_for :aliases, aliases_for_form do |alias_form| %>
         <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
           <div class="flex-1 w-full">
-            <%= alias_form.label :name, "別名", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
-            <%= alias_form.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+            <%= alias_form.label :name, "別名", class: "block text-xs font-semibold text-gray-900 dark:text-gray-100" %>
+            <%= alias_form.text_field :name, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
           </div>
           <div class="flex-1 w-full">
-            <%= alias_form.label :kana, "よみ", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
-            <%= alias_form.text_field :kana, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+            <%= alias_form.label :kana, "ヨミガナ", class: "block text-xs font-semibold text-gray-900 dark:text-gray-100" %>
+            <%= alias_form.text_field :kana, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
           </div>
           <div class="flex-1 w-full">
-            <%= alias_form.label :old_key, "旧キー (old_key)", class: "block text-xs font-medium text-gray-500 dark:text-gray-400" %>
-            <%= alias_form.text_field :old_key, class: "mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400" %>
+            <%= alias_form.label :old_key, "旧キー", class: "block text-xs font-medium text-gray-600 dark:text-gray-400" %>
+            <%= alias_form.text_field :old_key, class: "mt-1 block w-full rounded-md border border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400" %>
           </div>
           <div class="flex items-center gap-2 sm:pb-2">
             <%= alias_form.check_box :hidden, class: "rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700" %>
-            <%= alias_form.label :hidden, "画面に表示しない", class: "text-xs font-medium text-gray-700 dark:text-gray-300" %>
+            <%= alias_form.label :hidden, "非表示", class: "text-xs font-medium text-gray-900 dark:text-gray-100" %>
           </div>
         </div>
       <% end %>
-      <div class="text-xs text-gray-500">※名前を空にすると保存時に削除されます。旧キーはインポート時に自動設定されます。「画面に表示しない」にチェックすると、検索には使われますが画面には表示されなくなります。</div>
+      <div class="text-xs text-gray-500">※名前を空にすると保存時に削除されます。旧キーはインポート時に自動設定されます。「非表示」にチェックすると、検索には使われますが画面には表示されなくなります。</div>
     </div>
   </div>
 
   <div>
-    <h3 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">活動時期 (Activity Period)</h3>
+    <h3 class="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">活動時期</h3>
     <div class="space-y-4">
       <%
         periods_for_form = unit.activity_periods
@@ -132,16 +136,16 @@
       <%= form.fields_for :activity_periods, periods_for_form do |period_form| %>
         <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
           <div class="flex-1 w-full">
-            <%= period_form.label :from, "From", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
-            <%= period_form.text_field :from, placeholder: "例: 2010.01", class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+            <%= period_form.label :from, "開始", class: "block text-xs font-semibold text-gray-900 dark:text-gray-100" %>
+            <%= period_form.text_field :from, placeholder: "例: 2010.01", class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
           </div>
           <div class="flex-1 w-full">
-            <%= period_form.label :to, "To", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
-            <%= period_form.text_field :to, placeholder: "例: 2015.06（活動中なら空欄）", class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+            <%= period_form.label :to, "終了", class: "block text-xs font-semibold text-gray-900 dark:text-gray-100" %>
+            <%= period_form.text_field :to, placeholder: "例: 2015.06（活動中なら空欄）", class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
           </div>
           <div class="flex-1 w-full">
-            <%= period_form.label :label, "Label", class: "block text-xs font-medium text-gray-700 dark:text-gray-300" %>
-            <%= period_form.text_field :label, placeholder: "例: 活動休止前", class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+            <%= period_form.label :label, "ラベル", class: "block text-xs font-semibold text-gray-900 dark:text-gray-100" %>
+            <%= period_form.text_field :label, placeholder: "例: 活動休止前", class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
           </div>
         </div>
       <% end %>
@@ -150,22 +154,22 @@
   </div>
 
   <div>
-    <%= form.label :old_wiki_text, "Old Wiki Text", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.text_area :old_wiki_text, rows: 10, readonly: true, class: "mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm font-mono text-gray-600 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed" %>
-    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">移行元のWikiテキスト (Read Only)</p>
+    <%= form.label :old_wiki_text, "旧Wikiテキスト", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+    <%= form.text_area :old_wiki_text, rows: 10, readonly: true, class: "mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-sm font-mono text-gray-600 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed" %>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">移行元のWikiテキスト（読み取り専用）</p>
   </div>
 
   <div>
-    <%= form.label :note, "Note", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-    <%= form.text_area :note, rows: 5, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <%= form.label :note, "メモ", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+    <%= form.text_area :note, rows: 5, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">管理用メモ</p>
   </div>
 
 
 
   <div class="sticky bottom-0 z-10 -mx-6 -mb-6 flex justify-end gap-x-4 rounded-b-lg border-t border-gray-200 bg-white/95 px-6 py-4 backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/95">
-    <%= link_to "Cancel", admin_units_path, class: "px-4 py-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" %>
-    <%= form.submit class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+    <%= link_to "キャンセル", admin_units_path, class: "px-4 py-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" %>
+    <%= form.submit unit.persisted? ? "更新" : "作成", class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
   </div>
 
 <% end %>
