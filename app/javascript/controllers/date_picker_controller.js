@@ -8,6 +8,21 @@ export default class extends Controller {
         this.syncPickerFromInput()
     }
 
+    // Called when a custom trigger (e.g. an icon button) should open the native date picker.
+    // The native picker input itself may be visually hidden (e.g. via sr-only), so a plain
+    // click/focus on it isn't available to the user; showPicker() opens it programmatically.
+    open() {
+        if (this.pickerTarget.showPicker) {
+            try {
+                this.pickerTarget.showPicker()
+                return
+            } catch {
+                // fall through to focus() below (e.g. not called from a user gesture)
+            }
+        }
+        this.pickerTarget.focus()
+    }
+
     // Called when value is picked from the date picker
     apply(event) {
         const pickedDate = event.target.value
