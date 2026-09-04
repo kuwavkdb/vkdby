@@ -29,4 +29,4 @@ services:
       - key: MALLOC_ARENA_MAX
         value: 2
     region: singapore
-    plan: free # Web service has a free tier.
+    plan: standard # 512MBのStarterでOOM再起動が頻発したため2GB/1CPUに増強（issue #1344）

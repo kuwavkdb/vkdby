@@ -33,10 +33,13 @@
                 <% if sp.person %>
                   <%= link_to sp.name, edit_admin_person_path(sp.person), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
                 <% else %>
-                  <%= sp.person_name %>
+                  <%= sp.name %>
                 <% end %>
-                <% if sp.name_alias.present? %>
-                  <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">(<%= sp.name_alias %>)</span>
+                <%
+                  base_name = sp.person_name.presence || sp.person&.name
+                %>
+                <% if base_name.present? && base_name != sp.name %>
+                  <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">(<%= base_name %>)</span>
                 <% end %>
                 <% if sp.support? %>
                   <span class="ml-1 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">サポート</span>

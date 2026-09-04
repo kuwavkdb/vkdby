@@ -62,6 +62,18 @@ module Admin
       assert_equal 'テスト太郎', @snapshot.reload.snapshot_people.last.person_name
     end
 
+    test 'should override person_name with the value from the form when assigning' do
+      post assign_admin_temporary_snapshot_person_path(@temporary_snapshot_person), params: {
+        unit_id: @unit.id,
+        unit_snapshot_ids: [@snapshot.id],
+        person_name: '上書き太郎',
+        part: 'vocal',
+        status: 'left'
+      }
+
+      assert_equal '上書き太郎', @snapshot.reload.snapshot_people.last.person_name
+    end
+
     test 'should assign to multiple snapshots at once' do
       assert_difference('SnapshotPerson.count', 2) do
         assert_difference('TemporarySnapshotPerson.count', -1) do
