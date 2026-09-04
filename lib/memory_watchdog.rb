@@ -2,9 +2,8 @@
 
 require 'get_process_mem'
 
-# Render.com の 512MB（Starterプラン）メモリ制限下で、メモリスパイクによりOSの
-# OOM killerに強制終了される前に、プロアクティブにグレースフルな自己再起動を行う
-# 安全策（issue #743）。
+# Render.com のメモリ制限下で、メモリスパイクによりOSのOOM killerに強制終了される
+# 前に、プロアクティブにグレースフルな自己再起動を行う安全策（issue #743）。
 #
 # puma_worker_killer gem はPumaのクラスターモード（workers設定によるマスター/
 # ワーカー構成）を前提にしており、本アプリのようなシングルプロセス（threads only）
@@ -15,9 +14,9 @@ require 'get_process_mem'
 # リクエストを完了してから終了する）に、再起動はRenderのプロセス監視に委ねる。
 # リクエスト処理中でも問答無用で強制終了するOS OOM killer（SIGKILL）より安全。
 module MemoryWatchdog
-  # 再起動をトリガーするRSSの閾値（MB）。インスタンスタイプを変更した場合は
-  # 合わせて見直すこと（#1344 参照）。
-  DEFAULT_THRESHOLD_MB = 450
+  # 再起動をトリガーするRSSの閾値（MB）。Standardプラン（2GB/1CPU）の約88%。
+  # インスタンスタイプを変更した場合はrender.yamlのplanと合わせて見直すこと（#1344）。
+  DEFAULT_THRESHOLD_MB = 1800
   # 監視間隔（秒）
   DEFAULT_CHECK_INTERVAL_SECONDS = 20
 
