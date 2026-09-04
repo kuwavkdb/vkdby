@@ -69,6 +69,16 @@ GitHub Actions の **Database Backup** ワークフローを `workflow_dispatch`
 gh workflow run backup.yml --repo kuwavkdb/vkdby
 ```
 
+手動実行から Artifact のダウンロードまでを一括で行う場合は `bin/backup-db.sh` を使用してください（`gh` CLI が必要です）。
+
+```bash
+# tmp/backup/ にダウンロードされる
+bin/backup-db.sh
+
+# ダウンロード先を指定する場合
+bin/backup-db.sh /path/to/dir
+```
+
 ### バックアップからの復元
 
 1. GitHub → Actions → Database Backup → 対象の実行 → Artifacts からダンプファイルをダウンロード
