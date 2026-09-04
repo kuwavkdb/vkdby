@@ -34,6 +34,19 @@ module Admin
       assert_match @unit.name, response.body
     end
 
+    test 'should prefill the name field with the resolved name when person_name is blank' do
+      linked = TemporarySnapshotPerson.create!(
+        person: people(:one),
+        part: :vocal,
+        status: :left,
+        hint_unit: @unit
+      )
+
+      get assign_admin_temporary_snapshot_person_path(linked)
+      assert_response :success
+      assert_select 'input#person_name[value=?]', people(:one).name
+    end
+
     test 'should list assign target snapshots ordered by snapshot_index, matching the snapshot list order' do
       @snapshot.update!(snapshot_index: 2)
       @other_snapshot.update!(snapshot_index: 1)
