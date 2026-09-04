@@ -58,4 +58,28 @@ namespace :temporary_snapshot_people do
       not_found.each { |line| puts "  - #{line}" }
     end
   end
+
+  desc '振り分けフォームで名前とPart Aliasが取り違って見えるレコードの洗い出し（#1368の調査用）'
+  task audit_part_alias_names: :environment do
+    scope = TemporarySnapshotPerson.includes(:person, :hint_unit)
+                                    .where(person_name: nil)
+                                    .where.not(part_alias: nil)
+                                    .order(:id)
+
+    puts "対象: person_name が空 かつ part_alias が設定されているレコード #{scope.count}件"
+    puts
+
+    arrow_flagged, rest = scope.partition { |r| r.part_alias.to_s.include?('→') }
+
+    puts "## 要確認（part_aliasに「→」を含む＝旧名/改名表記の可能性が高い）: #{arrow_flagged.size}件"
+    arrow_flagged.each do |r|
+      puts "  ##{r.id} | unit: #{r.hint_unit&.name} | part: #{r.part} | part_alias: #{r.part_alias.inspect} | 解決後の名前: #{r.name.inspect}"
+    end
+
+    puts
+    puts "## その他（要目視確認）: #{rest.size}件"
+    rest.each do |r|
+      puts "  ##{r.id} | unit: #{r.hint_unit&.name} | part: #{r.part} | part_alias: #{r.part_alias.inspect} | 解決後の名前: #{r.name.inspect}"
+    end
+  end
 end
