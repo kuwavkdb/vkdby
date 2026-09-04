@@ -24,8 +24,10 @@ services:
         sync: false
       - key: WEB_CONCURRENCY
         value: 1
+      # 512MB/0.5CPUのStarter向けに2まで絞っていたが、2GB/1CPUのStandard増強（#1344）
+      # 後はスレッド枯渇によるレスポンス遅延が発生したため引き上げ（#1370）
       - key: RAILS_MAX_THREADS
-        value: 2
+        value: 5
       - key: MALLOC_ARENA_MAX
         value: 2
     region: singapore
