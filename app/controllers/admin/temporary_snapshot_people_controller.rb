@@ -94,8 +94,7 @@ module Admin
       {
         person_id: @temporary_snapshot_person.person_id,
         person_key: @temporary_snapshot_person.person_key,
-        person_name: @temporary_snapshot_person.person_name,
-        name_alias: params[:name_alias].presence,
+        person_name: params[:person_name].presence || @temporary_snapshot_person.person_name,
         part: params[:part].presence || @temporary_snapshot_person.part,
         part_alias: params[:part_alias].presence || @temporary_snapshot_person.part_alias,
         status: params[:status].presence || @temporary_snapshot_person.status,
