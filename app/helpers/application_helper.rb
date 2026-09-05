@@ -230,7 +230,8 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     'div_end' => :expand_div_end_plugin,
     'member' => :expand_member_plugin,
     'member2' => :expand_member2_plugin,
-    'youtube' => :expand_youtube_plugin
+    'youtube' => :expand_youtube_plugin,
+    'x' => :expand_x_plugin
   }.freeze
 
   # パラメータ（{{プラグイン名 ...}} の "..." 部分）を省略した記法
@@ -418,13 +419,35 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # YouTube動画IDを指定して埋め込みプレーヤーを表示する（例: {{youtube C-PqwPsrDd0}}）。
   # 動画IDはYouTube仕様上、英数字・"-"・"_"の11文字固定。それ以外の入力（URL丸ごと等）は
   # iframeのsrc属性に渡す値として想定外のため、埋め込まず何も出力しない。
+  # 幅は上限なしとし、高さのみ360pxに固定する（issue #1398。Wiki側の
+  # WikiLinkHelper#render_youtube_embedと表示を揃える）。aspect-video（16:9）と
+  # h-[360px]の組み合わせにより、幅はh-0/width:autoの比率計算で自動算出される
   def expand_youtube_plugin(args, _sectionable, placeholders, _open_tags)
     video_id = args.strip
     return '' unless video_id.match?(/\A[\w-]{11}\z/)
 
     html = <<~HTML.chomp
-      <div class="relative pb-[56.25%] h-0 overflow-hidden rounded-xl my-4">
-        <iframe src="https://www.youtube.com/embed/#{video_id}" title="YouTube動画" loading="lazy" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen class="absolute top-0 left-0 w-full h-full border-0"></iframe>
+      <div class="flex justify-center my-4">
+        <iframe src="https://www.youtube.com/embed/#{video_id}" title="YouTube動画" loading="lazy" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen class="aspect-video h-[360px] rounded-xl border-0"></iframe>
+      </div>
+    HTML
+    register_plugin_placeholder(placeholders, html)
+  end
+
+  # {{x URL}}: Xの個別ポストURLをembed表示する（issue #1398）。
+  # ツイート本文の引用HTMLを別途用意しなくても、公式ウィジェット（widgets.js）が
+  # <blockquote class="twitter-tweet"><a href="URL"></a></blockquote> を検出して
+  # 自動的にツイート内容を取得・展開してくれる最小構成を使う
+  # （WikiLinkHelper#render_bare_tweet_embedと同じ方式）
+  def expand_x_plugin(args, _sectionable, placeholders, _open_tags)
+    url = args.strip
+    return '' unless url.match?(WikiLinkHelper::BARE_TWEET_URL_PATTERN)
+
+    safe_url = CGI.escapeHTML(url)
+    html = <<~HTML.chomp
+      <div class="flex justify-center my-4">
+        <blockquote class="twitter-tweet"><a href="#{safe_url}"></a></blockquote>
+        <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
       </div>
     HTML
     register_plugin_placeholder(placeholders, html)
