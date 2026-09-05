@@ -260,6 +260,50 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_no_match(/<iframe/, result)
   end
 
+  test '{{youtube 動画ID}}の埋め込みは高さが360pxに固定される（issue #1398）' do
+    result = markdown('{{youtube C-PqwPsrDd0}}')
+
+    assert_match(/class="aspect-video h-\[360px\][^"]*"/, result)
+  end
+
+  test '{{youtube 動画URL}}でwatch形式のURLからも動画が埋め込まれる（issue #1398）' do
+    result = markdown('{{youtube https://www.youtube.com/watch?v=C-PqwPsrDd0}}')
+
+    assert_match(%r{https://www\.youtube\.com/embed/C-PqwPsrDd0}, result)
+  end
+
+  test '{{youtube 動画URL}}でyoutu.be形式のURLからも動画が埋め込まれる' do
+    result = markdown('{{youtube https://youtu.be/C-PqwPsrDd0}}')
+
+    assert_match(%r{https://www\.youtube\.com/embed/C-PqwPsrDd0}, result)
+  end
+
+  test '{{youtube 動画URL}}でshorts形式のURLからも動画が埋め込まれる' do
+    result = markdown('{{youtube https://www.youtube.com/shorts/C-PqwPsrDd0}}')
+
+    assert_match(%r{https://www\.youtube\.com/embed/C-PqwPsrDd0}, result)
+  end
+
+  test '{{x URL}}でXのポストが埋め込まれる（issue #1398）' do
+    result = markdown('{{x https://x.com/example/status/1234567890}}')
+
+    assert_match(%r{<blockquote class="twitter-tweet"><a href="https://x\.com/example/status/1234567890"></a></blockquote>}, result)
+    assert_match(%r{platform\.twitter\.com/widgets\.js}, result)
+  end
+
+  test '{{x URL}}でtwitter.comドメインのポストも埋め込まれる' do
+    result = markdown('{{x https://twitter.com/example/status/1234567890}}')
+
+    assert_match(%r{<blockquote class="twitter-tweet"><a href="https://twitter\.com/example/status/1234567890"></a></blockquote>}, result)
+  end
+
+  test '{{x URL}}でXの個別ポストURLでない場合は空文字になる' do
+    result = markdown('前{{x https://x.com/example}}後')
+
+    assert_match(/前後/, result)
+    assert_no_match(/twitter-tweet/, result)
+  end
+
   test '{{div_begin class="..."}}と{{div_end}}でdivタグが出力される' do
     result = markdown(<<~MARKDOWN)
       {{div_begin class="closable"}}

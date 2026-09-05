@@ -90,6 +90,35 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Me
     assert_includes header_text, 'Artist A'
   end
 
+  test 'show renders a publicly visible section' do
+    item = Item.create!(
+      title: 'Item With Section',
+      release_date: '2026-03-01',
+      link_url: "http://example.com/item-with-section-#{SecureRandom.hex(4)}"
+    )
+    item.sections.create!(name: 'メモ', wiki_text: '本文です')
+
+    get item_path(item)
+
+    assert_response :success
+    assert_includes response.body, 'メモ'
+    assert_includes response.body, '本文です'
+  end
+
+  test 'show does not render an inactive (non-public) section' do
+    item = Item.create!(
+      title: 'Item With Inactive Section',
+      release_date: '2026-03-01',
+      link_url: "http://example.com/item-with-inactive-section-#{SecureRandom.hex(4)}"
+    )
+    item.sections.create!(name: '非公開メモ', wiki_text: '非公開の本文', active: false)
+
+    get item_path(item)
+
+    assert_response :success
+    assert_not_includes response.body, '非公開メモ'
+  end
+
   test 'show does not render a link for a name-only artist' do
     item = Item.create!(
       title: 'Name Only Artist Item',

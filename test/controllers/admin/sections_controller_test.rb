@@ -3,7 +3,7 @@
 require 'test_helper'
 
 module Admin
-  class SectionsControllerTest < ActionDispatch::IntegrationTest
+  class SectionsControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
     setup do
       post login_path, params: { email: users(:one).email, password: 'password' }
     end
@@ -54,6 +54,28 @@ module Admin
 
       patch admin_section_path(section), params: { section: { active: true } }
       assert section.reload.active?
+    end
+
+    test 'create/edit/redirect works for an Item sectionable' do
+      item = Item.create!(title: 'Section Target Item', release_date: Date.current,
+                          link_url: "https://example.com/section-target-item-#{SecureRandom.hex(4)}")
+
+      post admin_sections_path, params: {
+        sectionable_type: 'Item', sectionable_id: item.id,
+        section: { name: 'about', wiki_text: '本文です' }
+      }
+
+      section = item.sections.last
+      assert_redirected_to edit_admin_item_path(item)
+      assert_equal '本文です', section.wiki_text
+
+      get edit_admin_section_path(section)
+      assert_response :success
+      assert_select "a[href='#{edit_admin_item_path(item)}']", text: /Section Target Item/
+
+      patch admin_section_path(section), params: { section: { wiki_text: '更新後の本文' } }
+      assert_redirected_to edit_admin_item_path(item)
+      assert_equal '更新後の本文', section.reload.wiki_text
     end
 
     test 'edit画面の下部にMarkdownヘルプが表示される' do

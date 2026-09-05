@@ -110,6 +110,19 @@ module Admin
       assert_match(%r{<a[^>]*href="#{Regexp.escape(admin_items_path)}"[^>]*>一覧へ戻る</a>}, response.body)
     end
 
+    test 'edit shows a セクションを追加 link and existing sections' do
+      item = Item.create!(title: 'Section List Item', release_date: Date.today,
+                          link_url: "https://example.com/item-#{SecureRandom.hex(4)}")
+      item.sections.create!(name: 'about', wiki_text: '本文')
+
+      get edit_admin_item_path(item)
+
+      assert_response :success
+      assert_select "a[href='#{new_admin_section_path(sectionable_type: 'Item', sectionable_id: item.id)}']",
+                    text: 'セクションを追加'
+      assert_includes response.body, 'about'
+    end
+
     test 'edit shows a 復元 button for admin on a discarded item' do
       delete logout_path
       post login_path, params: { email: users(:admin).email, password: 'password' }
