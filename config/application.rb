@@ -60,6 +60,12 @@ module Vkdby
     require_relative '../lib/middleware/euc_jp_url_fixer'
     config.middleware.insert_before 0, Middleware::EucJpUrlFixer
 
+    # Insert middleware to redirect legacy domains (next.vkdb.jp, vkdby.onrender.com)
+    # to the canonical production domain (issue #1381), ahead of EucJpUrlFixer so
+    # requests to these hosts are redirected before any other processing.
+    require_relative '../lib/middleware/legacy_domain_redirector'
+    config.middleware.insert_before Middleware::EucJpUrlFixer, Middleware::LegacyDomainRedirector
+
     # Insert IP blocker middleware (runs after EucJpUrlFixer)
     require_relative '../lib/middleware/ip_blocker'
     config.middleware.insert_after Middleware::EucJpUrlFixer, Middleware::IpBlocker
