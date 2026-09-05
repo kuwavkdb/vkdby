@@ -2,7 +2,7 @@
 
 class UnitsController < ApplicationController
   def index
-    @filter_groups = IndexGroup.for_units.includes(tag_indices: :items)
+    @filter_groups = IndexGroup.for_units.includes(:tag_indices)
     all_tag_index_ids = @filter_groups.flat_map { |g| g.tag_indices.map(&:id) }
     @tag_unit_counts = TagIndexItem.where(tag_index_id: all_tag_index_ids, indexable_type: 'Unit')
                                    .group(:tag_index_id)
