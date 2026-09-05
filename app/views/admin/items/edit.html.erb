@@ -13,6 +13,8 @@
       <%= render "form", item: @item %>
     </div>
 
+    <%= render "admin/sections/list", sectionable: @item, sections: @item.sections.with_discarded.order(:sort_order) %>
+
     <% if current_user.admin? %>
       <div class="mt-4 flex justify-end">
         <% if @item.discarded? %>

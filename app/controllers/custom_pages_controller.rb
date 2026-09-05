@@ -17,6 +17,10 @@ class CustomPagesController < ApplicationController
 
   def index_page
     @page = CustomPage.published.with_attached_ogp_image.find_by!(key: 'index')
+    # ルート('/')としての表示であることをビューに伝えるフラグ。/pages/index経由（showアクション）で
+    # 同じページを開いた場合は通常のカスタムページと同様に表示するため、@page.keyではなく
+    # アクション（ルートかどうか）で判定する（issue #1383）。
+    @root_page = true
     render :show
   rescue ActiveRecord::RecordNotFound
     render_not_found

@@ -31,6 +31,8 @@
 class Item < ApplicationRecord
   include Discard::Model
 
+  has_many :sections, as: :sectionable, dependent: :destroy
+
   validates :title, presence: true
   validates :release_date, presence: true
   validates :link_url, presence: true, uniqueness: true

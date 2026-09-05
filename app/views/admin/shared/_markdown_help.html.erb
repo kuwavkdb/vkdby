@@ -43,10 +43,19 @@
 
       <div>
         <dt class="font-mono text-xs bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded px-2 py-1 inline-block">
-          {{youtube 動画ID}}
+          {{youtube 動画IDまたは動画URL}}
         </dt>
         <dd class="mt-1 text-xs text-gray-600 dark:text-gray-400">
-          指定したYouTube動画（英数字・"-"・"_"の11文字の動画ID）を埋め込みプレーヤーとして表示します（例: <code>{{youtube C-PqwPsrDd0}}</code>）。動画IDはYouTubeの動画URLの<code>v=</code>以降の部分です。
+          指定したYouTube動画を、高さ360px固定の埋め込みプレーヤーとして表示します。動画ID（英数字・"-"・"_"の11文字。例: <code>{{youtube C-PqwPsrDd0}}</code>）のほか、<code>watch</code>/<code>youtu.be</code>/<code>shorts</code>形式の動画URLもそのまま指定できます（例: <code>{{youtube https://www.youtube.com/watch?v=C-PqwPsrDd0}}</code>）。
+        </dd>
+      </div>
+
+      <div>
+        <dt class="font-mono text-xs bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded px-2 py-1 inline-block">
+          {{x ポストURL}}
+        </dt>
+        <dd class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          指定したXの個別ポストURL（<code>x.com</code>/<code>twitter.com</code>）を公式ウィジェットで埋め込み表示します（例: <code>{{x https://x.com/example/status/1234567890}}</code>）。
         </dd>
       </div>
 
