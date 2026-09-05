@@ -31,4 +31,7 @@ services:
       - key: MALLOC_ARENA_MAX
         value: 2
     region: singapore
-    plan: standard # 512MBのStarterでOOM再起動が頻発したため2GB/1CPUに増強（issue #1344）
+    # 512MBのStarterでOOM再起動が頻発したため2GB/1CPUのStandardに増強していた
+    # （#1344）が、原因の主因だったtag_index_itemsのN+1（#1384）を修正できたため
+    # Starterに戻す（#1388）
+    plan: starter
