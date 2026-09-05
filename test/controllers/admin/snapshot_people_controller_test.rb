@@ -28,6 +28,18 @@ module Admin
       assert_redirected_to edit_admin_unit_unit_snapshot_path(@unit, @snapshot)
     end
 
+    test 'should ignore name_alias param and not persist it via person_name field' do
+      sp = @snapshot.snapshot_people.create!(person_name: 'Original Name', part: 'vocal')
+
+      patch admin_unit_unit_snapshot_snapshot_person_path(@unit, @snapshot, sp), params: {
+        snapshot_person: { person_name: 'Original Name', part: sp.part, sort_order: sp.sort_order, name_alias: 'Alias' }
+      }
+
+      sp.reload
+      assert_equal 'Original Name', sp.person_name
+      assert_nil sp.name_alias
+    end
+
     test 'should not create snapshot_person without part' do
       assert_no_difference('SnapshotPerson.count') do
         post admin_unit_unit_snapshot_snapshot_people_path(@unit, @snapshot), params: {
@@ -138,6 +150,16 @@ module Admin
       assert_response :success
       assert_select 'span', text: /未紐付け/
       assert_select 'textarea[name=?]:not([readonly])', 'snapshot_person[inline_history]'
+    end
+
+    test 'renders edit form with single unified name field' do
+      sp = snapshot_people(:one)
+
+      get edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, sp.unit_snapshot, sp)
+
+      assert_response :success
+      assert_select 'input[name=?]', 'snapshot_person[person_name]'
+      assert_select 'input[name=?]', 'snapshot_person[name_alias]', count: 0
     end
 
     test 'renders add member form on unit_snapshot edit page' do
