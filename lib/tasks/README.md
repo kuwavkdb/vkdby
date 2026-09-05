@@ -240,6 +240,31 @@ ID=1234  bin/rails convert:items   # 特定IDのみ
 
 **注意**: このタスクを実行すると、既存の `items` テーブルのデータは全て削除 (`delete_all`) された上で再作成されます。
 
+## SnapshotPersonデータのメンテナンス
+
+### 8. snapshot_people:migrate_name_alias_to_person_name - name_alias→person_nameデータ移行
+
+`person_name` が空で `name_alias` のみ入っている `SnapshotPerson` を対象に、`name_alias` の値を `person_name` にコピーします（issue #1361）。
+
+**背景**: `SnapshotPerson#name` は `name_alias.presence || person_name.presence || person&.name` の優先順位で解決されるが、`person_name` への一本化のため、`name_alias` にしか値がない行を事前に `person_name` へ寄せておく必要がある。
+
+**使用方法**:
+```bash
+# 対象件数・内容を確認（DBへの書き込みなし）
+DRY_RUN=1 bundle exec rails snapshot_people:migrate_name_alias_to_person_name
+
+# 実行
+bundle exec rails snapshot_people:migrate_name_alias_to_person_name
+```
+
+**仕様**:
+- `SnapshotPerson.with_discarded` で削除済みも含めて対象を検索
+- `person_name` が `nil` または空文字列、かつ `name_alias` が存在する行が対象
+- `update_column` で `person_name` に `name_alias` の値をそのままコピー（バリデーション・コールバックはスキップ）
+- コピー後も `name_alias` は残るため、`name()` の解決結果（表示）はコピー前後で変化しない
+
+**注意**: 本番実行はユーザー確認の上で行うこと。
+
 ## 対応リンクサービス
 
 以下のサービスが`[[Service:Account]]`形式でサポートされています：
