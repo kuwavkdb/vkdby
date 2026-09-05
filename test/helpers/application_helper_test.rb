@@ -266,6 +266,24 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match(/class="aspect-video h-\[360px\][^"]*"/, result)
   end
 
+  test '{{youtube 動画URL}}でwatch形式のURLからも動画が埋め込まれる（issue #1398）' do
+    result = markdown('{{youtube https://www.youtube.com/watch?v=C-PqwPsrDd0}}')
+
+    assert_match(%r{https://www\.youtube\.com/embed/C-PqwPsrDd0}, result)
+  end
+
+  test '{{youtube 動画URL}}でyoutu.be形式のURLからも動画が埋め込まれる' do
+    result = markdown('{{youtube https://youtu.be/C-PqwPsrDd0}}')
+
+    assert_match(%r{https://www\.youtube\.com/embed/C-PqwPsrDd0}, result)
+  end
+
+  test '{{youtube 動画URL}}でshorts形式のURLからも動画が埋め込まれる' do
+    result = markdown('{{youtube https://www.youtube.com/shorts/C-PqwPsrDd0}}')
+
+    assert_match(%r{https://www\.youtube\.com/embed/C-PqwPsrDd0}, result)
+  end
+
   test '{{x URL}}でXのポストが埋め込まれる（issue #1398）' do
     result = markdown('{{x https://x.com/example/status/1234567890}}')
 

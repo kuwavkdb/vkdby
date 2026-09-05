@@ -231,6 +231,8 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
   #   https://youtu.be/XXXX
   #   https://www.youtube.com/shorts/XXXX
   #   XXXX (IDそのまま)
+  # ApplicationHelper#expand_youtube_plugin（{{youtube}}、issue #1398）からも
+  # WikiLinkHelper.extract_youtube_video_id として呼べるようmodule_function化している
   def extract_youtube_video_id(raw)
     case raw
     when %r{youtu\.be/([^?&\s]+)}
@@ -244,6 +246,7 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
       raw
     end
   end
+  module_function :extract_youtube_video_id
 
   def render_wiki_blocks(blocks)
     safe_join(blocks.map do |block|

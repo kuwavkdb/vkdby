@@ -423,7 +423,8 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # WikiLinkHelper#render_youtube_embedと表示を揃える）。aspect-video（16:9）と
   # h-[360px]の組み合わせにより、幅はh-0/width:autoの比率計算で自動算出される
   def expand_youtube_plugin(args, _sectionable, placeholders, _open_tags)
-    video_id = args.strip
+    # 動画IDに加え、動画URL（watch/youtu.be/shorts）も許容する（issue #1398）
+    video_id = WikiLinkHelper.extract_youtube_video_id(args.strip)
     return '' unless video_id.match?(/\A[\w-]{11}\z/)
 
     html = <<~HTML.chomp
