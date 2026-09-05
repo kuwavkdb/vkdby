@@ -74,4 +74,66 @@ class EucJpUrlFixerTest < ActiveSupport::TestCase
 
     assert_equal raw_path, env['PATH_INFO']
   end
+
+  test 'should drop query string with invalid UTF-8 encoding' do
+    # "\xB7\xDF\xB9\xFC" is EUC-JP bytes, invalid as UTF-8
+    raw_query = "q=\xB7\xDF\xB9\xFC".dup.force_encoding('UTF-8')
+    assert_not raw_query.valid_encoding?
+
+    app = ->(env) { [200, {}, [env['QUERY_STRING']]] }
+    middleware = Middleware::EucJpUrlFixer.new(app)
+
+    env = { 'PATH_INFO' => '/search', 'QUERY_STRING' => raw_query, 'REQUEST_METHOD' => 'GET' }
+    middleware.call(env)
+
+    assert_equal '', env['QUERY_STRING']
+  end
+
+  test 'should drop query string with percent-encoded high-bit bytes' do
+    encoded_query = 'q=%B7%DF'
+
+    app = ->(env) { [200, {}, [env['QUERY_STRING']]] }
+    middleware = Middleware::EucJpUrlFixer.new(app)
+
+    env = { 'PATH_INFO' => '/search', 'QUERY_STRING' => encoded_query, 'REQUEST_METHOD' => 'GET' }
+    middleware.call(env)
+
+    assert_equal '', env['QUERY_STRING']
+  end
+
+  test 'should leave valid query string unchanged' do
+    valid_query = 'q=hello&page=2'
+
+    app = ->(env) { [200, {}, [env['QUERY_STRING']]] }
+    middleware = Middleware::EucJpUrlFixer.new(app)
+
+    env = { 'PATH_INFO' => '/search', 'QUERY_STRING' => valid_query, 'REQUEST_METHOD' => 'GET' }
+    middleware.call(env)
+
+    assert_equal valid_query, env['QUERY_STRING']
+  end
+
+  test 'should skip query string handling for non-GET requests' do
+    raw_query = "q=\xB7\xDF".dup.force_encoding('UTF-8')
+
+    app = ->(env) { [200, {}, [env['QUERY_STRING']]] }
+    middleware = Middleware::EucJpUrlFixer.new(app)
+
+    env = { 'PATH_INFO' => '/search', 'QUERY_STRING' => raw_query, 'REQUEST_METHOD' => 'POST' }
+    middleware.call(env)
+
+    assert_equal raw_query, env['QUERY_STRING']
+  end
+
+  test 'should skip query string handling for admin paths' do
+    raw_query = "q=\xB7\xDF".dup.force_encoding('UTF-8')
+
+    app = ->(env) { [200, {}, [env['QUERY_STRING']]] }
+    middleware = Middleware::EucJpUrlFixer.new(app)
+
+    env = { 'PATH_INFO' => '/admin/search', 'QUERY_STRING' => raw_query, 'REQUEST_METHOD' => 'GET' }
+    middleware.call(env)
+
+    assert_equal raw_query, env['QUERY_STRING']
+  end
 end
