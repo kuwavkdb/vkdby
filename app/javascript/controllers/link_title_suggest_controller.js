@@ -4,12 +4,25 @@ export default class extends Controller {
     static targets = ["title", "url"]
 
     suggest() {
+        const normalized = this.normalizeXAccount(this.urlTarget.value.trim())
+        if (normalized) {
+            this.urlTarget.value = normalized
+        }
+
         if (this.titleTarget.value.trim() !== "") return
 
         const guessed = this.guessTitle(this.urlTarget.value.trim())
         if (guessed) {
             this.titleTarget.value = guessed
         }
+    }
+
+    // "@xxxxx" 形式で入力された場合はXアカウントとみなし、通常のURLに変換する
+    normalizeXAccount(rawUrl) {
+        const matched = rawUrl.match(/^@(\w{1,15})$/)
+        if (!matched) return null
+
+        return `https://x.com/${matched[1]}`
     }
 
     guessTitle(rawUrl) {
