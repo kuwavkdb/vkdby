@@ -70,10 +70,18 @@ module Middleware
     # 「%HHが含まれるか」だけの判定では正規の検索クエリまで誤って弾いてしまう
     # （実際に全角英数字検索のテストが壊れた）。実際にデコードした上でUTF-8として
     # 妥当かどうかで判定する。
+    #
+    # 重要: RackはQUERY_STRINGを常にASCII-8BITとしてenvに渡す。ASCII-8BIT
+    # （バイナリ）はどんなバイト列でも「妥当」と判定されてしまうため、
+    # valid_encoding?をASCII-8BITのまま呼んでも常にtrueになり判定が機能しない
+    # （本番相当のRack::MockRequestで再現し発覚）。実際に知りたいのは
+    # 「UTF-8として妥当か」なので、force_encodingで明示的にUTF-8として
+    # 解釈し直してから判定する。
     def valid_query_string?(query)
-      return false unless query.valid_encoding?
+      utf8_query = query.dup.force_encoding(Encoding::UTF_8)
+      return false unless utf8_query.valid_encoding?
 
-      CGI.unescape(query).valid_encoding?
+      CGI.unescape(utf8_query).force_encoding(Encoding::UTF_8).valid_encoding?
     rescue ArgumentError
       false
     end

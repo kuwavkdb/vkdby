@@ -75,10 +75,16 @@ class EucJpUrlFixerTest < ActiveSupport::TestCase
     assert_equal raw_path, env['PATH_INFO']
   end
 
+  # RackはQUERY_STRINGを常にASCII-8BIT（バイナリ）としてenvに渡す。ASCII-8BITは
+  # どんなバイト列でも「妥当」と判定されてしまうため、テスト側でUTF-8のような
+  # 「検証すれば不正と分かる」エンコーディングを使ってしまうと、本番のRackが渡す
+  # 実際の文字列と乖離し、バグを検出できない（実際にこれが原因で、CGI.unescapeで
+  # デコードしてvalid_encoding?を見るだけの実装が本番でも全く機能しない不具合が
+  # 発覚した）。そのためQUERY_STRING関連のテストは明示的にASCII-8BITを使う。
+
   test 'should drop query string with invalid UTF-8 encoding' do
     # "\xB7\xDF\xB9\xFC" is EUC-JP bytes, invalid as UTF-8
-    raw_query = "q=\xB7\xDF\xB9\xFC".dup.force_encoding('UTF-8')
-    assert_not raw_query.valid_encoding?
+    raw_query = "q=\xB7\xDF\xB9\xFC".dup.force_encoding('ASCII-8BIT')
 
     app = ->(env) { [200, {}, [env['QUERY_STRING']]] }
     middleware = Middleware::EucJpUrlFixer.new(app)
@@ -90,7 +96,7 @@ class EucJpUrlFixerTest < ActiveSupport::TestCase
   end
 
   test 'should drop query string with percent-encoded high-bit bytes' do
-    encoded_query = 'q=%B7%DF'
+    encoded_query = 'q=%B7%DF'.dup.force_encoding('ASCII-8BIT')
 
     app = ->(env) { [200, {}, [env['QUERY_STRING']]] }
     middleware = Middleware::EucJpUrlFixer.new(app)
@@ -102,7 +108,7 @@ class EucJpUrlFixerTest < ActiveSupport::TestCase
   end
 
   test 'should leave valid query string unchanged' do
-    valid_query = 'q=hello&page=2'
+    valid_query = 'q=hello&page=2'.dup.force_encoding('ASCII-8BIT')
 
     app = ->(env) { [200, {}, [env['QUERY_STRING']]] }
     middleware = Middleware::EucJpUrlFixer.new(app)
@@ -113,8 +119,24 @@ class EucJpUrlFixerTest < ActiveSupport::TestCase
     assert_equal valid_query, env['QUERY_STRING']
   end
 
+  test 'should leave full-width alphanumeric query string unchanged' do
+    # 全角英数字はパーセントエンコードすると高位バイト（%80-%FF）になるため、
+    # 「%HHが含まれるか」だけの判定だと正規の検索クエリまで誤って弾いてしまう
+    # （実際に全角英数字検索のテストが壊れた）。正しくUTF-8として妥当と判定される
+    # ことを確認する。
+    fullwidth_query = 'q=%EF%BC%A1%EF%BC%A2%EF%BC%A3'.dup.force_encoding('ASCII-8BIT')
+
+    app = ->(env) { [200, {}, [env['QUERY_STRING']]] }
+    middleware = Middleware::EucJpUrlFixer.new(app)
+
+    env = { 'PATH_INFO' => '/search', 'QUERY_STRING' => fullwidth_query, 'REQUEST_METHOD' => 'GET' }
+    middleware.call(env)
+
+    assert_equal fullwidth_query, env['QUERY_STRING']
+  end
+
   test 'should skip query string handling for non-GET requests' do
-    raw_query = "q=\xB7\xDF".dup.force_encoding('UTF-8')
+    raw_query = "q=\xB7\xDF".dup.force_encoding('ASCII-8BIT')
 
     app = ->(env) { [200, {}, [env['QUERY_STRING']]] }
     middleware = Middleware::EucJpUrlFixer.new(app)
@@ -126,7 +148,7 @@ class EucJpUrlFixerTest < ActiveSupport::TestCase
   end
 
   test 'should skip query string handling for admin paths' do
-    raw_query = "q=\xB7\xDF".dup.force_encoding('UTF-8')
+    raw_query = "q=\xB7\xDF".dup.force_encoding('ASCII-8BIT')
 
     app = ->(env) { [200, {}, [env['QUERY_STRING']]] }
     middleware = Middleware::EucJpUrlFixer.new(app)
