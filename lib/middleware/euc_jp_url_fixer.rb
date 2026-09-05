@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'cgi'
+
 module Middleware
   class EucJpUrlFixer
     def initialize(app)
@@ -61,13 +63,19 @@ module Middleware
       env['QUERY_STRING'] = ''
     end
 
-    # 生のバイト列として不正なUTF-8を含む場合（PATH_INFOの1.と同様）、または
-    # パーセントエンコードされたEUC-JP等の高位バイト（PATH_INFOの2.と同様）を
-    # 含む場合は、デコード後にRailsで InvalidParameterError になるため不正とみなす。
+    # 生のバイト列として不正なUTF-8を含む場合（PATH_INFOの1.と同様）はもちろん、
+    # パーセントエンコードされたEUC-JP等が含まれる場合もデコード後にRailsで
+    # InvalidParameterErrorになるため不正とみなす。全角英数字等の正規のUTF-8文字も
+    # パーセントエンコードすると高位バイト（%80-%FF）になるため、PATH_INFOの2.のような
+    # 「%HHが含まれるか」だけの判定では正規の検索クエリまで誤って弾いてしまう
+    # （実際に全角英数字検索のテストが壊れた）。実際にデコードした上でUTF-8として
+    # 妥当かどうかで判定する。
     def valid_query_string?(query)
       return false unless query.valid_encoding?
 
-      !query.match?(/%[89a-fA-F][0-9a-fA-F]/)
+      CGI.unescape(query).valid_encoding?
+    rescue ArgumentError
+      false
     end
   end
 end
