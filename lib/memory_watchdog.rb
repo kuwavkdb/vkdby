@@ -14,9 +14,10 @@ require 'get_process_mem'
 # リクエストを完了してから終了する）に、再起動はRenderのプロセス監視に委ねる。
 # リクエスト処理中でも問答無用で強制終了するOS OOM killer（SIGKILL）より安全。
 module MemoryWatchdog
-  # 再起動をトリガーするRSSの閾値（MB）。Standardプラン（2GB/1CPU）の約88%。
-  # インスタンスタイプを変更した場合はrender.yamlのplanと合わせて見直すこと（#1344）。
-  DEFAULT_THRESHOLD_MB = 1800
+  # 再起動をトリガーするRSSの閾値（MB）。Starterプラン（512MB/0.5CPU）向けの値。
+  # インスタンスタイプを変更した場合はrender.yamlのplanと合わせて見直すこと
+  # （#1344, #1388）。
+  DEFAULT_THRESHOLD_MB = 450
   # 監視間隔（秒）
   DEFAULT_CHECK_INTERVAL_SECONDS = 20
 
