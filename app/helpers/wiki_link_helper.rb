@@ -262,14 +262,7 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
       when :multi_dl
         render_wiki_multi_dl(block[:lines])
       when :youtube2
-        video_id = block[:video_id]
-        tag.div(class: 'relative pb-[56.25%] h-0 overflow-hidden rounded-xl my-4') do
-          tag.iframe(src: "https://www.youtube.com/embed/#{video_id}",
-                     frameborder: '0',
-                     allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
-                     allowfullscreen: true,
-                     class: 'absolute top-0 left-0 w-full h-full border-0')
-        end
+        render_youtube_embed(block[:video_id])
       when :tweet_url_embed
         render_bare_tweet_embed(block[:url])
       else
@@ -346,6 +339,19 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     link_to(display.html_safe, '#', class: 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline')
   end
 
+  # YouTube動画をembed表示する。幅は上限なしとし、高さのみ360pxに固定する。
+  # aspect-video（16:9）とh-[360px]の組み合わせにより、幅はh-0/width:autoの
+  # 比率計算で640px相当に自動算出される（widthは指定しない）
+  def render_youtube_embed(video_id)
+    tag.div(class: 'flex justify-center my-4') do
+      tag.iframe(src: "https://www.youtube.com/embed/#{video_id}",
+                 frameborder: '0',
+                 allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
+                 allowfullscreen: true,
+                 class: 'aspect-video h-[360px] rounded-xl border-0')
+    end
+  end
+
   # 本文中に単独で書かれたXの個別ポストURLをembed表示する（issue #1396）。
   # ツイート本文の引用HTMLを別途用意しなくても、公式ウィジェット（widgets.js）が
   # <blockquote class="twitter-tweet"><a href="URL"></a></blockquote> を検出して
@@ -365,6 +371,7 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
       attributes: %w[class lang href]
     )
     script = tag.script(src: '//platform.twitter.com/widgets.js', async: true, charset: 'utf-8')
-    (sanitized + script).html_safe
+    # Twitterウィジェットのblockquoteは左寄せがデフォルトのため、flexで中央寄せにする
+    tag.div(class: 'flex justify-center my-4') { (sanitized + script).html_safe }
   end
 end
