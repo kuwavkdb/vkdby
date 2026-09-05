@@ -162,9 +162,14 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     extract_youtube_video_id(text)
   end
 
-  # 行全体がX（Twitter）の個別ポストURLかどうかを判定する
+  # 行全体がX（Twitter）の個別ポストURLかどうかを判定する。
+  # Link::TWITTER_STATUS_URL_PATTERNと同じ対象（twitter.com/x.comのstatus URL）だが、
+  # 動的に正規表現を組み立てるとBrakemanのRegexDoSチェックに引っかかるため、
+  # リテラルの正規表現として定義している
+  BARE_TWEET_URL_PATTERN = %r{\Ahttps?://(?:www\.)?(?:twitter\.com|x\.com)/[^/]+/status/\d+(?:\?\S*)?\z}
+
   def bare_tweet_url?(text)
-    text.match?(/\A#{Link::TWITTER_STATUS_URL_PATTERN.source}(?:\?\S*)?\z/)
+    text.match?(BARE_TWEET_URL_PATTERN)
   end
 
   def handle_h3(line, blocks, current_block)
