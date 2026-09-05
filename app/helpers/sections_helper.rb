@@ -8,6 +8,7 @@ module SectionsHelper
     when Unit       then edit_admin_unit_path(sectionable)
     when Person     then edit_admin_person_path(sectionable)
     when CustomPage then edit_admin_custom_page_path(sectionable)
+    when Item       then edit_admin_item_path(sectionable)
     end
   end
 
@@ -16,6 +17,7 @@ module SectionsHelper
     when Unit       then "ユニット「#{sectionable.name}」の編集へ"
     when Person     then "人物「#{sectionable.name}」の編集へ"
     when CustomPage then "カスタムページ「#{sectionable.title}」の編集へ"
+    when Item       then "アイテム「#{sectionable.title}」の編集へ"
     end
   end
 end

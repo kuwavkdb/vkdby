@@ -79,6 +79,7 @@ module Admin
                        when 'Unit'       then Unit.find(id)
                        when 'Person'     then Person.find(id)
                        when 'CustomPage' then CustomPage.with_discarded.find(id)
+                       when 'Item'       then Item.with_discarded.find(id)
                        else raise ActionController::BadRequest, 'Invalid sectionable_type'
                        end
       end
@@ -93,6 +94,7 @@ module Admin
       when Unit       then edit_admin_unit_path(@sectionable)
       when Person     then edit_admin_person_path(@sectionable)
       when CustomPage then edit_admin_custom_page_path(@sectionable)
+      when Item       then edit_admin_item_path(@sectionable)
       end
     end
 
