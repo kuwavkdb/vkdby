@@ -61,6 +61,12 @@ class SnapshotPersonTest < ActiveSupport::TestCase
     assert_equal people(:one).name, sp.name
   end
 
+  test 'name ignores name_alias and falls back to person.name' do
+    sp = snapshot_people(:one)
+    sp.name_alias = '無視されるはずの別名'
+    assert_equal people(:one).name, sp.name
+  end
+
   # {{snapshot}}プラグイン（application_helper.rb）のキャッシュキーは
   # UnitSnapshot#updated_at を参照しているため、SnapshotPersonの作成・更新・削除で
   # 親UnitSnapshotのupdated_atも更新される（touch: true）必要がある。
