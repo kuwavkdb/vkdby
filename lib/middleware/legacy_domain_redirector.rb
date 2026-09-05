@@ -9,7 +9,8 @@ module Middleware
   # ため、二重リダイレクトを避けてここでは直接 www.vkdb.jp を宛先にする。
   #
   # 何か問題が起きた場合に再デプロイなしで切り戻せるよう、環境変数
-  # LEGACY_DOMAIN_REDIRECT_ENABLED（デフォルト有効）で無効化できるようにしている。
+  # LEGACY_DOMAIN_REDIRECT_DISABLED（未設定時はリダイレクトが有効）で
+  # 無効化できるようにしている。
   class LegacyDomainRedirector
     REDIRECT_SOURCE_HOSTS = %w[next.vkdb.jp vkdby.onrender.com].freeze
     REDIRECT_TARGET_HOST = 'www.vkdb.jp'
@@ -30,7 +31,7 @@ module Middleware
     private
 
     def enabled?
-      ENV.fetch('LEGACY_DOMAIN_REDIRECT_ENABLED', 'true') != 'false'
+      ENV.fetch('LEGACY_DOMAIN_REDIRECT_DISABLED', 'false') != 'true'
     end
 
     def redirect_response(request)

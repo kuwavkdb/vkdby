@@ -39,8 +39,8 @@ class LegacyDomainRedirectorTest < ActiveSupport::TestCase
     assert_equal 200, status
   end
 
-  test '環境変数LEGACY_DOMAIN_REDIRECT_ENABLEDがfalseの場合はリダイレクトしない' do
-    with_env('LEGACY_DOMAIN_REDIRECT_ENABLED' => 'false') do
+  test '環境変数LEGACY_DOMAIN_REDIRECT_DISABLEDがtrueの場合はリダイレクトしない' do
+    with_env('LEGACY_DOMAIN_REDIRECT_DISABLED' => 'true') do
       env = build_env(host: 'next.vkdb.jp', path: '/xxx')
       status, = @middleware.call(env)
 
