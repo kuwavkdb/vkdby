@@ -133,8 +133,43 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     when /\{\{youtube2\s+([^,}\s]+)/i
       handle_youtube2(line, blocks, current_block, &block)
     else
-      handle_text(line, blocks, current_block, &block)
+      handle_bare_url_or_text(line, blocks, current_block, &block)
     end
+  end
+
+  # {{youtube2}}/{{bq}}のようなプラグイン記法を使わず、行単独でYouTube動画URL・
+  # Xの個別ポストURLが書かれている場合も自動でembed表示する（issue #1396）
+  def handle_bare_url_or_text(line, blocks, current_block, &block)
+    stripped = line.strip
+
+    if (video_id = bare_youtube_video_id(stripped))
+      blocks << current_block unless current_block[:lines].empty?
+      return block.call({ type: :youtube2, video_id: video_id, lines: [line] })
+    end
+
+    if bare_tweet_url?(stripped)
+      blocks << current_block unless current_block[:lines].empty?
+      return block.call({ type: :tweet_url_embed, url: stripped, lines: [line] })
+    end
+
+    handle_text(line, blocks, current_block, &block)
+  end
+
+  # 行全体がYouTubeの動画URLかどうかを判定し、video_idを返す（該当しなければnil）
+  def bare_youtube_video_id(text)
+    return nil unless text.match?(%r{\Ahttps?://(?:www\.|m\.)?(?:youtube\.com/(?:watch|shorts)\S*|youtu\.be/\S+)\z}i)
+
+    extract_youtube_video_id(text)
+  end
+
+  # 行全体がX（Twitter）の個別ポストURLかどうかを判定する。
+  # Link::TWITTER_STATUS_URL_PATTERNと同じ対象（twitter.com/x.comのstatus URL）だが、
+  # 動的に正規表現を組み立てるとBrakemanのRegexDoSチェックに引っかかるため、
+  # リテラルの正規表現として定義している
+  BARE_TWEET_URL_PATTERN = %r{\Ahttps?://(?:www\.)?(?:twitter\.com|x\.com)/[^/]+/status/\d+(?:\?\S*)?\z}
+
+  def bare_tweet_url?(text)
+    text.match?(BARE_TWEET_URL_PATTERN)
   end
 
   def handle_h3(line, blocks, current_block)
@@ -194,10 +229,13 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
   # 対応フォーマット:
   #   https://www.youtube.com/watch?v=XXXX
   #   https://youtu.be/XXXX
+  #   https://www.youtube.com/shorts/XXXX
   #   XXXX (IDそのまま)
   def extract_youtube_video_id(raw)
     case raw
     when %r{youtu\.be/([^?&\s]+)}
+      Regexp.last_match(1)
+    when %r{youtube\.com/shorts/([^?&\s]+)}
       Regexp.last_match(1)
     when /[?&]v=([^&\s]+)/
       Regexp.last_match(1)
@@ -229,14 +267,9 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
       when :multi_dl
         render_wiki_multi_dl(block[:lines])
       when :youtube2
-        video_id = block[:video_id]
-        tag.div(class: 'relative pb-[56.25%] h-0 overflow-hidden rounded-xl my-4') do
-          tag.iframe(src: "https://www.youtube.com/embed/#{video_id}",
-                     frameborder: '0',
-                     allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
-                     allowfullscreen: true,
-                     class: 'absolute top-0 left-0 w-full h-full border-0')
-        end
+        render_youtube_embed(block[:video_id])
+      when :tweet_url_embed
+        render_bare_tweet_embed(block[:url])
       else
         text_content = block[:lines].join
         formatted = simple_format(text_content, {}, wrapper_tag: 'div')
@@ -311,6 +344,28 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     link_to(display.html_safe, '#', class: 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline')
   end
 
+  # YouTube動画をembed表示する。幅は上限なしとし、高さのみ360pxに固定する。
+  # aspect-video（16:9）とh-[360px]の組み合わせにより、幅はh-0/width:autoの
+  # 比率計算で640px相当に自動算出される（widthは指定しない）
+  def render_youtube_embed(video_id)
+    tag.div(class: 'flex justify-center my-4') do
+      tag.iframe(src: "https://www.youtube.com/embed/#{video_id}",
+                 frameborder: '0',
+                 allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
+                 allowfullscreen: true,
+                 class: 'aspect-video h-[360px] rounded-xl border-0')
+    end
+  end
+
+  # 本文中に単独で書かれたXの個別ポストURLをembed表示する（issue #1396）。
+  # ツイート本文の引用HTMLを別途用意しなくても、公式ウィジェット（widgets.js）が
+  # <blockquote class="twitter-tweet"><a href="URL"></a></blockquote> を検出して
+  # 自動的にツイート内容を取得・展開してくれる最小構成を使う
+  def render_bare_tweet_embed(url)
+    content = tag.blockquote(tag.a(href: url), class: 'twitter-tweet')
+    render_tweet_embed(content)
+  end
+
   # Twitter tweet embedを出力する
   # <blockquote class="twitter-tweet"> をサニタイズしつつそのまま出力し、
   # Twitter widget scriptを付加する
@@ -321,6 +376,7 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
       attributes: %w[class lang href]
     )
     script = tag.script(src: '//platform.twitter.com/widgets.js', async: true, charset: 'utf-8')
-    (sanitized + script).html_safe
+    # Twitterウィジェットのblockquoteは左寄せがデフォルトのため、flexで中央寄せにする
+    tag.div(class: 'flex justify-center my-4') { (sanitized + script).html_safe }
   end
 end
