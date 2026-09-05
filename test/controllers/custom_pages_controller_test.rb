@@ -205,4 +205,34 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body,
                     "#{Rails.application.config.old_key_url_base}/#{page.old_key}.html"
   end
+
+  test 'non-index custom page shows the Last updated footer' do
+    page = CustomPage.create!(key: 'last-updated-footer-test-page', title: 'Last Updated Footer Test',
+                              active: true, body: 'body')
+
+    get custom_page_path(key: page.key)
+
+    assert_response :success
+    assert_includes response.body, 'Last updated'
+  end
+
+  test 'root page hides the Last updated and Management Information footer even for a super_operator (issue #1383)' do
+    post login_path, params: { email: users(:one).email, password: 'password' }
+    CustomPage.create!(key: 'index', title: 'トップページ', active: true, body: 'body')
+
+    get root_path
+
+    assert_response :success
+    assert_not_includes response.body, 'Last updated'
+    assert_not_includes response.body, 'Management Information'
+  end
+
+  test '/pages/index shows the Last updated footer like a normal custom page (issue #1383)' do
+    CustomPage.create!(key: 'index', title: 'トップページ', active: true, body: 'body')
+
+    get custom_page_path(key: 'index')
+
+    assert_response :success
+    assert_includes response.body, 'Last updated'
+  end
 end

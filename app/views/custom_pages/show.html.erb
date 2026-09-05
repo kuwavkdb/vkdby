@@ -32,14 +32,19 @@
               <%= markdown(@page.body, sectionable: @page, prioritize_first_image: true) %>
             </div>
 
-            <%= render ManagementInformationComponent.new(resource: @page) %>
+            <%# ルート('/')としての表示のみ、他のカスタムページのようなLast updated /
+                Management Informationのフッターは表示しない。/pages/index経由の表示は
+                通常のカスタムページと同様に表示する（issue #1383） %>
+            <% unless @root_page %>
+              <%= render ManagementInformationComponent.new(resource: @page) %>
 
-            <footer class="mt-12 pt-8 border-t border-slate-100 dark:border-slate-700 text-center">
-              <p class="text-[0.65rem] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-loose">
-                Last updated<br>
-                <span class="text-slate-600 dark:text-slate-300 font-black"><%= @page.updated_at.strftime("%Y-%m-%d %H:%M:%S") %></span>
-              </p>
-            </footer>
+              <footer class="mt-12 pt-8 border-t border-slate-100 dark:border-slate-700 text-center">
+                <p class="text-[0.65rem] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-loose">
+                  Last updated<br>
+                  <span class="text-slate-600 dark:text-slate-300 font-black"><%= @page.updated_at.strftime("%Y-%m-%d %H:%M:%S") %></span>
+                </p>
+              </footer>
+            <% end %>
           </div>
         </div>
 
