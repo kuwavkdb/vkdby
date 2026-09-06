@@ -1,4 +1,4 @@
-<% content_for :title, "Search" %>
+<% content_for :title, @query.present? ? "「#{@query}」の検索結果" : "Search" %>
 <div class="flex justify-center">
   <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
     <header class="mb-8 text-center flex flex-col items-center">
@@ -85,13 +85,13 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
           <p class="text-slate-400 dark:text-slate-500 font-bold">「<%= @query %>」の検索結果が見つかりませんでした。</p>
+        </div>
+      <% end %>
 
-          <% if Rails.application.config.google_cse_id.present? %>
-            <div class="mt-8 max-w-2xl mx-auto text-left">
-              <p class="mb-3 text-sm font-bold text-slate-500 dark:text-slate-400 text-center">Googleでサイト内を検索する</p>
-              <%= render "layouts/google_cse_search", query: @query %>
-            </div>
-          <% end %>
+      <% if Rails.application.config.google_cse_id.present? %>
+        <div class="mt-8 text-left">
+          <p class="mb-3 text-sm font-bold text-slate-500 dark:text-slate-400 text-center">Googleでサイト内を検索する</p>
+          <%= render "layouts/google_cse_search", query: @query %>
         </div>
       <% end %>
     <% else %>

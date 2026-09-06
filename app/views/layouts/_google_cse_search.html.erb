@@ -4,6 +4,25 @@
     locals:
       query - あらかじめ実行しておく検索クエリ(省略可。指定するとウィジェット読み込み時に自動実行される) %>
 <% if Rails.application.config.google_cse_id.present? %>
+  <style>
+    /* ウィジェットは初期化時のコンテナ幅を内部で固定してしまい、
+       周囲のレイアウト幅に追従しないため、幅いっぱいに広がるよう上書きする。 */
+    .gsc-control-cse,
+    .gsc-input-box,
+    .gsc-wrapper,
+    .gsc-results-wrapper-nooverlay,
+    .gsc-results-wrapper-overlay,
+    .gsc-results-wrapper-visible {
+      width: 100% !important;
+      max-width: 100% !important;
+      padding: 0 !important;
+    }
+    form.gsc-search-box {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+    }
+  </style>
   <div class="gcse-search"></div>
   <% if local_assigns[:query].present? %>
     <script>

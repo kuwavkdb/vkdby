@@ -59,12 +59,15 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_match(/window\.location\.hash = "gsc\.tab=0&gsc\.q=no-such-result-search-controller-test&gsc\.sort="/, response.body)
   end
 
-  test 'index does not show the Google custom search widget when there are results' do
+  test 'index also shows the inline Google custom search widget when there are results' do
     Unit.create!(name: 'HasResultUnit', key: 'has-result-unit-search-test', status: :active)
 
     get search_path(q: 'HasResultUnit')
 
     assert_response :success
-    assert_not_includes response.body, 'gcse-search'
+    assert_includes response.body, 'HasResultUnit'
+    assert_includes response.body, '<div class="gcse-search">'
+    assert_match(%r{cse\.google\.com/cse\.js\?cx=}, response.body)
+    assert_match(/window\.location\.hash = "gsc\.tab=0&gsc\.q=HasResultUnit&gsc\.sort="/, response.body)
   end
 end
