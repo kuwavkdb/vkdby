@@ -56,18 +56,25 @@
   </div>
 
   <% if @show_bulk_artist_ui %>
+    <div class="mb-2">
+      <button type="button" onclick="selectUnlinkedArtistsOnly()"
+              title="Unit/Personに未紐付けの項目だけを選択します"
+              class="text-sm text-indigo-600 hover:underline">未紐付けのみ選択</button>
+    </div>
+  <% end %>
+
+  <%= render "items_table" %>
+
+  <% if @show_bulk_artist_ui %>
+    <%# 行内の「論理削除」ボタン(button_to)が独自の<form>を生成するため、テーブルをこの
+        <form>の外に置き、チェックボックス側から form="#{Admin::ItemsHelper::BULK_ARTIST_UPDATE_FORM_ID}"
+        属性で論理的に紐付けている。<form>を入れ子にすると、ブラウザのHTMLパーサがフォーム構造を
+        破壊し、送信時に別行の_method/authenticity_tokenが紛れ込んでCSRFエラーになる(issue #1403) %>
     <%= form_with url: bulk_artist_update_admin_items_path, method: :patch, local: true,
+          id: Admin::ItemsHelper::BULK_ARTIST_UPDATE_FORM_ID,
           html: { onsubmit: "return confirmBulkArtistUpdate()" } do %>
       <%= hidden_field_tag :match_type, @match_type %>
       <%= hidden_field_tag :match_value, @match_value %>
-
-      <div class="mb-2">
-        <button type="button" onclick="selectUnlinkedArtistsOnly()"
-                title="Unit/Personに未紐付けの項目だけを選択します"
-                class="text-sm text-indigo-600 hover:underline">未紐付けのみ選択</button>
-      </div>
-
-      <%= render "items_table" %>
       <%= render "artist_replacement_picker" %>
 
       <div class="flex justify-end">
@@ -93,8 +100,6 @@
         document.getElementById('check_all').checked = false;
       }
     </script>
-  <% else %>
-    <%= render "items_table" %>
   <% end %>
 
   <div class="mt-4">
