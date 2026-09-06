@@ -44,6 +44,45 @@ class TrendsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'Old Sidebar Name'
   end
 
+  test 'show renders a person name badge before the title when person_phenomenon is set and no unit is linked' do
+    person = Person.create!(name: 'Solo Badge Person', key: 'trend-solo-badge-person', status: :active)
+    trend = Trend.create!(title: '死去', date: Date.current, publish_start_at: Time.current,
+                          person_phenomenon: :other,
+                          people: [{ 'person_id' => person.id, 'name' => 'Solo Badge Person' }])
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_match(%r{<h1[^>]*>.*href="/trend-solo-badge-person"[^>]*>Solo Badge Person</a>.*死去.*</h1>}m, response.body)
+  end
+
+  test 'show does not duplicate the person badge below the title when it is already shown before the title' do
+    person = Person.create!(name: 'No Duplicate Person', key: 'trend-no-duplicate-person', status: :active)
+    trend = Trend.create!(title: '死去', date: Date.current, publish_start_at: Time.current,
+                          person_phenomenon: :other,
+                          people: [{ 'person_id' => person.id, 'name' => 'No Duplicate Person' }])
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_equal 1, response.body.scan('No Duplicate Person').size
+  end
+
+  test 'show does not render a person badge before the title when the trend is linked to a unit' do
+    unit = Unit.create!(name: 'Badge Unit', key: 'trend-badge-unit', status: :active)
+    person = Person.create!(name: 'Member Badge Person', key: 'trend-member-badge-person', status: :active)
+    trend = Trend.create!(title: 'Member trend', date: Date.current, publish_start_at: Time.current,
+                          unit_phenomenon: :other, person_phenomenon: :join_member,
+                          units: [{ 'unit_id' => unit.id, 'name' => 'Badge Unit' }],
+                          people: [{ 'person_id' => person.id, 'name' => 'Member Badge Person' }])
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_no_match(%r{<h1[^>]*>.*Member Badge Person.*</h1>}m, response.body)
+    assert_includes response.body, 'Member Badge Person'
+  end
+
   test 'show does not render the X share text for a logged out visitor' do
     trend = Trend.create!(title: 'Share text trend', date: Date.current, publish_start_at: Time.current,
                           etc_phenomenon: :other)

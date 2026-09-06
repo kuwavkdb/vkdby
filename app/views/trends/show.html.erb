@@ -34,6 +34,7 @@
                        end %>
         <%= link_to trend_date_label(@trend), date_path, class: "hover:underline transition-colors" %>
       </div>
+      <% person_badge_in_title = trend_show_person_badge_in_title?(@trend) %>
       <h1 class="text-2xl font-bold text-zinc-900 flex flex-wrap items-center gap-2">
         <% if @trend.units %>
           <% @trend.units.each do |unit_data| %>
@@ -46,9 +47,22 @@
             <% end %>
           <% end %>
         <% end %>
+        <%# 個人の動向種別が設定されていてユニット未紐付けの場合、ユニットバッヂと同じ位置・スタイルで
+            個人名バッヂを件名の前に表示する（issue #1411） %>
+        <% if person_badge_in_title %>
+          <% @trend.people.each do |person_data| %>
+            <% person = @related_people&.dig(person_data['person_id']) %>
+            <% display_name = trend_person_display_name(person_data, person) %>
+            <% if person %>
+              <%= link_to display_name, profile_path(person.key), class: "px-3 py-1 rounded-md text-lg font-bold bg-white/80 text-zinc-900 hover:bg-white/95 transition-colors border border-white/50" %>
+            <% elsif display_name.present? %>
+              <span class="px-3 py-1 rounded-md text-lg font-bold bg-white/50 text-zinc-900 border border-white/40"><%= display_name %></span>
+            <% end %>
+          <% end %>
+        <% end %>
         <span><%= format_wiki_title(@trend.title, link: false) %></span>
       </h1>
-      <% if @trend.people.present? %>
+      <% if @trend.people.present? && !person_badge_in_title %>
         <div class="mt-2 flex flex-wrap items-center gap-1">
           <% @trend.people.each do |person_data| %>
             <% person = @related_people&.dig(person_data['person_id']) %>
