@@ -1,16 +1,18 @@
 <div class="flex justify-center">
-  <div class="bg-white dark:bg-zinc-900 shadow-xl rounded-3xl overflow-hidden w-full max-w-2xl p-6 md:p-10 text-center">
-    <p class="text-sm font-bold tracking-widest text-indigo-600 dark:text-indigo-400">404</p>
-    <h1 class="mt-2 text-2xl md:text-3xl font-black text-zinc-800 dark:text-zinc-100">
-      ページが見つかりません
-    </h1>
-    <p class="mt-4 text-zinc-500 dark:text-zinc-400">
-      <%= Rails.application.config.site_name %> に、お探しのページは見つかりませんでした。<br>
-      URLが正しいかご確認いただくか、以下から探してみてください。
-    </p>
+  <div class="bg-white dark:bg-zinc-900 shadow-xl rounded-3xl overflow-hidden w-full max-w-5xl p-6 md:p-10">
+    <div class="text-center">
+      <p class="text-sm font-bold tracking-widest text-indigo-600 dark:text-indigo-400">404</p>
+      <h1 class="mt-2 text-2xl md:text-3xl font-black text-zinc-800 dark:text-zinc-100">
+        ページが見つかりません
+      </h1>
+      <p class="mt-4 text-zinc-500 dark:text-zinc-400">
+        <%= Rails.application.config.site_name %> に、お探しのページは見つかりませんでした。<br>
+        URLが正しいかご確認いただくか、以下から探してみてください。
+      </p>
+    </div>
 
     <% if Rails.application.config.google_cse_id.present? %>
-      <div class="mt-8">
+      <div class="mt-8 text-left">
         <%= render "layouts/google_cse_search", query: @not_found_query %>
       </div>
 
@@ -21,7 +23,7 @@
       </div>
     <% end %>
 
-    <div class="mt-4">
+    <div class="mt-4 max-w-2xl mx-auto">
       <%= form_with url: search_path, method: :get, local: true, class: "flex gap-2" do |f| %>
         <%= f.label :q, "検索", class: "sr-only" %>
         <%= f.text_field :q, value: @not_found_query, placeholder: "Search units and people...", class: "w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-zinc-400", autofocus: true %>
@@ -34,7 +36,7 @@
       <% end %>
     </div>
 
-    <div class="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-3 text-left">
+    <div class="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-2xl mx-auto">
       <%= link_to units_path, class: "flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-3 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" do %>
         Units <span class="text-xs text-zinc-400">バンド</span>
       <% end %>
