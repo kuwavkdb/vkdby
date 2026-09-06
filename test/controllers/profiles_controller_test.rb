@@ -166,6 +166,18 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, 'id="comments"'
   end
 
+  test 'unit update log shows the name and part of an added snapshot member (issue #1405)' do
+    unit = Unit.create!(name: 'Log Member Unit', key: 'unit-log-member', status: :active)
+    snapshot = unit.unit_snapshots.create!(snapshot_date: Date.current, current: true)
+    member = snapshot.snapshot_people.create!(person_name: 'テストメンバー', part: :vocal)
+    UpdateLog.create!(user: users(:one), action: 'create', loggable: member, diff: nil)
+
+    get profile_update_logs_path(unit.key)
+
+    assert_response :success
+    assert_includes response.body, '[メンバー: テストメンバー (Vocal)]'
+  end
+
   test 'unit trend list shows the recorded name when it differs from the current unit name' do
     unit = Unit.create!(name: 'Renamed Trend Unit', key: 'unit-trend-name-badge', status: :active)
     Trend.create!(title: 'Trend before rename', date: Date.current, publish_start_at: Time.current,
