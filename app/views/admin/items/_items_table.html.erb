@@ -22,7 +22,10 @@
           <% if @show_bulk_artist_ui %>
             <% matched_and_unlinked = (item.artists || []).any? { |a| a[@match_type].to_s == @match_value && a['key'].blank? } %>
             <td class="px-4 py-4">
+              <%# 一括差し替え用<form>はこのテーブルの外にあるため(index.html.erb参照)、
+                  form属性で論理的に紐付ける。物理的に入れ子にすると送信時にCSRFエラーになる(issue #1403) %>
               <%= check_box_tag "ids[]", item.id, false, id: "item_#{item.id}", class: "row-check rounded border-gray-300",
+                    form: Admin::ItemsHelper::BULK_ARTIST_UPDATE_FORM_ID,
                     data: { unlinked: matched_and_unlinked }, aria: { label: "#{item.title} を選択" } %>
             </td>
           <% end %>
