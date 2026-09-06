@@ -57,7 +57,7 @@ class SnapshotPerson < ApplicationRecord
   before_validation :find_person_by_key, if: -> { person_id.blank? && person_key.present? }
 
   def name
-    name_alias.presence || person_name.presence || person&.name
+    person_name.presence || person&.name
   end
 
   def key

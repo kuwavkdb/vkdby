@@ -200,6 +200,25 @@ module Admin
       assert_includes response.body, 'function confirmBulkArtistUpdate()'
     end
 
+    # issue #1403: 一括差し替え用<form>の中に行の「論理削除」ボタン(button_to)の<form>が
+    # 入れ子になっていると、ブラウザのHTMLパーサがフォーム構造を破壊し、一括差し替え送信時に
+    # 別行の_method/authenticity_tokenが紛れ込んでCSRFエラー(destroyアクションへの誤爆)になる。
+    # <form>を入れ子にしない構造を維持できているかをここで検証する。
+    test 'index does not nest the row-level 論理削除 form inside the bulk artist replace form' do
+      delete logout_path
+      post login_path, params: { email: users(:admin).email, password: 'password' }
+      Item.create!(title: 'Matching Item', release_date: Date.today,
+                   link_url: "https://example.com/item-#{SecureRandom.hex(4)}",
+                   artists: [{ 'name' => 'ムック', 'old_key' => '%A5%E0%A5%C3%A5%AF' }])
+
+      get admin_items_path(match_type: 'old_key', match_value: '%A5%E0%A5%C3%A5%AF')
+
+      assert_response :success
+      assert_select "form##{Admin::ItemsHelper::BULK_ARTIST_UPDATE_FORM_ID}"
+      assert_select "form##{Admin::ItemsHelper::BULK_ARTIST_UPDATE_FORM_ID} form", count: 0
+      assert_select "input.row-check[form='#{Admin::ItemsHelper::BULK_ARTIST_UPDATE_FORM_ID}']"
+    end
+
     test 'index marks the checkbox as unlinked only when the matching artist entry has no key' do
       unlinked = Item.create!(title: 'Unlinked Item', release_date: Date.today,
                               link_url: "https://example.com/item-#{SecureRandom.hex(4)}",
@@ -211,8 +230,12 @@ module Admin
       get admin_items_path(match_type: 'old_key', match_value: '%A5%E0%A5%C3%A5%AF')
 
       assert_response :success
-      assert_includes response.body, "id=\"item_#{unlinked.id}\" value=\"#{unlinked.id}\" class=\"row-check rounded border-gray-300\" data-unlinked=\"true\""
-      assert_includes response.body, "id=\"item_#{linked.id}\" value=\"#{linked.id}\" class=\"row-check rounded border-gray-300\" data-unlinked=\"false\""
+      assert_includes response.body,
+                      "id=\"item_#{unlinked.id}\" value=\"#{unlinked.id}\" class=\"row-check rounded border-gray-300\" " \
+                      "form=\"#{Admin::ItemsHelper::BULK_ARTIST_UPDATE_FORM_ID}\" data-unlinked=\"true\""
+      assert_includes response.body,
+                      "id=\"item_#{linked.id}\" value=\"#{linked.id}\" class=\"row-check rounded border-gray-300\" " \
+                      "form=\"#{Admin::ItemsHelper::BULK_ARTIST_UPDATE_FORM_ID}\" data-unlinked=\"false\""
       assert_includes response.body, 'function selectUnlinkedArtistsOnly()'
     end
 

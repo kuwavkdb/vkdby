@@ -14,11 +14,18 @@
         <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[0.65rem] font-medium <%= cls %>"><%= label %></span>
         <% loggable_label = { 'UnitSnapshot' => 'スナップショット', 'SnapshotPerson' => 'メンバー', 'Link' => 'リンク', 'Section' => 'セクション' }[log.loggable_type] %>
         <% if loggable_label %>
-          <% if log.loggable_type == 'Section'
-               section = log.loggable
-               section_name = section&.discarded? ? '（削除済みセクション）' : (section&.name || log.diff&.dig('name', 1))
-             end %>
-          <span class="text-slate-300 dark:text-slate-600">[<%= loggable_label %><%= ": #{section_name}" if section_name %>]</span>
+          <% detail = case log.loggable_type
+                      when 'Section'
+                        section = log.loggable
+                        section&.discarded? ? '（削除済みセクション）' : (section&.name || log.diff&.dig('name', 1))
+                      when 'SnapshotPerson'
+                        sp = log.loggable
+                        if sp
+                          sp_part = sp.part_alias.presence || sp.part.humanize
+                          "#{sp.name} (#{sp_part})"
+                        end
+                      end %>
+          <span class="text-slate-300 dark:text-slate-600">[<%= loggable_label %><%= ": #{detail}" if detail %>]</span>
         <% end %>
         <span class="text-slate-400 dark:text-slate-500"><%= log.user.name %></span>
       </li>
