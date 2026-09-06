@@ -39,9 +39,18 @@
     </div>
   </div>
 
-  <%= hidden_field_tag :replacement_json, "[]", data: { artist_rows_target: "hiddenField" } %>
+  <%# 一括差し替え用<form>はこのDOM上の位置とは別の場所にある空の<form>のため(index.html.erb参照)、
+      form属性で論理的に紐付ける %>
+  <%= hidden_field_tag :replacement_json, "[]", form: Admin::ItemsHelper::BULK_ARTIST_UPDATE_FORM_ID,
+        data: { artist_rows_target: "hiddenField" } %>
   <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
     選択した Item のうち、検索条件（<%= @match_type %> = 「<%= @match_value %>」）に一致するアーティスト要素だけを、ここで選んだ Unit/Person に差し替えます。
     「表示名」を指定すると、対象 Item での表示名（alias）としてまとめて上書きされます（空欄の場合は表示名を設定しません）。
   </p>
+
+  <div class="flex justify-end mt-3">
+    <%= submit_tag "選択した項目のアーティストを一括差し替え",
+          form: Admin::ItemsHelper::BULK_ARTIST_UPDATE_FORM_ID,
+          class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 cursor-pointer" %>
+  </div>
 </div>

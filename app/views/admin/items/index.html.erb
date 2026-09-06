@@ -36,7 +36,7 @@
   <% end %>
 
   <% if @match_type.present? && @match_value.present? %>
-    <div class="mb-4 px-4 py-2 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-800 flex items-center justify-between">
+    <div class="sticky top-0 z-20 mb-4 px-4 py-2 bg-amber-50 dark:bg-amber-950/80 border border-amber-200 dark:border-amber-800 rounded-md text-sm text-amber-800 dark:text-amber-200 shadow-sm flex items-center justify-between">
       <span>アーティスト検索: <strong><%= @match_type %></strong> = 「<strong><%= @match_value %></strong>」に一致する Item のみ表示中</span>
       <%= link_to "解除", admin_items_path(q: params[:q]), class: "underline hover:no-underline" %>
     </div>
@@ -59,29 +59,29 @@
     <div class="mb-2">
       <button type="button" onclick="selectUnlinkedArtistsOnly()"
               title="Unit/Personに未紐付けの項目だけを選択します"
-              class="text-sm text-indigo-600 hover:underline">未紐付けのみ選択</button>
+              class="px-3 py-1.5 rounded-md text-sm font-medium bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-700 dark:hover:bg-indigo-900/60">未紐付けのみ選択</button>
     </div>
   <% end %>
 
   <%= render "items_table" %>
 
   <% if @show_bulk_artist_ui %>
-    <%# 行内の「論理削除」ボタン(button_to)が独自の<form>を生成するため、テーブルをこの
-        <form>の外に置き、チェックボックス側から form="#{Admin::ItemsHelper::BULK_ARTIST_UPDATE_FORM_ID}"
-        属性で論理的に紐付けている。<form>を入れ子にすると、ブラウザのHTMLパーサがフォーム構造を
-        破壊し、送信時に別行の_method/authenticity_tokenが紛れ込んでCSRFエラーになる(issue #1403) %>
+    <%# 行内の「論理削除」ボタン(button_to)が独自の<form>を生成するため、また置換先アーティスト欄を
+        画面下部にstickyで固定する都合上(sticky要素の可動範囲は直接の親要素の高さに制限されるため、
+        小さい<form>の直接の子にすると機能しない)、一括差し替え用<form>自体は隠しフィールドを
+        持たない空のフォームとし、中身(チェックボックス・隠しフィールド・送信ボタン)は全て
+        form属性で論理的に紐付けている。<form>を入れ子にすると、ブラウザのHTMLパーサがフォーム
+        構造を破壊し、送信時に別行の_method/authenticity_tokenが紛れ込んでCSRFエラーになる(issue #1403) %>
     <%= form_with url: bulk_artist_update_admin_items_path, method: :patch, local: true,
           id: Admin::ItemsHelper::BULK_ARTIST_UPDATE_FORM_ID,
           html: { onsubmit: "return confirmBulkArtistUpdate()" } do %>
-      <%= hidden_field_tag :match_type, @match_type %>
-      <%= hidden_field_tag :match_value, @match_value %>
-      <%= render "artist_replacement_picker" %>
-
-      <div class="flex justify-end">
-        <%= submit_tag "選択した項目のアーティストを一括差し替え",
-              class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 cursor-pointer" %>
-      </div>
     <% end %>
+    <%= hidden_field_tag :match_type, @match_type, form: Admin::ItemsHelper::BULK_ARTIST_UPDATE_FORM_ID %>
+    <%= hidden_field_tag :match_value, @match_value, form: Admin::ItemsHelper::BULK_ARTIST_UPDATE_FORM_ID %>
+
+    <div class="sticky bottom-0 z-20 -mx-4 px-4 pt-3 pb-4 bg-zinc-50 dark:bg-zinc-950 border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.15)]">
+      <%= render "artist_replacement_picker" %>
+    </div>
 
     <script>
       function confirmBulkArtistUpdate() {
