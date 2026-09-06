@@ -95,7 +95,7 @@ module Admin
 
     def snapshot_person_params
       p = params.require(:snapshot_person).permit(
-        :person_id, :person_name, :name_alias, :part, :part_alias,
+        :person_id, :person_name, :part, :part_alias,
         :status, :support, :sort_order, :person_key,
         :inline_history, :sns
       )
