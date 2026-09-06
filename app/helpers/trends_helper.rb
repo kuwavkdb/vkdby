@@ -11,6 +11,13 @@ module TrendsHelper
     person_data['name'].presence || person&.name
   end
 
+  # trends/show のヘッダで、件名（h1）の前に個人名バッヂを表示すべきかどうか（issue #1411）。
+  # 個人の動向種別（person_phenomenon）が設定されていて、かつユニットと紐づいていない
+  # （units が空）場合のみ、ユニットバッヂと同じ位置に個人名を表示する
+  def trend_show_person_badge_in_title?(trend)
+    trend.units.blank? && trend.person_phenomenon.present? && trend.people.present?
+  end
+
   # ページ<title>/og:title/twitter:title用にタイトル末尾の半角括弧書き（会場名等の補足）を取り除く（issue #1319）。
   # 正規表現自体はTrend#ogp_image_attachable_textと共有（Trend::TITLE_TRAILING_PARENTHETICAL_PATTERN）
   def trend_title_without_trailing_parenthetical(text)

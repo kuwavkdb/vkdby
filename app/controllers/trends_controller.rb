@@ -29,12 +29,15 @@ class TrendsController < ApplicationController
 
   def show
     @trend = Trend.find(params[:id])
+
+    # 件名前の個人名バッヂ（issue #1411）はユニット未紐付けのtrendでも表示するため、
+    # @related_peopleは以下のunits.present?チェックより前で解決しておく
+    person_ids = (@trend.people || []).map { |p| p['person_id'] }.compact
+    @related_people = Person.kept.where(id: person_ids).index_by(&:id) if person_ids.any?
+
     return unless @trend.units.present?
 
     @related_units = related_units_for([@trend])
-
-    person_ids = (@trend.people || []).map { |p| p['person_id'] }.compact
-    @related_people = Person.kept.where(id: person_ids).index_by(&:id) if person_ids.any?
 
     first_unit_id = @trend.units.first&.dig('unit_id')
     @unit = @related_units[first_unit_id]
