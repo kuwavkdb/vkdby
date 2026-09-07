@@ -223,7 +223,7 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Me
     assert_response :not_found
   end
 
-  test 'show prioritizes items with the same release date in the related items list' do
+  test 'show renders a dedicated section for items with the same release date' do
     unit = Unit.create!(name: 'Priority Artist', key: "priority-artist-#{SecureRandom.hex(4)}", status: :active)
 
     item = Item.create!(
@@ -238,23 +238,112 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Me
       release_date: '2026-03-01',
       link_url: "http://example.com/same-release-date-item-#{SecureRandom.hex(4)}"
     )
-    9.times do |i|
-      Item.create!(
-        title: "Other Release Date Item #{i}",
-        artists: [{ 'name' => unit.name, 'key' => unit.key }],
-        release_date: '2020-01-01',
-        link_url: "http://example.com/other-release-date-item-#{i}-#{SecureRandom.hex(4)}"
-      )
-    end
+    other_date_item = Item.create!(
+      title: 'Other Release Date Item',
+      artists: [{ 'name' => unit.name, 'key' => unit.key }],
+      release_date: '2020-01-01',
+      link_url: "http://example.com/other-release-date-item-#{SecureRandom.hex(4)}"
+    )
 
     get item_path(item)
 
     assert_response :success
+    section_heading_position = response.body.index('同日リリースの作品')
     same_date_position = response.body.index(same_date_item.title)
-    other_date_positions = (0..8).map { |i| response.body.index("Other Release Date Item #{i}") }
-    assert_not_nil same_date_position
-    assert other_date_positions.all? { |pos| same_date_position < pos },
-           'expected the same-release-date item to appear before all other related items'
+    other_date_position = response.body.index(other_date_item.title)
+    assert_not_nil section_heading_position
+    assert section_heading_position < same_date_position,
+           'expected the same-release-date section heading to precede the same-release-date item'
+    assert same_date_position < other_date_position,
+           'expected the same-release-date section to come before the other related items section'
+  end
+
+  test 'show does not render the same release date section when no items share the release date' do
+    unit = Unit.create!(name: 'No Priority Artist', key: "no-priority-artist-#{SecureRandom.hex(4)}", status: :active)
+
+    item = Item.create!(
+      title: 'No Priority Base Item',
+      artists: [{ 'name' => unit.name, 'key' => unit.key }],
+      release_date: '2026-03-01',
+      link_url: "http://example.com/no-priority-base-item-#{SecureRandom.hex(4)}"
+    )
+    Item.create!(
+      title: 'Different Release Date Item',
+      artists: [{ 'name' => unit.name, 'key' => unit.key }],
+      release_date: '2020-01-01',
+      link_url: "http://example.com/different-release-date-item-#{SecureRandom.hex(4)}"
+    )
+
+    get item_path(item)
+
+    assert_response :success
+    assert_not_includes response.body, '同日リリースの作品'
+    assert_includes response.body, 'Different Release Date Item'
+  end
+
+  test 'show renders an upcoming section with items releasing today or later, soonest first' do
+    unit = Unit.create!(name: 'Upcoming Artist', key: "upcoming-artist-#{SecureRandom.hex(4)}", status: :active)
+
+    item = Item.create!(
+      title: 'Upcoming Base Item',
+      artists: [{ 'name' => unit.name, 'key' => unit.key }],
+      release_date: '2020-01-01',
+      link_url: "http://example.com/upcoming-base-item-#{SecureRandom.hex(4)}"
+    )
+    later_item = Item.create!(
+      title: 'Later Upcoming Item',
+      artists: [{ 'name' => unit.name, 'key' => unit.key }],
+      release_date: 30.days.from_now.to_date,
+      link_url: "http://example.com/later-upcoming-item-#{SecureRandom.hex(4)}"
+    )
+    sooner_item = Item.create!(
+      title: 'Sooner Upcoming Item',
+      artists: [{ 'name' => unit.name, 'key' => unit.key }],
+      release_date: 5.days.from_now.to_date,
+      link_url: "http://example.com/sooner-upcoming-item-#{SecureRandom.hex(4)}"
+    )
+    past_item = Item.create!(
+      title: 'Past Other Item',
+      artists: [{ 'name' => unit.name, 'key' => unit.key }],
+      release_date: '2019-01-01',
+      link_url: "http://example.com/past-other-item-#{SecureRandom.hex(4)}"
+    )
+
+    get item_path(item)
+
+    assert_response :success
+    section_heading_position = response.body.index('近日リリースの作品')
+    sooner_position = response.body.index(sooner_item.title)
+    later_position = response.body.index(later_item.title)
+    assert_not_nil section_heading_position
+    assert section_heading_position < sooner_position,
+           'expected the upcoming section heading to precede the upcoming items'
+    assert sooner_position < later_position,
+           'expected the sooner upcoming item to appear before the later one'
+    assert_includes response.body, past_item.title
+  end
+
+  test 'show does not render the upcoming section when no items are scheduled from today onward' do
+    unit = Unit.create!(name: 'No Upcoming Artist', key: "no-upcoming-artist-#{SecureRandom.hex(4)}", status: :active)
+
+    item = Item.create!(
+      title: 'No Upcoming Base Item',
+      artists: [{ 'name' => unit.name, 'key' => unit.key }],
+      release_date: '2020-01-01',
+      link_url: "http://example.com/no-upcoming-base-item-#{SecureRandom.hex(4)}"
+    )
+    Item.create!(
+      title: 'Past Related Item',
+      artists: [{ 'name' => unit.name, 'key' => unit.key }],
+      release_date: '2019-01-01',
+      link_url: "http://example.com/past-related-item-#{SecureRandom.hex(4)}"
+    )
+
+    get item_path(item)
+
+    assert_response :success
+    assert_not_includes response.body, '近日リリースの作品'
+    assert_includes response.body, 'Past Related Item'
   end
 
   test 'index filters by artist name with q param' do
