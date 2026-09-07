@@ -79,7 +79,9 @@ class Item < ApplicationRecord
 
   # match_type ("old_key" / "key" / "name" / "alias") で一致した artists 要素を
   # replacement（{"name" =>, "key" =>, "old_key" =>, "alias" =>} を持つ Hash）で一括差し替えする。
-  # alias は replacement の値で上書きする（未指定・空なら表示名は設定しない。既存の alias は引き継がれない）。
+  # alias は replacement の値で上書きする（未指定・空の場合、対象要素がまだ key を持たない状態で
+  # 新たに key を設定する差し替えなら、元の name を alias として引き継ぐ。それ以外は表示名を設定しない。
+  # issue #1432）。
   # 一致する要素が無かった場合は何も更新せず false を返す（意図しない updated_at 更新を避けるため）。
   def replace_artist!(match_type:, match_value:, replacement:)
     return false unless %w[old_key key name alias].include?(match_type.to_s)
@@ -87,11 +89,13 @@ class Item < ApplicationRecord
     new_artists = (artists || []).map do |entry|
       next entry unless entry[match_type.to_s].to_s == match_value.to_s
 
+      alias_value = replacement['alias'].presence || fallback_alias_for(entry, replacement)
+
       entry.merge(
         'name' => replacement['name'],
         'key' => replacement['key'],
         'old_key' => replacement['old_key'],
-        'alias' => replacement['alias'],
+        'alias' => alias_value,
         'confirmed' => true
       ).compact_blank
     end
@@ -109,6 +113,20 @@ class Item < ApplicationRecord
   }
 
   private
+
+  # key が未設定だった要素に新たに key を設定する差し替えの場合に限り、
+  # 元の name を alias（別名）として引き継ぐための値を返す。
+  # 新しい name と同一の場合は冗長になるため引き継がない。（issue #1432）
+  def fallback_alias_for(entry, replacement)
+    return nil if entry['key'].present?
+    return nil if replacement['key'].blank?
+
+    original_name = entry['name'].presence
+    return nil if original_name.blank?
+    return nil if original_name == replacement['name']
+
+    original_name
+  end
 
   # 新規登録・更新・削除(discard/undiscard含む)のたびに当日分のサイドバーキャッシュを破棄し、
   # 反映を待たせないようにする（issue #1297）
