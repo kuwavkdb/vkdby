@@ -32,7 +32,7 @@
             </span>
           <% end %>
           <div class="relative flex-1 min-w-0">
-            <%= f.text_field :q, value: params[:q], placeholder: "商品名・アーティスト名で検索",
+            <%= f.text_field :q, value: params[:q], placeholder: @artist ? "商品名で検索" : "商品名・アーティスト名で検索",
                 class: "w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 #{'pr-10' if params[:q].present?} text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-400" %>
             <% if params[:q].present? %>
               <%= link_to items_path(key: params[:key].presence, old_key: params[:old_key].presence),
