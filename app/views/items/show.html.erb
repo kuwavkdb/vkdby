@@ -65,10 +65,10 @@
 
           <!-- 発売日 -->
           <div class="flex items-center justify-center sm:justify-start gap-2 mb-4">
-            <span class="text-sm font-bold text-slate-500 dark:text-slate-400">発売日:</span>
+            <span class="text-base font-bold text-slate-500 dark:text-slate-400">発売日:</span>
             <%= link_to @item.release_date.strftime('%Y/%m/%d'),
                 daily_path(year: @item.release_date.year, month: @item.release_date.month, day: @item.release_date.day),
-                class: "font-mono text-sm font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" %>
+                class: "font-mono text-base font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" %>
           </div>
 
           <!-- 購入・検索リンク -->
@@ -122,7 +122,7 @@
       </div>
 
       <% if other_artists.any? %>
-        <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700">
+        <div class="mt-8">
           <h2 class="text-base font-bold text-slate-600 dark:text-slate-400 mb-4">参加アーティスト</h2>
           <div class="flex flex-wrap gap-2">
             <% other_artists.each do |artist_data| %>
@@ -139,25 +139,43 @@
       <% end %>
 
       <% if @item.sections.kept.publicly_visible.exists? %>
-        <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700">
+        <div class="mt-8">
           <%= render SectionComponent.with_collection(@item.sections.kept.publicly_visible.order(:sort_order),
                 admin: defined?(logged_in?) && logged_in?) %>
         </div>
       <% end %>
 
-      <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700">
-        <%= link_to "Back to Items", items_path, class: "text-sm font-bold text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors" %>
-      </div>
-
-      <% if @related_items.any? %>
-        <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700">
-          <%
-            artist_names = @item.artists.map { |a| a['alias'].presence || a['name'] }.compact.join(' / ')
-          %>
-          <h2 class="text-base font-bold text-slate-600 dark:text-slate-400 mb-4"><%= artist_names %> の他の作品</h2>
+      <% if @same_release_date_items.any? %>
+        <div class="mt-8">
+          <h2 class="text-base font-bold text-zinc-900 dark:text-white mb-4">同日リリースの作品</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <%= render ItemCardComponent.with_collection(@related_items) %>
+            <%= render ItemCardComponent.with_collection(@same_release_date_items) %>
           </div>
+        </div>
+      <% end %>
+
+      <% if @upcoming_items.any? %>
+        <div class="mt-8">
+          <div class="-mx-5 md:-mx-8 px-5 md:px-8 py-4 bg-amber-500">
+            <h2 class="text-base font-bold text-zinc-900 mb-4">近日リリースの作品</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <%= render ItemCardComponent.with_collection(@upcoming_items) %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <% if @related_items.any? || @artists_with_more_items.any? %>
+        <div class="mt-8">
+          <% if @related_items.any? %>
+            <%
+              artist_names = @item.artists.map { |a| a['alias'].presence || a['name'] }.compact.join(' / ')
+            %>
+            <h2 class="text-base font-bold text-slate-600 dark:text-slate-400 mb-4"><%= artist_names %> の他の作品</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <%= render ItemCardComponent.with_collection(@related_items) %>
+            </div>
+          <% end %>
           <% @artists_with_more_items.each do |artist_data| %>
             <% artist_label = artist_data['alias'].presence || artist_data['name'] %>
             <%= render ArtistItemsButtonComponent.new(artist_name: artist_label, old_key: artist_data['old_key'], key: artist_data['key']) %>

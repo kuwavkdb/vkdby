@@ -8,8 +8,18 @@ class ItemsController < ApplicationController
 
     if scoped_artists.any?
       base_query = scoped_artists.map(&:last).reduce(:or).where.not(id: @item.id)
-      @related_items = base_query.order(Arel.sql('RANDOM()')).limit(10)
+      # 表示中アイテムと同一発売日の商品は「同日リリースの作品」として別枠で目立たせる
+      @same_release_date_items = base_query.where(release_date: @item.release_date).order(Arel.sql('RANDOM()'))
+      # 本日以降に発売(予定)の商品は「発売予定」として別枠で表示する
+      @upcoming_items = base_query.where(release_date: Date.current..)
+                                  .where.not(release_date: @item.release_date)
+                                  .order(release_date: :asc).limit(10)
+      excluded_ids = @same_release_date_items.map(&:id) + @upcoming_items.map(&:id)
+      @related_items = base_query.where.not(id: excluded_ids)
+                                 .order(Arel.sql('RANDOM()')).limit(10)
     else
+      @same_release_date_items = Item.none
+      @upcoming_items = Item.none
       @related_items = Item.none
     end
 
