@@ -11,10 +11,13 @@ module TrendsHelper
     person_data['name'].presence || person&.name
   end
 
-  # trends/show のヘッダで、件名（h1）の前に個人名バッヂを表示すべきかどうか（issue #1411）。
-  # 個人の動向種別（person_phenomenon）が設定されていて、かつユニットと紐づいていない
-  # （units が空）場合のみ、ユニットバッヂと同じ位置に個人名を表示する
+  # trends/show のヘッダで、件名（h1）の前に個人名バッヂを表示すべきかどうか。
+  # trend.person_name_in_title（issue #1419）が設定されていれば動向種別の内容に関わらず
+  # それを最優先し、未設定の場合は#1411までの自動判定（個人の動向種別が設定されていて、
+  # かつユニットと紐づいていない場合のみ個人名を表示）にフォールバックする
   def trend_show_person_badge_in_title?(trend)
+    return trend.people.present? if trend.person_name_in_title?
+
     trend.units.blank? && trend.person_phenomenon.present? && trend.people.present?
   end
 
@@ -32,17 +35,21 @@ module TrendsHelper
 
   # X（Twitter）へのシェア用テキストを生成する（issue #1313）
   # ヘッダに表示している内容（日付・Units・タイトル・People）＋ TrendのURL ＋ ハッシュタグ #vkdb
+  # trend_show_person_badge_in_title?と同じ判定で、件名前に個人名を出す設定の場合は
+  # 1行目を個人名、2行目をユニット名に入れ替える（issue #1419）
   def trend_x_share_text(trend, related_units: {}, related_people: {})
+    # 複数のユニット名／個人名が紐づく場合、それぞれ間を「、」区切りにする
     unit_names = (trend.units || []).filter_map do |unit_data|
       trend_unit_display_name(unit_data, related_units[unit_data['unit_id']])
-    end
+    end.join('、').presence
     person_names = (trend.people || []).filter_map do |person_data|
       trend_person_display_name(person_data, related_people[person_data['person_id']])
-    end
+    end.join('、').presence
     title = strip_tags(format_wiki_title(trend.title, link: false)).presence
+    primary_name, secondary_name = trend_show_person_badge_in_title?(trend) ? [person_names, unit_names] : [unit_names, person_names]
 
-    lines = [[trend_date_label(trend), *unit_names, title].compact_blank.join(' ')]
-    lines << person_names.join(' ') if person_names.any?
+    lines = [[trend_date_label(trend), primary_name, title].compact_blank.join(' ')]
+    lines << secondary_name if secondary_name.present?
     lines << trend_url(trend)
     lines << '#vkdb'
     lines.join("\n")
