@@ -112,6 +112,20 @@ class ItemTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
     assert_equal 'ムック', item.artists.first['alias']
   end
 
+  # issue #1432: 元の要素が既に alias（それまでの表示名）を持っていた場合は、
+  # name ではなく alias の方をフォールバック値として引き継ぐ
+  # （表示ロジックは一貫して alias.presence || name を採用しているため）
+  test 'replace_artist! prefers the original alias over the original name as the fallback' do
+    item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-replace-alias-fallback-prefers-alias',
+                        artists: [{ 'name' => 'ムック', 'alias' => 'OLD DISPLAY NAME', 'old_key' => '%A5%E0%A5%C3%A5%AF' }])
+
+    item.replace_artist!(match_type: 'old_key', match_value: '%A5%E0%A5%C3%A5%AF',
+                         replacement: { 'name' => 'MUCC', 'key' => 'mucc' })
+
+    item.reload
+    assert_equal 'OLD DISPLAY NAME', item.artists.first['alias']
+  end
+
   test 'replace_artist! prefers an explicitly specified alias over the original name fallback' do
     item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-replace-alias-explicit',
                         artists: [{ 'name' => 'ムック' }])
