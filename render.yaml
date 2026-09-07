@@ -32,6 +32,7 @@ services:
         value: 2
     region: singapore
     # 512MBのStarterでOOM再起動が頻発したため2GB/1CPUのStandardに増強していた
-    # （#1344）が、原因の主因だったtag_index_itemsのN+1（#1384）を修正できたため
-    # Starterに戻す（#1388）
-    plan: starter
+    # （#1344）。tag_index_itemsのN+1修正（#1384）を受けて一度Starterに戻した
+    # （#1388）が、24時間観測した結果512MBでは依然メモリが高帯域に張り付き
+    # GC負荷起因の応答遅延が長時間継続したため、再度Standardに戻す（#1423）
+    plan: standard
