@@ -155,6 +155,15 @@
     </div>
   </div>
 
+  <!-- 件名前のバッヂ表示優先度 -->
+  <div>
+    <label class="inline-flex items-center">
+      <%= form.check_box :person_name_in_title, class: "form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
+      <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">個人名を件名前に優先表示する</span>
+    </label>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">チェックしない場合、ユニットが紐づいていれば従来通りユニット名を件名前に表示します。チェックすると個人名を件名前に表示し、ユニットが紐づいていればユニット名は件名の下に表示します。</p>
+  </div>
+
   <!-- Snapshot Selection (Unit1組の場合のみ表示) -->
   <% if @snapshots.present? %>
     <div>
