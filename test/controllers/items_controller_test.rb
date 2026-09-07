@@ -223,6 +223,40 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Me
     assert_response :not_found
   end
 
+  test 'show prioritizes items with the same release date in the related items list' do
+    unit = Unit.create!(name: 'Priority Artist', key: "priority-artist-#{SecureRandom.hex(4)}", status: :active)
+
+    item = Item.create!(
+      title: 'Priority Base Item',
+      artists: [{ 'name' => unit.name, 'key' => unit.key }],
+      release_date: '2026-03-01',
+      link_url: "http://example.com/priority-base-item-#{SecureRandom.hex(4)}"
+    )
+    same_date_item = Item.create!(
+      title: 'Same Release Date Item',
+      artists: [{ 'name' => unit.name, 'key' => unit.key }],
+      release_date: '2026-03-01',
+      link_url: "http://example.com/same-release-date-item-#{SecureRandom.hex(4)}"
+    )
+    9.times do |i|
+      Item.create!(
+        title: "Other Release Date Item #{i}",
+        artists: [{ 'name' => unit.name, 'key' => unit.key }],
+        release_date: '2020-01-01',
+        link_url: "http://example.com/other-release-date-item-#{i}-#{SecureRandom.hex(4)}"
+      )
+    end
+
+    get item_path(item)
+
+    assert_response :success
+    same_date_position = response.body.index(same_date_item.title)
+    other_date_positions = (0..8).map { |i| response.body.index("Other Release Date Item #{i}") }
+    assert_not_nil same_date_position
+    assert other_date_positions.all? { |pos| same_date_position < pos },
+           'expected the same-release-date item to appear before all other related items'
+  end
+
   test 'index filters by artist name with q param' do
     item = Item.create!(
       title: 'Searchable Artist Item',

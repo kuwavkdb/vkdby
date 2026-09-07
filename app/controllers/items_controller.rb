@@ -8,7 +8,11 @@ class ItemsController < ApplicationController
 
     if scoped_artists.any?
       base_query = scoped_artists.map(&:last).reduce(:or).where.not(id: @item.id)
-      @related_items = base_query.order(Arel.sql('RANDOM()')).limit(10)
+      # 表示中アイテムと同一発売日の商品を最優先表示する
+      same_release_date_order = Item.sanitize_sql_array(
+        ['CASE WHEN release_date = ? THEN 0 ELSE 1 END', @item.release_date]
+      )
+      @related_items = base_query.order(Arel.sql(same_release_date_order), Arel.sql('RANDOM()')).limit(10)
     else
       @related_items = Item.none
     end
