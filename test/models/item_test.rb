@@ -88,12 +88,72 @@ class ItemTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
     assert_equal({ 'name' => 'Other Artist', 'key' => 'other-artist' }, untouched)
   end
 
-  test 'replace_artist! clears an existing alias when the replacement does not specify one' do
+  test 'replace_artist! clears an existing alias when the replacement does not specify one and the key was already set' do
     item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-replace-alias-clear',
-                        artists: [{ 'name' => 'ムック', 'alias' => 'OLD ALIAS', 'old_key' => '%A5%E0%A5%C3%A5%AF' }])
+                        artists: [{ 'name' => 'MUCC', 'key' => 'mucc', 'alias' => 'OLD ALIAS' }])
+
+    item.replace_artist!(match_type: 'key', match_value: 'mucc',
+                         replacement: { 'name' => 'MUCC', 'key' => 'mucc-new' })
+
+    item.reload
+    assert_nil item.artists.first['alias']
+  end
+
+  # issue #1432: key を持たない要素に新規で key を設定する差し替えでは、
+  # 表示名（alias）が明示指定されていない限り、元の name を alias として引き継ぐ
+  test 'replace_artist! keeps the original name as alias when setting a key for the first time' do
+    item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-replace-alias-fallback',
+                        artists: [{ 'name' => 'ムック', 'old_key' => '%A5%E0%A5%C3%A5%AF' }])
 
     item.replace_artist!(match_type: 'old_key', match_value: '%A5%E0%A5%C3%A5%AF',
                          replacement: { 'name' => 'MUCC', 'key' => 'mucc' })
+
+    item.reload
+    assert_equal 'ムック', item.artists.first['alias']
+  end
+
+  # issue #1432: 元の要素が既に alias（それまでの表示名）を持っていた場合は、
+  # name ではなく alias の方をフォールバック値として引き継ぐ
+  # （表示ロジックは一貫して alias.presence || name を採用しているため）
+  test 'replace_artist! prefers the original alias over the original name as the fallback' do
+    item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-replace-alias-fallback-prefers-alias',
+                        artists: [{ 'name' => 'ムック', 'alias' => 'OLD DISPLAY NAME', 'old_key' => '%A5%E0%A5%C3%A5%AF' }])
+
+    item.replace_artist!(match_type: 'old_key', match_value: '%A5%E0%A5%C3%A5%AF',
+                         replacement: { 'name' => 'MUCC', 'key' => 'mucc' })
+
+    item.reload
+    assert_equal 'OLD DISPLAY NAME', item.artists.first['alias']
+  end
+
+  test 'replace_artist! prefers an explicitly specified alias over the original name fallback' do
+    item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-replace-alias-explicit',
+                        artists: [{ 'name' => 'ムック' }])
+
+    item.replace_artist!(match_type: 'name', match_value: 'ムック',
+                         replacement: { 'name' => 'MUCC', 'key' => 'mucc', 'alias' => 'Explicit Alias' })
+
+    item.reload
+    assert_equal 'Explicit Alias', item.artists.first['alias']
+  end
+
+  test 'replace_artist! does not set a fallback alias when the name is unchanged' do
+    item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-replace-alias-same-name',
+                        artists: [{ 'name' => 'MUCC' }])
+
+    item.replace_artist!(match_type: 'name', match_value: 'MUCC',
+                         replacement: { 'name' => 'MUCC', 'key' => 'mucc' })
+
+    item.reload
+    assert_nil item.artists.first['alias']
+  end
+
+  test 'replace_artist! does not set a fallback alias when the replacement has no key' do
+    item = Item.create!(title: 'Some Album', release_date: Date.current, link_url: 'https://example.com/item-replace-alias-no-key',
+                        artists: [{ 'name' => 'ムック' }])
+
+    item.replace_artist!(match_type: 'name', match_value: 'ムック',
+                         replacement: { 'name' => 'MUCC' })
 
     item.reload
     assert_nil item.artists.first['alias']
