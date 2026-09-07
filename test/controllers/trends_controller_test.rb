@@ -83,6 +83,37 @@ class TrendsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'Member Badge Person'
   end
 
+  test 'show renders the person name before the title and the unit name below when person_name_in_title is set' do
+    unit = Unit.create!(name: 'Priority Unit', key: 'trend-priority-unit', status: :active)
+    person = Person.create!(name: 'Priority Person', key: 'trend-priority-person', status: :active)
+    trend = Trend.create!(title: 'Priority trend', date: Date.current, publish_start_at: Time.current,
+                          unit_phenomenon: :other, person_phenomenon: :join_member, person_name_in_title: true,
+                          units: [{ 'unit_id' => unit.id, 'name' => 'Priority Unit' }],
+                          people: [{ 'person_id' => person.id, 'name' => 'Priority Person' }])
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_match(%r{<h1[^>]*>.*href="/trend-priority-person"[^>]*>Priority Person</a>.*Priority trend.*</h1>}m,
+                 response.body)
+    assert_no_match(%r{<h1[^>]*>.*Priority Unit.*</h1>}m, response.body)
+    assert_includes response.body, 'Priority Unit'
+  end
+
+  test 'show renders only the person name before the title when person_name_in_title is set and no unit is linked' do
+    person = Person.create!(name: 'Solo Priority Person', key: 'trend-solo-priority-person', status: :active)
+    trend = Trend.create!(title: 'Solo priority trend', date: Date.current, publish_start_at: Time.current,
+                          person_phenomenon: :other, person_name_in_title: true,
+                          people: [{ 'person_id' => person.id, 'name' => 'Solo Priority Person' }])
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_match(%r{<h1[^>]*>.*href="/trend-solo-priority-person"[^>]*>Solo Priority Person</a>.*Solo priority trend.*</h1>}m,
+                 response.body)
+    assert_equal 1, response.body.scan('Solo Priority Person').size
+  end
+
   test 'show does not render the X share text for a logged out visitor' do
     trend = Trend.create!(title: 'Share text trend', date: Date.current, publish_start_at: Time.current,
                           etc_phenomenon: :other)
@@ -176,6 +207,54 @@ class TrendsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'Share Person'
     assert_includes response.body, CGI.escapeHTML(trend_url(trend))
     assert_includes response.body, '#vkdb'
+  end
+
+  test 'show renders the X share text with multiple unit names joined by a Japanese comma' do
+    unit_a = Unit.create!(name: 'Share Unit A', key: 'trend-share-unit-a', status: :active)
+    unit_b = Unit.create!(name: 'Share Unit B', key: 'trend-share-unit-b', status: :active)
+    trend = Trend.create!(title: 'Multi unit share trend', date: '2026-05-01', publish_start_at: Time.current,
+                          unit_phenomenon: :other,
+                          units: [{ 'unit_id' => unit_a.id, 'name' => 'Share Unit A' },
+                                  { 'unit_id' => unit_b.id, 'name' => 'Share Unit B' }])
+    login_as_admin
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_includes response.body, '2026/05/01 Share Unit A、Share Unit B Multi unit share trend'
+  end
+
+  test 'show renders the X share text with multiple person names joined by a Japanese comma' do
+    unit = Unit.create!(name: 'Share Unit C', key: 'trend-share-unit-c', status: :active)
+    person_a = Person.create!(name: 'Share Person A', key: 'trend-share-person-a', status: :active)
+    person_b = Person.create!(name: 'Share Person B', key: 'trend-share-person-b', status: :active)
+    trend = Trend.create!(title: 'Multi person share trend', date: '2026-05-01', publish_start_at: Time.current,
+                          unit_phenomenon: :other,
+                          units: [{ 'unit_id' => unit.id, 'name' => 'Share Unit C' }],
+                          people: [{ 'person_id' => person_a.id, 'name' => 'Share Person A' },
+                                   { 'person_id' => person_b.id, 'name' => 'Share Person B' }])
+    login_as_admin
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_includes response.body, 'Share Person A、Share Person B'
+  end
+
+  test 'show renders the X share text with the person name first when person_name_in_title is set' do
+    unit = Unit.create!(name: 'Share Priority Unit', key: 'trend-share-priority-unit', status: :active)
+    person = Person.create!(name: 'Share Priority Person', key: 'trend-share-priority-person', status: :active)
+    trend = Trend.create!(title: 'Share priority trend', date: '2026-05-01', publish_start_at: Time.current,
+                          unit_phenomenon: :other, person_name_in_title: true,
+                          units: [{ 'unit_id' => unit.id, 'name' => 'Share Priority Unit' }],
+                          people: [{ 'person_id' => person.id, 'name' => 'Share Priority Person' }])
+    login_as_admin
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_includes response.body, '2026/05/01 Share Priority Person Share priority trend'
+    assert_includes response.body, 'Share Priority Unit'
   end
 
   private

@@ -92,7 +92,7 @@ module Admin
         :title, :content,
         :quote, :quote_title, :quote_url,
         :via_name, :via_url,
-        :unit_phenomenon, :person_phenomenon, :etc_phenomenon,
+        :unit_phenomenon, :person_phenomenon, :etc_phenomenon, :person_name_in_title,
         units_json: {},
         people_json: {}
       ).tap do |whitelisted|

@@ -17,6 +17,7 @@ module Admin
     test 'should get edit' do
       get edit_admin_trend_path(@trend)
       assert_response :success
+      assert_select "input[type=checkbox][name='trend[person_name_in_title]']"
     end
 
     test 'should create trend with slash-separated date' do
@@ -32,6 +33,23 @@ module Admin
       end
 
       assert_equal Date.new(2024, 3, 15), Trend.last.date
+    end
+
+    test 'should update person_name_in_title' do
+      @trend.update!(unit_phenomenon: :other)
+
+      patch admin_trend_path(@trend), params: {
+        trend: {
+          date: @trend.date.strftime('%Y/%m/%d'),
+          publish_start_at: @trend.publish_start_at,
+          active: @trend.active,
+          unit_phenomenon: 'other',
+          person_name_in_title: '1'
+        }
+      }
+
+      assert_redirected_to edit_admin_trend_path(@trend)
+      assert @trend.reload.person_name_in_title?
     end
   end
 end
