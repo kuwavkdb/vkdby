@@ -1,9 +1,21 @@
 # frozen_string_literal: true
 
+require 'ipaddr'
+
 # 再起動をまたいでスロットリング・ブロックリストの状態を保持するため Redis ベースの
 # キャッシュを使う（デフォルトのインメモリストアだと OOM 再起動のたびにカウンターが
 # リセットされ、クローラーが再び閾値までリクエストを通せてしまう）
 Rack::Attack.cache.store = Rails.cache
+
+# IPごとのスロットルを、IPをローテーションしながら大量にリクエストを送ることで
+# すり抜けようとするスクレイパー対策に使う。同一サブネット（IPv4は/24、IPv6は/64）
+# をひとまとめのキーとして扱う（issue #1439）。
+subnet_key = lambda do |ip|
+  addr = IPAddr.new(ip)
+  addr.ipv4? ? addr.mask(24).to_s : addr.mask(64).to_s
+rescue IPAddr::Error
+  ip
+end
 
 # オートコンプリート・全文検索: IP ごとに 60 秒間 30 リクエストまで
 Rack::Attack.throttle('search/ip', limit: 30, period: 60) do |req|
@@ -28,6 +40,14 @@ end
 # （プレーンな一覧表示・ページネーションは対象外）
 Rack::Attack.throttle('people_units_filter/ip', limit: 5, period: 60) do |req|
   req.ip if people_units_filter_request.call(req)
+end
+
+# タグ組み合わせを変えながら IP をローテーションし、上記の IP 単位のスロットルを
+# すり抜けようとするスクレイパー対策。同一サブネットからのリクエストをまとめて
+# 60 秒間 20 リクエストまでに制限する（issue #1439）。共有NAT等からの正規利用も
+# 考慮し、IP単位の閾値（5）より緩めに設定している。
+Rack::Attack.throttle('people_units_filter/subnet', limit: 20, period: 60) do |req|
+  subnet_key.call(req.ip) if people_units_filter_request.call(req)
 end
 
 # ログイン: IP ごとに 20 秒間 5 回まで（ブルートフォース対策）
