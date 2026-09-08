@@ -11,6 +11,9 @@
             <th scope="col" class="relative py-3.5 pl-4 pr-3 sm:pl-6 w-10">
               <span class="sr-only">並び替え</span>
             </th>
+            <th scope="col" class="relative w-10 px-3 py-3.5">
+              <span class="sr-only">選択</span>
+            </th>
             <th scope="col" class="w-2/5 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">名前</th>
             <th scope="col" class="w-1/5 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">パート</th>
             <th scope="col" class="w-24 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">ステータス</th>
@@ -28,6 +31,14 @@
                 <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
+              </td>
+              <td class="px-3 py-4 text-sm">
+                <input type="checkbox"
+                       name="snapshot_person_ids[]"
+                       value="<%= sp.id %>"
+                       form="bulk-copy-move-form"
+                       aria-label="<%= sp.name %> を選択"
+                       class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700">
               </td>
               <td class="px-3 py-4 text-sm text-gray-900 dark:text-gray-200 break-all">
                 <% if sp.person %>
@@ -79,6 +90,29 @@
         </tbody>
       </table>
     </div>
+
+    <% if other_unit_snapshots.present? && other_unit_snapshots.any? %>
+      <%= form_with url: copy_or_move_admin_unit_unit_snapshot_snapshot_people_path(unit, unit_snapshot),
+            method: :post, id: "bulk-copy-move-form", class: "mt-4 flex flex-wrap items-end gap-3" do %>
+        <div>
+          <label for="target_unit_snapshot_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            選択したメンバーのコピー・移動先スナップショット
+          </label>
+          <select name="target_unit_snapshot_id" id="target_unit_snapshot_id"
+                  class="mt-1 block w-64 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <option value="">選択してください</option>
+            <% other_unit_snapshots.each do |os| %>
+              <option value="<%= os.id %>"><%= os.display_label || "(ラベル・日付未設定)" %></option>
+            <% end %>
+          </select>
+        </div>
+        <%= button_tag "コピー", type: "submit", name: "mode", value: "copy",
+              class: "inline-flex items-center justify-center rounded-md border border-gray-400 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer dark:bg-gray-700 dark:border-gray-500 dark:text-white dark:hover:bg-gray-600" %>
+        <%= button_tag "移動", type: "submit", name: "mode", value: "move",
+              class: "inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer",
+              onclick: "return confirm('選択したメンバーを移動しますか？（このスナップショットからは削除されます）')" %>
+      <% end %>
+    <% end %>
   <% else %>
     <p class="text-sm text-gray-500 dark:text-gray-400">まだメンバーが登録されていません。</p>
   <% end %>

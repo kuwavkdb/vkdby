@@ -40,22 +40,17 @@ module Admin
 
     def create_person
       if @snapshot_person.person_key.blank?
-        redirect_to edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @unit_snapshot, @snapshot_person),
-                    alert: 'Person Key を設定してから実行してください。'
-        return
+        return redirect_to edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @unit_snapshot, @snapshot_person),
+                           alert: 'Person Key を設定してから実行してください。'
       end
 
       if @snapshot_person.person_id.present?
-        redirect_to edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @unit_snapshot, @snapshot_person),
-                    alert: 'すでにPersonと紐付けられています。'
-        return
+        return redirect_to edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @unit_snapshot, @snapshot_person),
+                           alert: 'すでにPersonと紐付けられています。'
       end
 
-      person = Person.new(
-        name: @snapshot_person.person_name,
-        key: @snapshot_person.person_key,
-        parts: @snapshot_person.part == 'unknown' ? [] : [@snapshot_person.part]
-      )
+      person = Person.new(name: @snapshot_person.person_name, key: @snapshot_person.person_key,
+                          parts: @snapshot_person.part == 'unknown' ? [] : [@snapshot_person.part])
 
       if person.save
         @snapshot_person.update(person_id: person.id)
@@ -77,6 +72,21 @@ module Admin
         @unit_snapshot.snapshot_people.find(id).update(sort_order: index + 1)
       end
       head :ok
+    end
+
+    def copy_or_move
+      target_snapshot = @unit_snapshot.siblings.find_by(id: params[:target_unit_snapshot_id])
+      snapshot_people = @unit_snapshot.snapshot_people.where(id: Array(params[:snapshot_person_ids]))
+      if target_snapshot.nil? || snapshot_people.empty?
+        return redirect_to edit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
+                           alert: 'コピー・移動先のスナップショットと、コピー・移動するメンバーを選択してください。'
+      end
+
+      SnapshotPersonCopyMover.new(snapshot_people, target_snapshot, params[:mode]).call do |record, action|
+        record_update_log(record, action: action)
+      end
+      redirect_to edit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
+                  notice: "#{snapshot_people.size}件のメンバーを#{params[:mode] == 'move' ? '移動' : 'コピー'}しました。"
     end
 
     private

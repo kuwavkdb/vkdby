@@ -6,9 +6,7 @@ module Admin
     before_action :set_unit_snapshot, only: %i[edit update destroy copy copy_to_unit]
 
     def index
-      # ユニットページ（ProfilesController#load_unit_data）の表示順に合わせる
-      @unit_snapshots = @unit.unit_snapshots.includes(snapshot_people: :person)
-                             .order(past: :asc, current: :desc, snapshot_index: :asc)
+      @unit_snapshots = @unit.unit_snapshots.includes(snapshot_people: :person).display_order
     end
 
     def new
@@ -16,8 +14,7 @@ module Admin
     end
 
     def edit
-      @snapshot_people = @unit_snapshot.snapshot_people.includes(:person).order(:sort_order)
-      @snapshot_person = @unit_snapshot.snapshot_people.build
+      set_snapshot_edit_ivars
     end
 
     def create
@@ -38,8 +35,7 @@ module Admin
         redirect_to admin_unit_unit_snapshots_path(@unit),
                     notice: 'Snapshot was successfully updated.'
       else
-        @snapshot_people = @unit_snapshot.snapshot_people.includes(:person).order(:sort_order)
-        @snapshot_person = @unit_snapshot.snapshot_people.build
+        set_snapshot_edit_ivars
         render :edit, status: :unprocessable_entity
       end
     end
@@ -69,9 +65,8 @@ module Admin
       target_unit = Unit.kept.find_by(id: params[:target_unit_id])
 
       if target_unit.nil?
-        redirect_to copy_to_unit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
-                    alert: 'コピー先のユニットを選択してください。'
-        return
+        return redirect_to copy_to_unit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
+                           alert: 'コピー先のユニットを選択してください。'
       end
 
       new_snapshot = copy_snapshot_to(target_unit)
@@ -100,6 +95,12 @@ module Admin
 
     def set_unit_snapshot
       @unit_snapshot = @unit.unit_snapshots.find(params[:id])
+    end
+
+    def set_snapshot_edit_ivars
+      @snapshot_people = @unit_snapshot.snapshot_people.includes(:person).order(:sort_order)
+      @snapshot_person = @unit_snapshot.snapshot_people.build
+      @other_unit_snapshots = @unit_snapshot.siblings
     end
 
     def unit_snapshot_params

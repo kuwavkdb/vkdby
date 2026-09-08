@@ -35,6 +35,7 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
         resources :snapshot_people, only: %i[create destroy edit update] do
           collection do
             patch :reorder
+            post :copy_or_move
           end
           member do
             post :create_person
