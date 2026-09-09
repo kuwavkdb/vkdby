@@ -7,11 +7,14 @@
       <%= link_to "公開ページを見る", profile_path(@person.key), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
     </div>
 
+    <%# change_key_form は見た目を持たない form タグのみ（キー変更トリガーから form 属性で参照される）
+        ため、grid の子要素にすると 320px カラムを空のまま占有してしまう。grid の外に出す。 %>
+    <%= render "admin/shared/change_key_form", change_key_path: change_key_admin_person_path(@person), form_id: "change_key_form" %>
+
     <div class="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-8 items-start">
       <div class="bg-white shadow rounded-lg p-6 dark:bg-gray-800">
         <%= render "form", person: @person %>
       </div>
-      <%= render "admin/shared/change_key_form", change_key_path: change_key_admin_person_path(@person), form_id: "change_key_form" %>
 
       <div>
         <%= render "links_form", person: @person %>
