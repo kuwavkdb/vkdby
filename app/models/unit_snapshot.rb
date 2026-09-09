@@ -35,9 +35,16 @@ class UnitSnapshot < ApplicationRecord
   scope :past, -> { where(past: true) }
   scope :not_past, -> { where(past: false) }
   scope :active, -> { where(active: true) }
+  # ユニットページ（ProfilesController#load_unit_data）の表示順に合わせる
+  scope :display_order, -> { order(past: :asc, current: :desc, snapshot_index: :asc) }
 
   def member_names
     snapshot_people.sort_by(&:sort_order).map(&:name).join('、')
+  end
+
+  # 同じユニットの、自分自身を除く他のスナップショット（コピー・移動先の候補）
+  def siblings
+    unit.unit_snapshots.where.not(id: id).display_order
   end
 
   def display_label
