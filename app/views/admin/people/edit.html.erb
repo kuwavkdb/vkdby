@@ -11,13 +11,19 @@
         ため、grid の子要素にすると 320px カラムを空のまま占有してしまう。grid の外に出す。 %>
     <%= render "admin/shared/change_key_form", change_key_path: change_key_admin_person_path(@person), form_id: "change_key_form" %>
 
-    <div class="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-8 items-start">
-      <div class="bg-white shadow rounded-lg p-6 dark:bg-gray-800">
-        <%= render "form", person: @person %>
-      </div>
+    <div class="bg-white shadow rounded-lg p-6 dark:bg-gray-800">
+      <%= render "form", person: @person %>
+    </div>
 
+    <div class="mt-6">
+      <%= render "admin/wiki_page_imports/import_target_panel", wiki_page_imports: @wiki_page_imports, import_target: @person %>
+    </div>
+
+    <%# URL欄が右カラム（320px）だと狭すぎて内容がほぼ見えないため、メインフォームと同じ幅で表示する。
+        セクション・論理削除はこの列の右側に並べる %>
+    <div class="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
+      <%= render "links_form", person: @person %>
       <div>
-        <%= render "links_form", person: @person %>
         <%= render "admin/sections/list", sectionable: @person, sections: @person.sections.with_discarded.order(:sort_order) %>
         <% if current_user.super_operator_or_above? && !@person.discarded? %>
           <div class="mt-4 mb-4 flex justify-end">
@@ -27,7 +33,6 @@
                 class: "px-3 py-1.5 text-sm text-white bg-red-600 hover:bg-red-700 rounded cursor-pointer border-0" %>
           </div>
         <% end %>
-        <%= render "admin/wiki_page_imports/import_target_panel", wiki_page_imports: @wiki_page_imports, import_target: @person %>
       </div>
     </div>
 
