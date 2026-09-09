@@ -168,5 +168,63 @@ module Admin
       assert_response :success
       assert_select 'h3', text: 'メンバーを追加'
     end
+
+    test 'should copy selected members to another snapshot in the same unit' do
+      sp = snapshot_people(:one)
+      target = unit_snapshots(:two)
+
+      assert_difference('SnapshotPerson.kept.count', 1) do
+        post copy_or_move_admin_unit_unit_snapshot_snapshot_people_path(@unit, @snapshot), params: {
+          mode: 'copy', target_unit_snapshot_id: target.id, snapshot_person_ids: [sp.id]
+        }
+      end
+
+      assert_redirected_to edit_admin_unit_unit_snapshot_path(@unit, @snapshot)
+      assert sp.reload.kept?
+      copied = target.snapshot_people.find_by(person_id: sp.person_id)
+      assert copied.present?
+      assert_equal sp.part, copied.part
+    end
+
+    test 'should move selected members to another snapshot in the same unit' do
+      sp = snapshot_people(:one)
+      target = unit_snapshots(:two)
+
+      assert_difference('SnapshotPerson.kept.count', 0) do
+        post copy_or_move_admin_unit_unit_snapshot_snapshot_people_path(@unit, @snapshot), params: {
+          mode: 'move', target_unit_snapshot_id: target.id, snapshot_person_ids: [sp.id]
+        }
+      end
+
+      assert_redirected_to edit_admin_unit_unit_snapshot_path(@unit, @snapshot)
+      assert_not sp.reload.kept?
+      assert target.snapshot_people.find_by(person_id: sp.person_id).present?
+    end
+
+    test 'should not copy or move without selecting a target snapshot' do
+      sp = snapshot_people(:one)
+
+      assert_no_difference('SnapshotPerson.count') do
+        post copy_or_move_admin_unit_unit_snapshot_snapshot_people_path(@unit, @snapshot), params: {
+          mode: 'copy', target_unit_snapshot_id: '', snapshot_person_ids: [sp.id]
+        }
+      end
+
+      assert_redirected_to edit_admin_unit_unit_snapshot_path(@unit, @snapshot)
+    end
+
+    test 'should not copy or move to a snapshot in another unit' do
+      sp = snapshot_people(:one)
+      other_unit_snapshot = unit_snapshots(:one).unit.unit_snapshots.create!(snapshot_date: '2030-01-01')
+      other_unit_snapshot.update_column(:unit_id, units(:two).id)
+
+      assert_no_difference('SnapshotPerson.count') do
+        post copy_or_move_admin_unit_unit_snapshot_snapshot_people_path(@unit, @snapshot), params: {
+          mode: 'copy', target_unit_snapshot_id: other_unit_snapshot.id, snapshot_person_ids: [sp.id]
+        }
+      end
+
+      assert_redirected_to edit_admin_unit_unit_snapshot_path(@unit, @snapshot)
+    end
   end
 end
