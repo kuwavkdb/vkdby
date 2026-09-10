@@ -216,6 +216,19 @@ class UnitTest < ActiveSupport::TestCase
     Rails.cache = original_cache
   end
 
+  test 'ogp_image_relative_url does not raise when attach triggers a validation failure on the record (issue #1473)' do
+    unit = Unit.create!(name: 'Key Collision Unit', key: 'unit-ogp-key-collision', status: :active)
+    # keyの一意性バリデーションが効かない経路（インポート等）で紛れ込んだ、
+    # 大文字小文字違いのkey重複を再現する
+    Unit.new(key: 'Unit-Ogp-Key-Collision', status: :active).save(validate: false)
+
+    result = stub_class_method(OgpImageGenerator, :call, 'dummy-png-bytes') { unit.ogp_image_relative_url }
+
+    assert_nil result
+    assert_not unit.ogp_image.attached?
+    assert_equal 'Key Collision Unit', unit.reload.name, '添付失敗のsaveで他の属性が壊れていないこと'
+  end
+
   test 'aliases_attributes= persists the hidden flag (issue #1311)' do
     unit = Unit.create!(name: 'Alias Hidden Unit', key: 'alias-hidden-unit-test', status: :active)
 
