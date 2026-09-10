@@ -189,6 +189,21 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'Old Trend Unit Name'
   end
 
+  test 'person page hides tags belonging to an inactive index group but shows tags with no group' do
+    person = Person.create!(name: 'タグ非表示テスト', key: 'person-hidden-tag-group', status: :active)
+    inactive_group = IndexGroup.create!(name: '無効グループ', active: false)
+    active_tag = TagIndex.create!(name: '表示されるタグ')
+    hidden_tag = TagIndex.create!(name: '非表示になるタグ', index_group: inactive_group)
+    TagIndexItem.create!(tag_index: active_tag, indexable: person)
+    TagIndexItem.create!(tag_index: hidden_tag, indexable: person)
+
+    get profile_path(person.key)
+
+    assert_response :success
+    assert_includes response.body, '表示されるタグ'
+    assert_not_includes response.body, '非表示になるタグ'
+  end
+
   private
 
   def with_canonical_host(host)

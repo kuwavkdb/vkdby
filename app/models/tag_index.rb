@@ -33,4 +33,6 @@ class TagIndex < ApplicationRecord
 
   scope :ordered, -> { order(order_in_group: :asc) }
   scope :active, -> { where(active: true) }
+  # 所属グループがない、またはグループがactiveなタグのみに絞る（非表示にしたグループのタグを除外する）
+  scope :group_active, -> { left_joins(:index_group).where(index_groups: { active: [true, nil] }) }
 end

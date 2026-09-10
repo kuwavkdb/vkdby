@@ -65,11 +65,11 @@
       </div>
     <% end %>
 
-    <% if @resource.tag_indices.present? %>
+    <% if visible_tag_indices.present? %>
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
         <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Tags</dt>
         <dd class="text-right flex flex-wrap justify-end gap-2">
-          <% @resource.tag_indices.order(:name).each do |tag| %>
+          <% visible_tag_indices.each do |tag| %>
             <%= link_to tag.name, index_show_path(tag.id), class: "inline-block bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-200 px-2 py-0.5 rounded text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/70 transition-colors border border-indigo-200 dark:border-indigo-700" %>
           <% end %>
         </dd>
