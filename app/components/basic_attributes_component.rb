@@ -9,10 +9,14 @@ class BasicAttributesComponent < ViewComponent::Base
     attributes_present?
   end
 
+  def visible_tag_indices
+    @visible_tag_indices ||= @resource.tag_indices.group_active.order(:name).to_a
+  end
+
   private
 
   def attributes_present?
-    tags_present = @resource.tag_indices.present?
+    tags_present = visible_tag_indices.present?
 
     if @resource.is_a?(Person)
       tags_present || @resource.birthday.present? || @resource.blood.present? ||

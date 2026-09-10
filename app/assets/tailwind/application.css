@@ -82,6 +82,13 @@
     }
     .columns > * { margin: 0; }
     .columns img { margin: 0.25em 0; }
+    /* {{youtube}}プラグインの<iframe>はaspect-video + h-[360px]で高さ360px・幅640px相当の
+       固定サイズになっている（issue #1398）。.columns内ではこの固定幅がグリッドアイテムの
+       min-widthとして扱われ、1frの均等割りを押し広げて画像側カラムが狭くなる不具合があった
+       （issue #1466）。.columns内に限りwidth: 100%; height: autoで上書きし、aspect-video
+       （16:9）は維持したままカラム幅に追従させる。h-[360px]より詳細度の高い.columns iframeで
+       上書きするためimportant不要。 */
+    .columns iframe { width: 100%; height: auto; }
   }
 
   @media (min-width: 768px) {

@@ -67,6 +67,9 @@ class Person < ApplicationRecord
     福岡県 佐賀県 長崎県 熊本県 大分県 宮崎県 鹿児島県 沖縄県
   ].freeze
 
+  # 出身地入力欄の候補（都道府県以外の値も指定できるようにするため、候補はあくまで補助的な選択肢）
+  HOMETOWN_SUGGESTIONS = (PREFECTURES + %w[海外 非公表]).freeze
+
   # Scopes
   scope :birthday_on, lambda { |date|
     where('EXTRACT(MONTH FROM birthday) = ? AND EXTRACT(DAY FROM birthday) = ?',
