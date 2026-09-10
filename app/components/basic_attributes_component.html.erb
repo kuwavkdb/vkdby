@@ -1,18 +1,14 @@
 <section>
   <h2 class="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-2">Basic Information</h2>
-  <dl class="grid gap-4">
-    <% if @resource.is_a?(Person) %>
-      <% if @resource.parts.present? %>
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
-          <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Parts</dt>
-          <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 text-right"><%= @resource.parts.map(&:humanize).join(", ") %></dd>
-        </div>
-      <% end %>
-
-      <% if @resource.birthday.present? %>
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
-          <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Birthday</dt>
-          <dd class="flex flex-wrap justify-end items-center gap-0.5">
+  <%
+    compact_items = []
+    if @resource.is_a?(Person)
+      if @resource.parts.present?
+        compact_items << { label: "Parts", value: capture { @resource.parts.map(&:humanize).join(", ") } }
+      end
+      if @resource.birthday.present?
+        compact_items << { label: "Birthday", value: capture do %>
+          <div class="flex flex-wrap justify-end items-center gap-0.5">
             <% badge_class = "inline-block bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded text-xs font-bold hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors border border-amber-200 dark:border-amber-700" %>
             <% if @resource.birth_year.present? %>
               <%= link_to @resource.birth_year.to_s, yearly_path(year: @resource.birth_year), class: badge_class %>
@@ -21,53 +17,48 @@
             <%= link_to birthday_date_path(month: @resource.birthday.month, day: @resource.birthday.day), class: badge_class do %>
               <%= @resource.birthday.month %><span class="px-1">/</span><%= @resource.birthday.day %>
             <% end %>
-          </dd>
-        </div>
-      <% end %>
+          </div>
+        <% end }
+      end
+      if @resource.blood.present?
+        compact_items << { label: "Blood Type", value: capture { @resource.blood } }
+      end
+      if @resource.hometown.present?
+        compact_items << { label: "Hometown", value: capture { @resource.hometown } }
+      end
+    elsif @resource.is_a?(Unit) && @resource.unit_type.present?
+      compact_items << { label: "Unit Type", value: capture { @resource.unit_type } }
+    end
 
-      <% if @resource.blood.present? %>
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
-          <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Blood Type</dt>
-          <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 text-right"><%= @resource.blood %></dd>
-        </div>
-      <% end %>
-      <% if @resource.hometown.present? %>
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
-          <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Hometown</dt>
-          <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 text-right"><%= @resource.hometown %></dd>
-        </div>
-      <% end %>
-    <% elsif @resource.is_a?(Unit) %>
-      <% if @resource.unit_type.present? %>
-        <div class="flex flex-row justify-between items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
-          <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3">Unit Type</dt>
-          <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100"><%= @resource.unit_type %></dd>
-        </div>
-      <% end %>
-
-      <% if @resource.activity_periods.present? %>
-        <div class="flex flex-row justify-between items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
-          <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3">活動時期</dt>
-          <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 grid gap-x-3 justify-end" style="grid-template-columns: auto auto">
-            <% @resource.activity_periods.each do |period| %>
-              <span class="text-xs font-normal text-zinc-600 dark:text-zinc-300 text-right self-center"><%= period.label %></span>
-              <span class="whitespace-nowrap font-mono text-sm"><%= period.from %><span class="text-[0.6rem] text-zinc-400 dark:text-zinc-500">〜</span><%= period.to.presence || '現在' %></span>
-            <% end %>
-          </dd>
-        </div>
-      <% end %>
+    if @resource.status.present?
+      compact_items << { label: "Status", value: capture do %>
+        <span class="bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded text-xs font-bold text-zinc-600 dark:text-zinc-300"><%= @resource.status_text %></span>
+      <% end }
+    end
+  %>
+  <dl class="grid grid-cols-2 gap-x-6 gap-y-3">
+    <% compact_items.each_with_index do |item, i| %>
+      <div class="flex flex-row justify-between items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 <%= i.odd? ? 'pl-4 border-l' : '' %>">
+        <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3"><%= item[:label] %></dt>
+        <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 text-right"><%= item[:value] %></dd>
+      </div>
     <% end %>
 
-    <% if @resource.status.present? %>
-      <div class="flex flex-row justify-between items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
-        <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3">Status</dt>
-        <dd><span class="bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded text-xs font-bold text-zinc-600 dark:text-zinc-300"><%= @resource.status_text %></span></dd>
+    <% if @resource.is_a?(Unit) && @resource.activity_periods.present? %>
+      <div class="col-span-2 flex flex-row justify-between items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3">
+        <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3">活動時期</dt>
+        <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 grid gap-x-3 justify-end" style="grid-template-columns: auto auto">
+          <% @resource.activity_periods.each do |period| %>
+            <span class="text-xs font-normal text-zinc-600 dark:text-zinc-300 text-right self-center"><%= period.label %></span>
+            <span class="whitespace-nowrap font-mono text-sm"><%= period.from %><span class="text-[0.6rem] text-zinc-400 dark:text-zinc-500">〜</span><%= period.to.presence || '現在' %></span>
+          <% end %>
+        </dd>
       </div>
     <% end %>
 
     <% if visible_tag_indices.present? %>
-      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0">
-        <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Tags</dt>
+      <div class="col-span-2 flex flex-row justify-between items-baseline pb-3">
+        <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3">Tags</dt>
         <dd class="text-right flex flex-wrap justify-end gap-2">
           <% visible_tag_indices.each do |tag| %>
             <%= link_to tag.name, index_show_path(tag.id), class: "inline-block bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-200 px-2 py-0.5 rounded text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/70 transition-colors border border-indigo-200 dark:border-indigo-700" %>
