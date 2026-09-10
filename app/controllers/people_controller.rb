@@ -105,8 +105,7 @@ class PeopleController < ApplicationController
   end
 
   def build_person_data_filters
-    hometown_counts = base_scope.where.not(hometown: [nil, '']).group(:hometown).count.sort_by { |_, count| -count }
-
+    hometown_counts = base_scope.where.not(hometown: [nil, '']).group(:hometown).count.sort_by { |h, c| [Person::PREFECTURES.index(h) || Person::PREFECTURES.size, -c] }
     [
       { param: :part, name: 'パート', selected: @selected_part,
         options: Person::AVAILABLE_PARTS.map { |p| { value: p, label: p.humanize, count: base_scope.where('parts @> ?::jsonb', [p].to_json).count } } },

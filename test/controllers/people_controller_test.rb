@@ -65,6 +65,19 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, 'ステータステスト活動中'
   end
 
+  test 'index lists hometown options in prefecture order rather than by count' do
+    3.times { |i| Person.create!(name: "都道府県順テスト沖縄#{i}", key: "people-index-hometown-order-okinawa-#{i}", status: :active, hometown: '沖縄県') }
+    Person.create!(name: '都道府県順テスト北海道', key: 'people-index-hometown-order-hokkaido', status: :active, hometown: '北海道')
+
+    get people_path
+
+    assert_response :success
+    hokkaido_index = response.body.index('北海道')
+    okinawa_index = response.body.index('沖縄県')
+    assert hokkaido_index && okinawa_index, '北海道・沖縄県のボタンが表示されていること'
+    assert_operator hokkaido_index, :<, okinawa_index
+  end
+
   test 'index ignores an invalid part, blood or status filter value' do
     person = Person.create!(name: '不正パラメータテスト', key: 'people-index-filter-invalid-value', status: :active)
 
