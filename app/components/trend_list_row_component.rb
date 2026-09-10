@@ -2,6 +2,7 @@
 
 class TrendListRowComponent < ViewComponent::Base
   include WikiLinkHelper
+  include ApplicationHelper
   include TrendsHelper
   include Rails.application.routes.url_helpers
 
