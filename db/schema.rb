@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_06_125758) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -165,15 +165,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_06_125758) do
     t.string "old_key"
     t.integer "old_wiki_id"
     t.text "old_wiki_text"
-    t.json "parts"
+    t.jsonb "parts"
     t.integer "status", default: 1, null: false
     t.datetime "updated_at", null: false
     t.index ["aliases"], name: "index_people_on_aliases", using: :gin
+    t.index ["blood"], name: "index_people_on_blood"
     t.index ["destination_key"], name: "index_people_on_destination_key", where: "(destination_key IS NOT NULL)"
     t.index ["discarded_at"], name: "index_people_on_discarded_at"
+    t.index ["hometown"], name: "index_people_on_hometown"
     t.index ["name"], name: "index_people_on_name", opclass: :gin_trgm_ops, using: :gin
     t.index ["name_kana"], name: "index_people_on_name_kana", opclass: :gin_trgm_ops, using: :gin
     t.index ["old_history"], name: "index_people_on_old_history", opclass: :gin_trgm_ops, using: :gin
+    t.index ["parts"], name: "index_people_on_parts", using: :gin
   end
 
   create_table "release_schedules", force: :cascade do |t|

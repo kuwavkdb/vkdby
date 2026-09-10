@@ -17,7 +17,7 @@
 #  old_history   :text
 #  old_key       :string
 #  old_wiki_text :text
-#  parts         :json
+#  parts         :jsonb
 #  status        :integer          default("active"), not null
 #  created_at    :datetime         not null
 #  updated_at    :datetime         not null
