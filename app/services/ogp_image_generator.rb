@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'cgi'
+
 # Unit/Person/CustomPageページのog:image/twitter:image用に、ユニット名・メンバー名・
 # ページタイトルを合成したバナー画像（PNG）を生成する（issue #1259、CustomPage対応は#1263）。
 #
@@ -93,7 +95,11 @@ class OgpImageGenerator
 
   def compose_image
     base = Vips::Image.new_from_file(TEMPLATE_PATH.to_s)
-    text_mask = Vips::Image.text(@name.to_s, **text_options)
+    # Vips::Image.textは渡した文字列を常にPangoマークアップとして解釈するため、
+    # 名前に`&` `<` `>`等が含まれるとマークアップとして不正になり
+    # `invalid markup in text`でVips::Errorになる（issue #1472）。
+    # マークアップの特殊文字としてエンティティ化してから渡す。
+    text_mask = Vips::Image.text(CGI.escapeHTML(@name.to_s), **text_options)
     colored_text = text_mask.new_from_image(TEXT_COLOR).bandjoin(text_mask).copy(interpretation: :srgb)
 
     base.composite2(colored_text, :over, x: TEXT_BOX[:left], y: TEXT_BOX[:top])
