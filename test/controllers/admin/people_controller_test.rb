@@ -260,6 +260,17 @@ module Admin
       assert_not_includes response.body, 'キー変更'
     end
 
+    test 'edit offers hometown suggestions including prefectures and 海外/非公表' do
+      get edit_admin_person_path(@person)
+
+      assert_response :success
+      assert_includes response.body, 'id="hometown-suggestions"'
+      assert_includes response.body, '<option value="北海道">'
+      assert_includes response.body, '<option value="沖縄県">'
+      assert_includes response.body, '<option value="海外">'
+      assert_includes response.body, '<option value="非公表">'
+    end
+
     test 'index renders tag filter comboboxes only for groups and tags visible on people' do
       group = IndexGroup.create!(name: '属性グループ', people_filter_order: 1)
       hidden_group = IndexGroup.create!(name: '非表示グループ', people_filter_order: nil)
