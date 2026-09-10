@@ -64,6 +64,22 @@ module OgpImageAttachable
       filename: "ogp-#{self.class.name.underscore}-#{id}.png",
       content_type: 'image/png'
     )
+
+    return if ogp_image.attached? && ogp_image.attachment.persisted?
+
+    # ActiveStorage::Attached::One#attachは、永続化済みレコードに対しては内部で
+    # レコード自体をsaveする。このsaveがバリデーションエラー等で失敗した場合、attachは
+    # 例外を投げずに添付前の状態へ戻さないため、ogp_imageはメモリ上「添付済み」のまま
+    # 実体（blob/attachment）が保存されない不整合な状態になる（issue #1473）。
+    # 放置するとogp_image_relative_url側でsigned_id取得時にArgumentErrorが発生し
+    # 500エラーになるため、ここで検知してレコードをreloadし添付前の状態に戻す。
+    save_error_messages = errors.full_messages.presence
+    reload
+    Rails.logger.error(
+      "OgpImageAttachable: 画像の添付に失敗しました (#{self.class.name}##{id}): " \
+      "レコードの保存に失敗しました #{save_error_messages}"
+    )
+    mark_ogp_image_attach_failed
   rescue StandardError => e
     Rails.logger.error(
       "OgpImageAttachable: 画像の添付に失敗しました (#{self.class.name}##{id}): #{e.class}: #{e.message}"
