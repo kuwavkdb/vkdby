@@ -642,4 +642,12 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     end
     attrs
   end
+
+  # ナビの「Login」リンク用の遷移先。すでに /login にいる場合に return_to を
+  # 付けると、その値が自分自身（/login?return_to=...）を含んでしまい、
+  # このリンクをクロールするボットが return_to を再帰的にネストさせながら
+  # 延々とクロールし続ける原因になっていた（issue #1492）。
+  def login_link_path
+    current_page?(login_path) ? login_path : login_path(return_to: request.fullpath)
+  end
 end
