@@ -47,7 +47,7 @@ gem 'thruster', require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem 'aws-sdk-s3', require: false
-gem 'image_processing', '~> 2.0'
+gem 'image_processing', '~> 2.1'
 gem 'mini_magick'
 # 画像添付ファイルのメタデータ解析（width/height抽出）用。Dockerfileでlibvips(C library)を
 # インストール済みだが、ruby側のバインディングgemが無いためActiveStorageの画像解析
