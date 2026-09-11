@@ -60,6 +60,19 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_url
   end
 
+  test 'ナビのLoginリンクは現在のパスをreturn_toとして持つ（issue #1492）' do
+    get root_url
+
+    assert_select 'a[href=?]', login_path(return_to: '/')
+  end
+
+  test 'ログインページ自身のナビのLoginリンクはreturn_toを持たない（issue #1492）' do
+    get login_url, params: { return_to: '/date/2013/1/16' }
+
+    assert_select 'a[href=?]', login_path
+    assert_select 'a[href^=?]', "#{login_path}?return_to=", count: 0
+  end
+
   test 'should get destroy' do
     delete logout_url
     assert_redirected_to root_url

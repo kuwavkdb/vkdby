@@ -61,3 +61,26 @@ end
 Rack::Attack.throttle('login/email', limit: 10, period: 60) do |req|
   req.params['email']&.downcase if req.path == '/login' && req.post?
 end
+
+# ログインページ（GET /login）への大量アクセス対策（issue #1492）。
+# 全ページのナビに表示される「Login」リンク（return_to=現在パス付き）を
+# 既知のボット（Amazonbot, meta-externalagent 等）が律儀に辿り続け、
+# /login ページ自体にも同じリンクがあるため return_to の値が
+# /login?return_to=/login?return_to=... のように再帰的にネストして
+# 際限なく増殖する現象が本番ログで確認された。ログインページはこれらの
+# ボットがクロールする価値のないコンテンツのため、既知のボット UA は
+# GET /login への即時ブロック対象とする。
+login_page_bot_ua_pattern = /Amazonbot|meta-?externalagent|SemrushBot|MJ12bot|Bytespider|GPTBot|ClaudeBot|CCBot|
+                              Baiduspider|Googlebot|bingbot|Applebot|PerplexityBot|DotBot|AhrefsBot/xi
+Rack::Attack.blocklist('block_bots/login') do |req|
+  req.path == '/login' && req.get? && req.user_agent.to_s.match?(login_page_bot_ua_pattern)
+end
+
+# 上記の UA リストに該当しないクライアントも含め、GET /login は
+# IP ごとに 60 秒間 10 回までに制限する（POST のログイン試行に対する
+# login/ip・login/email スロットルとは別に、フォーム表示自体への
+# 過剰アクセスを抑える保険）。ログインアカウントは現状1名（今後増えても
+# 数名程度の見込み）で通常操作でこの回数に達することはない。
+Rack::Attack.throttle('login_page/ip', limit: 10, period: 60) do |req|
+  req.ip if req.path == '/login' && req.get?
+end

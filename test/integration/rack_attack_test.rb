@@ -28,4 +28,17 @@ class RackAttackTest < ActionDispatch::IntegrationTest
 
     assert_response :success
   end
+
+  test '既知のボットUAによるGET /loginは即座にブロックされる（issue #1492）' do
+    get '/login', headers: { 'User-Agent' => 'Mozilla/5.0 AppleWebKit/537.36 (compatible; Amazonbot/0.1; +https://developer.amazon.com/support/amazonbot)' }
+
+    assert_response :forbidden
+  end
+
+  test '通常のUAによるGET /loginはブロックされない' do
+    ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 13_7_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.6943.141 Safari/537.36'
+    get '/login', headers: { 'User-Agent' => ua }
+
+    assert_response :success
+  end
 end
