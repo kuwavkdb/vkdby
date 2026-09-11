@@ -3,7 +3,7 @@
   <head>
     <% og_title = content_for?(:title) ? yield(:title) : Rails.application.config.site_name %>
     <% og_description = content_for?(:description) ? yield(:description) : Rails.application.config.site_description %>
-    <title><%= page_title_text(content_for?(:title) ? "#{og_title} - #{Rails.application.config.site_name}" : og_title) %></title>
+    <title><%= page_title_text(page_title_with_site_name(og_title, has_custom_title: content_for?(:title))) %></title>
     <meta name="description" content="<%= meta_description_text(og_description) %>">
     <meta name="viewport" content="width=device-width,initial-scale=1">
 

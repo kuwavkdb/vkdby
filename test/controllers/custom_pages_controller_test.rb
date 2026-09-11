@@ -235,4 +235,24 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, 'Last updated'
   end
+
+  test '<title> does not duplicate the site name when the page title already contains it (issue #1252)' do
+    site_name = Rails.application.config.site_name
+    CustomPage.create!(key: 'index', title: "#{site_name} - ヴィジュアル系バンドまとめサイト", active: true, body: 'body')
+
+    get root_path
+
+    assert_response :success
+    assert_includes response.body, "<title>#{site_name} - ヴィジュアル系バンドまとめサイト</title>"
+  end
+
+  test '<title> appends the site name once for a normal custom page title (issue #1252)' do
+    site_name = Rails.application.config.site_name
+    page = CustomPage.create!(key: 'title-suffix-test-page', title: 'Title Suffix Test', active: true, body: 'body')
+
+    get custom_page_path(key: page.key)
+
+    assert_response :success
+    assert_includes response.body, "<title>Title Suffix Test - #{site_name}</title>"
+  end
 end

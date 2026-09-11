@@ -152,6 +152,19 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     CGI.unescapeHTML(text.to_s).gsub('&', '&amp;').gsub('<', '&lt;').html_safe
   end
 
+  # レイアウトの<title>用に、ページ固有タイトルへサイト名を付与する。
+  # content_for(:title)が未設定のページ（titleがそのままサイト名）にはそもそも付与不要。
+  # 設定済みでもタイトル自体に既にサイト名が含まれる場合（例: CustomPage#titleに
+  # "vkdb.jp - ..."のようにサイト名込みの値が入っているケース）は付与すると重複するため
+  # スキップする（issue #1252）。
+  def page_title_with_site_name(title, has_custom_title:)
+    site_name = Rails.application.config.site_name
+    return title unless has_custom_title
+    return title if title.to_s.include?(site_name)
+
+    "#{title} - #{site_name}"
+  end
+
   # meta descriptionはHTML属性値（content="..."）として出力するため、page_title_textと違い
   # "&"と"<"だけでなく">"や引用符も含めてエスケープする必要がある。
   # content_for(:description, ...)にプレーン文字列を渡した場合も、page_title_textと同様に

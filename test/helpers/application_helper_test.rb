@@ -864,6 +864,26 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_equal 'https://example.com/units/1/ogp.png', result
   end
 
+  test 'page_title_with_site_nameはcontent_for(:title)がない場合、サイト名をそのまま返す（issue #1252）' do
+    result = page_title_with_site_name(Rails.application.config.site_name, has_custom_title: false)
+
+    assert_equal Rails.application.config.site_name, result
+  end
+
+  test 'page_title_with_site_nameはページ固有タイトルの末尾にサイト名を付与する（issue #1252）' do
+    result = page_title_with_site_name('個別ページタイトル', has_custom_title: true)
+
+    assert_equal "個別ページタイトル - #{Rails.application.config.site_name}", result
+  end
+
+  test 'page_title_with_site_nameはタイトルに既にサイト名が含まれる場合は付与をスキップする（issue #1252）' do
+    title = "#{Rails.application.config.site_name} - ヴィジュアル系バンドまとめサイト"
+
+    result = page_title_with_site_name(title, has_custom_title: true)
+
+    assert_equal title, result
+  end
+
   private
 
   def create_image_blob(width:, height:)
