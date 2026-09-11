@@ -8,9 +8,53 @@ class LegacyRedirectsController < ApplicationController
   }.freeze
   YEARLY_TREND_PATTERN = %r{\A動向/(\d{4})\z}
   DAILY_CALENDAR_PATTERN = %r{\Aカレンダー/(\d{4})-(\d{1,2})-(\d{1,2})\z}
+  WIKI_CGI_DATE_PATTERN = %r{\A(\d{4})/(\d{1,2})/(\d{1,2})\z}
 
   def show
-    old_key = params[:old_key]
+    redirect_for_old_key(params[:old_key])
+  end
+
+  # 旧wiki.cgi宛のリクエストの救済（issue #1482）
+  # ?page=XXX は .html と同様のold_key解決、?date=YYYY/MM/DD&action=DAY は
+  # 日付ページへの転送のみ対応する（無理のない範囲での救済のため）
+  def wiki_cgi
+    if params[:page].present?
+      redirect_for_old_key(params[:page])
+      return
+    end
+
+    date = request.query_parameters['date']
+    if date.present? && request.query_parameters['action'] == 'DAY' && (match = date.match(WIKI_CGI_DATE_PATTERN))
+      redirect_to daily_path(year: match[1], month: match[2], day: match[3]), status: :moved_permanently
+      return
+    end
+
+    render 'not_found', status: :not_found
+  end
+
+  def news_redirect
+    trend = Trend.find_by(id: params[:id])
+    if trend
+      redirect_to trend_url(trend), status: :moved_permanently
+    else
+      render 'not_found', status: :not_found
+    end
+  end
+
+  def item_redirect
+    item = Item.kept.find_by(asin: params[:asin])
+    if item
+      redirect_to item_url(item), status: :moved_permanently
+    else
+      render 'not_found', status: :not_found
+    end
+  end
+
+  private
+
+  # old_key（.html の旧ページ名、またはwiki.cgiのpageパラメータ）から
+  # 対応する新URLを解決してリダイレクトする
+  def redirect_for_old_key(old_key)
     encoded_old_key = URI.encode_www_form_component(old_key.gsub('+', ' '))
     decoded_name = decode_euc_jp(old_key)
 
@@ -58,26 +102,6 @@ class LegacyRedirectsController < ApplicationController
 
     render 'not_found', status: :not_found
   end
-
-  def news_redirect
-    trend = Trend.find_by(id: params[:id])
-    if trend
-      redirect_to trend_url(trend), status: :moved_permanently
-    else
-      render 'not_found', status: :not_found
-    end
-  end
-
-  def item_redirect
-    item = Item.kept.find_by(asin: params[:asin])
-    if item
-      redirect_to item_url(item), status: :moved_permanently
-    else
-      render 'not_found', status: :not_found
-    end
-  end
-
-  private
 
   # Try to decode old_key (EUC-JP) to UTF-8
   # Unescape first, then force encoding to EUC-JP and transcode to UTF-8
