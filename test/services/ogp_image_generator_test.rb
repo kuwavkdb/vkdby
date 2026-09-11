@@ -30,6 +30,17 @@ class OgpImageGeneratorTest < ActiveSupport::TestCase
     end
   end
 
+  test 'generates an image for a name containing markup special characters (issue #1472)' do
+    skip 'libvips is not installed in this environment' unless ActiveStorage::VIPS_AVAILABLE
+
+    result = OgpImageGenerator.call('sound&prg.&Dr.<大熊>')
+
+    assert_not_nil result
+    image = Vips::Image.new_from_buffer(result, '')
+    assert_equal 1200, image.width
+    assert_equal 628, image.height
+  end
+
   # text_optionsの結果だけを見る純粋なRubyのロジックテスト。実際にVips::Image.textを
   # 呼ぶ（compose_image経由の）テストにすると、存在しないフォント名解決やfontfileの
   # 組み合わせによってlibvips内部がクラッシュすることがあり（並列テスト実行時に確認）、
