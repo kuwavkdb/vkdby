@@ -134,6 +134,9 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   root 'custom_pages#index_page'
 
+  # Sitemap for search engine crawling (issue #1491)
+  get '/sitemap.xml', to: 'sitemaps#show'
+
   mount Lookbook::Engine, at: '/lookbook' if Rails.env.development?
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
