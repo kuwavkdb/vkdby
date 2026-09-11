@@ -30,22 +30,26 @@ Rack::Attack.throttle('people_units_filter/ip', limit: 5, period: 60) do |req|
   req.ip if people_units_filter_request.call(req)
 end
 
-# tag_ids を5カテゴリ以上同時に指定するリクエストか判定する。通常のユーザー操作
-# （UIで1〜2個ずつチェックボックスを選ぶ）ではまず起こらない、フィルターの
-# 組み合わせを総当たりで列挙するクロール特有のパターン（issue #1439）。
-exhaustive_tag_filter_request = lambda do |req|
+# tag_ids を4カテゴリ以上同時に指定するリクエストか判定する。tag_idsで絞り込める
+# グループは現状のUIで people 最大1（個人カナ索引）・units 最大3（カナ索引/地域/
+# バンド状態）までしかなく、4カテゴリ以上は通常のユーザー操作では発生し得ない、
+# フィルターの組み合わせを総当たりで列挙するクロール特有のパターン（issue #1439）。
+excessive_tag_filter_request = lambda do |req|
   next false unless people_units_filter_request.call(req)
 
   tag_ids = req.params['tag_ids']
-  tag_ids.is_a?(Hash) && tag_ids.size >= 5
+  tag_ids.is_a?(Hash) && tag_ids.size >= 4
 end
 
 # IPをローテーションしながら大量にリクエストを送ることで、上記の IP 単位のスロットルを
-# すり抜けようとするスクレイパー対策（issue #1439）。IPには依存せず、5カテゴリ以上の
-# 総当たりリクエストの合計量をサイト全体で30秒間10回までに制限する。通常利用では
-# まず該当しない条件に絞っているため、正規ユーザーへの影響はほぼない。
-Rack::Attack.throttle('people_units_filter/exhaustive_tag_combo', limit: 10, period: 30) do |req|
-  'people_units_filter/exhaustive_tag_combo' if exhaustive_tag_filter_request.call(req)
+# すり抜けようとするスクレイパー対策（issue #1439）。当初はスロットル（30秒10回まで）
+# だったが、その「許可される10回」だけでも本番の同時実行数（Pumaスレッド。
+# render.yamlのWEB_CONCURRENCY=1・RAILS_MAX_THREADS=5）を瞬間的に圧迫し、
+# 無関係なページまで応答遅延を起こす問題が起きた（issue #1478）。UIでは絶対に
+# 発生しないリクエストなので正規ユーザーへの影響はなく、スロットルではなく
+# 即座にブロックする。
+Rack::Attack.blocklist('block_excessive_tag_combo/people_units_filter') do |req|
+  excessive_tag_filter_request.call(req)
 end
 
 # ログイン: IP ごとに 20 秒間 5 回まで（ブルートフォース対策）
