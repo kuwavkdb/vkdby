@@ -200,9 +200,12 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
   get '/release_recent.htm', to: redirect('/items')
 
   # Legacy redirect for old search CGI (issue #1481)
-  # クエリストリングは維持したまま /search へリダイレクトする（旧パラメータ名が
-  # 新しい検索の :q と一致するかは問わず、可能な範囲で維持する）
-  get '/search/msearch.cgi', to: redirect(path: '/search')
+  # 旧msearch.cgiの検索語パラメータは `query` だったため、新しい検索の `q` に
+  # 変換して /search へリダイレクトする
+  get '/search/msearch.cgi', to: redirect { |_params, request|
+    query = request.query_parameters['query']
+    query.present? ? "/search?#{URI.encode_www_form(q: query)}" : '/search'
+  }
 
   # Legacy redirects for .html extensions
   get '/:old_key.html', to: 'legacy_redirects#show', constraints: { old_key: %r{[^/]+} }

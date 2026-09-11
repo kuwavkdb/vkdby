@@ -12,10 +12,17 @@ class MsearchCgiRedirectTest < ActionDispatch::IntegrationTest
     assert_redirected_to '/search'
   end
 
-  test 'クエリパラメータは維持したまま/searchへリダイレクトされる' do
-    get '/search/msearch.cgi?word=VAMPS'
+  test '旧パラメータqueryはqに変換して/searchへリダイレクトされる' do
+    get '/search/msearch.cgi?query=VAMPS'
 
     assert_response :moved_permanently
-    assert_redirected_to '/search?word=VAMPS'
+    assert_redirected_to '/search?q=VAMPS'
+  end
+
+  test 'queryが空の場合はパラメータなしで/searchへリダイレクトされる' do
+    get '/search/msearch.cgi?query='
+
+    assert_response :moved_permanently
+    assert_redirected_to '/search'
   end
 end
