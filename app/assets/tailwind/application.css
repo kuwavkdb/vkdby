@@ -60,39 +60,45 @@
       border-radius: 0.25em;
     }
     details.closable[open] summary { margin-bottom: 0.25em; }
-
-    /* {{div_begin class="columns"}} プラグイン（画像・{{youtube}}埋め込み等の左右配置）。
-       モバイル幅では縦積み、md幅以上で2カラムに並べる（issue #1146）。
-       直下の各要素（<p><img></p>や{{youtube}}のプレースホルダー等）がそのままグリッドの
-       各カラムになるため、1カラムに複数要素をまとめたい場合は{{div_begin}}（無属性）で
-       さらに内側を1つの<div>にまとめる。
-       子要素（<p>等）自体のマージンは0にし、間隔はgapだけに任せる。pにデフォルトで
-       margin: 0.875em 0が付くため放置すると、md幅以上の2カラムグリッドで「DOM上たまたま
-       先頭/末尾になった要素」だけ実質マージンが小さくなり、align-items: centerと組み合わさって
-       同じ行の左右の画像（サイズが同一でも）の縦位置が数px単位でズレて見える不具合があった
-       （例: 画像を4枚並べたとき、各行の右側の画像だけ左側より約7px下にズレる）。
-       .columns自体の外枠マージンは0にし、行間・カラム間の余白はgapに一本化している。
-       img自体のマージン（下記imgルール由来の0.5em 0）は.columns内では半分の0.25em 0に
-       減らしている。row-gap/column-gapは実機で見た目を揃えて0.5rem固定にしている。 */
-    .columns {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 0.5rem;
-      align-items: center;
-    }
-    .columns > * { margin: 0; }
-    .columns img { margin: 0.25em 0; }
-    /* {{youtube}}プラグインの<iframe>はaspect-video + h-[360px]で高さ360px・幅640px相当の
-       固定サイズになっている（issue #1398）。.columns内ではこの固定幅がグリッドアイテムの
-       min-widthとして扱われ、1frの均等割りを押し広げて画像側カラムが狭くなる不具合があった
-       （issue #1466）。.columns内に限りwidth: 100%; height: autoで上書きし、aspect-video
-       （16:9）は維持したままカラム幅に追従させる。h-[360px]より詳細度の高い.columns iframeで
-       上書きするためimportant不要。 */
-    .columns iframe { width: 100%; height: auto; }
   }
 
+  /* {{div_begin class="columns"}} プラグイン（画像・{{youtube}}埋め込み等の左右配置）。
+     モバイル幅では縦積み、md幅以上で2カラムに並べる（issue #1146）。
+     直下の各要素（<p><img></p>や{{youtube}}のプレースホルダー等）がそのままグリッドの
+     各カラムになるため、1カラムに複数要素をまとめたい場合は{{div_begin}}（無属性）で
+     さらに内側を1つの<div>にまとめる。
+     子要素（<p>等）自体のマージンは0にし、間隔はgapだけに任せる。pにデフォルトで
+     margin: 0.875em 0が付くため放置すると、md幅以上の2カラムグリッドで「DOM上たまたま
+     先頭/末尾になった要素」だけ実質マージンが小さくなり、align-items: centerと組み合わさって
+     同じ行の左右の画像（サイズが同一でも）の縦位置が数px単位でズレて見える不具合があった
+     （例: 画像を4枚並べたとき、各行の右側の画像だけ左側より約7px下にズレる）。
+     .columns自体の外枠マージンは0にし、行間・カラム間の余白はgapに一本化している。
+     img自体のマージン（.markdown-content/.wiki-contentのimgルール由来の0.5em 0）は
+     .columns内では半分の0.25em 0に減らしている。row-gap/column-gapは実機で見た目を
+     揃えて0.5rem固定にしている。
+     このプラグインは{{div_begin class="columns"}}が出力する<div class="columns">専用の
+     クラスで、custom_pages（.markdown-content）・セクション（.wiki-content）のどちらの
+     本文中でも使われるため、特定の親クラスにスコープせずトップレベルで定義する
+     （issue #1504: .markdown-content配下にネストしていたため、セクション内では
+     このルールが一切当たらず、md幅以上でも画像が横並びにならなかった）。 */
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .columns > * { margin: 0; }
+  .columns img { margin: 0.25em 0; }
+  /* {{youtube}}プラグインの<iframe>はaspect-video + h-[360px]で高さ360px・幅640px相当の
+     固定サイズになっている（issue #1398）。.columns内ではこの固定幅がグリッドアイテムの
+     min-widthとして扱われ、1frの均等割りを押し広げて画像側カラムが狭くなる不具合があった
+     （issue #1466）。.columns内に限りwidth: 100%; height: autoで上書きし、aspect-video
+     （16:9）は維持したままカラム幅に追従させる。h-[360px]より詳細度の高い.columns iframeで
+     上書きするためimportant不要。 */
+  .columns iframe { width: 100%; height: auto; }
+
   @media (min-width: 768px) {
-    .markdown-content .columns {
+    .columns {
       grid-template-columns: repeat(2, 1fr);
     }
   }
