@@ -30,9 +30,17 @@ services:
         value: 5
       - key: MALLOC_ARENA_MAX
         value: 2
+      # MemoryWatchdog（lib/memory_watchdog.rb、issue #743）の再起動閾値。
+      # 下の plan を変更する際は、この値もインスタンスサイズの約88%に
+      # 合わせて更新すること（#1497）。Starter(512MB)なら450、
+      # Standard(2GB)なら1800が目安。
+      - key: MEMORY_WATCHDOG_THRESHOLD_MB
+        value: 450
     region: singapore
     # 512MBのStarterでOOM再起動が頻発したため2GB/1CPUのStandardに増強していた
     # （#1344）。tag_index_itemsのN+1修正（#1384）を受けて一度Starterに戻した
     # （#1388）が、24時間観測した結果512MBでは依然メモリが高帯域に張り付き
-    # GC負荷起因の応答遅延が長時間継続したため、再度Standardに戻す（#1423）
-    plan: standard
+    # GC負荷起因の応答遅延が長時間継続したため、再度Standardに戻した（#1423）。
+    # その後、応答時間悪化の別の根本原因（レート制限をすり抜けるスクレイパー、
+    # #1439）を解消できたため、再度Starterに戻す（#1497）
+    plan: starter
