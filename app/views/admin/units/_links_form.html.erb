@@ -1,4 +1,4 @@
-<div class="bg-white shadow rounded-lg p-6 mt-6">
+<div class="bg-white shadow rounded-lg p-6 mt-6 dark:bg-gray-900">
   <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100 mb-4">公式リンク</h3>
   
   <%= form_with(model: [:admin, unit], class: "space-y-6") do |form| %>
@@ -24,7 +24,7 @@
             </div>
             <div class="flex items-center">
               <%= link_form.check_box :_destroy, class: "rounded border-gray-300 text-red-600 shadow-sm focus:border-red-500 focus:ring-red-500 dark:bg-gray-700 dark:border-gray-600" %>
-              <%= link_form.label :_destroy, "削除", class: "ml-2 text-xs text-red-600 font-medium" %>
+              <%= link_form.label :_destroy, "削除", class: "ml-2 text-xs text-red-600 font-medium dark:text-red-400" %>
             </div>
           </div>
         </div>
