@@ -16,7 +16,8 @@ module Admin
       @section = @sectionable.sections.build(section_params)
       if @section.save
         record_update_log(@section, action: 'create')
-        redirect_to sectionable_edit_path, notice: 'セクションを追加しました。'
+        redirect_to edit_admin_section_path(@section, sectionable_type: @sectionable.class.name, sectionable_id: @sectionable.id),
+                    notice: 'セクションを追加しました。'
       else
         render :new, status: :unprocessable_entity
       end

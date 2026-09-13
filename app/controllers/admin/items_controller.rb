@@ -51,6 +51,11 @@ module Admin
       if @item.save
         redirect_to edit_admin_item_path(@item), notice: 'Item created successfully.'
       else
+        # ASINの重複（validates :asin, uniqueness: true）で保存に失敗した場合、
+        # 新規作成をそのまま失敗させるのではなく、既存アイテムへの上書き（更新）に
+        # 進める導線を出す（issue #1509）。フォームはduplicate_asin_itemが
+        # 存在する場合、その場でupdateへ再送信できるボタンを表示する。
+        @duplicate_asin_item = find_duplicate_asin_item(@item)
         render :new, status: :unprocessable_entity
       end
     end
@@ -106,6 +111,14 @@ module Admin
 
     def item_params
       params.require(:item).permit(:title, :release_date, :link_url, :asin, :image_url, :various_artists)
+    end
+
+    # ASINのuniqueness違反が原因で保存に失敗した場合、同じASINを持つ既存アイテム
+    # （論理削除済みも含む）を返す。それ以外のエラーの場合はnilを返す。
+    def find_duplicate_asin_item(item)
+      return nil unless item.errors.of_kind?(:asin, :taken)
+
+      Item.with_discarded.where(asin: item.asin).where.not(id: item.id).first
     end
 
     def build_artist_from_params

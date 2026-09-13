@@ -66,7 +66,7 @@ module Admin
       }
 
       section = item.sections.last
-      assert_redirected_to edit_admin_item_path(item)
+      assert_redirected_to edit_admin_section_path(section, sectionable_type: 'Item', sectionable_id: item.id)
       assert_equal '本文です', section.wiki_text
 
       get edit_admin_section_path(section)
