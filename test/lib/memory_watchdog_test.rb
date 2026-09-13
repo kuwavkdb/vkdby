@@ -35,6 +35,53 @@ class MemoryWatchdogTest < ActiveSupport::TestCase
     assert_empty killed
   end
 
+  test 'log_interval指定時は閾値未満でも一定間隔でRSSをINFOログに出す（issue #1521）' do
+    fake_mem = Object.new.tap { |o| o.define_singleton_method(:mb) { 100.0 } }
+    info_logs = []
+    fake_logger = Object.new.tap do |o|
+      o.define_singleton_method(:info) { |msg| info_logs << msg }
+      o.define_singleton_method(:warn) { |_msg| }
+      o.define_singleton_method(:error) { |_msg| }
+    end
+    original_logger = Rails.logger
+    Rails.logger = fake_logger
+
+    stub_class_method(GetProcessMem, :new, ->(*_args) { fake_mem }) do
+      thread = MemoryWatchdog.start(threshold_mb: 450, check_interval: 0.02, log_interval: 0.05, pid: 12_345)
+      sleep 0.2
+      thread.kill
+      thread.join
+    end
+
+    assert_operator info_logs.size, :>=, 2
+    assert_match(/RSS 100\.0MB（閾値 450MB）/, info_logs.first)
+  ensure
+    Rails.logger = original_logger
+  end
+
+  test 'log_interval未指定の場合は閾値未満でINFOログを出さない' do
+    fake_mem = Object.new.tap { |o| o.define_singleton_method(:mb) { 100.0 } }
+    info_logs = []
+    fake_logger = Object.new.tap do |o|
+      o.define_singleton_method(:info) { |msg| info_logs << msg }
+      o.define_singleton_method(:warn) { |_msg| }
+      o.define_singleton_method(:error) { |_msg| }
+    end
+    original_logger = Rails.logger
+    Rails.logger = fake_logger
+
+    stub_class_method(GetProcessMem, :new, ->(*_args) { fake_mem }) do
+      thread = MemoryWatchdog.start(threshold_mb: 450, check_interval: 0.02, pid: 12_345)
+      sleep 0.1
+      thread.kill
+      thread.join
+    end
+
+    assert_empty info_logs
+  ensure
+    Rails.logger = original_logger
+  end
+
   test 'メモリ取得でエラーが発生してもスレッドは監視を継続する' do
     killed = []
     call_count = 0

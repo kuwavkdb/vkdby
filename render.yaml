@@ -36,6 +36,11 @@ services:
       # Standard(2GB)なら1800が目安。
       - key: MEMORY_WATCHDOG_THRESHOLD_MB
         value: 450
+      # デバッグ用: 閾値未満でも1分ごとに実測RSSをINFOログに出す（issue #1521）。
+      # Renderのメトリクス画面が示すメモリ使用率と実RSSの乖離を確認するための一時的な
+      # 計装。原因の切り分けが済んだら本変数ごと削除してよい。
+      - key: MEMORY_WATCHDOG_LOG_INTERVAL
+        value: 60
     region: singapore
     # 512MBのStarterでOOM再起動が頻発したため2GB/1CPUのStandardに増強していた
     # （#1344）。tag_index_itemsのN+1修正（#1384）を受けて一度Starterに戻した
