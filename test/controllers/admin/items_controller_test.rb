@@ -62,6 +62,40 @@ module Admin
       assert_redirected_to edit_admin_item_path(item)
     end
 
+    test 'create shows the duplicate item and an overwrite link when the asin is already registered' do
+      existing = Item.create!(
+        title: '既存アイテム',
+        release_date: Date.today,
+        link_url: "https://example.com/item-#{SecureRandom.hex(4)}",
+        asin: 'B00TESTASIN'
+      )
+
+      post admin_items_path, params: {
+        item: {
+          title: '新規アイテム',
+          release_date: Date.today,
+          link_url: "https://example.com/item-#{SecureRandom.hex(4)}",
+          asin: 'B00TESTASIN'
+        }
+      }
+
+      assert_response :unprocessable_entity
+      assert_select 'button[data-overwrite-url=?]', admin_item_path(existing)
+      assert_not Item.exists?(title: '新規アイテム')
+    end
+
+    test 'create does not set a duplicate item when the save fails for another reason' do
+      post admin_items_path, params: {
+        item: {
+          title: '', # titleのバリデーション未設定でも、asin以外のエラーでは上書き導線を出さない
+          release_date: Date.today,
+          link_url: "https://example.com/item-#{SecureRandom.hex(4)}"
+        }
+      }
+
+      assert_select 'button[data-overwrite-url]', count: 0
+    end
+
     test 'new does not auto-confirm an artist passed via query params, even with an artist_key' do
       get new_admin_item_path, params: {
         artist_name: 'シド',

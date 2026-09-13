@@ -7,6 +7,29 @@
           <li><%= error.full_message %></li>
         <% end %>
       </ul>
+
+      <%# ASINのuniqueness違反の場合、新規作成を諦めさせるのではなく既存アイテムへの
+          上書き（update）に進める導線を出す（issue #1509）。@duplicate_asin_itemは
+          Admin::ItemsController#createがASIN重複エラー時にのみセットする。 %>
+      <% if @duplicate_asin_item %>
+        <div class="mt-3 pt-3 border-t border-red-200">
+          <p class="text-sm">
+            同じASINのアイテム「<%= @duplicate_asin_item.title %>」が既に登録されています。
+            <% if @duplicate_asin_item.discarded? %>
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">削除済み</span>
+            <% end %>
+            <br>
+            このフォームの内容でそのアイテムを上書きする場合は、以下のボタンから更新できます。
+          </p>
+          <button type="submit"
+                  class="mt-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-md cursor-pointer"
+                  data-action="click->item-form#overwriteExisting"
+                  data-overwrite-url="<%= admin_item_path(@duplicate_asin_item) %>"
+                  data-overwrite-title="<%= @duplicate_asin_item.title %>">
+            「<%= @duplicate_asin_item.title %>」に上書きして保存
+          </button>
+        </div>
+      <% end %>
     </div>
   <% end %>
 
