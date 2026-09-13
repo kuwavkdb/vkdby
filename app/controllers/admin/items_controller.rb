@@ -54,13 +54,31 @@ module Admin
         # ASINの重複（validates :asin, uniqueness: true）で保存に失敗した場合、
         # 新規作成をそのまま失敗させるのではなく、既存アイテムへの上書き（更新）に
         # 進める導線を出す（issue #1509）。フォームはduplicate_asin_itemが
-        # 存在する場合、その場でupdateへ再送信できるボタンを表示する。
+        # 存在する場合、その場で既存アイテムの編集画面へ遷移するボタンを表示する。
         @duplicate_asin_item = find_duplicate_asin_item(@item)
         render :new, status: :unprocessable_entity
       end
     end
 
-    def edit; end
+    # ASIN重複時の「上書きして保存」ボタンからは、新規作成フォームの内容を
+    # クエリパラメータ（item[...]）付きで編集画面へGET遷移してくる（issue #1515）。
+    # 以前はJSでフォームをその場でPATCH送信し直す実装だったが、フォーム生成時に
+    # 埋め込まれるCSRFトークンがPOST /admin/items専用（per_form_csrf_tokens）の
+    # ため、action/methodを書き換えて送信するとCSRF検証に失敗していた。
+    #
+    # GET遷移にすることでCSRF検証自体を回避しつつ、DBの値に対して
+    # assign_attributesするだけで保存はしないため、ActiveModel::Dirtyで
+    # 変更箇所を検出でき、編集画面上でどこが上書きされるか確認できる。
+    #
+    # アーティストのみ上書き対象から除外する。新規作成フォームのartists_jsonを
+    # そのままクエリパラメータで引き継ごうとすると、既存アイテム側の行と衝突して
+    # 編集画面でアーティスト欄が空になってしまうため、既存アイテムの値をそのまま残す。
+    def edit
+      return if params[:item].blank?
+
+      @item.assign_attributes(item_params)
+      @overwrite_preview = true
+    end
 
     def update
       @item.assign_attributes(item_params)
