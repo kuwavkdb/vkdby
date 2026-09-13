@@ -26,13 +26,26 @@ module MemoryWatchdog
 
   def start(threshold_mb: ENV.fetch('MEMORY_WATCHDOG_THRESHOLD_MB', DEFAULT_THRESHOLD_MB).to_i,
             check_interval: ENV.fetch('MEMORY_WATCHDOG_CHECK_INTERVAL', DEFAULT_CHECK_INTERVAL_SECONDS).to_i,
+            # RenderのメトリクスとRubyプロセスの実RSSの乖離を確認するためのデバッグ計装
+            # （issue #1521）。未設定なら従来通り閾値超過時のみログを出す。設定時は、
+            # この秒数間隔で閾値未満でも実測RSSをINFOログに出す。
+            log_interval: ENV['MEMORY_WATCHDOG_LOG_INTERVAL']&.to_i,
             pid: Process.pid)
     Thread.new do
+      elapsed_since_last_log = 0
+
       loop do
         sleep check_interval
+        elapsed_since_last_log += check_interval
 
         begin
           rss_mb = GetProcessMem.new(pid).mb
+
+          if log_interval&.positive? && elapsed_since_last_log >= log_interval
+            Rails.logger.info("MemoryWatchdog: RSS #{rss_mb.round(1)}MB（閾値 #{threshold_mb}MB）")
+            elapsed_since_last_log = 0
+          end
+
           next if rss_mb < threshold_mb
 
           Rails.logger.warn(
