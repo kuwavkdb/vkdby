@@ -42,5 +42,16 @@ module ActiveSupport
     ensure
       klass.define_method(method_name, original)
     end
+
+    # 指定したENV変数を一時的に差し替えてブロックを実行し、元の値に戻す
+    # （issue #1510: current_environmentのIS_PULL_REQUEST分岐のテストで使用）。
+    # value に nil を渡すとそのキーが未設定の状態を再現する。
+    def with_env(vars)
+      original = vars.keys.to_h { |key| [key, ENV.fetch(key, nil)] }
+      vars.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
+      yield
+    ensure
+      original.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
+    end
   end
 end

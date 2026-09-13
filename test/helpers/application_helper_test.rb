@@ -884,6 +884,35 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_equal title, result
   end
 
+  test 'current_environmentはRails.env.local?がtrueならdevelopmentを返す（issue #1510）' do
+    stub_instance_method(ActiveSupport::EnvironmentInquirer, :local?, true) do
+      assert_equal :development, current_environment
+    end
+  end
+
+  test 'current_environmentはlocalでなくIS_PULL_REQUEST=trueならpreviewを返す（issue #1510）' do
+    with_env('IS_PULL_REQUEST' => 'true') do
+      stub_instance_method(ActiveSupport::EnvironmentInquirer, :local?, false) do
+        assert_equal :preview, current_environment
+      end
+    end
+  end
+
+  test 'current_environmentはlocalでもIS_PULL_REQUEST=trueでもなければproductionを返す（issue #1510）' do
+    with_env('IS_PULL_REQUEST' => nil) do
+      stub_instance_method(ActiveSupport::EnvironmentInquirer, :local?, false) do
+        assert_equal :production, current_environment
+      end
+    end
+  end
+
+  test 'nav_themeはcurrent_environmentに対応する配色を返す（issue #1510）' do
+    stub_instance_method(ActiveSupport::EnvironmentInquirer, :local?, true) do
+      assert_equal 'bg-emerald-500', nav_theme[:bg]
+      assert_equal 'DEV', nav_theme[:badge]
+    end
+  end
+
   private
 
   def create_image_blob(width:, height:)

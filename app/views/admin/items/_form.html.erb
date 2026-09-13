@@ -1,4 +1,19 @@
+<%
+  # ASIN重複時の上書きプレビュー中（Admin::ItemsController#editがitem[...]パラメータを
+  # 受け取ってassign_attributesだけ行い、保存前の状態）は、ActiveModel::Dirtyで
+  # DB上の元の値との差分を検出できる。差分があるフィールドをハイライトする（issue #1515）。
+  overwrite_preview = local_assigns.fetch(:overwrite_preview, false)
+  changed = ->(attr) { overwrite_preview && item.attribute_changed?(attr) }
+  changed_field_class = "border-amber-400 ring-2 ring-amber-300 dark:border-amber-500"
+  default_field_class = "border-gray-300 dark:border-gray-600"
+%>
 <%= form_with(model: [:admin, item], class: "space-y-6", data: { controller: "item-form" }) do |form| %>
+  <% if overwrite_preview %>
+    <div class="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200">
+      <p class="font-semibold">新規作成フォームの内容で、このアイテムを上書きしようとしています。</p>
+      <p class="mt-1">黄色でハイライトされた項目が変更されます。内容を確認し、問題なければ「更新」を押してください。</p>
+    </div>
+  <% end %>
   <% if item.errors.any? %>
     <div class="bg-red-50 p-4 rounded text-red-700 dark:bg-red-900 dark:text-red-200">
       <h2><%= pluralize(item.errors.count, "error") %> prohibited this item from being saved:</h2>
@@ -9,8 +24,11 @@
       </ul>
 
       <%# ASINのuniqueness違反の場合、新規作成を諦めさせるのではなく既存アイテムへの
-          上書き（update）に進める導線を出す（issue #1509）。@duplicate_asin_itemは
-          Admin::ItemsController#createがASIN重複エラー時にのみセットする。 %>
+          上書き（update）に進める導線を出す（issue #1509, #1515）。@duplicate_asin_itemは
+          Admin::ItemsController#createがASIN重複エラー時にのみセットする。
+          このボタンは既存アイテムの編集画面へGET遷移し、このフォームの入力内容を
+          クエリパラメータとして引き継ぐ。編集画面で内容を確認したうえで、
+          改めて「更新」を押すことで初めて保存される（いきなり上書き保存はしない）。 %>
       <% if @duplicate_asin_item %>
         <div class="mt-3 pt-3 border-t border-red-200">
           <p class="text-sm">
@@ -19,14 +37,13 @@
               <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">削除済み</span>
             <% end %>
             <br>
-            このフォームの内容でそのアイテムを上書きする場合は、以下のボタンから更新できます。
+            このフォームの内容でそのアイテムを上書きする場合は、以下のボタンから編集画面に進み、内容を確認のうえ更新してください。
           </p>
           <button type="submit"
                   class="mt-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-md cursor-pointer"
                   data-action="click->item-form#overwriteExisting"
-                  data-overwrite-url="<%= admin_item_path(@duplicate_asin_item) %>"
-                  data-overwrite-title="<%= @duplicate_asin_item.title %>">
-            「<%= @duplicate_asin_item.title %>」に上書きして保存
+                  data-overwrite-url="<%= edit_admin_item_path(@duplicate_asin_item) %>">
+            「<%= @duplicate_asin_item.title %>」の編集画面で内容を確認する
           </button>
         </div>
       <% end %>
@@ -35,14 +52,17 @@
 
   <div>
     <%= form.label :title, "タイトル", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
-    <%= form.text_field :title, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <%= form.text_field :title, class: "mt-1 block w-full rounded-md border #{changed.(:title) ? changed_field_class : default_field_class} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:text-white" %>
+    <% if changed.(:title) %>
+      <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">変更前: <%= item.attribute_was(:title) %></p>
+    <% end %>
   </div>
 
   <div class="flex flex-wrap items-end gap-6">
     <div data-controller="date-picker">
       <%= form.label :release_date, "発売日", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
       <div class="flex gap-2">
-        <%= form.text_field :release_date, value: item.release_date&.strftime('%Y/%m/%d'), class: "mt-1 block w-32 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white", data: { date_picker_target: "input", action: "input->date-picker#syncPickerFromInput" } %>
+        <%= form.text_field :release_date, value: item.release_date&.strftime('%Y/%m/%d'), class: "mt-1 block w-32 rounded-md border #{changed.(:release_date) ? changed_field_class : default_field_class} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:text-white", data: { date_picker_target: "input", action: "input->date-picker#syncPickerFromInput" } %>
         <button type="button" data-action="click->date-picker#open" aria-label="カレンダーから日付を選択" title="カレンダーから日付を選択" class="mt-1 flex w-11 shrink-0 items-center justify-center rounded-md border border-gray-300 shadow-sm hover:bg-gray-50 focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-500 dark:text-gray-300" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
@@ -50,34 +70,59 @@
         </button>
         <input type="date" class="sr-only" tabindex="-1" aria-hidden="true" data-date-picker-target="picker" data-action="input->date-picker#apply">
       </div>
+      <% if changed.(:release_date) %>
+        <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">変更前: <%= item.attribute_was(:release_date)&.strftime('%Y/%m/%d') %></p>
+      <% end %>
     </div>
     <div>
       <%= form.label :asin, "ASIN", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
-      <%= form.text_field :asin, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white",
+      <%= form.text_field :asin, class: "mt-1 block w-full rounded-md border #{changed.(:asin) ? changed_field_class : default_field_class} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:text-white",
                                     data: { item_form_target: "asin" } %>
+      <% if changed.(:asin) %>
+        <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">変更前: <%= item.attribute_was(:asin) %></p>
+      <% end %>
     </div>
   </div>
 
   <div>
     <%= form.label :link_url, "リンクURL", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
-    <%= form.url_field :link_url, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white",
+    <%= form.url_field :link_url, class: "mt-1 block w-full rounded-md border #{changed.(:link_url) ? changed_field_class : default_field_class} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:text-white",
                                   data: { item_form_target: "linkUrl", action: "focus->item-form#autofillLinkUrl" } %>
+    <% if changed.(:link_url) %>
+      <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">変更前: <%= item.attribute_was(:link_url) %></p>
+    <% end %>
   </div>
 
   <div>
     <%= form.label :image_url, "画像URL", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
-    <%= form.url_field :image_url, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <%= form.url_field :image_url, class: "mt-1 block w-full rounded-md border #{changed.(:image_url) ? changed_field_class : default_field_class} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:text-white" %>
+    <% if changed.(:image_url) %>
+      <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">変更前: <%= item.attribute_was(:image_url) %></p>
+    <% end %>
   </div>
 
-  <div class="flex items-center gap-2">
-    <%= form.check_box :various_artists, class: "rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700" %>
-    <%= form.label :various_artists, "Various Artists（オムニバス）", class: "text-sm font-medium text-gray-900 dark:text-gray-100" %>
+  <div>
+    <div class="flex items-center gap-2">
+      <%= form.check_box :various_artists, class: "rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700" %>
+      <%= form.label :various_artists, "Various Artists（オムニバス）", class: "text-sm font-medium text-gray-900 dark:text-gray-100" %>
+      <% if changed.(:various_artists) %>
+        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">変更あり</span>
+      <% end %>
+    </div>
+    <% if changed.(:various_artists) %>
+      <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">変更前: <%= item.attribute_was(:various_artists) ? "あり" : "なし" %></p>
+    <% end %>
   </div>
 
   <div data-controller="artist-rows"
        data-artist-rows-url-units-value="<%= search_admin_units_path %>"
        data-artist-rows-url-people-value="<%= search_admin_people_path %>">
     <label class="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">アーティスト</label>
+    <% if overwrite_preview %>
+      <p class="mb-2 text-xs text-gray-500 dark:text-gray-400">
+        アーティストは上書きプレビューの対象外です。既存アイテムの内容がそのまま表示されています。変更する場合は手動で編集してください。
+      </p>
+    <% end %>
 
     <%# Row container %>
     <div data-artist-rows-target="container" class="space-y-2">

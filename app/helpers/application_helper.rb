@@ -650,4 +650,32 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   def login_link_path
     current_page?(login_path) ? login_path : login_path(return_to: request.fullpath)
   end
+
+  # ヘッダーの配色で「今どの環境にいるか」を一目でわかるようにする（issue #1510）。
+  # render.yamlのpreviewsは本番DBを共有する設定のため（プレビュー専用DBは未構築）、
+  # 特にpreviewを本番と混同して操作してしまう事故を防ぐのが主目的。
+  # Renderの自動プレビュー環境（render.yaml の `previews:`）では IS_PULL_REQUEST=true が
+  # 自動セットされる（Rails.env自体はproductionのまま）: https://render.com/docs/pull-request-previews
+  #
+  # 文字・アイコンは環境色に関わらずzinc-900（ほぼ黒）で統一する。背景色と同系色の濃色
+  # （例: emerald-900 on emerald-500）はコントラスト比の数値上は足りていても輪郭がぼやけて
+  # 視認性が落ちるため（issue #1510 レビューで指摘）、あえて無彩色にして背景色ごとの
+  # くっきりさを揃えている。
+  ENVIRONMENT_THEMES = {
+    production: { badge: nil, bg: 'bg-amber-500' }, # items/show等の既存テーマカラーに合わせる
+    development: { badge: 'DEV', bg: 'bg-emerald-500' },
+    preview: { badge: 'PREVIEW', bg: 'bg-fuchsia-400' }
+  }.freeze
+  private_constant :ENVIRONMENT_THEMES
+
+  def current_environment
+    return :development if Rails.env.local?
+    return :preview if ENV['IS_PULL_REQUEST'] == 'true'
+
+    :production
+  end
+
+  def nav_theme
+    ENVIRONMENT_THEMES.fetch(current_environment)
+  end
 end

@@ -80,7 +80,7 @@ module Admin
       }
 
       assert_response :unprocessable_entity
-      assert_select 'button[data-overwrite-url=?]', admin_item_path(existing)
+      assert_select 'button[data-overwrite-url=?]', edit_admin_item_path(existing)
       assert_not Item.exists?(title: '新規アイテム')
     end
 
@@ -119,6 +119,52 @@ module Admin
 
       assert_response :success
       assert_match(/artist-name-hidden[^>]*value="名称のみのアーティスト"/, response.body)
+    end
+
+    test 'edit with item params previews an overwrite without saving, highlighting only the changed fields' do
+      item = Item.create!(
+        title: '既存アイテム',
+        release_date: Date.today,
+        link_url: "https://example.com/item-#{SecureRandom.hex(4)}",
+        asin: 'B00TESTASIN'
+      )
+
+      get edit_admin_item_path(item), params: {
+        item: {
+          title: '新規アイテム', # 変更あり
+          release_date: item.release_date, # 変更なし
+          link_url: item.link_url, # 変更なし
+          asin: item.asin # 変更なし
+        }
+      }
+
+      assert_response :success
+      assert_includes response.body, '新規作成フォームの内容で、このアイテムを上書きしようとしています。'
+      assert_includes response.body, '変更前: 既存アイテム'
+      item.reload
+      assert_equal '既存アイテム', item.title, 'edit(GET)だけでは保存されない'
+    end
+
+    test 'edit with item params leaves artists untouched, even if artists_json is passed' do
+      item = Item.create!(
+        title: '既存アイテム',
+        release_date: Date.today,
+        link_url: "https://example.com/item-#{SecureRandom.hex(4)}",
+        artists: [{ 'name' => '既存アーティスト' }]
+      )
+
+      get edit_admin_item_path(item), params: {
+        item: {
+          title: '新規アイテム',
+          release_date: item.release_date,
+          link_url: item.link_url,
+          artists_json: [{ name: '新規アーティスト' }].to_json
+        }
+      }
+
+      assert_response :success
+      assert_includes response.body, '既存アーティスト'
+      assert_includes response.body, 'アーティストは上書きプレビューの対象外です'
     end
 
     test 'edit shows a 論理削除 button for admin on a kept item' do
