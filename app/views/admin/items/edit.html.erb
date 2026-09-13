@@ -10,7 +10,7 @@
       </div>
     </div>
     <div class="bg-white shadow rounded-lg p-6 dark:bg-gray-800">
-      <%= render "form", item: @item %>
+      <%= render "form", item: @item, overwrite_preview: @overwrite_preview %>
     </div>
 
     <%= render "admin/sections/list", sectionable: @item, sections: @item.sections.with_discarded.order(:sort_order) %>
