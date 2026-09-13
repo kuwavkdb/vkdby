@@ -35,12 +35,14 @@ class MemoryWatchdogTest < ActiveSupport::TestCase
     assert_empty killed
   end
 
-  test 'log_interval指定時は閾値未満でも一定間隔でRSSをINFOログに出す（issue #1521）' do
+  test 'log_interval指定時は閾値未満でも一定間隔でRSSをWARNログに出す（issue #1521）' do
+    # 本番のlog_levelはデフォルトwarn（#482）でinfoは握りつぶされるため、
+    # このデバッグログはwarnで出す必要がある
     fake_mem = Object.new.tap { |o| o.define_singleton_method(:mb) { 100.0 } }
-    info_logs = []
+    warn_logs = []
     fake_logger = Object.new.tap do |o|
-      o.define_singleton_method(:info) { |msg| info_logs << msg }
-      o.define_singleton_method(:warn) { |_msg| }
+      o.define_singleton_method(:info) { |_msg| }
+      o.define_singleton_method(:warn) { |msg| warn_logs << msg }
       o.define_singleton_method(:error) { |_msg| }
     end
     original_logger = Rails.logger
@@ -53,18 +55,18 @@ class MemoryWatchdogTest < ActiveSupport::TestCase
       thread.join
     end
 
-    assert_operator info_logs.size, :>=, 2
-    assert_match(/RSS 100\.0MB（閾値 450MB）/, info_logs.first)
+    assert_operator warn_logs.size, :>=, 2
+    assert_match(/RSS 100\.0MB（閾値 450MB）/, warn_logs.first)
   ensure
     Rails.logger = original_logger
   end
 
-  test 'log_interval未指定の場合は閾値未満でINFOログを出さない' do
+  test 'log_interval未指定の場合は閾値未満でWARNログを出さない' do
     fake_mem = Object.new.tap { |o| o.define_singleton_method(:mb) { 100.0 } }
-    info_logs = []
+    warn_logs = []
     fake_logger = Object.new.tap do |o|
-      o.define_singleton_method(:info) { |msg| info_logs << msg }
-      o.define_singleton_method(:warn) { |_msg| }
+      o.define_singleton_method(:info) { |_msg| }
+      o.define_singleton_method(:warn) { |msg| warn_logs << msg }
       o.define_singleton_method(:error) { |_msg| }
     end
     original_logger = Rails.logger
@@ -77,7 +79,7 @@ class MemoryWatchdogTest < ActiveSupport::TestCase
       thread.join
     end
 
-    assert_empty info_logs
+    assert_empty warn_logs
   ensure
     Rails.logger = original_logger
   end
