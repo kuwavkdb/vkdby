@@ -16,6 +16,7 @@ Metrics/BlockLength:
 Metrics/ClassLength:
   Exclude:
     - 'app/models/person.rb'
+    - 'app/models/unit.rb'
     - 'app/services/base_wikipage_importer.rb'
     - 'test/services/custom_page_draft_generator_test.rb'
     - 'test/helpers/application_helper_test.rb'
@@ -24,3 +25,4 @@ Metrics/ClassLength:
     - 'test/controllers/profiles_controller_test.rb'
     - 'test/controllers/custom_pages_controller_test.rb'
     - 'test/controllers/trends_controller_test.rb'
+    - 'test/controllers/search_controller_test.rb'

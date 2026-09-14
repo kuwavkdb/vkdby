@@ -39,6 +39,7 @@ class Person < ApplicationRecord
   include KeyChangeable
   include Unpublishable
   include OgpImageAttachable
+  include PgSearch::Model
   has_many :links, as: :linkable, dependent: :destroy
   has_many :wiki_page_imports, as: :import_target
   has_many :unit_people
@@ -46,11 +47,48 @@ class Person < ApplicationRecord
   has_many :tag_index_items, as: :indexable, dependent: :destroy
   has_many :tag_indices, through: :tag_index_items
   has_many :sections, as: :sectionable, dependent: :destroy
+  # 横断検索用。discard済み・非公開のSectionは検索結果に出したくないため専用のアソシエーションを分ける。
+  has_many :searchable_sections, -> { kept.publicly_visible }, as: :sectionable, class_name: 'Section'
   has_many :snapshot_people
 
   accepts_nested_attributes_for :links, allow_destroy: true, reject_if: proc { |attrs| attrs['url'].blank? }
 
   enum :status, { pre: 0, active: 1, free: 2, hiatus: 3, retirement: 90, passed_away: 98, unknown: 99 }
+
+  # 横断検索（SearchController）用。pg_trgmによるあいまい検索で、単純なILIKE部分一致より
+  # 複数語検索・表記ゆれへの耐性が高い（issue #1536）。
+  pg_search_scope :text_search,
+                  against: %i[name name_kana name_log aliases old_history],
+                  associated_against: { searchable_sections: :name },
+                  using: :trigram,
+                  order_within_rank: 'people.updated_at DESC'
+
+  # pg_search移行前のILIKEベースの検索（issue #1536）。SEARCH_BACKEND=legacy時のみ
+  # SearchControllerから呼ばれる、当面のロールバック用。
+  def self.legacy_text_search(normalized_query)
+    search_pattern = "%#{normalized_query}%"
+    exact_pattern = ActiveRecord::Base.sanitize_sql_like(normalized_query)
+    relevance_order = Arel.sql(
+      "CASE WHEN name ILIKE #{connection.quote(exact_pattern)} THEN 0 " \
+      "WHEN name ILIKE #{connection.quote("#{exact_pattern}%")} THEN 1 " \
+      "WHEN name_kana ILIKE #{connection.quote(exact_pattern)} THEN 0 " \
+      "WHEN name_kana ILIKE #{connection.quote("#{exact_pattern}%")} THEN 1 " \
+      'ELSE 2 END'
+    )
+    # 紐づくSection（discard済み・非公開を除く）の名前もマッチ対象にする。
+    where(<<~SQL.squish, q: search_pattern, section_type: 'Person')
+      name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q OR old_history ILIKE :q
+      OR EXISTS (
+        SELECT 1 FROM sections
+        WHERE sections.sectionable_type = :section_type
+          AND sections.sectionable_id = people.id
+          AND sections.discarded_at IS NULL
+          AND sections.active = TRUE
+          AND sections.name ILIKE :q
+      )
+    SQL
+      .order(relevance_order, updated_at: :desc)
+  end
 
   # Valid parts for a person
   AVAILABLE_PARTS = %w[vocal guitar bass drums keyboard dj dancer manipulator].freeze

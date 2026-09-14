@@ -102,23 +102,59 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'index does not find a unit via a discarded section name' do
-    unit = Unit.create!(name: 'DiscardedSectionUnit', key: 'discarded-section-unit-test', status: :active)
+    # ユニット名を検索クエリと同じ部分文字列("DiscardedSection"等)を含めないようにする。
+    # あいまい検索(trigram類似度)は共通の部分文字列があるとそれだけでヒットしてしまうため、
+    # 「discard済みSectionが除外されていること」を確認するにはユニット名自体を無関係にする必要がある。
+    unit = Unit.create!(name: 'DiscardExcludedUnit', key: 'discarded-section-unit-test', status: :active)
     section = unit.sections.create!(name: 'UniqueDiscardedSectionNameTest', active: true)
     section.discard!
 
     get search_path(q: 'UniqueDiscardedSectionNameTest')
 
     assert_response :success
-    assert_not_includes response.body, 'DiscardedSectionUnit'
+    assert_not_includes response.body, 'DiscardExcludedUnit'
   end
 
   test 'index does not find a unit via an inactive (non-public) section name' do
-    unit = Unit.create!(name: 'InactiveSectionUnit', key: 'inactive-section-unit-test', status: :active)
+    # ユニット名を検索クエリと同じ部分文字列("InactiveSection"等)を含めないようにする。理由は上記と同様。
+    unit = Unit.create!(name: 'InactiveExcludedUnit', key: 'inactive-section-unit-test', status: :active)
     unit.sections.create!(name: 'UniqueInactiveSectionNameTest', active: false)
 
     get search_path(q: 'UniqueInactiveSectionNameTest')
 
     assert_response :success
-    assert_not_includes response.body, 'InactiveSectionUnit'
+    assert_not_includes response.body, 'InactiveExcludedUnit'
+  end
+
+  # SEARCH_BACKEND=legacy 指定時、pg_search移行前のILIKEベースの検索にコード変更なしで
+  # 戻せることを確認する（issue #1536。問題発生時の当面のロールバック手段）。
+  test 'index falls back to the legacy ILIKE search when SEARCH_BACKEND is legacy' do
+    Unit.create!(name: 'LegacyBackendUnit', key: 'legacy-backend-unit-test', status: :active)
+    Person.create!(name: 'LegacyBackendPerson', key: 'legacy-backend-person-test', status: :active)
+    page = CustomPage.create!(key: 'legacy-backend-page-test', title: 'Legacy Backend Page', body: 'body', active: true)
+
+    with_search_backend('legacy') do
+      get search_path(q: 'LegacyBackendUnit')
+      assert_response :success
+      assert_includes response.body, 'LegacyBackendUnit'
+
+      get search_path(q: 'LegacyBackendPerson')
+      assert_response :success
+      assert_includes response.body, 'LegacyBackendPerson'
+
+      get search_path(q: 'Legacy Backend Page')
+      assert_response :success
+      assert_includes response.body, custom_page_path(page.key)
+    end
+  end
+
+  private
+
+  def with_search_backend(backend)
+    original = Rails.application.config.search_backend
+    Rails.application.config.search_backend = backend
+    yield
+  ensure
+    Rails.application.config.search_backend = original
   end
 end

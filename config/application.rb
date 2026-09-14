@@ -112,6 +112,13 @@ module Vkdby
     # （ItemConverter#build_amazon_url）。IDが変更になった場合はコード修正不要でENV側だけ差し替える
     config.amazon_associate_tag = ENV.fetch('AMAZON_ASSOCIATE_TAG', 'vkdb07-22')
 
+    # 横断検索（SearchController）のバックエンド切り替えフラグ（issue #1536）。
+    # 既定値 'pg_search' は pg_trgm ベースのあいまい検索（Unit/Person/CustomPage#text_search）。
+    # 'legacy' を指定すると、置き換え前のILIKEベースの検索（#legacy_text_search）に
+    # コード変更なしで即座に戻せる。本番での安定運用が確認でき次第、このフラグと
+    # legacy_text_search自体を削除する想定の一時的なもの。
+    config.search_backend = ENV.fetch('SEARCH_BACKEND', 'pg_search')
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

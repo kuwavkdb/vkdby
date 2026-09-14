@@ -6,62 +6,27 @@ class SearchController < ApplicationController
 
     if @query.present?
       normalized_query = normalize_search_query(@query)
-      search_pattern = "%#{normalized_query}%"
-      exact_pattern = ActiveRecord::Base.sanitize_sql_like(normalized_query)
-      relevance_order = Arel.sql(
-        "CASE WHEN name ILIKE #{Unit.connection.quote(exact_pattern)} THEN 0 " \
-        "WHEN name ILIKE #{Unit.connection.quote("#{exact_pattern}%")} THEN 1 " \
-        "WHEN name_kana ILIKE #{Unit.connection.quote(exact_pattern)} THEN 0 " \
-        "WHEN name_kana ILIKE #{Unit.connection.quote("#{exact_pattern}%")} THEN 1 " \
-        'ELSE 2 END'
-      )
-      # 紐づくSection（discard済み・非公開を除く）の名前もマッチ対象にする。
-      # sections テーブルは (sectionable_type, sectionable_id) の複合indexを持つため、
-      # このEXISTS句は新規indexなしでも低コストに評価できる。
-      @units = Unit.kept.where(<<~SQL.squish, q: search_pattern, section_type: 'Unit')
-        name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q
-        OR EXISTS (
-          SELECT 1 FROM sections
-          WHERE sections.sectionable_type = :section_type
-            AND sections.sectionable_id = units.id
-            AND sections.discarded_at IS NULL
-            AND sections.active = TRUE
-            AND sections.name ILIKE :q
-        )
-      SQL
-                   .order(relevance_order, updated_at: :desc)
-                   .limit(15)
-      @people = Person.kept.where(<<~SQL.squish, q: search_pattern, section_type: 'Person')
-        name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q OR old_history ILIKE :q
-        OR EXISTS (
-          SELECT 1 FROM sections
-          WHERE sections.sectionable_type = :section_type
-            AND sections.sectionable_id = people.id
-            AND sections.discarded_at IS NULL
-            AND sections.active = TRUE
-            AND sections.name ILIKE :q
-        )
-      SQL
-                      .order(relevance_order, updated_at: :desc)
-                      .limit(15)
-      @custom_pages = CustomPage.published.non_system_pages
-                                .where(<<~SQL.squish, q: search_pattern, section_type: 'CustomPage')
-                                  title ILIKE :q OR body ILIKE :q
-                                  OR EXISTS (
-                                    SELECT 1 FROM sections
-                                    WHERE sections.sectionable_type = :section_type
-                                      AND sections.sectionable_id = custom_pages.id
-                                      AND sections.discarded_at IS NULL
-                                      AND sections.active = TRUE
-                                      AND sections.name ILIKE :q
-                                  )
-                                SQL
-                                .order(updated_at: :desc)
-                                .limit(15)
+      @units = apply_text_search(Unit.kept, normalized_query).limit(15)
+      @people = apply_text_search(Person.kept, normalized_query).limit(15)
+      @custom_pages = apply_text_search(CustomPage.published.non_system_pages, normalized_query).limit(15)
     else
       @units = []
       @people = []
       @custom_pages = []
+    end
+  end
+
+  private
+
+  # pg_trgmベースのあいまい検索（Unit/Person/CustomPage#text_search）。紐づくSection名
+  # （discard済み・非公開を除く）も検索対象になる。SEARCH_BACKEND=legacy を指定すると、
+  # コード変更なしで置き換え前のILIKEベースの検索（#legacy_text_search）に戻せる
+  # （issue #1536。問題が起きた場合の当面のロールバック手段）。
+  def apply_text_search(relation, normalized_query)
+    if Rails.application.config.search_backend == 'legacy'
+      relation.legacy_text_search(normalized_query)
+    else
+      relation.text_search(normalized_query)
     end
   end
 end

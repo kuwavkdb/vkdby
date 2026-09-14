@@ -24,9 +24,12 @@
 class CustomPage < ApplicationRecord
   include Discard::Model
   include OgpImageAttachable
+  include PgSearch::Model
 
   has_many_attached :images
   has_many :sections, as: :sectionable, dependent: :destroy
+  # 横断検索用。discard済み・非公開のSectionは検索結果に出したくないため専用のアソシエーションを分ける。
+  has_many :searchable_sections, -> { kept.publicly_visible }, as: :sectionable, class_name: 'Section'
   has_many :custom_page_includes, foreign_key: :source_custom_page_id, dependent: :destroy, inverse_of: :source_custom_page
   has_many :included_by, class_name: 'CustomPageInclude', foreign_key: :target_custom_page_id, dependent: :destroy, inverse_of: :target_custom_page
 
@@ -56,6 +59,33 @@ class CustomPage < ApplicationRecord
   scope :published, -> { kept.where(active: true) }
   scope :system_pages, -> { where(key: SYSTEM_KEYS) }
   scope :non_system_pages, -> { where.not(key: SYSTEM_KEYS) }
+
+  # 横断検索（SearchController）用。pg_trgmによるあいまい検索で、単純なILIKE部分一致より
+  # 複数語検索・表記ゆれへの耐性が高い（issue #1536）。
+  pg_search_scope :text_search,
+                  against: %i[title body],
+                  associated_against: { searchable_sections: :name },
+                  using: :trigram,
+                  order_within_rank: 'custom_pages.updated_at DESC'
+
+  # pg_search移行前のILIKEベースの検索（issue #1536）。SEARCH_BACKEND=legacy時のみ
+  # SearchControllerから呼ばれる、当面のロールバック用。
+  def self.legacy_text_search(normalized_query)
+    search_pattern = "%#{normalized_query}%"
+    # 紐づくSection（discard済み・非公開を除く）の名前もマッチ対象にする。
+    where(<<~SQL.squish, q: search_pattern, section_type: 'CustomPage')
+      title ILIKE :q OR body ILIKE :q
+      OR EXISTS (
+        SELECT 1 FROM sections
+        WHERE sections.sectionable_type = :section_type
+          AND sections.sectionable_id = custom_pages.id
+          AND sections.discarded_at IS NULL
+          AND sections.active = TRUE
+          AND sections.name ILIKE :q
+      )
+    SQL
+      .order(updated_at: :desc)
+  end
 
   after_commit :expire_sidebar_cache
   after_commit :expire_blocked_ips_cache, if: -> { key == Middleware::IpBlocker::CUSTOM_PAGE_KEY }

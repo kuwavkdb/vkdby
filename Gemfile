@@ -106,4 +106,5 @@ gem 'rack-attack'
 gem 'romaji', '~> 0.3.0'
 
 gem 'pagy', '~> 43.6'
+gem 'pg_search'
 gem 'redcarpet'
