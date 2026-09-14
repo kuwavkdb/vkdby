@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_14_225317) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -63,9 +63,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
     t.string "old_key"
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.index ["body"], name: "index_custom_pages_on_body", opclass: :gin_trgm_ops, using: :gin
     t.index ["discarded_at"], name: "index_custom_pages_on_discarded_at"
     t.index ["key"], name: "index_custom_pages_on_key", unique: true
     t.index ["old_key"], name: "index_custom_pages_on_old_key", unique: true
+    t.index ["title"], name: "index_custom_pages_on_title", opclass: :gin_trgm_ops, using: :gin
   end
 
   create_table "external_sites", force: :cascade do |t|
@@ -216,6 +218,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
     t.datetime "updated_at", null: false
     t.text "wiki_text"
     t.index ["discarded_at"], name: "index_sections_on_discarded_at"
+    t.index ["name"], name: "index_sections_on_name", opclass: :gin_trgm_ops, using: :gin
     t.index ["sectionable_type", "sectionable_id"], name: "index_sections_on_sectionable"
   end
 

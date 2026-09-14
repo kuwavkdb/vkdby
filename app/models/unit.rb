@@ -34,6 +34,7 @@ class Unit < ApplicationRecord
   include KeyChangeable
   include Unpublishable
   include OgpImageAttachable
+  include PgSearch::Model
   has_many :links, as: :linkable, dependent: :destroy
   accepts_nested_attributes_for :links, allow_destroy: true, reject_if: proc { |attrs| attrs['url'].blank? }
   has_many :wiki_page_imports, as: :import_target
@@ -43,10 +44,20 @@ class Unit < ApplicationRecord
   has_many :tag_index_items, as: :indexable, dependent: :destroy
   has_many :tag_indices, through: :tag_index_items
   has_many :sections, as: :sectionable, dependent: :destroy
+  # 横断検索用。discard済み・非公開のSectionは検索結果に出したくないため専用のアソシエーションを分ける。
+  has_many :searchable_sections, -> { kept.publicly_visible }, as: :sectionable, class_name: 'Section'
   has_many :unit_snapshots, dependent: :destroy
   has_many :temporary_snapshot_people, foreign_key: :hint_unit_id, inverse_of: :hint_unit, dependent: :nullify
   enum :unit_type, { band: 0, unit: 1, session: 2, solo: 3, limited: 4, moved: 5, other: 99 }
   enum :status, { pre: 0, active: 1, freeze: 2, disbanded: 3, unknown: 99 }
+
+  # 横断検索（SearchController）用。pg_trgmによるあいまい検索で、単純なILIKE部分一致より
+  # 複数語検索・表記ゆれへの耐性が高い（issue #1536）。
+  pg_search_scope :text_search,
+                  against: %i[name name_kana name_log aliases],
+                  associated_against: { searchable_sections: :name },
+                  using: :trigram,
+                  order_within_rank: 'units.updated_at DESC'
 
   validates :status, presence: true
   # keyが空だと一覧ページのprofile_path(key)がUrlGenerationErrorで落ちるため必須（issue #1277）

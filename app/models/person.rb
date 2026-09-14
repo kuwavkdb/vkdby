@@ -39,6 +39,7 @@ class Person < ApplicationRecord
   include KeyChangeable
   include Unpublishable
   include OgpImageAttachable
+  include PgSearch::Model
   has_many :links, as: :linkable, dependent: :destroy
   has_many :wiki_page_imports, as: :import_target
   has_many :unit_people
@@ -46,11 +47,21 @@ class Person < ApplicationRecord
   has_many :tag_index_items, as: :indexable, dependent: :destroy
   has_many :tag_indices, through: :tag_index_items
   has_many :sections, as: :sectionable, dependent: :destroy
+  # 横断検索用。discard済み・非公開のSectionは検索結果に出したくないため専用のアソシエーションを分ける。
+  has_many :searchable_sections, -> { kept.publicly_visible }, as: :sectionable, class_name: 'Section'
   has_many :snapshot_people
 
   accepts_nested_attributes_for :links, allow_destroy: true, reject_if: proc { |attrs| attrs['url'].blank? }
 
   enum :status, { pre: 0, active: 1, free: 2, hiatus: 3, retirement: 90, passed_away: 98, unknown: 99 }
+
+  # 横断検索（SearchController）用。pg_trgmによるあいまい検索で、単純なILIKE部分一致より
+  # 複数語検索・表記ゆれへの耐性が高い（issue #1536）。
+  pg_search_scope :text_search,
+                  against: %i[name name_kana name_log aliases old_history],
+                  associated_against: { searchable_sections: :name },
+                  using: :trigram,
+                  order_within_rank: 'people.updated_at DESC'
 
   # Valid parts for a person
   AVAILABLE_PARTS = %w[vocal guitar bass drums keyboard dj dancer manipulator].freeze
