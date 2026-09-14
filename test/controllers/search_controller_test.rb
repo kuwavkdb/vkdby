@@ -70,4 +70,55 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_match(%r{cse\.google\.com/cse\.js\?cx=}, response.body)
     assert_match(/window\.location\.hash = "gsc\.tab=0&gsc\.q=HasResultUnit&gsc\.sort="/, response.body)
   end
+
+  test 'index finds a unit via a linked section name' do
+    unit = Unit.create!(name: 'SectionMatchUnit', key: 'section-match-unit-test', status: :active)
+    unit.sections.create!(name: 'UniqueSectionNameForUnitTest', active: true)
+
+    get search_path(q: 'UniqueSectionNameForUnitTest')
+
+    assert_response :success
+    assert_includes response.body, 'SectionMatchUnit'
+  end
+
+  test 'index finds a person via a linked section name' do
+    person = Person.create!(name: 'SectionMatchPerson', key: 'section-match-person-test', status: :active)
+    person.sections.create!(name: 'UniqueSectionNameForPersonTest', active: true)
+
+    get search_path(q: 'UniqueSectionNameForPersonTest')
+
+    assert_response :success
+    assert_includes response.body, 'SectionMatchPerson'
+  end
+
+  test 'index finds a custom page via a linked section name' do
+    page = CustomPage.create!(key: 'section-match-page-test', title: 'Section Match Page', body: 'body', active: true)
+    page.sections.create!(name: 'UniqueSectionNameForPageTest', active: true)
+
+    get search_path(q: 'UniqueSectionNameForPageTest')
+
+    assert_response :success
+    assert_includes response.body, custom_page_path(page.key)
+  end
+
+  test 'index does not find a unit via a discarded section name' do
+    unit = Unit.create!(name: 'DiscardedSectionUnit', key: 'discarded-section-unit-test', status: :active)
+    section = unit.sections.create!(name: 'UniqueDiscardedSectionNameTest', active: true)
+    section.discard!
+
+    get search_path(q: 'UniqueDiscardedSectionNameTest')
+
+    assert_response :success
+    assert_not_includes response.body, 'DiscardedSectionUnit'
+  end
+
+  test 'index does not find a unit via an inactive (non-public) section name' do
+    unit = Unit.create!(name: 'InactiveSectionUnit', key: 'inactive-section-unit-test', status: :active)
+    unit.sections.create!(name: 'UniqueInactiveSectionNameTest', active: false)
+
+    get search_path(q: 'UniqueInactiveSectionNameTest')
+
+    assert_response :success
+    assert_not_includes response.body, 'InactiveSectionUnit'
+  end
 end
