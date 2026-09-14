@@ -59,6 +59,33 @@ class Unit < ApplicationRecord
                   using: :trigram,
                   order_within_rank: 'units.updated_at DESC'
 
+  # pg_search移行前のILIKEベースの検索（issue #1536）。SEARCH_BACKEND=legacy時のみ
+  # SearchControllerから呼ばれる、当面のロールバック用。
+  def self.legacy_text_search(normalized_query)
+    search_pattern = "%#{normalized_query}%"
+    exact_pattern = ActiveRecord::Base.sanitize_sql_like(normalized_query)
+    relevance_order = Arel.sql(
+      "CASE WHEN name ILIKE #{connection.quote(exact_pattern)} THEN 0 " \
+      "WHEN name ILIKE #{connection.quote("#{exact_pattern}%")} THEN 1 " \
+      "WHEN name_kana ILIKE #{connection.quote(exact_pattern)} THEN 0 " \
+      "WHEN name_kana ILIKE #{connection.quote("#{exact_pattern}%")} THEN 1 " \
+      'ELSE 2 END'
+    )
+    # 紐づくSection（discard済み・非公開を除く）の名前もマッチ対象にする。
+    where(<<~SQL.squish, q: search_pattern, section_type: 'Unit')
+      name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q
+      OR EXISTS (
+        SELECT 1 FROM sections
+        WHERE sections.sectionable_type = :section_type
+          AND sections.sectionable_id = units.id
+          AND sections.discarded_at IS NULL
+          AND sections.active = TRUE
+          AND sections.name ILIKE :q
+      )
+    SQL
+      .order(relevance_order, updated_at: :desc)
+  end
+
   validates :status, presence: true
   # keyが空だと一覧ページのprofile_path(key)がUrlGenerationErrorで落ちるため必須（issue #1277）
   validates :key, presence: true, uniqueness: { case_sensitive: false }

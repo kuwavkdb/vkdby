@@ -125,4 +125,36 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_not_includes response.body, 'InactiveExcludedUnit'
   end
+
+  # SEARCH_BACKEND=legacy 指定時、pg_search移行前のILIKEベースの検索にコード変更なしで
+  # 戻せることを確認する（issue #1536。問題発生時の当面のロールバック手段）。
+  test 'index falls back to the legacy ILIKE search when SEARCH_BACKEND is legacy' do
+    Unit.create!(name: 'LegacyBackendUnit', key: 'legacy-backend-unit-test', status: :active)
+    Person.create!(name: 'LegacyBackendPerson', key: 'legacy-backend-person-test', status: :active)
+    page = CustomPage.create!(key: 'legacy-backend-page-test', title: 'Legacy Backend Page', body: 'body', active: true)
+
+    with_search_backend('legacy') do
+      get search_path(q: 'LegacyBackendUnit')
+      assert_response :success
+      assert_includes response.body, 'LegacyBackendUnit'
+
+      get search_path(q: 'LegacyBackendPerson')
+      assert_response :success
+      assert_includes response.body, 'LegacyBackendPerson'
+
+      get search_path(q: 'Legacy Backend Page')
+      assert_response :success
+      assert_includes response.body, custom_page_path(page.key)
+    end
+  end
+
+  private
+
+  def with_search_backend(backend)
+    original = Rails.application.config.search_backend
+    Rails.application.config.search_backend = backend
+    yield
+  ensure
+    Rails.application.config.search_backend = original
+  end
 end

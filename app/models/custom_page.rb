@@ -68,6 +68,25 @@ class CustomPage < ApplicationRecord
                   using: :trigram,
                   order_within_rank: 'custom_pages.updated_at DESC'
 
+  # pg_search移行前のILIKEベースの検索（issue #1536）。SEARCH_BACKEND=legacy時のみ
+  # SearchControllerから呼ばれる、当面のロールバック用。
+  def self.legacy_text_search(normalized_query)
+    search_pattern = "%#{normalized_query}%"
+    # 紐づくSection（discard済み・非公開を除く）の名前もマッチ対象にする。
+    where(<<~SQL.squish, q: search_pattern, section_type: 'CustomPage')
+      title ILIKE :q OR body ILIKE :q
+      OR EXISTS (
+        SELECT 1 FROM sections
+        WHERE sections.sectionable_type = :section_type
+          AND sections.sectionable_id = custom_pages.id
+          AND sections.discarded_at IS NULL
+          AND sections.active = TRUE
+          AND sections.name ILIKE :q
+      )
+    SQL
+      .order(updated_at: :desc)
+  end
+
   after_commit :expire_sidebar_cache
   after_commit :expire_blocked_ips_cache, if: -> { key == Middleware::IpBlocker::CUSTOM_PAGE_KEY }
   after_save :rebuild_include_relations, if: :saved_change_to_body?
