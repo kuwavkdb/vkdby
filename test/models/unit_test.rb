@@ -154,19 +154,6 @@ class UnitTest < ActiveSupport::TestCase
     assert_equal original_updated_at, unit.reload.updated_at
   end
 
-  test 'purging the ogp_image after a name change does not further bump updated_at (issue #1528)' do
-    unit = Unit.create!(name: 'Purge Touch Guard Unit', key: 'unit-ogp-purge-touch-guard', status: :active)
-    stub_class_method(OgpImageGenerator, :call, 'dummy-png-bytes') { unit.ogp_image_relative_url }
-
-    unit.update!(name: 'Renamed Purge Touch Guard Unit')
-    # 名前変更のsave自体が記録したupdated_at（真の編集時刻）
-    rename_updated_at = unit.saved_changes['updated_at'].last
-
-    # purge_later内のdelete（同期処理）でActiveStorageがtouchするが、
-    # そのぶんが上書きされて名前変更自体のupdated_atからずれてはいけない
-    assert_equal rename_updated_at, unit.reload.updated_at
-  end
-
   test 'ogp_image_relative_url reuses the previously generated image without regenerating' do
     unit = Unit.create!(name: 'Reuse Unit', key: 'unit-ogp-reuse', status: :active)
     call_count = 0

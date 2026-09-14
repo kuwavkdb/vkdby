@@ -28,25 +28,20 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(%r{<span class="inline-block[^"]*">\s*</span>}, response.body)
   end
 
-  test 'merely viewing a page does not bump it into the sidebar recent updates list (issue #1528)' do
+  test 'merely viewing a page does not bump its updated_at, which is what the sidebar recent updates list sorts by (issue #1528)' do
     old_page = CustomPage.create!(key: 'ogp-touch-old-page', title: 'Old Page', active: true, body: 'body')
     old_page.update_column(:updated_at, 1.year.ago)
-    fresh_page = CustomPage.create!(key: 'ogp-touch-fresh-page', title: 'Fresh Page', active: true, body: 'body')
+    original_updated_at = old_page.reload.updated_at
 
-    # 1回目のアクセスでOGP画像を遅延生成させる（この時点のサイドバーはbefore_actionで
-    # 集計済みのため、まだ影響が出ない。副作用はキャッシュ破棄経由で次回アクセスに現れる）
+    # ページ閲覧時にOGP画像が遅延生成される。ActiveStorageのtouch仕様で対象レコードの
+    # updated_atが書き換わってしまうと、実際には編集していないこのページがサイドバーの
+    # 「最近の更新」に浮上してしまう
     stub_class_method(OgpImageGenerator, :call, 'dummy-png-bytes') { get custom_page_path(key: old_page.key) }
 
     assert_response :success
-    assert_equal 1.year.ago.to_date, old_page.reload.updated_at.to_date
-
-    # 2回目のアクセスで再集計されたサイドバーを確認する。ActiveStorageのtouchで
-    # old_pageのupdated_atが書き換わっていれば、ここでold_pageが浮上してしまう
-    get custom_page_path(key: fresh_page.key)
-
-    assert_response :success
-    assert_not_includes response.body, 'Old Page'
-    assert_includes response.body, 'Fresh Page'
+    reloaded = old_page.reload
+    assert reloaded.ogp_image.attached?
+    assert_equal original_updated_at, reloaded.updated_at
   end
 
   test 'renders og:image pointing at the generated title banner (issue #1263)' do
