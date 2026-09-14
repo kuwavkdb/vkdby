@@ -15,6 +15,13 @@
 # フォールバックに委ねる（呼び出し元をエラーにしない）。また、失敗直後にFAILURE_COOLDOWN
 # の間は再試行せず生成処理自体をスキップする。R2側の障害等でattachが失敗し続ける状況で、
 # アクセスの度に重いvips処理を繰り返して負荷をかけ続けないようにするため（issue #1267）。
+#
+# ActiveStorageは添付先レコードへのattach/purgeのたびにレコード自体をtouchする仕様のため
+# （belongs_to :record, touch: true）、対策をしないとOGP画像の遅延生成・自動再生成が走る
+# だけで対象レコードのupdated_atが書き換わってしまう。ページ閲覧（クローラー等含む）だけで
+# トップページサイドバーの「最近の更新」に、実際には編集していないページが浮上する不具合の
+# 原因になっていた（issue #1528）。ここではattach/purge直後にupdated_atを元の値へ戻すことで、
+# 「本当にコンテンツを編集した時刻」だけがupdated_atに反映されるようにする。
 module OgpImageAttachable
   extend ActiveSupport::Concern
 
@@ -59,6 +66,8 @@ module OgpImageAttachable
   end
 
   def attach_ogp_image(png)
+    original_updated_at = updated_at
+
     ogp_image.attach(
       io: StringIO.new(png),
       filename: "ogp-#{self.class.name.underscore}-#{id}.png",
@@ -85,10 +94,25 @@ module OgpImageAttachable
       "OgpImageAttachable: 画像の添付に失敗しました (#{self.class.name}##{id}): #{e.class}: #{e.message}"
     )
     mark_ogp_image_attach_failed
+  ensure
+    restore_updated_at(original_updated_at)
   end
 
   def purge_ogp_image
+    original_updated_at = updated_at
     ogp_image.purge_later
+  ensure
+    restore_updated_at(original_updated_at)
+  end
+
+  # OGP画像のattach/purgeが伴うActiveStorageのtouch（issue #1528）を打ち消し、
+  # updated_atを実際の編集操作時点の値に戻す。update_columnはコールバックを発火しない
+  # ため、after_update_commit :purge_ogp_imageとの再帰は起きない。
+  def restore_updated_at(original_updated_at)
+    return unless persisted?
+    return if updated_at == original_updated_at
+
+    update_column(:updated_at, original_updated_at)
   end
 
   def ogp_image_attach_recently_failed?

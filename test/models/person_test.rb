@@ -375,6 +375,17 @@ class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
     assert_match %r{\A/rails/active_storage/}, result
   end
 
+  test 'generating the ogp_image on first view does not bump updated_at (issue #1528)' do
+    person = Person.create!(name: 'Touch Guard Person', key: 'person-ogp-touch-guard', status: :active)
+    person.update_column(:updated_at, 1.year.ago)
+    original_updated_at = person.reload.updated_at
+
+    stub_class_method(OgpImageGenerator, :call, 'dummy-png-bytes') { person.ogp_image_relative_url }
+
+    assert person.ogp_image.attached?
+    assert_equal original_updated_at, person.reload.updated_at
+  end
+
   test 'updating name purges the previously generated ogp_image so it regenerates next time' do
     person = Person.create!(name: 'Old Name Person', key: 'person-ogp-purge', status: :active)
     stub_class_method(OgpImageGenerator, :call, 'dummy-png-bytes') { person.ogp_image_relative_url }
