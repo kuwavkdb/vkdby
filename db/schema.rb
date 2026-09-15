@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_15_225238) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -368,6 +368,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
     t.index ["unit_id"], name: "index_unit_snapshots_on_unit_id"
   end
 
+  create_table "unit_submissions", force: :cascade do |t|
+    t.bigint "converted_unit_id"
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.boolean "is_related_person", default: false, null: false
+    t.string "name", null: false
+    t.string "name_kana"
+    t.text "note"
+    t.integer "status"
+    t.integer "submission_status", default: 0, null: false
+    t.integer "unit_type"
+    t.datetime "updated_at", null: false
+    t.index ["converted_unit_id"], name: "index_unit_submissions_on_converted_unit_id"
+    t.index ["submission_status"], name: "index_unit_submissions_on_submission_status"
+  end
+
   create_table "units", force: :cascade do |t|
     t.jsonb "activity_period"
     t.jsonb "aliases", default: [], null: false
@@ -461,6 +477,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
   add_foreign_key "unit_people", "people"
   add_foreign_key "unit_people", "units"
   add_foreign_key "unit_snapshots", "units"
+  add_foreign_key "unit_submissions", "units", column: "converted_unit_id"
   add_foreign_key "update_logs", "users"
   add_foreign_key "wiki_page_imports", "wikipages"
 end
