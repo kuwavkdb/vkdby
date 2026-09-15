@@ -45,6 +45,24 @@ class TrendTest < ActiveSupport::TestCase
   #   assert true
   # end
 
+  test 'published? reflects active and publish_start_at' do
+    assert Trend.new(active: true, publish_start_at: 1.minute.ago).published?
+    assert_not Trend.new(active: false, publish_start_at: 1.minute.ago).published?
+    assert_not Trend.new(active: true, publish_start_at: 1.minute.from_now).published?
+  end
+
+  test 'published scope excludes inactive trends and trends whose publish_start_at is in the future' do
+    titles = ['Published trend', 'Inactive trend', 'Future trend']
+    published = Trend.create!(title: titles[0], date: Date.current, publish_start_at: 1.minute.ago,
+                              etc_phenomenon: :other)
+    Trend.create!(title: titles[1], date: Date.current, publish_start_at: 1.minute.ago,
+                  etc_phenomenon: :other, active: false)
+    Trend.create!(title: titles[2], date: Date.current, publish_start_at: 1.minute.from_now,
+                  etc_phenomenon: :other)
+
+    assert_equal [published.id], Trend.published.where(title: titles).pluck(:id)
+  end
+
   test 'title_without_trailing_parenthetical strips a trailing half-width parenthetical' do
     trend = Trend.new(title: '無期限活動休止(Shibuya Spotify O-EAST)')
 
