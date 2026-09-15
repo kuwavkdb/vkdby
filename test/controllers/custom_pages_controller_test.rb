@@ -28,6 +28,22 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(%r{<span class="inline-block[^"]*">\s*</span>}, response.body)
   end
 
+  test 'merely viewing a page does not bump its updated_at, which is what the sidebar recent updates list sorts by (issue #1528)' do
+    old_page = CustomPage.create!(key: 'ogp-touch-old-page', title: 'Old Page', active: true, body: 'body')
+    old_page.update_column(:updated_at, 1.year.ago)
+    original_updated_at = old_page.reload.updated_at
+
+    # ページ閲覧時にOGP画像が遅延生成される。ActiveStorageのtouch仕様で対象レコードの
+    # updated_atが書き換わってしまうと、実際には編集していないこのページがサイドバーの
+    # 「最近の更新」に浮上してしまう
+    stub_class_method(OgpImageGenerator, :call, 'dummy-png-bytes') { get custom_page_path(key: old_page.key) }
+
+    assert_response :success
+    reloaded = old_page.reload
+    assert reloaded.ogp_image.attached?
+    assert_equal original_updated_at, reloaded.updated_at
+  end
+
   test 'renders og:image pointing at the generated title banner (issue #1263)' do
     skip 'libvips is not installed in this environment' unless ActiveStorage::VIPS_AVAILABLE
 

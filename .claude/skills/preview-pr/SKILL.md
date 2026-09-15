@@ -51,3 +51,6 @@ description: 指定したブランチ（指定しない場合はカレントブ�
    ```
 
 7. 作成したPRのURLをユーザーに表示する
+
+8. **重要: このPRをマージする際は、必ず「Create a merge commit」（マージコミット）を選択すること**
+   - squash や rebase でマージすると main と develop の共通祖先がずれ、以降の release PR で過去の差分が繰り返し表示される原因になる（詳細は `release-pr` スキル参照）
