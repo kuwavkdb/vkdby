@@ -1,6 +1,6 @@
 <%= form_with(model: [:admin, unit], class: "space-y-6") do |form| %>
   <% if unit.errors.any? %>
-    <div class="bg-red-50 p-4 rounded text-red-700">
+    <div class="bg-red-50 dark:bg-red-900/50 p-4 rounded text-red-700 dark:text-red-100">
       <h2><%= pluralize(unit.errors.count, "error") %> prohibited this unit from being saved:</h2>
       <ul class="list-disc list-inside">
         <% unit.errors.each do |error| %>
@@ -91,7 +91,7 @@
           </div>
         </div>
       <% end %>
-      <div class="text-xs text-gray-500">※名前を空にすると保存時に削除されます</div>
+      <div class="text-xs text-gray-500 dark:text-gray-400">※名前を空にすると保存時に削除されます</div>
     </div>
   </div>
 
@@ -122,7 +122,7 @@
           </div>
         </div>
       <% end %>
-      <div class="text-xs text-gray-500">※名前を空にすると保存時に削除されます。旧キーはインポート時に自動設定されます。「非表示」にチェックすると、検索には使われますが画面には表示されなくなります。</div>
+      <div class="text-xs text-gray-500 dark:text-gray-400">※名前を空にすると保存時に削除されます。旧キーはインポート時に自動設定されます。「非表示」にチェックすると、検索には使われますが画面には表示されなくなります。</div>
     </div>
   </div>
 
@@ -149,7 +149,7 @@
           </div>
         </div>
       <% end %>
-      <div class="text-xs text-gray-500">※ From・To ともに空の行は保存時に削除されます</div>
+      <div class="text-xs text-gray-500 dark:text-gray-400">※ From・To ともに空の行は保存時に削除されます</div>
     </div>
   </div>
 

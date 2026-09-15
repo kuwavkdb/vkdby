@@ -1,6 +1,6 @@
 <%= form_with(model: [:admin, unit, unit_snapshot], class: "space-y-6") do |form| %>
   <% if unit_snapshot.errors.any? %>
-    <div class="bg-red-50 p-4 rounded text-red-700">
+    <div class="bg-red-50 dark:bg-red-900/50 p-4 rounded text-red-700 dark:text-red-100">
       <h2><%= unit_snapshot.errors.count %>件のエラーがあります：</h2>
       <ul class="list-disc list-inside">
         <% unit_snapshot.errors.each do |error| %>
