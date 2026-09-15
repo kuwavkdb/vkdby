@@ -43,12 +43,7 @@
     end
   %>
   <dl class="grid grid-cols-2 gap-x-6 gap-y-3">
-    <% compact_items.each_with_index do |item, i| %>
-      <div class="flex flex-row justify-between items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 <%= i.odd? ? 'pl-4 border-l' : '' %>">
-        <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3"><%= item[:label] %></dt>
-        <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 text-right"><%= item[:value] %></dd>
-      </div>
-    <% end %>
+    <%= render BasicAttributeItemComponent.with_collection(compact_items) %>
 
     <% if @resource.is_a?(Unit) && @resource.activity_periods.present? %>
       <div class="col-span-2 flex flex-row justify-between items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3">
