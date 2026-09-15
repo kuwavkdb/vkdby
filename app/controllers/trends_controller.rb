@@ -2,25 +2,25 @@
 
 class TrendsController < ApplicationController
   def index
-    @year_counts = Trend.group('EXTRACT(year FROM date)::integer').count
+    @year_counts = viewable_trends.group('EXTRACT(year FROM date)::integer').count
     @years = @year_counts.keys.sort.reverse
 
     if params[:year].present?
       year = params[:year].to_i
       month = params[:month].presence&.to_i
 
-      @month_counts = Trend.where('EXTRACT(year FROM date) = ?', year)
-                           .group('EXTRACT(month FROM date)::integer').count
+      @month_counts = viewable_trends.where('EXTRACT(year FROM date) = ?', year)
+                                     .group('EXTRACT(month FROM date)::integer').count
       @months = @month_counts.keys.sort.reverse
 
       start_date = Date.new(year, month || 1, 1)
       end_date = month ? start_date.end_of_month : start_date.end_of_year
 
-      scope = Trend.order(date: :desc).where(date: start_date..end_date)
+      scope = viewable_trends.order(date: :desc).where(date: start_date..end_date)
     elsif params[:sort] == 'update'
-      scope = Trend.order(id: :desc)
+      scope = viewable_trends.order(id: :desc)
     else
-      scope = Trend.order(date: :desc)
+      scope = viewable_trends.order(date: :desc)
     end
 
     @pagy, @trends = pagy(scope, limit: 20)
@@ -28,7 +28,7 @@ class TrendsController < ApplicationController
   end
 
   def show
-    @trend = Trend.find(params[:id])
+    @trend = viewable_trends.find(params[:id])
 
     # 件名前の個人名バッヂ（issue #1411）はユニット未紐付けのtrendでも表示するため、
     # @related_peopleは以下のunits.present?チェックより前で解決しておく
@@ -58,13 +58,19 @@ class TrendsController < ApplicationController
     scopes << Item.kept.by_artist_old_key(unit.old_key) if unit.old_key.present?
     @items = scopes.reduce(:or).order(release_date: :desc).limit(8) if scopes.any?
 
-    @unit_trends = Trend.where('units @> ?', [{ unit_id: unit.id }].to_json)
-                        .select(:id, :date, :title, :units)
-                        .order(date: :asc)
+    @unit_trends = viewable_trends.where('units @> ?', [{ unit_id: unit.id }].to_json)
+                                  .select(:id, :date, :title, :units)
+                                  .order(date: :asc)
     @unit_trends_related_units = related_units_for(@unit_trends)
   end
 
   private
+
+  # 公開画面から閲覧可能なTrendの範囲。adminロールのみ非公開（active: false・
+  # 公開開始日時が未到来）のTrendも参照でき、管理画面プレビュー用途に使う
+  def viewable_trends
+    current_user&.admin? ? Trend.all : Trend.published
+  end
 
   def related_units_for(trends)
     unit_ids = trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq

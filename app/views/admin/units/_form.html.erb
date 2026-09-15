@@ -153,6 +153,29 @@
     </div>
   </div>
 
+  <% if unit.new_record? && unit.links.any? %>
+    <div>
+      <h3 class="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">リンク（投稿フォームからの引き継ぎ）</h3>
+      <div class="space-y-3">
+        <%= form.fields_for :links, unit.links do |link_form| %>
+          <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+            <%= link_form.text_field :text, placeholder: "タイトル", class: "block w-full sm:w-40 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+            <%= link_form.text_field :url, placeholder: "URL（https://...）", class: "block w-full flex-1 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+            <div class="flex items-center gap-1 shrink-0">
+              <%= link_form.check_box :_destroy, class: "rounded border-gray-300 text-red-600 shadow-sm focus:border-red-500 focus:ring-red-500 dark:bg-gray-700 dark:border-gray-600" %>
+              <%= link_form.label :_destroy, "削除", class: "text-xs text-red-600 font-medium dark:text-red-400" %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">保存後は編集画面の「公式リンク」からも追加・編集できます。</p>
+    </div>
+  <% end %>
+
+  <% if local_assigns[:unit_submission_id].present? %>
+    <%= hidden_field_tag :unit_submission_id, unit_submission_id %>
+  <% end %>
+
   <div>
     <%= form.label :old_wiki_text, "旧Wikiテキスト", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
     <%= form.text_area :old_wiki_text, rows: 10, readonly: true, class: "mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-sm font-mono text-gray-600 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed" %>
