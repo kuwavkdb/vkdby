@@ -24,6 +24,9 @@
             visible: defined?(logged_in?) && logged_in?) %>
       <%# ヘッダの日付はtext-amber-900だとbg-amber-500背景とのコントラスト比が約4.2:1でWCAG AA（4.5:1）未達だった。
           タイトル（h1）と同じtext-zinc-900に揃えてコントラスト比を約8.3:1まで改善（issue #1322） %>
+      <% unless @trend.published? %>
+        <span class="inline-block mb-2 px-2 py-0.5 rounded text-xs font-bold bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/40 dark:text-red-300 dark:border-red-700">非公開（管理者のみ閲覧可）</span>
+      <% end %>
       <div class="flex items-center gap-3 text-sm text-zinc-900 font-mono mb-2 font-bold">
         <% date_path = if @trend.month_unknown?
                          yearly_path(year: @trend.date.year)

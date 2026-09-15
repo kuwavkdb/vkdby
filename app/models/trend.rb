@@ -84,6 +84,8 @@ class Trend < ApplicationRecord
   scope :on_month_day, lambda { |month, day|
     where('EXTRACT(MONTH FROM date) = ? AND EXTRACT(DAY FROM date) = ?', month, day)
   }
+  # 公開画面に表示してよいTrend（非公開active: falseと、公開開始日時が未到来のものを除く）
+  scope :published, -> { where(active: true).where(publish_start_at: ..Time.current) }
 
   # Validations
   validates :date, presence: true
@@ -113,6 +115,12 @@ class Trend < ApplicationRecord
   # 上記からさらに末尾の半角括弧書きを取り除いたもの
   def title_without_trailing_parenthetical
     title_as_plain_text.sub(TITLE_TRAILING_PARENTHETICAL_PATTERN, '')
+  end
+
+  # 公開画面での閲覧可否（`published`スコープの単一レコード版）。管理画面プレビュー時の
+  # 「非公開」バッジ表示判定に使う
+  def published?
+    active? && publish_start_at <= Time.current
   end
 
   # Trend詳細ページのヘッダ・ページ<title>・OGP画像で共通して使う日付ラベル。
