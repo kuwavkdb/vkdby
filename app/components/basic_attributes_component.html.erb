@@ -2,14 +2,20 @@
   <h2 class="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-2">Basic Information</h2>
   <%
     compact_items = []
+    badge_class = "inline-block whitespace-nowrap bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-200 px-2 py-0.5 rounded text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/70 transition-colors border border-indigo-200 dark:border-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
     if @resource.is_a?(Person)
       if @resource.parts.present?
-        compact_items << { label: "Parts", value: capture { @resource.parts.map(&:humanize).join(", ") } }
+        compact_items << { label: "Parts", value: capture do %>
+          <div class="flex flex-wrap justify-end gap-1">
+            <% @resource.parts.each do |part| %>
+              <%= link_to part.humanize, people_path(part: part), class: badge_class %>
+            <% end %>
+          </div>
+        <% end }
       end
       if @resource.birthday.present?
         compact_items << { label: "Birthday", value: capture do %>
           <div class="flex flex-wrap justify-end items-center gap-0.5">
-            <% badge_class = "inline-block bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded text-xs font-bold hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors border border-amber-200 dark:border-amber-700" %>
             <% if @resource.birth_year.present? %>
               <%= link_to @resource.birth_year.to_s, yearly_path(year: @resource.birth_year), class: badge_class %>
               <span class="text-xs font-bold text-zinc-400 dark:text-zinc-500 px-1">/</span>
@@ -21,10 +27,10 @@
         <% end }
       end
       if @resource.blood.present?
-        compact_items << { label: "Blood Type", value: capture { @resource.blood } }
+        compact_items << { label: "Blood Type", value: capture { link_to @resource.blood, people_path(blood: @resource.blood), class: badge_class } }
       end
       if @resource.hometown.present?
-        compact_items << { label: "Hometown", value: capture { @resource.hometown } }
+        compact_items << { label: "Hometown", value: capture { link_to @resource.hometown, people_path(hometown: @resource.hometown), class: badge_class } }
       end
     elsif @resource.is_a?(Unit) && @resource.unit_type.present?
       compact_items << { label: "Unit Type", value: capture { @resource.unit_type } }
@@ -61,7 +67,7 @@
         <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3">Tags</dt>
         <dd class="text-right flex flex-wrap justify-end gap-2">
           <% visible_tag_indices.each do |tag| %>
-            <%= link_to tag.name, index_show_path(tag.id), class: "inline-block bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-200 px-2 py-0.5 rounded text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/70 transition-colors border border-indigo-200 dark:border-indigo-700" %>
+            <%= link_to tag.name, index_show_path(tag.id), class: badge_class %>
           <% end %>
         </dd>
       </div>
