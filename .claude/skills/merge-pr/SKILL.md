@@ -39,3 +39,8 @@ description: mainブランチの最新タグを元に、feat/merge-{release_tag}
    ```
 
 6. 作成した PR の URL をユーザーに表示する
+
+7. **重要: このPRをマージする際は、必ず「Create a merge commit」（マージコミット）を選択すること**
+   - `gh pr merge <PR番号> --merge` を使うか、GitHub UI 上で "Squash and merge" ではなく "Merge pull request" を選ぶ
+   - このPRは main の内容を develop に取り込むためだけのPRであり、squash マージすると main 上のコミットとは別ハッシュのコミットが develop にできてしまい、main と develop の共通祖先が更新されない
+   - 共通祖先が更新されないと、次回以降 `release-pr` で作成するPRの diff・コミット一覧に、過去にリリース済みの変更が毎回再表示されてしまう（このリポジトリで実際に発生した問題）

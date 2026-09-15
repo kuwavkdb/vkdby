@@ -63,3 +63,9 @@ description: developブランチから release/v0.yyyy.mmdd ブランチを切�
    ```
 
 8. 作成したPRのURLをユーザーに表示する
+
+9. **重要: このPRをマージする際は、必ず「Create a merge commit」（マージコミット）を選択すること**
+   - `gh pr merge <PR番号> --merge` を使うか、GitHub UI 上で "Squash and merge" ではなく "Merge pull request" を選ぶ
+   - squash や rebase でマージすると、main 上のコミットが develop 上の元コミットと別のハッシュになり、main と develop の共通祖先（merge-base）が更新されなくなる
+   - その結果、次回以降 `develop` から作成する release PR の diff・コミット一覧に、過去にリリース済みの変更が毎回再表示されるようになる（このリポジトリで実際に発生した問題）
+   - このPRを merge commit でマージすれば、main の最新コミットが develop 側の履歴に取り込まれ、共通祖先が正しく更新される
