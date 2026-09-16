@@ -52,6 +52,12 @@ Rack::Attack.blocklist('block_excessive_tag_combo/people_units_filter') do |req|
   excessive_tag_filter_request.call(req)
 end
 
+# ユニット投稿フォーム: ログイン不要のため、IPごとに60秒間5回までに制限する
+# （issue #1545。CAPTCHA等は導入せず、rack-attackのレート制限のみでスパム対策とする）
+Rack::Attack.throttle('unit_submissions/ip', limit: 5, period: 60) do |req|
+  req.ip if req.path == '/unit_submissions' && req.post?
+end
+
 # ログイン: IP ごとに 20 秒間 5 回まで（ブルートフォース対策）
 Rack::Attack.throttle('login/ip', limit: 5, period: 20) do |req|
   req.ip if req.path == '/login' && req.post?

@@ -1,0 +1,103 @@
+<% status_labels = { 'pending' => '未処理', 'rejected' => '却下済み', 'converted' => '変換済み' } %>
+<% title = "Unit投稿一覧（#{status_labels[@status_filter]}）" %>
+<% content_for :title, title %>
+<div class="container mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100"><%= title %></h1>
+    <span class="text-sm text-gray-500 dark:text-gray-400"><%= @pagy.count %> 件</span>
+  </div>
+
+  <div class="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-700">
+    <% status_labels.each do |status, label| %>
+      <%= link_to admin_unit_submissions_path(status: status),
+            class: "px-4 py-2 text-sm font-medium rounded-t-md border border-b-0 #{@status_filter == status ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100' : 'bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}" do %>
+        <%= label %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="mb-4 flex justify-center">
+    <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
+  </div>
+
+  <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg mb-4">
+    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+      <thead class="bg-gray-50 dark:bg-gray-700">
+        <tr>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">受付日時</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">名前</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">種別/活動状況</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">リンク</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">投稿理由・連絡先</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">アクション</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+        <% @unit_submissions.each do |submission| %>
+          <tr>
+            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+              <%= submission.created_at.strftime('%Y-%m-%d %H:%M') %>
+              <% if submission.submitter_ip.present? %>
+                <span class="block text-xs text-gray-400"><%= submission.submitter_ip %></span>
+              <% end %>
+            </td>
+            <td class="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">
+              <%= submission.name %>
+              <% if submission.name_kana.present? %>
+                <span class="block text-xs text-gray-400"><%= submission.name_kana %></span>
+              <% end %>
+              <% if submission.is_related_person? %>
+                <span class="inline-block mt-1 px-1.5 py-0.5 text-xs font-medium rounded bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">本人・関係者</span>
+              <% end %>
+            </td>
+            <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">
+              <%= submission.unit_type&.humanize %><br>
+              <%= submission.status.present? ? Unit::STATUS_TRANSLATIONS[submission.status] : nil %>
+            </td>
+            <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">
+              <ul class="space-y-1">
+                <% submission.links.each do |link| %>
+                  <li>
+                    <%= link_to link.domain, link.url, target: "_blank", rel: "noopener", class: "text-indigo-600 dark:text-indigo-400 hover:underline break-all" %>
+                  </li>
+                <% end %>
+              </ul>
+            </td>
+            <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+              <p class="whitespace-pre-wrap break-words"><%= submission.note %></p>
+              <% if submission.email.present? %>
+                <p class="mt-1 text-xs">連絡先: <%= submission.email %></p>
+              <% end %>
+            </td>
+            <td class="px-4 py-4 whitespace-nowrap text-sm">
+              <% if submission.pending? %>
+                <div class="flex flex-col gap-2 items-start">
+                  <%= link_to "承認してUnit作成", new_admin_unit_path(unit_submission_id: submission.id),
+                        class: "px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded hover:bg-indigo-700" %>
+                  <%= button_to "却下", reject_admin_unit_submission_path(submission), method: :patch,
+                        form_class: "inline",
+                        onclick: "return confirm('この投稿を却下しますか？')",
+                        class: "px-3 py-1.5 text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer border-0" %>
+                </div>
+              <% elsif submission.converted? %>
+                <% if submission.converted_unit %>
+                  <%= link_to "#{submission.converted_unit.name} を見る", edit_admin_unit_path(submission.converted_unit),
+                        class: "text-indigo-600 dark:text-indigo-400 hover:underline" %>
+                <% else %>
+                  <span class="text-gray-400">生成元Unitが見つかりません</span>
+                <% end %>
+              <% else %>
+                <span class="text-gray-400">却下済み</span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @unit_submissions.none? %>
+          <tr>
+            <td colspan="6" class="px-4 py-8 text-center text-sm text-gray-400">該当する投稿はありません</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

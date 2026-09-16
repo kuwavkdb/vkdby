@@ -10,10 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_16_060000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
-  enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
 
   create_table "active_storage_attachments", force: :cascade do |t|
@@ -173,9 +172,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
     t.index ["destination_key"], name: "index_people_on_destination_key", where: "(destination_key IS NOT NULL)"
     t.index ["discarded_at"], name: "index_people_on_discarded_at"
     t.index ["hometown"], name: "index_people_on_hometown"
+    t.index ["key"], name: "index_people_on_key", unique: true
     t.index ["name"], name: "index_people_on_name", opclass: :gin_trgm_ops, using: :gin
     t.index ["name_kana"], name: "index_people_on_name_kana", opclass: :gin_trgm_ops, using: :gin
     t.index ["old_history"], name: "index_people_on_old_history", opclass: :gin_trgm_ops, using: :gin
+    t.index ["old_key"], name: "index_people_on_old_key", unique: true
     t.index ["parts"], name: "index_people_on_parts", using: :gin
   end
 
@@ -368,6 +369,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
     t.index ["unit_id"], name: "index_unit_snapshots_on_unit_id"
   end
 
+  create_table "unit_submissions", force: :cascade do |t|
+    t.bigint "converted_unit_id"
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.boolean "is_related_person", default: false, null: false
+    t.string "name", null: false
+    t.string "name_kana"
+    t.text "note"
+    t.integer "status"
+    t.integer "submission_status", default: 0, null: false
+    t.string "submitter_ip"
+    t.integer "unit_type"
+    t.datetime "updated_at", null: false
+    t.index ["converted_unit_id"], name: "index_unit_submissions_on_converted_unit_id"
+    t.index ["submission_status"], name: "index_unit_submissions_on_submission_status"
+  end
+
   create_table "units", force: :cascade do |t|
     t.jsonb "activity_period"
     t.jsonb "aliases", default: [], null: false
@@ -388,8 +406,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
     t.index ["aliases"], name: "index_units_on_aliases", using: :gin
     t.index ["destination_key"], name: "index_units_on_destination_key", where: "(destination_key IS NOT NULL)"
     t.index ["discarded_at"], name: "index_units_on_discarded_at"
+    t.index ["key"], name: "index_units_on_key", unique: true
     t.index ["name"], name: "index_units_on_name", opclass: :gin_trgm_ops, using: :gin
     t.index ["name_kana"], name: "index_units_on_name_kana", opclass: :gin_trgm_ops, using: :gin
+    t.index ["old_key"], name: "index_units_on_old_key", unique: true
   end
 
   create_table "update_logs", force: :cascade do |t|
@@ -461,6 +481,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
   add_foreign_key "unit_people", "people"
   add_foreign_key "unit_people", "units"
   add_foreign_key "unit_snapshots", "units"
+  add_foreign_key "unit_submissions", "units", column: "converted_unit_id"
   add_foreign_key "update_logs", "users"
   add_foreign_key "wiki_page_imports", "wikipages"
 end
