@@ -5,7 +5,8 @@ require 'test_helper'
 module Admin
   class UnitSubmissionsControllerTest < ActionDispatch::IntegrationTest
     setup do
-      @submission = UnitSubmission.create!(name: 'Pending Unit', links_attributes: { '0' => { url: 'https://example.com' } })
+      @submission = UnitSubmission.create!(name: 'Pending Unit', unit_type: :band, status: :active,
+                                           links_attributes: { '0' => { url: 'https://example.com' } })
     end
 
     test 'index requires admin role' do
@@ -27,7 +28,8 @@ module Admin
 
     test 'index filters by status' do
       login_as_admin
-      rejected = UnitSubmission.create!(name: 'Rejected Unit', submission_status: :rejected,
+      rejected = UnitSubmission.create!(name: 'Rejected Unit', unit_type: :band, status: :active,
+                                        submission_status: :rejected,
                                         links_attributes: { '0' => { url: 'https://example.com/rejected' } })
 
       get admin_unit_submissions_path(status: 'rejected')

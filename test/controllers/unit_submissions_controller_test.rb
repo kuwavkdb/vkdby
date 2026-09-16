@@ -37,6 +37,7 @@ class UnitSubmissionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 'New Unit From Fan', submission.name
     assert_equal 'https://example.com/band', submission.links.first.url
     assert_predicate submission, :pending?
+    assert_equal '127.0.0.1', submission.submitter_ip
     assert_redirected_to new_unit_submission_path
   end
 

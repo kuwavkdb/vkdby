@@ -10,6 +10,7 @@ class UnitSubmissionsController < ApplicationController
 
   def create
     @unit_submission = UnitSubmission.new(unit_submission_params)
+    @unit_submission.submitter_ip = request.remote_ip
 
     if @unit_submission.save
       notify_admins(@unit_submission)

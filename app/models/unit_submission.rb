@@ -12,6 +12,7 @@
 #  note              :text
 #  status            :integer
 #  submission_status :integer          default(0), not null
+#  submitter_ip      :string
 #  unit_type         :integer
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null

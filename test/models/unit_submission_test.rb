@@ -2,9 +2,39 @@
 
 require 'test_helper'
 
+# == Schema Information
+#
+# Table name: unit_submissions
+#
+#  id                :bigint           not null, primary key
+#  email             :string
+#  is_related_person :boolean          default(FALSE), not null
+#  name              :string           not null
+#  name_kana         :string
+#  note              :text
+#  status            :integer
+#  submission_status :integer          default(0), not null
+#  submitter_ip      :string
+#  unit_type         :integer
+#  created_at        :datetime         not null
+#  updated_at        :datetime         not null
+#  converted_unit_id :bigint
+#
+# Indexes
+#
+#  index_unit_submissions_on_converted_unit_id  (converted_unit_id)
+#  index_unit_submissions_on_submission_status  (submission_status)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (converted_unit_id => units.id)
+#
 class UnitSubmissionTest < ActiveSupport::TestCase
   def valid_attributes
-    { name: 'Test Unit', links_attributes: { '0' => { url: 'https://example.com' } } }
+    {
+      name: 'Test Unit', unit_type: :band, status: :active,
+      links_attributes: { '0' => { url: 'https://example.com' } }
+    }
   end
 
   test 'name is required' do
