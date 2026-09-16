@@ -24,7 +24,7 @@
           <% sections.each do |section| %>
             <% discarded = section.discarded? %>
             <tr data-id="<%= section.id %>" class="<%= 'opacity-50' if discarded %>">
-              <td class="whitespace-nowrap px-3 py-3 text-sm font-medium text-gray-900 sm:pl-6 <%= discarded ? 'cursor-default' : 'drag-handle cursor-move' %>">
+              <td class="whitespace-nowrap px-3 py-3 text-sm font-medium text-gray-900 dark:text-gray-200 sm:pl-6 <%= discarded ? 'cursor-default' : 'drag-handle cursor-move' %>">
                 <% unless discarded %>
                   <svg class="h-4 w-4 text-gray-400" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />

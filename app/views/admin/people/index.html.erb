@@ -5,7 +5,7 @@
     <div class="flex items-center gap-3 mb-4 md:mb-0">
       <h1 class="text-2xl font-bold"><%= title %></h1>
       <%= link_to "Unit管理", admin_units_path,
-          class: "text-sm text-gray-500 hover:text-indigo-600 hover:underline" %>
+          class: "text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline" %>
     </div>
     <div class="flex items-center space-x-4">
       <%= form_with url: admin_people_path, method: :get, local: true, class: "flex" do |f| %>
@@ -13,18 +13,18 @@
         <%= f.hidden_field :tag_index_id, value: params[:tag_index_id] %>
         <%= f.select :status, options_for_select(Person::STATUS_TRANSLATIONS.map { |key, label| [label, key] }, params[:status]),
               { include_blank: "すべてのStatus" },
-              { onchange: "this.form.requestSubmit()", "aria-label": "Statusで絞り込み", class: "border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 mr-2" } %>
-        <%= f.text_field :q, value: params[:q], placeholder: "Search by name or key...", class: "rounded-l-md border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" %>
-        <%= f.submit "Search", class: "px-4 py-2 bg-white text-gray-700 border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-50 cursor-pointer" %>
+              { onchange: "this.form.requestSubmit()", "aria-label": "Statusで絞り込み", class: "border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 mr-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" } %>
+        <%= f.text_field :q, value: params[:q], placeholder: "Search by name or key...", class: "rounded-l-md border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+        <%= f.submit "Search", class: "px-4 py-2 bg-white text-gray-700 border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-50 cursor-pointer dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600" %>
       <% end %>
       <%= link_to "Add Person", new_admin_person_path, class: "px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700" %>
     </div>
   </div>
 
   <% if @tag_index %>
-    <div class="mb-4 px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-md flex items-center justify-between text-sm">
-      <span class="text-indigo-800">タグ「<strong><%= @tag_index.name %></strong>」でフィルター中</span>
-      <%= link_to "フィルター解除", admin_people_path, class: "text-indigo-600 hover:text-indigo-800 underline" %>
+    <div class="mb-4 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-md flex items-center justify-between text-sm">
+      <span class="text-indigo-800 dark:text-indigo-200">タグ「<strong><%= @tag_index.name %></strong>」でフィルター中</span>
+      <%= link_to "フィルター解除", admin_people_path, class: "text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 underline" %>
     </div>
   <% end %>
 
@@ -32,64 +32,64 @@
 
   <div class="flex space-x-2 mb-4">
     <%= link_to "通常", admin_people_path(q: params[:q]),
-        class: "px-3 py-1 rounded text-sm #{params[:discarded].blank? && params[:redirect_source].blank? ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+        class: "px-3 py-1 rounded text-sm #{params[:discarded].blank? && params[:redirect_source].blank? ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}" %>
     <%= link_to "削除済みのみ", admin_people_path(q: params[:q], discarded: "only"),
-        class: "px-3 py-1 rounded text-sm #{params[:discarded] == 'only' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+        class: "px-3 py-1 rounded text-sm #{params[:discarded] == 'only' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}" %>
     <%= link_to "全件", admin_people_path(q: params[:q], discarded: "all"),
-        class: "px-3 py-1 rounded text-sm #{params[:discarded] == 'all' ? 'bg-gray-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+        class: "px-3 py-1 rounded text-sm #{params[:discarded] == 'all' ? 'bg-gray-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}" %>
     <%= link_to "リダイレクト元", admin_people_path(q: params[:q], redirect_source: "only"),
-        class: "px-3 py-1 rounded text-sm #{params[:redirect_source] == 'only' ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+        class: "px-3 py-1 rounded text-sm #{params[:redirect_source] == 'only' ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}" %>
   </div>
 
   <div class="mb-4">
     <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
   </div>
 
-  <div class="overflow-x-auto bg-white shadow rounded-lg mb-4">
-    <table class="min-w-full divide-y divide-gray-200">
-      <thead class="bg-gray-50">
+  <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg mb-4">
+    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+      <thead class="bg-gray-50 dark:bg-gray-700">
         <tr>
           <% if current_user.admin? %>
             <th class="px-4 py-3">
-              <input type="checkbox" id="check_all" class="rounded border-gray-300" onclick="document.querySelectorAll('.row-check').forEach(c => c.checked = this.checked)" aria-label="すべて選択">
+              <input type="checkbox" id="check_all" class="rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700" onclick="document.querySelectorAll('.row-check').forEach(c => c.checked = this.checked)" aria-label="すべて選択">
             </th>
           <% end %>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parts</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Key</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Parts</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Key</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
         </tr>
       </thead>
-      <tbody class="bg-white divide-y divide-gray-200">
+      <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
         <% @people.each do |person| %>
-          <tr class="<%= person.discarded? ? 'bg-red-50' : '' %>">
+          <tr class="<%= person.discarded? ? 'bg-red-50 dark:bg-red-900/20' : '' %>">
             <% if current_user.admin? %>
               <td class="px-4 py-4">
-                <input type="checkbox" value="<%= person.id %>" class="row-check rounded border-gray-300" aria-label="<%= person.name %> を選択">
+                <input type="checkbox" value="<%= person.id %>" class="row-check rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700" aria-label="<%= person.name %> を選択">
               </td>
             <% end %>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
               <%= person.name %>
               <% if person.discarded? %>
-                <span class="ml-1 text-xs text-red-500">削除済み</span>
+                <span class="ml-1 text-xs text-red-500 dark:text-red-400">削除済み</span>
               <% end %>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
               <%= person.parts&.map(&:humanize)&.join(", ") %>
             </td>
-            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs break-all">
+            <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs break-all">
               <% if person.key.present? %>
-                <%= link_to person.key, profile_path(person.key), class: "text-indigo-600 hover:text-indigo-900", target: "_blank" %>
+                <%= link_to person.key, profile_path(person.key), class: "text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300", target: "_blank" %>
               <% else %>
-                <span class="text-gray-400 italic">No Key</span>
+                <span class="text-gray-400 dark:text-gray-500 italic">No Key</span>
               <% end %>
               <% if person.destination_key.present? %>
                 <div class="text-xs text-amber-600 dark:text-amber-400 mt-0.5">→ <%= link_to person.destination_key, profile_path(person.destination_key), class: "hover:underline", target: "_blank" %></div>
               <% end %>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200">
                 <%= person.status_text %>
               </span>
             </td>
@@ -98,7 +98,7 @@
                 <% if current_user.super_operator_or_above? %>
                   <%= button_to "復元", undiscard_admin_person_path(person), method: :patch,
                       form: { class: "inline-block" },
-                      class: "text-green-600 hover:text-green-900 bg-transparent border-0 cursor-pointer p-0" %>
+                      class: "text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 bg-transparent border-0 cursor-pointer p-0" %>
                 <% end %>
                 <% if current_user.admin? %>
                   <%= button_to "物理削除", purge_admin_person_path(person), method: :delete,
@@ -107,12 +107,12 @@
                       class: "text-white bg-red-800 hover:bg-red-900 rounded px-2 py-1 cursor-pointer" %>
                 <% end %>
               <% else %>
-                <%= link_to "Edit", edit_admin_person_path(person), class: "text-indigo-600 hover:text-indigo-900 mr-4" %>
+                <%= link_to "Edit", edit_admin_person_path(person), class: "text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-4" %>
                 <% if current_user.super_operator_or_above? %>
                   <%= button_to "論理削除", admin_person_path(person), method: :delete,
                     form_class: "inline",
                     onclick: "return confirm('Are you sure?')",
-                    class: "text-red-600 hover:text-red-900 bg-transparent border-0 cursor-pointer p-0" %>
+                    class: "text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 bg-transparent border-0 cursor-pointer p-0" %>
                 <% end %>
               <% end %>
             </td>
@@ -123,10 +123,10 @@
   </div>
 
   <% if current_user.admin? %>
-    <div class="sticky bottom-0 z-10 flex flex-wrap items-center gap-2 bg-white border-t border-gray-200 px-4 py-3 shadow-md mb-4">
-      <label class="text-sm text-gray-600">一括更新:</label>
+    <div class="sticky bottom-0 z-10 flex flex-wrap items-center gap-2 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 shadow-md mb-4">
+      <label class="text-sm text-gray-600 dark:text-gray-400">一括更新:</label>
       <select id="bulk-status-select"
-              class="text-sm rounded border-gray-300 py-1.5 pr-8"
+              class="text-sm rounded border-gray-300 py-1.5 pr-8 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               aria-label="一括更新するStatus">
         <% Person::STATUS_TRANSLATIONS.each do |key, label| %>
           <option value="<%= key %>"><%= label %></option>
