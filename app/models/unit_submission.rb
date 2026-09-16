@@ -41,7 +41,17 @@ class UnitSubmission < ApplicationRecord
   enum :status, { pre: 0, active: 1, freeze: 2, disbanded: 3, unknown: 99 }
   enum :submission_status, { pending: 0, rejected: 1, converted: 2 }
 
+  UNIT_TYPE_TRANSLATIONS = {
+    'band' => 'バンド',
+    'unit' => 'ユニット',
+    'session' => 'セッション',
+    'solo' => 'ソロ',
+    'other' => 'その他'
+  }.freeze
+
   validates :name, presence: true
+  validates :unit_type, presence: true
+  validates :status, presence: true
   validate :at_least_one_link
 
   scope :recent, -> { order(created_at: :desc) }

@@ -55,7 +55,7 @@
               <ul class="space-y-1">
                 <% submission.links.each do |link| %>
                   <li>
-                    <%= link_to (link.text.presence || link.url), link.url, target: "_blank", rel: "noopener", class: "text-indigo-600 dark:text-indigo-400 hover:underline break-all" %>
+                    <%= link_to link.domain, link.url, target: "_blank", rel: "noopener", class: "text-indigo-600 dark:text-indigo-400 hover:underline break-all" %>
                   </li>
                 <% end %>
               </ul>

@@ -1,19 +1,13 @@
-<% content_for :title, "ユニット情報を投稿する" %>
+<% content_for :title, "ユニット（バンド）情報を投稿する" %>
 <div class="flex justify-center">
   <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-3xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
     <header class="mb-8 text-center flex flex-col items-center">
-      <h1 class="text-3xl font-black text-slate-800 dark:text-slate-100">ユニット情報を投稿する</h1>
+      <h1 class="text-3xl font-black text-slate-800 dark:text-slate-100">ユニット（バンド）情報を投稿する</h1>
       <p class="mt-3 text-sm text-slate-500 dark:text-slate-400 max-w-xl">
-        まだ掲載されていないユニットの情報をお寄せください。ログインは不要です。<br>
+        まだ掲載されていないユニット（バンド）の情報をお寄せください。ログインは不要です。<br>
         いただいた内容は管理者が確認したうえで掲載を検討します（内容がそのまま公開されるわけではありません）。
       </p>
     </header>
-
-    <% if flash[:notice] %>
-      <div class="mb-6 p-4 text-sm text-emerald-800 bg-emerald-50 dark:bg-emerald-900/40 dark:text-emerald-200 rounded-xl" role="status">
-        <%= flash[:notice] %>
-      </div>
-    <% end %>
 
     <% if @unit_submission.errors.any? %>
       <div class="mb-6 p-4 text-sm text-red-700 bg-red-50 dark:bg-red-900/40 dark:text-red-200 rounded-xl" role="alert">
@@ -28,7 +22,7 @@
 
     <%= form_with model: @unit_submission, url: unit_submissions_path, local: true, class: "space-y-6" do |form| %>
       <div>
-        <%= form.label :name, "名前", class: "block text-sm font-bold text-slate-700 dark:text-slate-200" %>
+        <%= form.label :name, "バンド（ユニット）名", class: "block text-sm font-bold text-slate-700 dark:text-slate-200" %>
         <span class="text-red-500 text-xs align-top">必須</span>
         <%= form.text_field :name, required: true,
             class: "mt-1 block w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
@@ -42,11 +36,12 @@
 
       <fieldset>
         <legend class="block text-sm font-bold text-slate-700 dark:text-slate-200">種別</legend>
+        <span class="text-red-500 text-xs align-top">必須</span>
         <div class="mt-2 flex flex-wrap gap-4">
-          <% UnitSubmission.unit_types.each_key do |type| %>
+          <% UnitSubmission::UNIT_TYPE_TRANSLATIONS.each_key do |type| %>
             <label class="inline-flex items-center gap-1.5 text-sm text-slate-700 dark:text-slate-200">
-              <%= form.radio_button :unit_type, type, class: "text-indigo-600 focus:ring-2 focus:ring-indigo-500 border-slate-300" %>
-              <%= type.humanize %>
+              <%= form.radio_button :unit_type, type, required: true, class: "text-indigo-600 focus:ring-2 focus:ring-indigo-500 border-slate-300" %>
+              <%= UnitSubmission::UNIT_TYPE_TRANSLATIONS[type] %>
             </label>
           <% end %>
         </div>
@@ -54,10 +49,11 @@
 
       <fieldset>
         <legend class="block text-sm font-bold text-slate-700 dark:text-slate-200">活動状況</legend>
+        <span class="text-red-500 text-xs align-top">必須</span>
         <div class="mt-2 flex flex-wrap gap-4">
           <% UnitSubmission.statuses.each_key do |status| %>
             <label class="inline-flex items-center gap-1.5 text-sm text-slate-700 dark:text-slate-200">
-              <%= form.radio_button :status, status, class: "text-indigo-600 focus:ring-2 focus:ring-indigo-500 border-slate-300" %>
+              <%= form.radio_button :status, status, required: true, class: "text-indigo-600 focus:ring-2 focus:ring-indigo-500 border-slate-300" %>
               <%= Unit::STATUS_TRANSLATIONS[status] %>
             </label>
           <% end %>
@@ -70,13 +66,10 @@
         <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">公式サイト・SNSなど、参照できるURLを入力してください。</p>
         <div class="mt-2 space-y-3">
           <%= form.fields_for :links do |link_form| %>
-            <div class="flex flex-col sm:flex-row gap-2">
-              <%= link_form.label :text, "リンク名", class: "sr-only" %>
-              <%= link_form.text_field :text, placeholder: "リンク名（例: 公式サイト、X など）",
-                  class: "block w-full sm:w-48 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+            <div>
               <%= link_form.label :url, "URL", class: "sr-only" %>
               <%= link_form.url_field :url, placeholder: "https://...",
-                  class: "block w-full flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+                  class: "block w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
             </div>
           <% end %>
         </div>
@@ -97,7 +90,7 @@
 
       <div class="flex items-start gap-2">
         <%= form.check_box :is_related_person, class: "mt-1 rounded border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500" %>
-        <%= form.label :is_related_person, "本人またはユニット関係者です", class: "text-sm text-slate-700 dark:text-slate-200" %>
+        <%= form.label :is_related_person, "本人またはユニット（バンド）関係者です", class: "text-sm text-slate-700 dark:text-slate-200" %>
       </div>
 
       <div class="flex justify-center pt-2">
