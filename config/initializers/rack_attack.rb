@@ -58,6 +58,12 @@ Rack::Attack.throttle('unit_submissions/ip', limit: 5, period: 60) do |req|
   req.ip if req.path == '/unit_submissions' && req.post?
 end
 
+# 動向投稿フォーム: ログイン不要のため、IPごとに60秒間5回までに制限する
+# （issue #1553。unit_submissions/ipと同様、CAPTCHA等は導入せずrack-attackのみで対応する）
+Rack::Attack.throttle('trend_submissions/ip', limit: 5, period: 60) do |req|
+  req.ip if req.path == '/trend_submissions' && req.post?
+end
+
 # ログイン: IP ごとに 20 秒間 5 回まで（ブルートフォース対策）
 Rack::Attack.throttle('login/ip', limit: 5, period: 20) do |req|
   req.ip if req.path == '/login' && req.post?

@@ -1,0 +1,14 @@
+新しい動向投稿があります
+
+<%= @admin_user.name %> さん、
+ログイン不要の投稿フォームから新しい動向情報の投稿がありました。
+
+対象: <%= @trend_submission.target_name %>（<%= @trend_submission.target_type == 'unit' ? 'ユニット' : '個人' %>）
+タイトル: <%= @trend_submission.title %>
+
+内容を確認のうえ、承認・却下の判断をお願いします。
+
+投稿一覧: <%= @url %>
+
+Thanks,
+VKDBY Team

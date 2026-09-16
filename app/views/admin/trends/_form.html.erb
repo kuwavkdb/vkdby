@@ -1,4 +1,8 @@
 <%= form_with(model: [:admin, trend], class: "space-y-6") do |form| %>
+  <% if local_assigns[:trend_submission_id].present? %>
+    <%= hidden_field_tag :trend_submission_id, trend_submission_id %>
+  <% end %>
+
   <% if trend.errors.any? %>
     <div class="bg-red-50 p-4 rounded text-red-700 dark:bg-red-900 dark:text-red-200">
       <h2><%= pluralize(trend.errors.count, "error") %> prohibited this trend from being saved:</h2>
