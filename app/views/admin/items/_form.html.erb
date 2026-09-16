@@ -141,7 +141,7 @@
                    autocomplete="off"
                    value="<%= search_mode ? artist['name'] : '' %>"
                    data-action="input->artist-rows#onSearchInput keydown->artist-rows#onKeydown focus->artist-rows#onSearchFocus">
-            <div class="artist-results hidden absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 max-h-60 overflow-auto"></div>
+            <div class="artist-results hidden absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 max-h-60 overflow-auto"></div>
           </div>
 
           <%# Selected display (visible only when already selected) %>
@@ -194,7 +194,7 @@
                  placeholder="ユニット名で検索..."
                  autocomplete="off"
                  data-action="input->artist-rows#onSearchInput keydown->artist-rows#onKeydown focus->artist-rows#onSearchFocus">
-          <div class="artist-results hidden absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 max-h-60 overflow-auto"></div>
+          <div class="artist-results hidden absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 max-h-60 overflow-auto"></div>
         </div>
 
         <div class="artist-selected-display flex-1 items-center hidden">
