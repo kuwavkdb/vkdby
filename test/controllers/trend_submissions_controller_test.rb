@@ -10,7 +10,9 @@ class TrendSubmissionsControllerTest < ActionDispatch::IntegrationTest
       trend_submission: {
         target_type: 'unit',
         target_name: 'New Unit From Fan',
-        date: '2026-01-01',
+        year: '2026',
+        month: '1',
+        day: '1',
         title: '結成しました',
         content: '詳細はリンク先を参照',
         via_url: 'https://example.com/announcement',
@@ -43,10 +45,20 @@ class TrendSubmissionsControllerTest < ActionDispatch::IntegrationTest
 
     submission = TrendSubmission.last
     assert_equal 'New Unit From Fan', submission.target_name
+    assert_equal Date.new(2026, 1, 1), submission.date
     assert_predicate submission, :unit?
     assert_predicate submission, :pending?
     assert_equal '127.0.0.1', submission.submitter_ip
     assert_redirected_to new_trend_submission_path
+  end
+
+  test 'create builds date from year with month/day left unknown' do
+    post trend_submissions_path, params: valid_params(month: '', day: '')
+
+    submission = TrendSubmission.last
+    assert_equal Date.new(2026, 1, 1), submission.date
+    assert_predicate submission, :month_unknown?
+    assert_predicate submission, :day_unknown?
   end
 
   test 'create preserves target context in the redirect when target_id was fixed' do

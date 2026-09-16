@@ -37,7 +37,7 @@ class TrendSubmissionsController < ApplicationController
   def trend_submission_params
     params.require(:trend_submission).permit(
       :target_type, :target_id, :target_name,
-      :date, :day_unknown, :month_unknown,
+      :year, :month, :day,
       :title, :content, :via_url,
       :phenomenon, :email, :is_related_person
     )

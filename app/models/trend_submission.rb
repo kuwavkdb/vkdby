@@ -46,8 +46,16 @@ class TrendSubmission < ApplicationRecord
   enum :target_type, { unit: 0, person: 1 }
   enum :submission_status, { pending: 0, rejected: 1, converted: 2 }
 
+  # 投稿フォームでは年をテキスト入力、月・日を「不明」を選べるセレクトで受け取り、
+  # date/day_unknown/month_unknownを組み立てる（issue #1553）。dateを直接指定する
+  # 経路（admin側の変換フローやテスト）はyearが空のままなので影響を受けない
+  attr_accessor :year, :month, :day
+
+  before_validation :build_date_from_parts
+
   validates :target_type, presence: true
   validates :target_name, presence: true
+  validates :year, format: { with: /\A\d{4}\z/, message: 'は4桁の数字で入力してください' }, allow_blank: true
   validates :date, presence: true
   validates :via_url, presence: true
   validates :phenomenon, presence: true
@@ -87,5 +95,20 @@ class TrendSubmission < ApplicationRecord
     return nil unless key
 
     I18n.t("activerecord.attributes.trend.#{target_type}_phenomenon.#{key}")
+  end
+
+  private
+
+  # year/month/dayが入力されている場合のみdate/day_unknown/month_unknownを組み立てる。
+  # 月日は「不明」の場合空文字が渡ってくるので、その場合は1で仮埋めしつつフラグを立てる
+  def build_date_from_parts
+    return if year.blank? || !year.match?(/\A\d{4}\z/)
+
+    self.month_unknown = month.blank?
+    self.day_unknown = day.blank?
+    self.date = Date.new(year.to_i, month.presence&.to_i || 1, day.presence&.to_i || 1)
+  rescue ArgumentError
+    self.date = nil
+    errors.add(:date, 'が正しくありません（存在しない日付です）')
   end
 end

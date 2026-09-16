@@ -106,4 +106,36 @@ class TrendSubmissionTest < ActiveSupport::TestCase
 
     assert_equal 'お知らせ', submission.phenomenon_label
   end
+
+  test 'builds date from year/month/day when year is present' do
+    submission = TrendSubmission.new(valid_attributes.except(:date).merge(year: '2026', month: '3', day: '15'))
+
+    assert submission.valid?
+    assert_equal Date.new(2026, 3, 15), submission.date
+    assert_not submission.month_unknown?
+    assert_not submission.day_unknown?
+  end
+
+  test 'marks month_unknown and day_unknown when month/day are left blank' do
+    submission = TrendSubmission.new(valid_attributes.except(:date).merge(year: '2026', month: '', day: ''))
+
+    assert submission.valid?
+    assert_equal Date.new(2026, 1, 1), submission.date
+    assert_predicate submission, :month_unknown?
+    assert_predicate submission, :day_unknown?
+  end
+
+  test 'rejects a year that is not 4 digits' do
+    submission = TrendSubmission.new(valid_attributes.except(:date).merge(year: '26', month: '3', day: '15'))
+
+    assert_not submission.valid?
+    assert_includes submission.errors[:year], 'は4桁の数字で入力してください'
+  end
+
+  test 'adds a date error when year/month/day form a nonexistent date' do
+    submission = TrendSubmission.new(valid_attributes.except(:date).merge(year: '2026', month: '2', day: '30'))
+
+    assert_not submission.valid?
+    assert_includes submission.errors[:date], 'が正しくありません（存在しない日付です）'
+  end
 end

@@ -69,17 +69,28 @@
       <fieldset>
         <legend class="block text-sm font-bold text-slate-700 dark:text-slate-200">日付</legend>
         <span class="text-red-500 text-xs align-top">必須</span>
-        <div class="mt-2 flex flex-wrap items-center gap-4">
-          <%= form.date_field :date, required: true,
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">月・日が分からない場合は「不明」を選択してください。</p>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <%= form.label :year, "年", class: "sr-only" %>
+          <%= form.select :year,
+              options_for_select((2000..Date.current.year).to_a.reverse, (@trend_submission.year.presence || Date.current.year).to_i),
+              {},
               class: "rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
-          <label class="inline-flex items-center gap-1.5 text-sm text-slate-700 dark:text-slate-200">
-            <%= form.check_box :day_unknown, class: "rounded border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500" %>
-            日不明
-          </label>
-          <label class="inline-flex items-center gap-1.5 text-sm text-slate-700 dark:text-slate-200">
-            <%= form.check_box :month_unknown, class: "rounded border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500" %>
-            月不明
-          </label>
+          <span class="text-sm text-slate-600 dark:text-slate-300">年</span>
+
+          <%= form.label :month, "月", class: "sr-only" %>
+          <%= form.select :month,
+              options_for_select([['不明', '']] + (1..12).map { |m| [m, m] }, @trend_submission.month),
+              {},
+              class: "rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+          <span class="text-sm text-slate-600 dark:text-slate-300">月</span>
+
+          <%= form.label :day, "日", class: "sr-only" %>
+          <%= form.select :day,
+              options_for_select([['不明', '']] + (1..31).map { |d| [d, d] }, @trend_submission.day),
+              {},
+              class: "rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+          <span class="text-sm text-slate-600 dark:text-slate-300">日</span>
         </div>
       </fieldset>
 
@@ -121,7 +132,7 @@
 
       <div>
         <%= form.label :content, "本文", class: "block text-sm font-bold text-slate-700 dark:text-slate-200" %>
-        <%= form.text_area :content, rows: 5, placeholder: "主対象以外の関連ユニット・メンバーへの言及があればこちらにご記入ください",
+        <%= form.text_area :content, rows: 5, placeholder: "動向の詳細等をご記入ください",
             class: "mt-1 block w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
       </div>
 

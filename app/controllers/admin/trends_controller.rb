@@ -64,6 +64,7 @@ module Admin
         convert_trend_submission(@trend, params[:trend_submission_id])
         redirect_to admin_trends_path, notice: 'Trend created successfully.'
       else
+        @trend_submission = TrendSubmission.pending.find_by(id: params[:trend_submission_id]) if params[:trend_submission_id].present?
         set_snapshots_from_trend
         render :new, status: :unprocessable_entity
       end
@@ -143,6 +144,7 @@ module Admin
       trend_submission = TrendSubmission.pending.find_by(id: trend_submission_id)
       return unless trend_submission
 
+      @trend_submission = trend_submission
       trend.date = trend_submission.date
       trend.day_unknown = trend_submission.day_unknown
       trend.month_unknown = trend_submission.month_unknown
