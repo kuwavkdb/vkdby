@@ -54,7 +54,8 @@ module Admin
     end
 
     test 'create converts the pending unit submission and links it to the created unit' do
-      submission = UnitSubmission.create!(name: 'Submitted Unit', links_attributes: { '0' => { url: 'https://example.com/submitted' } })
+      submission = UnitSubmission.create!(name: 'Submitted Unit', unit_type: 'band', status: 'active',
+                                          links_attributes: { '0' => { url: 'https://example.com/submitted' } })
 
       assert_difference('Unit.count') do
         post admin_units_path, params: {
@@ -69,7 +70,8 @@ module Admin
     end
 
     test 'create does not touch the unit submission when the unit fails to save' do
-      submission = UnitSubmission.create!(name: 'Submitted Unit', links_attributes: { '0' => { url: 'https://example.com/submitted' } })
+      submission = UnitSubmission.create!(name: 'Submitted Unit', unit_type: 'band', status: 'active',
+                                          links_attributes: { '0' => { url: 'https://example.com/submitted' } })
 
       assert_no_difference('Unit.count') do
         post admin_units_path, params: {

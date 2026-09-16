@@ -14,7 +14,8 @@ class UserMailerTest < ActionMailer::TestCase
 
   test 'new_unit_submission_email' do
     admin_user = users(:admin)
-    unit_submission = UnitSubmission.create!(name: 'Submitted Unit', links_attributes: { '0' => { url: 'https://example.com' } })
+    unit_submission = UnitSubmission.create!(name: 'Submitted Unit', unit_type: 'band', status: 'active',
+                                             links_attributes: { '0' => { url: 'https://example.com' } })
 
     mail = UserMailer.new_unit_submission_email(unit_submission, admin_user)
 
