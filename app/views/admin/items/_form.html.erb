@@ -34,7 +34,7 @@
           <p class="text-sm">
             同じASINのアイテム「<%= @duplicate_asin_item.title %>」が既に登録されています。
             <% if @duplicate_asin_item.discarded? %>
-              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">削除済み</span>
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">削除済み</span>
             <% end %>
             <br>
             このフォームの内容でそのアイテムを上書きする場合は、以下のボタンから編集画面に進み、内容を確認のうえ更新してください。
