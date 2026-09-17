@@ -49,6 +49,9 @@ application.register("timeline", TimelineController)
 import TimelineSearchController from "controllers/timeline_search_controller"
 application.register("timeline-search", TimelineSearchController)
 
+import TrendSubmissionTargetController from "controllers/trend_submission_target_controller"
+application.register("trend-submission-target", TrendSubmissionTargetController)
+
 import ToggleController from "controllers/toggle_controller"
 application.register("toggle", ToggleController)
 

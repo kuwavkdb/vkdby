@@ -1,4 +1,24 @@
+<% unlinked_trend_submission = local_assigns[:trend_submission].presence if local_assigns[:trend_submission]&.target_id.blank? %>
+<% unit_name_prefill = unlinked_trend_submission&.target_name if unlinked_trend_submission&.unit? %>
+<% person_name_prefill = unlinked_trend_submission&.target_name if unlinked_trend_submission&.person? %>
 <%= form_with(model: [:admin, trend], class: "space-y-6") do |form| %>
+  <% if local_assigns[:trend_submission_id].present? %>
+    <%= hidden_field_tag :trend_submission_id, trend_submission_id %>
+  <% end %>
+
+  <% if local_assigns[:trend_submission].present? %>
+    <div class="bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-200 dark:border-indigo-700 rounded-md p-4 text-sm text-indigo-800 dark:text-indigo-200">
+      <p class="font-semibold">投稿フォームからの対象</p>
+      <p class="mt-1">
+        <%= trend_submission.target_name %>
+        （<%= trend_submission.target_type == 'unit' ? 'ユニット（バンド）' : '個人' %>）
+      </p>
+      <% if trend_submission.target_id.blank? %>
+        <p class="mt-1 text-xs">サイト内のデータと自動紐付けされていません。下記の<%= trend_submission.target_type == 'unit' ? 'ユニット' : '個人' %>欄に対象名を入力済みです。検索結果から選択して紐付けてください。</p>
+      <% end %>
+    </div>
+  <% end %>
+
   <% if trend.errors.any? %>
     <div class="bg-red-50 p-4 rounded text-red-700 dark:bg-red-900 dark:text-red-200">
       <h2><%= pluralize(trend.errors.count, "error") %> prohibited this trend from being saved:</h2>
@@ -87,7 +107,8 @@
       <div class="mt-1 relative">
         <input type="text"
                data-autocomplete-target="input"
-               data-action="input->autocomplete#search keydown->autocomplete#onKeydown"
+               data-action="input->autocomplete#search focus->autocomplete#search keydown->autocomplete#onKeydown"
+               value="<%= unit_name_prefill %>"
                placeholder="ユニット名で検索..."
                class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
 
@@ -126,7 +147,8 @@
       <div class="mt-1 relative">
         <input type="text"
                data-autocomplete-target="input"
-               data-action="input->autocomplete#search keydown->autocomplete#onKeydown"
+               data-action="input->autocomplete#search focus->autocomplete#search keydown->autocomplete#onKeydown"
+               value="<%= person_name_prefill %>"
                placeholder="個人名またはバンド名で検索..."
                class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
 

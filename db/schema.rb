@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_16_060000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_16_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -290,6 +290,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_060000) do
     t.index ["person_key"], name: "index_temporary_snapshot_people_on_person_key"
   end
 
+  create_table "trend_submissions", force: :cascade do |t|
+    t.text "content"
+    t.bigint "converted_trend_id"
+    t.datetime "created_at", null: false
+    t.date "date", null: false
+    t.boolean "day_unknown", default: false, null: false
+    t.string "email"
+    t.boolean "is_related_person", default: false, null: false
+    t.boolean "month_unknown", default: false, null: false
+    t.integer "phenomenon", null: false
+    t.integer "submission_status", default: 0, null: false
+    t.string "submitter_ip"
+    t.bigint "target_id"
+    t.string "target_name", null: false
+    t.integer "target_type", null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.string "via_url", null: false
+    t.index ["converted_trend_id"], name: "index_trend_submissions_on_converted_trend_id"
+    t.index ["submission_status"], name: "index_trend_submissions_on_submission_status"
+  end
+
   create_table "trends", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.text "content"
@@ -477,6 +499,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_060000) do
   add_foreign_key "tag_indices", "index_groups"
   add_foreign_key "temporary_snapshot_people", "people"
   add_foreign_key "temporary_snapshot_people", "units", column: "hint_unit_id"
+  add_foreign_key "trend_submissions", "trends", column: "converted_trend_id"
   add_foreign_key "unit_logs", "units"
   add_foreign_key "unit_people", "people"
   add_foreign_key "unit_people", "units"

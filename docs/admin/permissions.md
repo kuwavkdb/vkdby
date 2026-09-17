@@ -61,6 +61,7 @@
 | Units / People — リダイレクト元の物理削除 | purge |
 | Units / People — 一覧からのStatus一括更新 | bulk_update_status |
 | Unit Submissions（ログイン不要の投稿フォームからの投稿一覧・却下） | 全アクション |
+| Trend Submissions（ログイン不要の投稿フォームからの投稿一覧・却下） | 全アクション |
 
 ---
 
@@ -104,3 +105,4 @@
 - ログイン履歴（`OperationLog`）の記録: `app/controllers/sessions_controller.rb`（ログイン成功時）
 - ログイン履歴の参照: `app/controllers/admin/operation_logs_controller.rb`（`require_admin`）
 - Unit Submissions（投稿の一覧・却下、承認時のUnit新規作成フォームへの引き継ぎ）: `app/controllers/admin/unit_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/units_controller.rb#new/#create`
+- Trend Submissions（投稿の一覧・却下、承認時のTrend新規作成フォームへの引き継ぎ）: `app/controllers/admin/trend_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/trends_controller.rb#new/#create`
