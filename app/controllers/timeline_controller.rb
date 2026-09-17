@@ -88,12 +88,7 @@ class TimelineController < ApplicationController
         end
       end
 
-      # タイムライン下の動向一覧用: unit_id → unit を引けるようにし、日付降順のフラットなリストに変換
-      unit_by_id = units.index_by(&:id)
-      trend_list = trend_markers.flat_map do |uid, markers|
-        unit = unit_by_id[uid]
-        markers.map { |m| m.merge(unit_name: unit.name, unit_key: unit.key) }
-      end.sort_by { |m| m[:date] }.reverse
+      trend_list = build_trend_list(trend_markers, units.index_by(&:id))
 
       { units: units.map(&:to_h), year_min:, year_max:, trend_markers:, trend_list: }
     end
@@ -187,6 +182,15 @@ class TimelineController < ApplicationController
         end
       end
     markers
+  end
+
+  # タイムライン下の動向一覧用: unit_id → unit を引けるようにし、日付降順のフラットなリストに変換
+  def build_trend_list(trend_markers, unit_by_id)
+    list = trend_markers.flat_map do |uid, markers|
+      unit = unit_by_id[uid]
+      markers.map { |m| m.merge(unit_name: unit.name, unit_key: unit.key) }
+    end
+    list.sort_by { |m| m[:date] }.reverse
   end
 
   # Wiki記法リンクをラベルテキストに置換 [[A|B]]→A, [A|B]→A, [[A]]→A
