@@ -2,7 +2,7 @@
 
 # rubocop:disable Metrics/ClassLength
 class TimelineController < ApplicationController
-  CACHE_KEY = 'timeline/major_units/v5'
+  CACHE_KEY = 'timeline/major_units/v6'
   CACHE_TTL = 1.hour
 
   VALID_ZOOMS = { '2' => 48 }.freeze
@@ -88,7 +88,14 @@ class TimelineController < ApplicationController
         end
       end
 
-      { units: units.map(&:to_h), year_min:, year_max:, trend_markers: }
+      # タイムライン下の動向一覧用: unit_id → unit を引けるようにし、日付降順のフラットなリストに変換
+      unit_by_id = units.index_by(&:id)
+      trend_list = trend_markers.flat_map do |uid, markers|
+        unit = unit_by_id[uid]
+        markers.map { |m| m.merge(unit_name: unit.name, unit_key: unit.key) }
+      end.sort_by { |m| m[:date] }.reverse
+
+      { units: units.map(&:to_h), year_min:, year_max:, trend_markers:, trend_list: }
     end
 
     @units          = @timeline_data[:units].map { |attrs| TimelineUnit.new(**attrs) }
@@ -96,6 +103,7 @@ class TimelineController < ApplicationController
     @year_max       = @timeline_data[:year_max]
     @year_range     = (@year_min..@year_max).to_a
     @trend_markers  = @timeline_data[:trend_markers]
+    @trend_list     = @timeline_data[:trend_list]
   end
   # rubocop:enable Metrics/AbcSize, Metrics/PerceivedComplexity
 
