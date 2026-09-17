@@ -8,7 +8,7 @@ class UserMailerTest < ActionMailer::TestCase
     mail = UserMailer.welcome_email(user, 'password123')
     assert_equal 'Welcome to VKDBY - Your Account Credentials', mail.subject
     assert_equal [user.email], mail.to
-    assert_equal ['notifications@example.com'], mail.from
+    assert_equal ['from@example.com'], mail.from
     assert_match 'Welcome back to VKDBY', mail.body.encoded
   end
 
@@ -21,7 +21,7 @@ class UserMailerTest < ActionMailer::TestCase
 
     assert_equal '[VKDBY] 新しいユニット投稿があります: Submitted Unit', mail.subject
     assert_equal [admin_user.email], mail.to
-    assert_equal ['notifications@example.com'], mail.from
+    assert_equal ['from@example.com'], mail.from
     assert_match 'Submitted Unit', mail.text_part.decoded
   end
 
@@ -35,7 +35,7 @@ class UserMailerTest < ActionMailer::TestCase
 
     assert_equal '[VKDBY] 新しい動向投稿があります: Submitted Unit', mail.subject
     assert_equal [admin_user.email], mail.to
-    assert_equal ['notifications@example.com'], mail.from
+    assert_equal ['from@example.com'], mail.from
     assert_match 'Submitted Unit', mail.text_part.decoded
   end
 end
