@@ -58,4 +58,10 @@ class Link < ApplicationRecord
     info = sns_info
     info ? "#{base} (#{info[:account]})" : base
   end
+
+  def domain
+    URI.parse(url).host || url
+  rescue URI::InvalidURIError
+    url
+  end
 end

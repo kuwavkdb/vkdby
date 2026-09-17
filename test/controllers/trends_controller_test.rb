@@ -241,6 +241,68 @@ class TrendsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'Share Person A、Share Person B'
   end
 
+  test 'show returns 404 for an inactive trend when logged out' do
+    trend = Trend.create!(title: 'Inactive trend', date: Date.current, publish_start_at: Time.current,
+                          etc_phenomenon: :other, active: false)
+
+    get trend_path(trend)
+
+    assert_response :not_found
+  end
+
+  test 'show returns 404 for a trend whose publish_start_at is in the future when logged out' do
+    trend = Trend.create!(title: 'Future trend', date: Date.current, publish_start_at: 1.day.from_now,
+                          etc_phenomenon: :other)
+
+    get trend_path(trend)
+
+    assert_response :not_found
+  end
+
+  test 'show renders an inactive trend for an admin with an unpublished badge' do
+    trend = Trend.create!(title: 'Inactive trend for admin', date: Date.current, publish_start_at: Time.current,
+                          etc_phenomenon: :other, active: false)
+    login_as_admin
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_includes response.body, '非公開'
+  end
+
+  test 'show returns 404 for an inactive trend when logged in as a non-admin operator' do
+    trend = Trend.create!(title: 'Inactive trend for operator', date: Date.current, publish_start_at: Time.current,
+                          etc_phenomenon: :other, active: false)
+    User.create!(email: 'trend-operator@example.com', name: 'Operator', password: 'password', role: :operator)
+    post login_path, params: { email: 'trend-operator@example.com', password: 'password' }
+
+    get trend_path(trend)
+
+    assert_response :not_found
+  end
+
+  test 'index does not list an inactive trend when logged out' do
+    Trend.create!(title: 'Inactive listing trend', date: Date.current, publish_start_at: Time.current,
+                  etc_phenomenon: :other, active: false)
+
+    get trends_path
+
+    assert_response :success
+    assert_not_includes response.body, 'Inactive listing trend'
+  end
+
+  test 'index lists an inactive trend for an admin with an unpublished badge' do
+    Trend.create!(title: 'Inactive listing trend for admin', date: Date.current, publish_start_at: Time.current,
+                  etc_phenomenon: :other, active: false)
+    login_as_admin
+
+    get trends_path
+
+    assert_response :success
+    assert_includes response.body, 'Inactive listing trend for admin'
+    assert_includes response.body, '非公開'
+  end
+
   test 'show renders the X share text with the person name first when person_name_in_title is set' do
     unit = Unit.create!(name: 'Share Priority Unit', key: 'trend-share-priority-unit', status: :active)
     person = Person.create!(name: 'Share Priority Person', key: 'trend-share-priority-person', status: :active)

@@ -1,0 +1,16 @@
+<h1>新しいユニット投稿があります</h1>
+<p>
+  <%= @admin_user.name %> さん、<br>
+  ログイン不要の投稿フォームから新しいユニット情報の投稿がありました。
+</p>
+<p>
+  名前: <%= @unit_submission.name %><br>
+  ヨミガナ: <%= @unit_submission.name_kana %>
+</p>
+<p>
+  内容を確認のうえ、承認・却下の判断をお願いします。
+</p>
+<p>
+  <%= link_to '投稿一覧を確認する', @url %>
+</p>
+<p>Thanks, <br>VKDBY Team</p>

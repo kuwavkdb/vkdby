@@ -11,4 +11,31 @@ class UserMailerTest < ActionMailer::TestCase
     assert_equal ['notifications@example.com'], mail.from
     assert_match 'Welcome back to VKDBY', mail.body.encoded
   end
+
+  test 'new_unit_submission_email' do
+    admin_user = users(:admin)
+    unit_submission = UnitSubmission.create!(name: 'Submitted Unit', unit_type: 'band', status: 'active',
+                                             links_attributes: { '0' => { url: 'https://example.com' } })
+
+    mail = UserMailer.new_unit_submission_email(unit_submission, admin_user)
+
+    assert_equal '[VKDBY] 新しいユニット投稿があります: Submitted Unit', mail.subject
+    assert_equal [admin_user.email], mail.to
+    assert_equal ['notifications@example.com'], mail.from
+    assert_match 'Submitted Unit', mail.text_part.decoded
+  end
+
+  test 'new_trend_submission_email' do
+    admin_user = users(:admin)
+    trend_submission = TrendSubmission.create!(target_type: :unit, target_name: 'Submitted Unit',
+                                               date: Date.new(2026, 1, 1), via_url: 'https://example.com',
+                                               phenomenon: Trend.unit_phenomenons['announcement'])
+
+    mail = UserMailer.new_trend_submission_email(trend_submission, admin_user)
+
+    assert_equal '[VKDBY] 新しい動向投稿があります: Submitted Unit', mail.subject
+    assert_equal [admin_user.email], mail.to
+    assert_equal ['notifications@example.com'], mail.from
+    assert_match 'Submitted Unit', mail.text_part.decoded
+  end
 end

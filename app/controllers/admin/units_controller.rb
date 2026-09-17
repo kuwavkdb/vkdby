@@ -46,6 +46,7 @@ module Admin
       @unit = Unit.new(params[:unit]&.permit(:name, :key, :name_kana, :status, :unit_type, :old_key))
       @unit.name ||= params[:name]
       @unit.old_key ||= params[:old_key]
+      prefill_from_unit_submission(@unit, params[:unit_submission_id]) if params[:unit_submission_id].present?
     end
 
     def show
@@ -71,6 +72,7 @@ module Admin
 
       if @unit.save
         record_update_log(@unit, action: 'create')
+        convert_unit_submission(@unit, params[:unit_submission_id])
         redirect_to admin_units_path, notice: 'Unit created successfully.'
       else
         @unit.links.build if @unit.links.none?(&:new_record?)
@@ -215,6 +217,35 @@ module Admin
     # key はキー変更専用の操作でのみ変更可能(issue #57)。通常の update では受け付けない。
     def unit_update_params
       unit_params.except(:key)
+    end
+
+    # 公開の投稿フォーム(UnitSubmission)からの「承認」導線。投稿内容を新規作成フォームの
+    # 初期値として引き継ぐ（issue #1545）。key は投稿に含まれないため引き継がない。
+    def prefill_from_unit_submission(unit, unit_submission_id)
+      unit_submission = UnitSubmission.pending.find_by(id: unit_submission_id)
+      return unless unit_submission
+
+      unit.name = unit_submission.name
+      unit.name_kana = unit_submission.name_kana
+      unit.unit_type = unit_submission.unit_type
+      unit.status = unit_submission.status
+      unit_submission.links.each { |link| unit.links.build(text: link.text, url: link.url) }
+      unit.note = unit_submission_note(unit_submission)
+    end
+
+    def unit_submission_note(unit_submission)
+      lines = []
+      lines << "[投稿者より] #{unit_submission.note}" if unit_submission.note.present?
+      lines << "[連絡先] #{unit_submission.email}" if unit_submission.email.present?
+      lines << '[本人・関係者からの投稿]' if unit_submission.is_related_person?
+      lines.join("\n")
+    end
+
+    def convert_unit_submission(unit, unit_submission_id)
+      unit_submission = UnitSubmission.pending.find_by(id: unit_submission_id)
+      return unless unit_submission
+
+      unit_submission.update!(submission_status: :converted, converted_unit: unit)
     end
   end
 end

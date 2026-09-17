@@ -44,11 +44,11 @@
 
   <div class="flex space-x-2 mb-4">
     <%= link_to "通常", admin_items_path(q: params[:q]),
-        class: "px-3 py-1 rounded text-sm #{@show_discarded.blank? ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+        class: "px-3 py-1 rounded text-sm #{@show_discarded.blank? ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}" %>
     <%= link_to "削除済みのみ", admin_items_path(q: params[:q], discarded: "only"),
-        class: "px-3 py-1 rounded text-sm #{@show_discarded == 'only' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+        class: "px-3 py-1 rounded text-sm #{@show_discarded == 'only' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}" %>
     <%= link_to "全件", admin_items_path(q: params[:q], discarded: "all"),
-        class: "px-3 py-1 rounded text-sm #{@show_discarded == 'all' ? 'bg-gray-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+        class: "px-3 py-1 rounded text-sm #{@show_discarded == 'all' ? 'bg-gray-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}" %>
   </div>
 
   <div class="mb-4">

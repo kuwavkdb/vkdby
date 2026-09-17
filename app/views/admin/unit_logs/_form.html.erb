@@ -1,6 +1,6 @@
 <%= form_with(model: [:admin, unit, unit_log], class: "space-y-6") do |form| %>
   <% if unit_log.errors.any? %>
-    <div class="bg-red-50 p-4 rounded text-red-700">
+    <div class="bg-red-50 dark:bg-red-900/50 p-4 rounded text-red-700 dark:text-red-100">
       <h2><%= pluralize(unit_log.errors.count, "error") %> prohibited this log from being saved:</h2>
       <ul class="list-disc list-inside">
         <% unit_log.errors.each do |error| %>

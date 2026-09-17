@@ -39,6 +39,50 @@ module Admin
       assert_equal 'brand-new-unit-key', Unit.last.key
     end
 
+    # issue #1545: 公開の投稿フォーム(UnitSubmission)から「承認」した際、内容が新規作成フォームに
+    # 引き継がれ、保存すると投稿が「変換済み」になることを確認する
+    test 'new prefills the form from a pending unit submission' do
+      submission = UnitSubmission.create!(name: 'Submitted Unit', name_kana: 'トウコウユニット', unit_type: 'unit',
+                                          status: 'active', note: '見つからなかったので投稿します', email: 'fan@example.com',
+                                          links_attributes: { '0' => { text: '公式サイト', url: 'https://example.com/submitted' } })
+
+      get new_admin_unit_path(unit_submission_id: submission.id)
+
+      assert_response :success
+      assert_includes response.body, 'Submitted Unit'
+      assert_includes response.body, 'https://example.com/submitted'
+    end
+
+    test 'create converts the pending unit submission and links it to the created unit' do
+      submission = UnitSubmission.create!(name: 'Submitted Unit', unit_type: 'band', status: 'active',
+                                          links_attributes: { '0' => { url: 'https://example.com/submitted' } })
+
+      assert_difference('Unit.count') do
+        post admin_units_path, params: {
+          unit: { name: 'Submitted Unit', key: 'submitted-unit-key', status: 'active' },
+          unit_submission_id: submission.id
+        }
+      end
+
+      submission.reload
+      assert_predicate submission, :converted?
+      assert_equal Unit.last, submission.converted_unit
+    end
+
+    test 'create does not touch the unit submission when the unit fails to save' do
+      submission = UnitSubmission.create!(name: 'Submitted Unit', unit_type: 'band', status: 'active',
+                                          links_attributes: { '0' => { url: 'https://example.com/submitted' } })
+
+      assert_no_difference('Unit.count') do
+        post admin_units_path, params: {
+          unit: { name: 'Submitted Unit', key: '', status: 'active' },
+          unit_submission_id: submission.id
+        }
+      end
+
+      assert_predicate submission.reload, :pending?
+    end
+
     # issue #1277: keyが空のまま作成できると、以降Unit一覧ページ(管理画面・公開ページとも)が
     # profile_path(key)のUrlGenerationErrorで全面的に500エラーになっていた
     test 'create rejects a blank key and re-renders the form' do

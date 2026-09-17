@@ -34,7 +34,7 @@
           <p class="text-sm">
             同じASINのアイテム「<%= @duplicate_asin_item.title %>」が既に登録されています。
             <% if @duplicate_asin_item.discarded? %>
-              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">削除済み</span>
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">削除済み</span>
             <% end %>
             <br>
             このフォームの内容でそのアイテムを上書きする場合は、以下のボタンから編集画面に進み、内容を確認のうえ更新してください。
@@ -141,7 +141,7 @@
                    autocomplete="off"
                    value="<%= search_mode ? artist['name'] : '' %>"
                    data-action="input->artist-rows#onSearchInput keydown->artist-rows#onKeydown focus->artist-rows#onSearchFocus">
-            <div class="artist-results hidden absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 max-h-60 overflow-auto"></div>
+            <div class="artist-results hidden absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 max-h-60 overflow-auto"></div>
           </div>
 
           <%# Selected display (visible only when already selected) %>
@@ -194,7 +194,7 @@
                  placeholder="ユニット名で検索..."
                  autocomplete="off"
                  data-action="input->artist-rows#onSearchInput keydown->artist-rows#onKeydown focus->artist-rows#onSearchFocus">
-          <div class="artist-results hidden absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 max-h-60 overflow-auto"></div>
+          <div class="artist-results hidden absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 max-h-60 overflow-auto"></div>
         </div>
 
         <div class="artist-selected-display flex-1 items-center hidden">

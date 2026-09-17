@@ -1,0 +1,16 @@
+<h1>新しい動向投稿があります</h1>
+<p>
+  <%= @admin_user.name %> さん、<br>
+  ログイン不要の投稿フォームから新しい動向情報の投稿がありました。
+</p>
+<p>
+  対象: <%= @trend_submission.target_name %>（<%= @trend_submission.target_type == 'unit' ? 'ユニット' : '個人' %>）<br>
+  タイトル: <%= @trend_submission.title %>
+</p>
+<p>
+  内容を確認のうえ、承認・却下の判断をお願いします。
+</p>
+<p>
+  <%= link_to '投稿一覧を確認する', @url %>
+</p>
+<p>Thanks, <br>VKDBY Team</p>
