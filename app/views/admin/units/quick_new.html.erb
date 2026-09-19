@@ -1,0 +1,105 @@
+<% title = "Unit簡単登録" %>
+<% content_for :title, title %>
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-2xl mx-auto">
+    <div class="flex items-center gap-3 mb-1">
+      <h1 class="text-2xl font-bold"><%= title %></h1>
+      <%= link_to "通常の登録画面", new_admin_unit_path,
+          class: "text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline" %>
+    </div>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+      バンド名とメンバー名をまとめて入力して、1回の登録でUnit・現在のラインナップ・メンバーを作成します。
+      詳細な設定は保存後に編集画面から行えます。
+    </p>
+
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+      <%= form_with model: @unit, url: quick_create_admin_units_path, class: "space-y-6" do |form| %>
+        <% if @unit.errors.any? %>
+          <div class="bg-red-50 dark:bg-red-900/50 p-4 rounded text-red-700 dark:text-red-100">
+            <h2><%= pluralize(@unit.errors.count, "error") %> prohibited this unit from being saved:</h2>
+            <ul class="list-disc list-inside">
+              <% @unit.errors.each do |error| %>
+                <li><%= error.full_message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div>
+          <%= form.label :name, "バンド名", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+          <%= form.text_field :name, required: true, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+        </div>
+
+        <div>
+          <%= form.label :key, "キー", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+          <%= form.text_field :key, required: true, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">プロフィールページのURL（/profile/キー）に使われます。半角英数字推奨。</p>
+        </div>
+
+        <div>
+          <%= form.label :unit_type, "ユニット種別", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+          <div class="mt-2 space-x-4">
+            <% Unit.unit_types.keys.each do |type| %>
+              <label class="inline-flex items-center">
+                <%= form.radio_button :unit_type, type, checked: type == "band", class: "form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
+                <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"><%= type.humanize %></span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+
+        <div>
+          <%= form.label :status, "ステータス", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+          <div class="mt-2 flex flex-wrap gap-4">
+            <% Unit.statuses.keys.each do |status| %>
+              <label class="inline-flex items-center">
+                <%= form.radio_button :status, status, checked: status == (@unit.status || "active"), class: "form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
+                <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"><%= Unit::STATUS_TRANSLATIONS[status] %></span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">現在のラインナップ</h2>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">「現在のラインナップ」「有効」としてスナップショットを1件作成します。日付・ラベルは任意です。</p>
+
+          <div class="grid grid-cols-2 gap-4 mb-4" data-controller="date-picker">
+            <div>
+              <%= label_tag "unit_snapshot_date", "日付（任意）", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+              <div class="flex gap-2">
+                <%= text_field_tag "unit[snapshot_date]", nil, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white", data: { date_picker_target: "input", action: "input->date-picker#syncPickerFromInput" } %>
+                <button type="button" data-action="click->date-picker#open" aria-label="カレンダーから日付を選択" title="カレンダーから日付を選択" class="mt-1 flex w-11 shrink-0 items-center justify-center rounded-md border border-gray-300 shadow-sm hover:bg-gray-50 focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-500 dark:text-gray-300" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                  </svg>
+                </button>
+                <input type="date" class="sr-only" tabindex="-1" aria-hidden="true" data-date-picker-target="picker" data-action="input->date-picker#apply">
+              </div>
+            </div>
+            <div>
+              <%= label_tag "unit_snapshot_label", "ラベル（任意）", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+              <%= text_field_tag "unit[snapshot_label]", nil, placeholder: "例: 結成時", class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+            </div>
+          </div>
+
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">メンバー</h3>
+          <div class="space-y-3">
+            <% @member_rows.each_with_index do |member, index| %>
+              <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+                <%= text_field_tag "unit[members][#{index}][person_name]", member.person_name, placeholder: "メンバー名", "aria-label": "メンバー#{index + 1}の名前", class: "block w-full flex-1 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+                <%= select_tag "unit[members][#{index}][part]", options_for_select(SnapshotPerson.parts.keys.map { |k| [k.humanize, k] }, member.part), "aria-label": "メンバー#{index + 1}のパート", class: "block w-full sm:w-40 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+              </div>
+            <% end %>
+          </div>
+          <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">※名前が空欄の行は無視されます。Personとの紐付けやSNS・経歴などの詳細は保存後に編集画面から設定できます。</p>
+        </div>
+
+        <div class="flex justify-end gap-x-4">
+          <%= link_to "キャンセル", admin_units_path, class: "px-4 py-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" %>
+          <%= form.submit "作成", class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

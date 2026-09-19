@@ -18,6 +18,7 @@
         <%= f.text_field :q, value: params[:q], placeholder: "Search by name or key...", class: "rounded-l-md border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
         <%= f.submit "Search", class: "px-4 py-2 bg-white text-gray-700 border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-50 cursor-pointer dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600" %>
       <% end %>
+      <%= link_to "簡単登録", quick_new_admin_units_path, class: "px-4 py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md hover:bg-indigo-100 dark:bg-indigo-900/40 dark:text-indigo-200 dark:border-indigo-800 dark:hover:bg-indigo-900/70" %>
       <%= link_to "Add Unit", new_admin_unit_path, class: "px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700" %>
     </div>
   </div>

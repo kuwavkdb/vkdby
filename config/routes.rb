@@ -16,6 +16,8 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
       collection do
         get :search
         patch :bulk_update_status
+        get :quick_new
+        post :quick_create
       end
       member do
         patch :undiscard
