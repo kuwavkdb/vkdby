@@ -3,7 +3,7 @@
 require 'test_helper'
 
 module Admin
-  class TrendsControllerTest < ActionDispatch::IntegrationTest
+  class TrendsControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
     setup do
       post login_path, params: { email: users(:one).email, password: 'password' }
       @trend = trends(:one)
@@ -12,6 +12,61 @@ module Admin
     test 'should get new' do
       get new_admin_trend_path
       assert_response :success
+    end
+
+    # issue #1582: 記事やXのポストから組み立てたURLで新規作成フォームを事前入力できることを確認する
+    test 'new prefills the form from trend params in the URL' do
+      get new_admin_trend_path(
+        trend: {
+          date: '2026-07-17', day_unknown: '1', title: 'Vo. [[Amon|天聞]] 引退', content: '引退を発表',
+          quote: '<blockquote class="twitter-tweet">投稿</blockquote>',
+          quote_url: 'https://twitter.com/amonn_uc/status/2034929759059419627',
+          via_name: '@amonn_uc', via_url: 'https://example.com/via', person_phenomenon: 'retirement'
+        }
+      )
+
+      assert_response :success
+      assert_select "input[name='trend[date]'][value='2026/07/17']"
+      assert_select "input[type=checkbox][name='trend[day_unknown]'][checked]"
+      assert_select "input[name='trend[title]'][value=?]", 'Vo. [[Amon|天聞]] 引退'
+      assert_select "input[name='trend[quote_url]'][value=?]", 'https://twitter.com/amonn_uc/status/2034929759059419627'
+      assert_select "input[name='trend[via_name]'][value='@amonn_uc']"
+      assert_select "select[name='trend[person_phenomenon]'] option[selected][value='retirement']"
+      assert_select "textarea[name='trend[quote]']", text: /twitter-tweet/
+    end
+
+    test 'new ignores an undefined phenomenon key instead of raising' do
+      get new_admin_trend_path(trend: { unit_phenomenon: 'no_such_phenomenon', title: 'テスト' })
+
+      assert_response :success
+      assert_select "input[name='trend[title]'][value='テスト']"
+      assert_select "select[name='trend[unit_phenomenon]'] option[selected]", count: 0
+    end
+
+    test 'new does not accept attributes outside the prefill whitelist' do
+      get new_admin_trend_path(trend: { title: 'テスト', publish_start_at: '2000-01-01T00:00', active: '0' })
+
+      assert_response :success
+      assert_select "input[type=checkbox][name='trend[active]'][checked]"
+      assert_select "input[name='trend[publish_start_at]'][value^='2000']", count: 0
+    end
+
+    test 'new shows unit_name and person_name in the autocomplete inputs without selecting them' do
+      get new_admin_trend_path(unit_name: 'ヤミテラ', person_name: 'J \'ω\'2')
+
+      assert_response :success
+      assert_select "div[data-autocomplete-field-name-value='units'] input[data-autocomplete-target='input'][value='ヤミテラ']"
+      assert_select "div[data-autocomplete-field-name-value='people'] input[data-autocomplete-target='input'][value=?]", "J 'ω'2"
+      assert_select "div[data-autocomplete-field-name-value='units'] span", count: 0
+    end
+
+    test 'new still presets the unit from unit_id as linked from the profile page' do
+      unit = units(:one)
+
+      get new_admin_trend_path(unit_id: unit.id)
+
+      assert_response :success
+      assert_select "div[data-autocomplete-field-name-value='units'] span", text: /#{Regexp.escape(unit.name)}/
     end
 
     test 'should get edit' do

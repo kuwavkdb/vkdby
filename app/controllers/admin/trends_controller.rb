@@ -5,6 +5,11 @@ module Admin
     before_action :set_trend, only: %i[edit update destroy]
     before_action :require_super_operator, only: %i[destroy]
 
+    # 新規作成フォームをURLパラメーター（trend[...]）で事前入力する際に受け付ける属性（issue #1582）。
+    # ユニット・個人は対象をフォームのサジェストで確定するため、名前のみ unit_name/person_name で渡す
+    PREFILL_ATTRIBUTES = %i[date day_unknown month_unknown title content quote quote_url via_name via_url].freeze
+    PREFILL_PHENOMENONS = %i[unit_phenomenon person_phenomenon etc_phenomenon].freeze
+
     def index
       @q = params[:q]
       scope = Trend.all.order(date: :desc)
@@ -26,6 +31,8 @@ module Admin
     end
 
     def new
+      @unit_name_prefill = params[:unit_name].to_s.presence
+      @person_name_prefill = params[:person_name].to_s.presence
       @trend = Trend.new(trend_params_for_new)
       @trend.date ||= Date.current
       @trend.publish_start_at ||= Time.current
@@ -112,8 +119,13 @@ module Admin
       end
     end
 
+    # 存在しない動向種別のキーを渡されてもenumのArgumentErrorで落ちないよう、未定義のキーは捨てる
     def trend_params_for_new
-      params[:trend]&.permit(:unit_id, :person_id) || {}
+      permitted = params[:trend]&.permit(*PREFILL_ATTRIBUTES, *PREFILL_PHENOMENONS) || {}
+      PREFILL_PHENOMENONS.each do |attribute|
+        permitted.delete(attribute) unless Trend.defined_enums[attribute.to_s].key?(permitted[attribute])
+      end
+      permitted
     end
 
     def parse_json_field(json_string)
