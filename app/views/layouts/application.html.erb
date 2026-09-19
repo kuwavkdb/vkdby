@@ -81,83 +81,85 @@
     <nav class="<%= nav_theme[:bg] %> border-b border-black/10 relative z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
-          <div class="flex">
+          <div class="flex min-w-0 flex-1 sm:flex-none">
             <div class="flex-shrink-0 flex items-center gap-2">
               <%= link_to root_path, class: "flex items-center" do %>
                 <%= image_tag "vkdb_logo.png", alt: "VKDB.jp", class: "max-h-10 w-auto", width: 218, height: 80 %>
               <% end %>
               <% if nav_theme[:badge] %>
-                <%# モバイル(sm未満)は横幅が足りないため、ヘッダー背景色での区別のみとしてバッジは非表示にする（issue #1234） %>
-                <span class="hidden sm:inline bg-black/10 text-zinc-900 text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded"><%= nav_theme[:badge] %></span>
+                <%# ヘッダーの横幅が足りず、ナビ(lg付近)が右側のアイコンと重なるため、バッジは一旦全幅で非表示にし、
+                    環境の区別はヘッダー背景色のみとする（issue #1234）。横幅に余裕ができたら`hidden`を外して再表示する。 %>
+                <span class="hidden bg-black/10 text-zinc-900 text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded"><%= nav_theme[:badge] %></span>
               <% end %>
             </div>
-            <!-- Search Form (Desktop) - Next to logo -->
-            <%= form_with url: search_path, method: :get, local: true, class: "hidden sm:flex items-center ml-6" do |f| %>
-              <div class="relative">
-                <%= f.text_field :q, placeholder: "Search...", class: "search-input-responsive bg-white/90 border border-black/10 rounded pl-3 py-2 pr-10 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder:text-zinc-500 placeholder:opacity-0 md:placeholder:opacity-100 focus:placeholder:opacity-100" %>
-                <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600">
+            <!-- Search Form: 全幅で常時表示。sm未満は残り幅いっぱい、sm以上は192px固定 -->
+            <%= form_with url: search_path, method: :get, local: true, class: "flex min-w-0 flex-1 items-center mx-4 sm:ml-6 sm:mr-0 sm:flex-none" do |f| %>
+              <div class="relative w-full sm:w-auto">
+                <%= f.text_field :q, placeholder: "Search...", "aria-label": "サイト内検索", class: "w-full sm:w-48 bg-white/90 border border-black/10 rounded pl-3 py-2 pr-10 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder:text-zinc-500" %>
+                <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded">
+                  <span class="sr-only">検索</span>
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                   </svg>
                 </button>
               </div>
             <% end %>
-            <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+            <div class="hidden lg:ml-6 lg:flex lg:space-x-4">
               <%= link_to units_path, title: "Units", class: "group inline-flex items-center px-2 py-1.5 rounded-md text-sm font-bold text-zinc-900 hover:bg-white transition-colors" do %>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 sm:mr-1.5 group-hover:hidden" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-1.5 group-hover:hidden" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
                 </svg>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 sm:mr-1.5 hidden group-hover:block" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mr-1.5 hidden group-hover:block" aria-hidden="true">
                   <path fill-rule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z" clip-rule="evenodd" />
                   <path d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z" />
                 </svg>
-                <span class="hidden lg:inline text-center">Units<br><span class="text-xs font-normal whitespace-nowrap">バンド</span></span>
+                <span class="text-center">Units<br><span class="text-xs font-normal whitespace-nowrap">バンド</span></span>
               <% end %>
               <%= link_to people_path, title: "People", class: "group inline-flex items-center px-2 py-1.5 rounded-md text-sm font-bold text-zinc-900 hover:bg-white transition-colors" do %>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 sm:mr-1.5 group-hover:hidden" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-1.5 group-hover:hidden" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                 </svg>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 sm:mr-1.5 hidden group-hover:block" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mr-1.5 hidden group-hover:block" aria-hidden="true">
                   <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
                 </svg>
-                <span class="hidden lg:inline text-center">People<br><span class="text-xs font-normal whitespace-nowrap">個人</span></span>
+                <span class="text-center">People<br><span class="text-xs font-normal whitespace-nowrap">個人</span></span>
               <% end %>
               <%= link_to trends_path, title: "Trends", class: "group inline-flex items-center px-2 py-1.5 rounded-md text-sm font-bold text-zinc-900 hover:bg-white transition-colors" do %>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 sm:mr-1.5 group-hover:hidden" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-1.5 group-hover:hidden" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.307a11.95 11.95 0 0 1 5.814-5.519l2.74-1.22m0 0-5.94-2.28m5.94 2.28-2.28 5.941" />
                 </svg>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 sm:mr-1.5 hidden group-hover:block" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mr-1.5 hidden group-hover:block" aria-hidden="true">
                   <path fill-rule="evenodd" d="M15.22 6.268a.75.75 0 0 1 .968-.431l5.942 2.28a.75.75 0 0 1 .431.97l-2.28 5.94a.75.75 0 1 1-1.4-.537l1.63-4.251-1.086.484a11.2 11.2 0 0 0-5.45 5.173.75.75 0 0 1-1.199.19L9 12.312l-6.22 6.22a.75.75 0 0 1-1.06-1.061l6.75-6.75a.75.75 0 0 1 1.06 0l3.606 3.606a12.695 12.695 0 0 1 5.68-4.974l1.086-.483-4.251-1.631a.75.75 0 0 1-.432-.967Z" clip-rule="evenodd" />
                 </svg>
-                <span class="hidden lg:inline text-center">Trends<br><span class="text-xs font-normal whitespace-nowrap">動向</span></span>
+                <span class="text-center">Trends<br><span class="text-xs font-normal whitespace-nowrap">動向</span></span>
               <% end %>
               <%= link_to items_path, title: "Items", class: "group inline-flex items-center px-2 py-1.5 rounded-md text-sm font-bold text-zinc-900 hover:bg-white transition-colors" do %>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 sm:mr-1.5 group-hover:hidden" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-1.5 group-hover:hidden" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
                 </svg>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 sm:mr-1.5 hidden group-hover:block" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mr-1.5 hidden group-hover:block" aria-hidden="true">
                   <path d="M12.378 1.602a.75.75 0 0 0-.756 0L3 6.632l9 5.25 9-5.25-8.622-5.03ZM21.75 7.93l-9 5.25v9l8.628-5.032a.75.75 0 0 0 .372-.648V7.93ZM11.25 22.18v-9l-9-5.25v8.57a.75.75 0 0 0 .372.648l8.628 5.033Z" />
                 </svg>
-                <span class="hidden lg:inline text-center">Items<br><span class="text-xs font-normal whitespace-nowrap">アイテム</span></span>
+                <span class="text-center">Items<br><span class="text-xs font-normal whitespace-nowrap">アイテム</span></span>
               <% end %>
               <%= link_to timeline_path, title: "Timeline", class: "group inline-flex items-center px-2 py-1.5 rounded-md text-sm font-bold text-zinc-900 hover:bg-white transition-colors" do %>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 sm:mr-1.5 group-hover:hidden" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-1.5 group-hover:hidden" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605" />
                 </svg>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 sm:mr-1.5 hidden group-hover:block" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mr-1.5 hidden group-hover:block" aria-hidden="true">
                   <path fill-rule="evenodd" d="M2.25 3A.75.75 0 0 1 3 2.25h13.5A.75.75 0 0 1 17.25 3v2.25H21A2.25 2.25 0 0 1 23.25 7.5v11.25A2.25 2.25 0 0 1 21 21H3a2.25 2.25 0 0 1-2.25-2.25V7.5A2.25 2.25 0 0 1 3 5.25h.75V3A.75.75 0 0 1 2.25 3Zm.75 12.75v3h18v-3H3Zm18-1.5V9H3v5.25h18ZM3 7.5v-.75h13.5V7.5H3Z" clip-rule="evenodd" />
                 </svg>
-                <span class="hidden lg:inline text-center">Timeline<br><span class="text-xs font-normal whitespace-nowrap">年表</span></span>
+                <span class="text-center">Timeline<br><span class="text-xs font-normal whitespace-nowrap">年表</span></span>
               <% end %>
 
             </div>
           </div>
-          <div class="flex items-center">
-          <button type="button" data-controller="theme" data-action="click->theme#toggle" title="テーマ設定を切り替える" class="bg-transparent hidden sm:inline-flex items-center justify-center p-2 rounded-md text-zinc-900 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors">
+          <div class="flex items-center shrink-0">
+          <button type="button" data-controller="theme" data-action="click->theme#toggle" title="テーマ設定を切り替える" class="bg-transparent hidden lg:inline-flex items-center justify-center p-2 rounded-md text-zinc-900 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors">
             <span class="sr-only" data-theme-target="srLabel">テーマ: 自動（クリックでライトに切り替え）</span>
             <%= render "layouts/theme_toggle_icons", icon_class: "h-5 w-5" %>
           </button>
-          <div class="hidden sm:ml-6 sm:flex sm:items-center">
+          <div class="hidden lg:ml-6 lg:flex lg:items-center">
             <% if logged_in? %>
               <div class="ml-3 relative admin-dropdown h-full flex items-center">
                 <div class="inline-flex items-center px-2 py-1.5 rounded-md text-sm font-bold text-zinc-900 hover:bg-white cursor-pointer transition-colors" title="<%= current_user.name %>">
@@ -296,22 +298,20 @@
                 </div>
               </div>
             <% else %>
-              <%= link_to "Login", login_link_path, class: "px-2 py-1.5 rounded-md text-sm font-bold text-zinc-900 hover:bg-white transition-colors" %>
+              <%= link_to login_link_path, title: "Login", class: "inline-flex items-center px-2 py-1.5 rounded-md text-sm font-bold text-zinc-900 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors" do %>
+                <span class="sr-only">Login</span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                </svg>
+              <% end %>
             <% end %>
           </div>
           
           <!-- Mobile Navigation: Single hamburger menu (nav links, user/admin menu, theme toggle) -->
-          <div class="flex items-center gap-2 sm:hidden">
+          <div class="flex items-center gap-2 lg:hidden">
             <!-- Hamburger: Common Navigation (Units, People, Trends, Items, Timeline) + User/Admin Menu + Theme Toggle -->
             <div data-controller="mobile-menu" class="flex items-center">
-              <!-- Search hint icon: opens the same panel as the hamburger, scrolled to the search form -->
-              <button type="button" class="bg-transparent inline-flex items-center justify-center p-2 rounded-md text-zinc-900 hover:bg-white focus:outline-none transition-colors" aria-controls="common-nav-menu" aria-expanded="false" data-action="click->mobile-menu#toggle">
-                <span class="sr-only">Open search</span>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                </svg>
-              </button>
-              <button type="button" class="bg-transparent inline-flex items-center justify-center p-2 rounded-md text-zinc-900 hover:bg-white focus:outline-none transition-colors" aria-controls="common-nav-menu" aria-expanded="false" data-action="click->mobile-menu#toggle">
+              <button type="button" class="bg-transparent inline-flex items-center justify-center p-2 rounded-md text-zinc-900 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors" aria-controls="common-nav-menu" aria-expanded="false" data-mobile-menu-target="button" data-action="click->mobile-menu#toggle">
                 <span class="sr-only">Open navigation menu</span>
                 <!-- Icon when menu is closed -->
                 <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-mobile-menu-target="iconOpen">
@@ -324,174 +324,163 @@
               </button>
               
               <!-- Common Navigation Menu Panel -->
-              <div class="hidden absolute top-16 left-0 right-0 z-50 max-h-[calc(100dvh-4rem)] overflow-y-auto bg-white dark:bg-zinc-900 border-t border-b border-zinc-200 dark:border-zinc-700 shadow-lg" id="common-nav-menu" data-mobile-menu-target="menu">
-                <!-- Search Form (Mobile) -->
-                <div class="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800">
-                  <%= form_with url: search_path, method: :get, local: true, class: "flex gap-2" do |f| %>
-                    <%= f.text_field :q, placeholder: "Search...", class: "flex-1 bg-zinc-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded px-4 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-amber-500 transition-all placeholder:text-zinc-400" %>
-                    <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                      </svg>
-                    </button>
-                  <% end %>
-                </div>
+              <div class="hidden absolute top-16 left-0 right-0 sm:left-auto sm:right-3 sm:w-[25rem] sm:border-x sm:rounded-b-lg z-50 max-h-[calc(100dvh-4rem)] overflow-y-auto <%= nav_theme[:bg] %> border-t border-b border-black/10 shadow-lg" id="common-nav-menu" data-mobile-menu-target="menu">
                 <div class="pt-2 pb-3 space-y-1">
-                  <%= link_to units_path, class: "border-transparent text-zinc-600 hover:bg-zinc-50 hover:border-indigo-600 hover:text-indigo-600 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-indigo-400 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors" do %>
+                  <%= link_to units_path, class: "border-transparent text-zinc-900 hover:bg-white hover:border-indigo-600 hover:text-indigo-600 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors" do %>
                     <div class="flex items-center">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 13.742a6.051 6.051 0 0 1 12 0c0 .94-.251 1.815-.695 2.571ZM10.5 8.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Zm0 1.5a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Zm6.75 3a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5ZM17.25 10.5a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" />
                       </svg>
-                      <span>Units <span class="text-sm font-normal text-gray-400 dark:text-gray-500">バンド</span></span>
+                      <span>Units <span class="text-sm font-normal text-zinc-800">バンド</span></span>
                     </div>
                   <% end %>
-                  <%= link_to people_path, class: "border-transparent text-zinc-600 hover:bg-zinc-50 hover:border-indigo-600 hover:text-indigo-600 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-indigo-400 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors" do %>
+                  <%= link_to people_path, class: "border-transparent text-zinc-900 hover:bg-white hover:border-indigo-600 hover:text-indigo-600 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors" do %>
                     <div class="flex items-center">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                       </svg>
-                      <span>People <span class="text-sm font-normal text-gray-400 dark:text-gray-500">個人</span></span>
+                      <span>People <span class="text-sm font-normal text-zinc-800">個人</span></span>
                     </div>
                   <% end %>
-                  <%= link_to trends_path, class: "border-transparent text-zinc-600 hover:bg-zinc-50 hover:border-indigo-600 hover:text-indigo-600 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-indigo-400 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors" do %>
+                  <%= link_to trends_path, class: "border-transparent text-zinc-900 hover:bg-white hover:border-indigo-600 hover:text-indigo-600 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors" do %>
                     <div class="flex items-center">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.307a11.95 11.95 0 0 1 5.814-5.519l2.74-1.22m0 0-5.94-2.28m5.94 2.28-2.28 5.941" />
                       </svg>
-                      <span>Trends <span class="text-sm font-normal text-gray-400 dark:text-gray-500">動向</span></span>
+                      <span>Trends <span class="text-sm font-normal text-zinc-800">動向</span></span>
                     </div>
                   <% end %>
-                  <%= link_to items_path, class: "border-transparent text-zinc-600 hover:bg-zinc-50 hover:border-indigo-600 hover:text-indigo-600 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-indigo-400 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors" do %>
+                  <%= link_to items_path, class: "border-transparent text-zinc-900 hover:bg-white hover:border-indigo-600 hover:text-indigo-600 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors" do %>
                     <div class="flex items-center">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
                       </svg>
-                      <span>Items <span class="text-sm font-normal text-gray-400 dark:text-gray-500">アイテム</span></span>
+                      <span>Items <span class="text-sm font-normal text-zinc-800">アイテム</span></span>
                     </div>
                   <% end %>
-                  <%= link_to timeline_path, class: "border-transparent text-zinc-600 hover:bg-zinc-50 hover:border-indigo-600 hover:text-indigo-600 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-indigo-400 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors" do %>
+                  <%= link_to timeline_path, class: "border-transparent text-zinc-900 hover:bg-white hover:border-indigo-600 hover:text-indigo-600 block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors" do %>
                     <div class="flex items-center">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605" />
                       </svg>
-                      <span>Timeline <span class="text-sm font-normal text-gray-400 dark:text-gray-500">年表</span></span>
+                      <span>Timeline <span class="text-sm font-normal text-zinc-800">年表</span></span>
                     </div>
                   <% end %>
                 </div>
                 <% if logged_in? %>
-                  <div class="pt-4 pb-3 border-t border-zinc-200 dark:border-zinc-800">
+                  <div class="pt-4 pb-3 border-t border-black/10">
                     <div class="flex items-center px-4">
                       <div class="flex-shrink-0">
-                        <div class="h-10 w-10 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center text-amber-700 dark:text-amber-300 font-bold">
+                        <div class="h-10 w-10 rounded-full bg-white flex items-center justify-center text-zinc-900 font-bold">
                           <%= current_user.name.first.upcase %>
                         </div>
                       </div>
                       <div class="ml-3">
-                        <div class="text-base font-medium text-gray-800 dark:text-white"><%= current_user.name %></div>
+                        <div class="text-base font-medium text-zinc-900"><%= current_user.name %></div>
                       </div>
                     </div>
                     <div class="mt-3 space-y-1">
                       <%# 公開側ナビ（Units/People/Trends/Items）と同名のリンクが並ぶため、見出しで管理用だと区別する %>
-                      <h2 class="px-4 pt-1 text-xs font-semibold tracking-wide text-zinc-500 dark:text-zinc-400">Settings</h2>
-                      <%= link_to admin_units_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors" do %>
+                      <h2 class="px-4 pt-1 text-xs font-semibold tracking-wide text-zinc-800">Settings</h2>
+                      <%= link_to admin_units_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-900 hover:bg-white transition-colors" do %>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 flex-shrink-0" aria-hidden="true">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
                         </svg>
                         Units
                       <% end %>
-                      <%= link_to admin_temporary_snapshot_people_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors" do %>
+                      <%= link_to admin_temporary_snapshot_people_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-900 hover:bg-white transition-colors" do %>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 flex-shrink-0" aria-hidden="true">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                         </svg>
                         Temporary Pool
                       <% end %>
-                      <%= link_to admin_unit_submissions_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors" do %>
+                      <%= link_to admin_unit_submissions_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-900 hover:bg-white transition-colors" do %>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 flex-shrink-0" aria-hidden="true">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
                         Unit Submissions
                       <% end %>
-                      <%= link_to admin_trend_submissions_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors" do %>
+                      <%= link_to admin_trend_submissions_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-900 hover:bg-white transition-colors" do %>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 flex-shrink-0" aria-hidden="true">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.307a11.95 11.95 0 0 1 5.814-5.519l2.74-1.22m0 0-5.94-2.28m5.94 2.28-2.28 5.941" />
                         </svg>
                         Trend Submissions
                       <% end %>
-                      <%= link_to admin_people_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors" do %>
+                      <%= link_to admin_people_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-900 hover:bg-white transition-colors" do %>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 flex-shrink-0" aria-hidden="true">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                         </svg>
                         People
                       <% end %>
-                      <hr class="my-1 border-zinc-200 dark:border-zinc-800">
-                      <%= link_to admin_index_groups_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors" do %>
+                      <hr class="my-1 border-black/10">
+                      <%= link_to admin_index_groups_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-900 hover:bg-white transition-colors" do %>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 flex-shrink-0" aria-hidden="true">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
                         </svg>
                         Index Groups
                       <% end %>
-                      <%= link_to admin_trends_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors" do %>
+                      <%= link_to admin_trends_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-900 hover:bg-white transition-colors" do %>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 flex-shrink-0" aria-hidden="true">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.307a11.95 11.95 0 0 1 5.814-5.519l2.74-1.22m0 0-5.94-2.28m5.94 2.28-2.28 5.941" />
                         </svg>
                         Trends
                       <% end %>
-                      <%= link_to admin_items_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors" do %>
+                      <%= link_to admin_items_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-900 hover:bg-white transition-colors" do %>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 flex-shrink-0" aria-hidden="true">
                           <path stroke-linecap="round" stroke-linejoin="round" d="m9 9 10.5-3m0 6.553v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 1 1-.99-3.467l2.31-.66a2.25 2.25 0 0 0 1.632-2.163Zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 0 1-.99-3.467l2.31-.66A2.25 2.25 0 0 0 9 15.553Z" />
                         </svg>
                         Items
                       <% end %>
-                      <%= link_to admin_custom_pages_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors" do %>
+                      <%= link_to admin_custom_pages_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-900 hover:bg-white transition-colors" do %>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 flex-shrink-0" aria-hidden="true">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                         </svg>
                         Custom Pages
                       <% end %>
                       <% if current_user.admin? %>
-                        <%= link_to admin_images_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors" do %>
+                        <%= link_to admin_images_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-900 hover:bg-white transition-colors" do %>
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 flex-shrink-0" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                           </svg>
                           Images
                         <% end %>
                       <% end %>
-                      <%= link_to admin_external_sites_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors" do %>
+                      <%= link_to admin_external_sites_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-900 hover:bg-white transition-colors" do %>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 flex-shrink-0" aria-hidden="true">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
                         </svg>
                         External Sites
                       <% end %>
-                      <hr class="my-1 border-zinc-200 dark:border-zinc-800">
-                      <%= link_to admin_wiki_page_imports_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors" do %>
+                      <hr class="my-1 border-black/10">
+                      <%= link_to admin_wiki_page_imports_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-900 hover:bg-white transition-colors" do %>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 flex-shrink-0" aria-hidden="true">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                         </svg>
                         Wiki Imports
                       <% end %>
-                      <%= link_to admin_users_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors" do %>
+                      <%= link_to admin_users_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-900 hover:bg-white transition-colors" do %>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 flex-shrink-0" aria-hidden="true">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
                         </svg>
                         Users
                       <% end %>
                       <% if current_user.admin? %>
-                        <%= link_to admin_operation_logs_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors" do %>
+                        <%= link_to admin_operation_logs_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-900 hover:bg-white transition-colors" do %>
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 flex-shrink-0" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                           </svg>
                           Login History
                         <% end %>
                       <% end %>
-                      <hr class="my-1 border-zinc-200 dark:border-zinc-800">
-                      <%= link_to edit_password_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors" do %>
+                      <hr class="my-1 border-black/10">
+                      <%= link_to edit_password_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-900 hover:bg-white transition-colors" do %>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 flex-shrink-0" aria-hidden="true">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 0 1 0 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281Z" />
                           <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                         </svg>
                         Password Settings
                       <% end %>
-                      <%= button_to logout_path(return_to: request.fullpath), method: :delete, class: "flex w-full items-center text-left px-4 py-2 text-base font-medium text-red-600 hover:text-red-800 hover:bg-zinc-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-zinc-800 transition-colors" do %>
+                      <%= button_to logout_path(return_to: request.fullpath), method: :delete, class: "flex w-full items-center text-left px-4 py-2 text-base font-medium text-zinc-900 hover:bg-white transition-colors" do %>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 flex-shrink-0" aria-hidden="true">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
                         </svg>
@@ -500,9 +489,9 @@
                     </div>
                   </div>
                 <% else %>
-                  <div class="pt-4 pb-3 border-t border-zinc-200 dark:border-zinc-800">
+                  <div class="pt-4 pb-3 border-t border-black/10">
                     <div class="space-y-1">
-                      <%= link_to login_link_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors" do %>
+                      <%= link_to login_link_path, class: "flex items-center px-4 py-2 text-base font-medium text-zinc-900 hover:bg-white transition-colors" do %>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 flex-shrink-0" aria-hidden="true">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
                         </svg>
@@ -511,9 +500,9 @@
                     </div>
                   </div>
                 <% end %>
-                <%# モバイルではヘッダーにテーマ切替ボタンを置かず、メニューの一番下に置く（issue #1234） %>
-                <div class="border-t border-zinc-200 dark:border-zinc-800 py-2">
-                  <button type="button" data-controller="theme" data-action="click->theme#toggle" class="flex w-full items-center px-4 py-2 text-base font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 transition-colors">
+                <%# ハンバーガー表示(lg未満)ではヘッダーにテーマ切替ボタンを置かず、メニューの一番下に置く（issue #1234）。lg以上はヘッダー側を使う %>
+                <div class="border-t border-black/10 py-2">
+                  <button type="button" data-controller="theme" data-action="click->theme#toggle" class="flex w-full items-center px-4 py-2 text-base font-medium text-zinc-900 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 transition-colors">
                     <span class="sr-only" data-theme-target="srLabel">テーマ: 自動（クリックでライトに切り替え）</span>
                     <%= render "layouts/theme_toggle_icons", icon_class: "h-5 w-5 mr-3" %>
                     <span aria-hidden="true" data-theme-target="label">テーマ: 自動</span>

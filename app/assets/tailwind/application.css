@@ -164,21 +164,4 @@
       opacity: 0;
     }
   }
-
-  .search-input-responsive {
-    width: 2.5rem; /* 40px */
-    transition: width 300ms ease-in-out, padding 300ms ease-in-out;
-  }
-
-  .search-input-responsive:focus {
-    width: 12rem; /* 192px */
-    padding-left: 1rem; /* 16px */
-  }
-
-  @media (min-width: 768px) {
-    .search-input-responsive {
-      width: 12rem; /* 192px */
-      padding-left: 1rem; /* 16px */
-    }
-  }
 }

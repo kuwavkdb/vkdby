@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-    static targets = ["menu", "iconOpen", "iconClose"]
+    static targets = ["menu", "button", "iconOpen", "iconClose"]
 
     connect() {
         console.log("MobileMenuController connected")
@@ -33,7 +33,7 @@ export default class extends Controller {
 
     open() {
         this.menuTarget.classList.remove("hidden")
-        this.element.setAttribute("aria-expanded", "true")
+        this.setExpanded(true)
         if (this.hasIconOpenTarget) this.iconOpenTarget.classList.add("hidden")
         if (this.hasIconCloseTarget) this.iconCloseTarget.classList.remove("hidden")
 
@@ -46,9 +46,14 @@ export default class extends Controller {
 
     close() {
         this.menuTarget.classList.add("hidden")
-        this.element.setAttribute("aria-expanded", "false")
+        this.setExpanded(false)
         if (this.hasIconOpenTarget) this.iconOpenTarget.classList.remove("hidden")
         if (this.hasIconCloseTarget) this.iconCloseTarget.classList.add("hidden")
+    }
+
+    // aria-expandedは開閉を操作するボタン自体に付ける（外側のdivでは支援技術に伝わらない）
+    setExpanded(expanded) {
+        this.buttonTargets.forEach((button) => button.setAttribute("aria-expanded", String(expanded)))
     }
 
     handleClickOutside(event) {
