@@ -244,6 +244,56 @@ module Admin
       assert_equal 'existing-unit-controller-test', @unit.reload.key
     end
 
+    test 'quick_new renders the quick create form' do
+      get quick_new_admin_units_path
+
+      assert_response :success
+      assert_includes response.body, 'Unit簡単登録'
+    end
+
+    # issue #1596: バンド名・メンバー名をまとめて入力し、Unit・現在のラインナップ用のUnitSnapshot・
+    # SnapshotPersonを1回のsubmitで一括作成できることを確認する
+    test 'quick_create creates the unit, a current snapshot, and its members in one submission' do
+      assert_difference('Unit.count' => 1, 'UnitSnapshot.count' => 1, 'SnapshotPerson.count' => 2) do
+        post quick_create_admin_units_path, params: {
+          unit: {
+            name: 'Quick Created Band', key: 'quick-created-band', unit_type: 'band', status: 'active',
+            snapshot_date: '2024/04/01', snapshot_label: '結成時',
+            members: {
+              '0' => { person_name: 'Vocalist', part: 'vocal' },
+              '1' => { person_name: 'Guitarist', part: 'guitar' },
+              '2' => { person_name: '', part: 'bass' }
+            }
+          }
+        }
+      end
+
+      unit = Unit.find_by(key: 'quick-created-band')
+      assert_redirected_to edit_admin_unit_path(unit)
+      assert_equal 'band', unit.unit_type
+      snapshot = unit.unit_snapshots.sole
+      assert snapshot.current?
+      assert snapshot.active?
+      assert_equal '結成時', snapshot.label
+      assert_equal Date.new(2024, 4, 1), snapshot.snapshot_date
+      assert_equal %w[Vocalist Guitarist], snapshot.snapshot_people.order(:sort_order).map(&:person_name)
+      assert UpdateLog.exists?(loggable: unit, action: 'create')
+      assert UpdateLog.exists?(loggable: snapshot, action: 'create')
+    end
+
+    test 'quick_create rolls back the unit and snapshot when the unit is invalid' do
+      assert_no_difference(['Unit.count', 'UnitSnapshot.count', 'SnapshotPerson.count']) do
+        post quick_create_admin_units_path, params: {
+          unit: {
+            name: 'Invalid Band', key: '', status: 'active',
+            members: { '0' => { person_name: 'Vocalist', part: 'vocal' } }
+          }
+        }
+      end
+
+      assert_response :unprocessable_entity
+    end
+
     test 'edit shows the change key form for admin' do
       login_as_admin
 
