@@ -117,7 +117,7 @@
                   <% if @trend.quote_url.present? %>
                     <% sanitized_url = safe_url(@trend.quote_url) %>
                     <% if sanitized_url %>
-                      <%= link_to @trend.quote_title.presence || sanitized_url, sanitized_url, target: '_blank', rel: 'noopener noreferrer', class: "hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" %>
+                      <%= link_to @trend.quote_title.presence || sanitized_url, sanitized_url, target: '_blank', rel: 'noopener noreferrer', class: "hover:text-indigo-600 dark:hover:text-amber-400 transition-colors" %>
                     <% else %>
                       <%= @trend.quote_title.presence || @trend.quote_url %>
                     <% end %>
@@ -137,7 +137,7 @@
             <section>
               <div class="flex items-center gap-2 mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
                 <h2 class="flex items-baseline gap-1.5">
-                  <%= link_to trend_unit_display_name(@trend.units.first, @unit), profile_path(@unit.key), class: "text-sm font-bold text-slate-800 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" %>
+                  <%= link_to trend_unit_display_name(@trend.units.first, @unit), profile_path(@unit.key), class: "text-sm font-bold text-slate-800 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-amber-400 transition-colors" %>
                   <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Members</span>
                 </h2>
                 <% if @snapshot.label.present? && @trend.snapshot_date.blank? %>
@@ -189,7 +189,7 @@
       <% end %>
 
       <div class="mt-12 pt-8 border-t border-slate-100 dark:border-slate-700">
-        <%= link_to "Back to Trends", trends_path, class: "text-sm font-bold text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors" %>
+        <%= link_to "Back to Trends", trends_path, class: "text-sm font-bold text-indigo-500 hover:text-indigo-600 dark:text-amber-400 dark:hover:text-amber-300 transition-colors" %>
       </div>
     </div>
   </div>

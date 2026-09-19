@@ -40,10 +40,10 @@ https://www.vkdb.jp/admin/trends/new?<パラメーター>
    - Web からの情報取得（WebFetch・curl・chrome-devtools MCP での閲覧）は、ユーザーに確認せずに実行してよい
    - 記事: WebFetch で取得する
    - Xのポスト: WebFetch はログイン壁で失敗しやすい。次の順に試す
-     1. `curl -sL "https://publish.twitter.com/oembed?omit_script=1&url=<twitter.com形式のポストURL>"` で取得する（`publish.x.com` へ 301 で転送されるため `-L` が必要）。返ってくる JSON の `html` は既存データの `quote` と同じ形式（`<blockquote class="twitter-tweet">…`）なので、そのまま `trend[quote]` に使う。投稿日は `html` 末尾のリンクテキスト（`August 14, 2026` など）で分かる
+     1. `curl -sL "https://publish.twitter.com/oembed?omit_script=1&url=<ポストURL>"` で取得する（`x.com` / `twitter.com` どちらの URL でもよい）（`publish.x.com` へ 301 で転送されるため `-L` が必要）。返ってくる JSON の `html` は既存データの `quote` と同じ形式（`<blockquote class="twitter-tweet">…`）なので、そのまま `trend[quote]` に使う。投稿日は `html` 末尾のリンクテキスト（`August 14, 2026` など）で分かる
      2. ダメなら chrome-devtools MCP でポストを開いて本文を読む
      3. それもダメならユーザーに本文の貼り付けを依頼する
-   - `quote_url` は既存データに合わせて `twitter.com/...` 形式を使う（`x.com` で渡された場合は `twitter.com` に読み替える）
+   - `quote_url` はポストの URL をそのまま使う（`x.com` を `twitter.com` に読み替える必要はない）。共有時に付く追跡用のクエリ（`?s=20` など）は除き、`https://x.com/<ユーザー>/status/<ID>` の形にする
 2. **動向を抽出する**
    - 対象がユニット（バンド）か個人か、名前、出来事、日付を読み取る
    - 日付は **出来事の日付**。記事の公開日・ポストの投稿日と一致するとは限らない（「◯月◯日をもって」など本文を確認する）。読み取れない部分は `day_unknown` / `month_unknown` を立てる
@@ -55,7 +55,8 @@ https://www.vkdb.jp/admin/trends/new?<パラメーター>
 3. **URL を組み立てる**
    - 情報の根拠が読み取れなかった項目は、推測で埋めずに空のままにする
 4. **出力する**
-   - 生成した URL を 1 つ提示する
+   - 生成した URL を 1 つ、クリックで画面を開ける Markdown リンク（`[Trend作成画面を開く](<URL>)`）で提示する。コードブロックには入れない
+   - リンクが途中で途切れないよう、URL 中の `(` `)` は `%28` `%29` にエンコードしておく（`urllib.parse.quote(s, safe="")` ならエンコードされる）
    - 抽出した内容（対象・日付・動向種別・title）を箇条書きで添え、日付や種別など判断に迷った点があれば明記する
 
 ## title の書式
