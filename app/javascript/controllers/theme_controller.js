@@ -5,17 +5,20 @@ const MODES = ["auto", "light", "dark"]
 const MODE_LABELS = { auto: "自動", light: "ライト", dark: "ダーク" }
 
 export default class extends Controller {
-    static targets = ["iconAuto", "iconLight", "iconDark", "srLabel"]
+    static targets = ["iconAuto", "iconLight", "iconDark", "srLabel", "label"]
 
     connect() {
         this.media = window.matchMedia("(prefers-color-scheme: dark)")
         this.boundApplyTheme = this.applyTheme.bind(this)
         this.media.addEventListener("change", this.boundApplyTheme)
+        // ヘッダーとモバイルメニューに複数のトグルがあるため、他方の切り替えにも追従する
+        document.addEventListener("theme:changed", this.boundApplyTheme)
         this.applyTheme()
     }
 
     disconnect() {
         this.media.removeEventListener("change", this.boundApplyTheme)
+        document.removeEventListener("theme:changed", this.boundApplyTheme)
     }
 
     toggle() {
@@ -23,7 +26,7 @@ export default class extends Controller {
         try {
             localStorage.setItem(STORAGE_KEY, nextMode)
         } catch (e) {}
-        this.applyTheme()
+        document.dispatchEvent(new CustomEvent("theme:changed"))
     }
 
     applyTheme() {
@@ -37,6 +40,7 @@ export default class extends Controller {
 
         const nextMode = MODES[(MODES.indexOf(mode) + 1) % MODES.length]
         this.srLabelTarget.textContent = `テーマ: ${MODE_LABELS[mode]}（クリックで${MODE_LABELS[nextMode]}に切り替え）`
+        if (this.hasLabelTarget) this.labelTarget.textContent = `テーマ: ${MODE_LABELS[mode]}`
     }
 
     currentMode() {
