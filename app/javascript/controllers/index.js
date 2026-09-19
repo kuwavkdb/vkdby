@@ -43,6 +43,9 @@ application.register("sortable", SortableController)
 import TagGroupSelectController from "controllers/tag_group_select_controller"
 application.register("tag-group-select", TagGroupSelectController)
 
+import ThemeController from "controllers/theme_controller"
+application.register("theme", ThemeController)
+
 import TimelineController from "controllers/timeline_controller"
 application.register("timeline", TimelineController)
 
