@@ -17,7 +17,7 @@ class PersonCardComponent < ViewComponent::Base
 
   def card_classes
     'group block bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 ' \
-    'hover:border-person dark:hover:border-person hover:scale-[1.01] transition-all relative overflow-hidden p-4 rounded-lg'
+    'hover:border-person dark:hover:border-amber-400 hover:scale-[1.01] transition-all relative overflow-hidden p-4 rounded-lg'
   end
 
   def icon_padding_classes
@@ -29,10 +29,10 @@ class PersonCardComponent < ViewComponent::Base
   end
 
   def name_classes
-    'font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-person transition-colors'
+    'font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-person dark:group-hover:text-amber-400 transition-colors'
   end
 
   def kana_classes
-    'text-xs text-zinc-500 dark:text-zinc-500 group-hover:text-person transition-colors'
+    'text-xs text-zinc-500 dark:text-zinc-500 group-hover:text-person dark:group-hover:text-amber-400 transition-colors'
   end
 end

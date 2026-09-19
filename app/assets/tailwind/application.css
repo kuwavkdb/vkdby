@@ -112,8 +112,8 @@
       h1, h2, h3, h4, h5 { color: #fafafa; }
       h2 { border-bottom-color: #27272a; }
       h6 { color: #71717a; }
-      a { color: #818cf8; }
-      a:hover { color: #a5b4fc; }
+      a { color: #fbbf24; }
+      a:hover { color: #fcd34d; }
       strong { color: #fafafa; }
       code { background-color: #18181b; color: #e4e4e7; }
       blockquote { border-left-color: #f59e0b; color: #71717a; background-color: #18181b; }
@@ -128,14 +128,15 @@
   /* ユニット/個人ページのセクション本文（section_component.html.erb）用ラッパー。
      markdown形式の場合はmarkdown()ヘルパーが素の<a>を出力するためクラスを持たず、
      このルールがないとリンクが地の文と同色・下線なしで視認できなかった（issue #1220）。
-     旧wiki形式（format_wiki_content）はリンクごとにインラインでtext-indigo-*クラスを
-     付けているため実質上書きされるが、同じ配色なので見た目は変わらない。 */
+     旧wiki形式（format_wiki_content）はリンクごとにインラインでtext-indigo-*（ダークは
+     dark:text-amber-400）クラスを付けているため実質上書きされるが、同じ配色なので
+     見た目は変わらない。ダークのリンク色はamber系（issue #1571）。 */
   .wiki-content a { color: #4338ca; text-decoration: underline; }
   .wiki-content a:hover { color: #3730a3; }
 
   @variant dark {
-    .wiki-content a { color: #818cf8; }
-    .wiki-content a:hover { color: #a5b4fc; }
+    .wiki-content a { color: #fbbf24; }
+    .wiki-content a:hover { color: #fcd34d; }
   }
 
   .timeline-added-name-cell {

@@ -308,7 +308,7 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
       key = "WIKILINKPLACEHOLDER#{placeholders.size}"
       display = Regexp.last_match(1)
       url = Regexp.last_match(2)
-      link_class = 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline'
+      link_class = 'text-indigo-600 hover:text-indigo-800 dark:text-amber-400 dark:hover:text-amber-300 underline'
       link_opts = { class: link_class }
       link_opts.merge!(target: '_blank', rel: 'noopener noreferrer') if external_url?(url)
       placeholders[key] = link ? link_to(display, url, **link_opts) : display
@@ -318,7 +318,7 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     # 2. Auto-link raw URLs in the remaining text
     if link
       protected_text = protected_text.gsub(URI::DEFAULT_PARSER.make_regexp(%w[http https])) do |match|
-        link_class = 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline'
+        link_class = 'text-indigo-600 hover:text-indigo-800 dark:text-amber-400 dark:hover:text-amber-300 underline'
         link_opts = { class: link_class }
         link_opts.merge!(target: '_blank', rel: 'noopener noreferrer') if external_url?(match)
         link_to(match, match, **link_opts)
@@ -342,9 +342,9 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
 
   def create_internal_link(display, target)
     encoded = URI.encode_www_form_component(target.encode('EUC-JP'))
-    link_to(display.html_safe, "/#{encoded}.html", class: 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline')
+    link_to(display.html_safe, "/#{encoded}.html", class: 'text-indigo-600 hover:text-indigo-800 dark:text-amber-400 dark:hover:text-amber-300 underline')
   rescue Encoding::UndefinedConversionError
-    link_to(display.html_safe, '#', class: 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline')
+    link_to(display.html_safe, '#', class: 'text-indigo-600 hover:text-indigo-800 dark:text-amber-400 dark:hover:text-amber-300 underline')
   end
 
   # YouTube動画をembed表示する。幅は上限なしとし、高さのみ360pxに固定する。
