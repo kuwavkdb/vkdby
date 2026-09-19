@@ -10,7 +10,7 @@
 
 <div class="flex justify-center p-0 md:p-8">
   <div class="w-full max-w-7xl">
-    <div class="lg:grid lg:grid-cols-[1fr_280px] lg:gap-6 lg:items-start">
+    <%= render layout: 'shared/with_sidebar' do %>
 
       <%# メインカラム: メインコンテンツ＋今日はなんの日？（トップページのみ） %>
       <div class="space-y-6">
@@ -53,17 +53,6 @@
           <%= render 'today_teaser' %>
         <% end %>
       </div>
-
-      <%# PC: サイドバーを右カラムに表示 %>
-      <div class="hidden lg:block sticky top-4">
-        <%= render 'sidebar' %>
-      </div>
-
-    </div>
-
-    <%# モバイル: サイドバーをカードの外・別セクションとして表示 %>
-    <div class="lg:hidden px-4 pb-8 mt-12">
-      <%= render 'sidebar' %>
-    </div>
+    <% end %>
   </div>
 </div>

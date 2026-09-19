@@ -229,7 +229,7 @@ class ItemTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
   end
 
   test 'saving an item expires today\'s new-releases sidebar cache (issue #1297)' do
-    cache_key = "#{CustomPagesController::NEW_RELEASES_CACHE_KEY_PREFIX}/#{Date.current}"
+    cache_key = "#{SidebarLoadable::NEW_RELEASES_CACHE_KEY_PREFIX}/#{Date.current}"
     original_cache = Rails.cache
     Rails.cache = ActiveSupport::Cache::MemoryStore.new
     Rails.cache.write(cache_key, %w[stale])
@@ -270,7 +270,7 @@ class ItemTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
   test 'discarding an item expires today\'s new-releases sidebar cache (issue #1297)' do
     item = Item.create!(title: 'Cache Busting Discard Item', release_date: Date.current,
                         link_url: 'https://example.com/item-cache-bust-discard')
-    cache_key = "#{CustomPagesController::NEW_RELEASES_CACHE_KEY_PREFIX}/#{Date.current}"
+    cache_key = "#{SidebarLoadable::NEW_RELEASES_CACHE_KEY_PREFIX}/#{Date.current}"
     original_cache = Rails.cache
     Rails.cache = ActiveSupport::Cache::MemoryStore.new
     Rails.cache.write(cache_key, %w[stale])

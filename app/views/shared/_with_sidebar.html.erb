@@ -1,0 +1,13 @@
+<div class="lg:grid lg:grid-cols-[1fr_280px] lg:gap-6 lg:items-start">
+  <%= yield %>
+
+  <%# PC: サイドバーを右カラムに表示 %>
+  <div class="hidden lg:block sticky top-4">
+    <%= render 'shared/sidebar' %>
+  </div>
+</div>
+
+<%# モバイル: サイドバーをカードの外・別セクションとして表示 %>
+<div class="lg:hidden px-4 pb-8 mt-12">
+  <%= render 'shared/sidebar' %>
+</div>
