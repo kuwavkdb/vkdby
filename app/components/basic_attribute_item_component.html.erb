@@ -1,4 +1,4 @@
-<div class="flex flex-row justify-between items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 <%= @index.odd? ? 'pl-4 border-l' : '' %>">
+<div class="flex flex-row justify-between items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3 <%= @index.odd? ? '@[20rem]:pl-4 @[20rem]:border-l' : '' %>">
   <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3"><%= @item[:label] %></dt>
   <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 text-right"><%= @item[:value] %></dd>
 </div>
