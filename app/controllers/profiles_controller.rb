@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 class ProfilesController < ApplicationController
+  include SidebarLoadable
+
+  before_action :load_sidebar_data, only: :show, unless: -> { request.format.json? }
+
   def show
     # with_attached_ogp_image: ogp_image_relative_url内のattached?判定が毎アクセスN+1で
     # クエリを発行しないよう、attachment/blobを事前にeager loadしておく（issue #1267）。

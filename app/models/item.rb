@@ -132,6 +132,6 @@ class Item < ApplicationRecord
   # 新規登録・更新・削除(discard/undiscard含む)のたびに当日分のサイドバーキャッシュを破棄し、
   # 反映を待たせないようにする（issue #1297）
   def expire_new_releases_sidebar_cache
-    Rails.cache.delete("#{CustomPagesController::NEW_RELEASES_CACHE_KEY_PREFIX}/#{Date.current}")
+    Rails.cache.delete("#{SidebarLoadable::NEW_RELEASES_CACHE_KEY_PREFIX}/#{Date.current}")
   end
 end
