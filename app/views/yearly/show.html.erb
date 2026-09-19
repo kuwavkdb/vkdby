@@ -17,11 +17,11 @@
       <!-- Year Navigation -->
       <div class="flex justify-between items-center">
         <%= link_to "← 前年", yearly_path(year: @year - 1),
-            class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
+            class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-amber-400 dark:hover:text-amber-300 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-amber-400" %>
         <%= link_to "年一覧", date_index_path,
-            class: "text-sm font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
+            class: "text-sm font-bold text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-amber-400" %>
         <%= link_to "翌年 →", yearly_path(year: @year + 1),
-            class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
+            class: "text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-amber-400 dark:hover:text-amber-300 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-amber-400" %>
       </div>
     </div>
 
@@ -74,7 +74,7 @@
                 <% end %>
               <% end %>
               <%= link_to trend_path(trend), class: "inline" do %>
-                <span class="font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"><%= format_wiki_title(trend.title, link: false) %></span>
+                <span class="font-bold text-indigo-600 dark:text-amber-400 hover:text-indigo-800 dark:hover:text-amber-300 transition-colors"><%= format_wiki_title(trend.title, link: false) %></span>
               <% end %>
             </div>
           <% end %>

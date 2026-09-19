@@ -33,7 +33,7 @@
                 </svg>
                 Units
               </h2>
-              <%= link_to "View all Units →", units_path(q: @query), class: "text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors" %>
+              <%= link_to "View all Units →", units_path(q: @query), class: "text-sm font-bold text-indigo-600 dark:text-amber-400 hover:text-indigo-700 dark:hover:text-amber-300 transition-colors" %>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               <%= render UnitCardComponent.with_collection(@units) %>
@@ -51,7 +51,7 @@
                 </svg>
                 People
               </h2>
-              <%= link_to "View all People →", people_path(q: @query), class: "text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors" %>
+              <%= link_to "View all People →", people_path(q: @query), class: "text-sm font-bold text-indigo-600 dark:text-amber-400 hover:text-indigo-700 dark:hover:text-amber-300 transition-colors" %>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <%= render PersonCardComponent.with_collection(@people, show_history: true) %>
@@ -72,7 +72,7 @@
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <% @custom_pages.each do |page| %>
-                <%= link_to custom_page_path(page.key), class: "block rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" do %>
+                <%= link_to custom_page_path(page.key), class: "block rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-amber-400 transition-colors" do %>
                   <%= page.title %>
                 <% end %>
               <% end %>
@@ -87,7 +87,7 @@
           <p class="text-slate-400 dark:text-slate-500 font-bold">「<%= @query %>」の検索結果が見つかりませんでした。</p>
           <p class="mt-4 text-sm text-slate-500 dark:text-slate-400">
             お探しのユニットが見つかりませんか？
-            <%= link_to "情報を投稿する", new_unit_submission_path, class: "font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 underline" %>
+            <%= link_to "情報を投稿する", new_unit_submission_path, class: "font-bold text-indigo-600 dark:text-amber-400 hover:text-indigo-700 dark:hover:text-amber-300 underline" %>
           </p>
         </div>
       <% end %>
