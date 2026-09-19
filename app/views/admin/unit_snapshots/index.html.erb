@@ -16,11 +16,13 @@
     <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
       <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
         <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg dark:ring-gray-700">
-          <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
+          <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700"
+                 data-controller="sortable"
+                 data-sortable-url-value="<%= reorder_admin_unit_unit_snapshots_path(@unit) %>">
             <thead class="bg-gray-50 dark:bg-gray-800">
               <tr>
-                <th scope="col" class="relative py-3.5 pl-4 pr-3 sm:pl-6 w-10">
-                  <span class="sr-only">並び替え</span>
+                <th scope="col" class="relative py-3.5 pl-4 pr-3 sm:pl-6 w-16">
+                  <%= render "admin/shared/sortable_save" %>
                 </th>
                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">ID</th>
                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">日付</th>
@@ -35,8 +37,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 bg-white dark:bg-gray-900 dark:divide-gray-700"
-                   data-controller="sortable"
-                   data-sortable-url-value="<%= reorder_admin_unit_unit_snapshots_path(@unit) %>">
+                   data-sortable-target="list">
               <% @unit_snapshots.each do |snapshot| %>
                 <tr data-id="<%= snapshot.id %>">
                   <td class="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-900 dark:text-gray-200 sm:pl-6 drag-handle cursor-move">

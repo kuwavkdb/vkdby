@@ -7,11 +7,13 @@
   </div>
   <% if sections.any? %>
     <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
+      <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700"
+             data-controller="sortable"
+             data-sortable-url-value="<%= reorder_admin_sections_path(sectionable_type: sectionable.class.name, sectionable_id: sectionable.id) %>">
         <thead class="bg-gray-50 dark:bg-gray-800">
           <tr>
-            <th scope="col" class="relative py-2 pl-4 pr-3 sm:pl-6 w-10">
-              <span class="sr-only">並び替え</span>
+            <th scope="col" class="relative py-2 pl-4 pr-3 sm:pl-6 w-16">
+              <%= render "admin/shared/sortable_save" %>
             </th>
             <th scope="col" class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">名前</th>
             <th scope="col" class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">形式</th>
@@ -19,8 +21,7 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 bg-white dark:bg-gray-900 dark:divide-gray-700"
-               data-controller="sortable"
-               data-sortable-url-value="<%= reorder_admin_sections_path(sectionable_type: sectionable.class.name, sectionable_id: sectionable.id) %>">
+               data-sortable-target="list">
           <% sections.each do |section| %>
             <% discarded = section.discarded? %>
             <tr data-id="<%= section.id %>" class="<%= 'opacity-50' if discarded %>">

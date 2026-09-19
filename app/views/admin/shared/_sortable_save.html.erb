@@ -1,0 +1,15 @@
+<%# sortable コントローラー配下に置く並び順の保存ボタン。並び替えるまでは無効 %>
+<button type="button"
+        data-sortable-target="saveButton"
+        data-action="sortable#save"
+        disabled
+        title="並び順を保存"
+        aria-label="並び順を保存"
+        class="inline-flex h-7 w-7 items-center justify-center rounded-md bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-indigo-600">
+  <svg class="h-4 w-4" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+    <path d="M17 21v-8H7v8" />
+    <path d="M7 3v5h8" />
+  </svg>
+</button>
+<span data-sortable-target="status" role="status" class="sr-only"></span>
