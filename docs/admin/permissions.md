@@ -22,7 +22,7 @@
 
 | 機能 | アクション |
 |---|---|
-| Units — 閲覧・作成・編集 | index / new / create / edit / update / show / search |
+| Units — 閲覧・作成・編集 | index / new / create / edit / update / show / search / quick_new / quick_create |
 | People — 閲覧・作成・編集 | index / new / create / edit / update / search |
 | Index Groups / タグ（Tag Indices）— 閲覧・作成・編集・削除・並べ替え・グループ移動 | 全アクション |
 | Trends — 閲覧・作成・編集 | index / new / create / edit / update |
