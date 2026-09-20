@@ -9,6 +9,7 @@ module Admin
     before_action :require_admin, only: %i[change_key purge bulk_update_status]
 
     QUICK_CREATE_MEMBER_ROWS = 5
+    QUICK_CREATE_DEFAULT_PARTS = %w[vocal guitar guitar bass drums].freeze
 
     def index
       @q = params[:q]
@@ -60,7 +61,7 @@ module Admin
     # データ構造・既存フローには手を加えず、入り口を追加するのみ。
     def quick_new
       @unit = Unit.new
-      @member_rows = Array.new(QUICK_CREATE_MEMBER_ROWS) { OpenStruct.new(person_name: '', part: 'vocal') }
+      @member_rows = QUICK_CREATE_DEFAULT_PARTS.map { |part| OpenStruct.new(person_name: '', part: part) }
     end
 
     def quick_create
