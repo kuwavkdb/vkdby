@@ -55,6 +55,8 @@ class Person < ApplicationRecord
   # Valid parts for a person
   AVAILABLE_PARTS = %w[vocal guitar bass drums keyboard dj dancer manipulator].freeze
 
+  BLOOD_TYPES = %w[A B O AB Unknown].freeze
+
   # 都道府県（全国地方公共団体コード順: 北海道→東北→関東→中部→近畿→中国→四国→九州・沖縄）
   PREFECTURES = %w[
     北海道
@@ -75,6 +77,8 @@ class Person < ApplicationRecord
     where('EXTRACT(MONTH FROM birthday) = ? AND EXTRACT(DAY FROM birthday) = ?',
           date.month, date.day)
   }
+  # /peopleの索引ページ（一覧・フィルタ選択肢の件数集計）の対象となる人物
+  scope :for_index, -> { kept.where.not(key: [nil, '']) }
 
   STATUS_TRANSLATIONS = {
     'pre' => '準備中',
@@ -95,6 +99,7 @@ class Person < ApplicationRecord
   validate :key_immutable, on: :update
   after_create :auto_link_snapshot_people
   after_commit :expire_sidebar_cache
+  after_commit :expire_filter_counts_cache
 
   def name
     CGI.unescapeHTML(super.to_s).presence
@@ -202,5 +207,9 @@ class Person < ApplicationRecord
 
   def expire_sidebar_cache
     Rails.cache.delete('sidebar/recently_updated')
+  end
+
+  def expire_filter_counts_cache
+    PersonFilterCounts.expire
   end
 end
