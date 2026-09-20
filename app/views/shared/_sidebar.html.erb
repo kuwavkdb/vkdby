@@ -1,3 +1,9 @@
+<%# サイドバーはUnit/Personの全プロフィールページで表示されるため、
+    ERB評価コストを避けるためフラグメントキャッシュする（issue #1601）。
+    データ自体はSidebarLoadableで既にキャッシュ済みだが、HTML組み立てコストも
+    ページ数分毎回発生していたため、Recent Updatesの更新粒度（10分）に合わせて
+    サイドバー全体をキャッシュする。 %>
+<% cache "sidebar/#{Date.current}", expires_in: 10.minutes do %>
 <div class="space-y-4">
   <%# New Releases %>
   <% if @new_releases.present? %>
@@ -152,3 +158,4 @@
     </div>
   <% end %>
 </div>
+<% end %>
