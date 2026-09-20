@@ -10,7 +10,12 @@
 
     embed.jsの読み込みはIntersectionObserverでコンテナが画面内に入ってから
     行う（重い外部スクリプト・トラッキングCookieを伴うため、初回表示時の
-    パフォーマンスへの影響を避ける）。 %>
+    パフォーマンスへの影響を避ける）。
+
+    サイトのテーマ切替（issue #1573）への追従（issue #1593）:
+    DISQUSは自動テーマの場合、#disqus_threadの背景色でライト/ダークを判定するが、
+    判定は埋め込み時に一度きりなので、テーマ切替時はDISQUS.reset({ reload: true })で
+    再読み込みする。 %>
 <% disqus_shortname = ENV['DISQUS_SHORTNAME'] %>
 <% disqus_page_url = "https://www.vkdb.jp/#{resource.old_key}.html" if resource.old_key.present? %>
 <% if disqus_shortname.present? %>
@@ -18,7 +23,9 @@
     <div class="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
       <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Comments</h2>
     </div>
-    <%# id="disqus_thread"にはTailwindのユーティリティクラス（bg-white dark:bg-slate-800等）を
+    <%# ダーク配色はOS設定（prefers-color-scheme）ではなく、テーマ切替が付け外しする
+        <html>のdarkクラスに連動させる（OS設定と異なるテーマを選べるため）。
+        id="disqus_thread"にはTailwindのユーティリティクラス（bg-white dark:bg-slate-800等）を
         使わず、styleで直接rgb値を指定する。Tailwind v4はデフォルトのカラーパレットを
         oklch()で定義しており、DISQUSのembed.jsは自身がマウントする要素の色を
         getComputedStyleで読み取る際にoklch()形式を解釈できずクラッシュする
@@ -26,9 +33,7 @@
         コメント欄が表示されない）。ここだけ明示的にrgb/hexで指定して回避する。 %>
     <style>
       #disqus_thread { background-color: #ffffff; color: #1e293b; }
-      @media (prefers-color-scheme: dark) {
-        #disqus_thread { background-color: #1e293b; color: #e2e8f0; }
-      }
+      .dark #disqus_thread { background-color: #1e293b; color: #e2e8f0; }
     </style>
     <div id="disqus_thread" data-disqus-shortname="<%= disqus_shortname %>" data-disqus-page-url="<%= disqus_page_url %>" data-disqus-developer="<%= !Rails.env.production? %>">
       <p class="text-sm text-slate-400 dark:text-slate-500" data-disqus-placeholder>コメントを読み込み中…</p>
@@ -47,9 +52,14 @@
           if (placeholder) placeholder.textContent = message;
         }
 
+        function isDarkTheme() {
+          return document.documentElement.classList.contains('dark');
+        }
+
         function loadDisqus() {
           if (container.dataset.disqusLoaded) return;
           container.dataset.disqusLoaded = 'true';
+          container.dataset.disqusDark = isDarkTheme();
 
           // ローカル/開発環境ではdisqus_developerを立てて、DISQUS側の
           // ドメイン許可設定を変更せずにlocalhostからの動作確認を可能にする
@@ -74,6 +84,25 @@
             showPlaceholderError('コメントの読み込みに失敗しました。広告ブロッカーなどが原因の可能性があります。');
           };
           (d.head || d.body).appendChild(s);
+        }
+
+        // テーマ切替に追従して、DISQUSを新しい配色で再読み込みする。
+        // 監視対象は切替イベントではなく<html>のclass属性そのもの（トグル操作・
+        // OS設定変更・自動モードのいずれでも、実際にdarkクラスが変わったときだけ発火する）。
+        // Turboのページ遷移でこのスクリプトが再実行されても二重に登録しないよう、
+        // オブザーバーはwindowに一度だけ登録し、その時点のコンテナを都度取得する。
+        if (!window.disqusThemeObserver) {
+          window.disqusThemeObserver = new MutationObserver(function () {
+            var current = document.getElementById('disqus_thread');
+            if (!current || !window.DISQUS || current.dataset.disqusLoaded !== 'true') return;
+
+            var dark = document.documentElement.classList.contains('dark');
+            if (current.dataset.disqusDark === String(dark)) return;
+            current.dataset.disqusDark = dark;
+            // page.urlを渡し直さないと、旧サイトのスレッドの引き継ぎが外れる
+            window.DISQUS.reset({ reload: true, config: window.disqus_config });
+          });
+          window.disqusThemeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
         }
 
         if ('IntersectionObserver' in window) {

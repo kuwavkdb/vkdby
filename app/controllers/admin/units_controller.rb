@@ -8,6 +8,9 @@ module Admin
     before_action :require_super_operator, only: %i[destroy]
     before_action :require_admin, only: %i[change_key purge bulk_update_status]
 
+    QUICK_CREATE_MEMBER_ROWS = 5
+    QUICK_CREATE_DEFAULT_PARTS = %w[vocal guitar guitar bass drums].freeze
+
     def index
       @q = params[:q]
       @tag_index_id = params[:tag_index_id]
@@ -51,6 +54,41 @@ module Admin
 
     def show
       redirect_to edit_admin_unit_path(@unit)
+    end
+
+    # バンド名・メンバー名をまとめて入力し、Unit・UnitSnapshot（現在のラインナップ）・
+    # SnapshotPerson を1回のsubmitで一括作成する簡易フォーム（issue #1596）。
+    # データ構造・既存フローには手を加えず、入り口を追加するのみ。
+    def quick_new
+      @unit = Unit.new
+      @member_rows = QUICK_CREATE_DEFAULT_PARTS.map { |part| OpenStruct.new(person_name: '', part: part) }
+    end
+
+    def quick_create
+      @unit = Unit.new(quick_unit_params)
+      member_rows = quick_member_rows
+
+      ActiveRecord::Base.transaction do
+        @unit.save!
+        record_update_log(@unit, action: 'create')
+
+        @unit_snapshot = @unit.unit_snapshots.create!(quick_snapshot_params.merge(current: true, active: true))
+        record_update_log(@unit_snapshot, action: 'create')
+
+        member_rows.each_with_index do |attrs, index|
+          next if attrs[:person_name].blank?
+
+          snapshot_person = @unit_snapshot.snapshot_people.create!(attrs.merge(sort_order: index))
+          record_update_log(snapshot_person, action: 'create')
+        end
+      end
+
+      redirect_to edit_admin_unit_path(@unit), notice: 'Unitを作成しました。'
+    rescue ActiveRecord::RecordInvalid => e
+      @unit.errors.merge!(e.record.errors) unless e.record.equal?(@unit)
+      @member_rows = member_rows.map { |attrs| OpenStruct.new(attrs) }
+      @member_rows << OpenStruct.new(person_name: '', part: 'vocal') if @member_rows.none? { |r| r.person_name.blank? }
+      render :quick_new, status: :unprocessable_entity
     end
 
     def edit
@@ -217,6 +255,26 @@ module Admin
     # key はキー変更専用の操作でのみ変更可能(issue #57)。通常の update では受け付けない。
     def unit_update_params
       unit_params.except(:key)
+    end
+
+    def quick_unit_params
+      params.require(:unit).permit(:name, :key, :unit_type, :status)
+    end
+
+    def quick_snapshot_params
+      params.require(:unit).permit(:snapshot_date, :snapshot_label).then do |p|
+        { snapshot_date: p[:snapshot_date].presence, label: p[:snapshot_label].presence }
+      end
+    end
+
+    # 空行（名前未入力）は保存時に無視する。既存の name_logs_attributes= 等と同じ考え方。
+    def quick_member_rows
+      raw_rows = params[:unit][:members]
+      return [] if raw_rows.blank?
+
+      raw_rows.values.map do |row|
+        row.permit(:person_name, :part).to_h.symbolize_keys
+      end
     end
 
     # 公開の投稿フォーム(UnitSubmission)からの「承認」導線。投稿内容を新規作成フォームの

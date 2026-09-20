@@ -50,7 +50,8 @@ module Admin
       end
 
       person = Person.new(name: @snapshot_person.person_name, key: @snapshot_person.person_key,
-                          parts: @snapshot_person.part == 'unknown' ? [] : [@snapshot_person.part])
+                          parts: @snapshot_person.part == 'unknown' ? [] : [@snapshot_person.part],
+                          old_history: @snapshot_person.inline_history)
 
       if person.save
         @snapshot_person.update(person_id: person.id)

@@ -70,6 +70,20 @@ module Admin
       assert_redirected_to edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @snapshot, sp)
     end
 
+    test 'should carry over inline_history to person old_history when creating person' do
+      sp = @snapshot.snapshot_people.create!(
+        person_name: 'History Guy', part: 'vocal', person_key: 'history_test_key',
+        inline_history: "2020/01 加入\n2021/01 脱退"
+      )
+
+      assert_difference('Person.count', 1) do
+        post create_person_admin_unit_unit_snapshot_snapshot_person_path(@unit, @snapshot, sp)
+      end
+
+      sp.reload
+      assert_equal "2020/01 加入\n2021/01 脱退", sp.person.old_history
+    end
+
     test 'should not create person when person_key is blank' do
       sp = @snapshot.snapshot_people.create!(person_name: 'No Key Guy', part: 'vocal')
 
