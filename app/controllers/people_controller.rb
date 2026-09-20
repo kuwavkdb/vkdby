@@ -5,6 +5,13 @@ class PeopleController < ApplicationController
   PERSON_DATA_TAG_GROUP_NAMES = %w[パート 血液型 出身地 状況].freeze
   BLOOD_TYPES = %w[A B O AB Unknown].freeze
 
+  # build_person_data_filtersはフィルタ選択肢ごとのCOUNTクエリを合計20件超発行するが、
+  # 結果はPersonのparts/blood/hometown/statusが変化した時にしか変わらないため、
+  # 索引ページ（/people）アクセスごとに毎回集計せずキャッシュする（issue #1602と同様の方針）。
+  FILTER_COUNTS_CACHE_KEY = 'people/index_filter_counts'
+  FILTER_COUNTS_CACHE_TTL = 10.minutes
+  FILTER_COUNTS_RACE_CONDITION_TTL = 10.seconds
+
   def index
     load_tag_filter_groups
     load_selected_filters
@@ -105,16 +112,31 @@ class PeopleController < ApplicationController
   end
 
   def build_person_data_filters
-    hometown_counts = base_scope.where.not(hometown: [nil, '']).group(:hometown).count.sort_by { |h, c| [Person::PREFECTURES.index(h) || Person::PREFECTURES.size, -c] }
+    counts = filter_counts
+
     [
       { param: :part, name: 'パート', selected: @selected_part,
-        options: Person::AVAILABLE_PARTS.map { |p| { value: p, label: p.humanize, count: base_scope.where('parts @> ?::jsonb', [p].to_json).count } } },
+        options: Person::AVAILABLE_PARTS.map { |p| { value: p, label: p.humanize, count: counts[:part][p] || 0 } } },
       { param: :blood, name: '血液型', selected: @selected_blood,
-        options: BLOOD_TYPES.map { |b| { value: b, label: b == 'Unknown' ? '不明' : b, count: base_scope.where(blood: b).count } } },
+        options: BLOOD_TYPES.map { |b| { value: b, label: b == 'Unknown' ? '不明' : b, count: counts[:blood][b] || 0 } } },
       { param: :hometown, name: '出身地', selected: @selected_hometown,
-        options: hometown_counts.map { |h, c| { value: h, label: h, count: c } } },
+        options: counts[:hometown].map { |h, c| { value: h, label: h, count: c } } },
       { param: :status, name: 'ステータス', selected: @selected_status,
-        options: Person.statuses.keys.map { |s| { value: s, label: Person::STATUS_TRANSLATIONS[s], count: base_scope.where(status: s).count } } }
+        options: Person.statuses.keys.map { |s| { value: s, label: Person::STATUS_TRANSLATIONS[s], count: counts[:status][s] || 0 } } }
     ]
+  end
+
+  def filter_counts
+    Rails.cache.fetch(FILTER_COUNTS_CACHE_KEY, expires_in: FILTER_COUNTS_CACHE_TTL,
+                       race_condition_ttl: FILTER_COUNTS_RACE_CONDITION_TTL) do
+      hometown_counts = base_scope.where.not(hometown: [nil, '']).group(:hometown).count
+                                  .sort_by { |h, c| [Person::PREFECTURES.index(h) || Person::PREFECTURES.size, -c] }
+      {
+        part: Person::AVAILABLE_PARTS.index_with { |p| base_scope.where('parts @> ?::jsonb', [p].to_json).count },
+        blood: BLOOD_TYPES.index_with { |b| base_scope.where(blood: b).count },
+        hometown: hometown_counts,
+        status: Person.statuses.keys.index_with { |s| base_scope.where(status: s).count }
+      }
+    end
   end
 end

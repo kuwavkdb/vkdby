@@ -95,6 +95,7 @@ class Person < ApplicationRecord
   validate :key_immutable, on: :update
   after_create :auto_link_snapshot_people
   after_commit :expire_sidebar_cache
+  after_commit :expire_filter_counts_cache
 
   def name
     CGI.unescapeHTML(super.to_s).presence
@@ -202,5 +203,9 @@ class Person < ApplicationRecord
 
   def expire_sidebar_cache
     Rails.cache.delete('sidebar/recently_updated')
+  end
+
+  def expire_filter_counts_cache
+    Rails.cache.delete(PeopleController::FILTER_COUNTS_CACHE_KEY)
   end
 end

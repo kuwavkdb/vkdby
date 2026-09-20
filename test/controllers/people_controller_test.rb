@@ -86,4 +86,47 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, person.name
   end
+
+  test 'index reuses cached person data filter option counts instead of recomputing them every request' do
+    original_cache = Rails.cache
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
+    Rails.cache.clear
+
+    get people_path
+    assert_response :success
+    cached = Rails.cache.read(PeopleController::FILTER_COUNTS_CACHE_KEY)
+    assert cached, 'フィルタ選択肢のカウントがキャッシュされていること'
+
+    # キャッシュを直接書き換えて、次のリクエストで再集計されず書き換えた値がそのまま
+    # 使われることを確認する（＝毎リクエストではCOUNTクエリを発行していない）
+    poisoned_count = (cached[:blood]['A'] || 0) + 12_345
+    poisoned = cached.merge(blood: cached[:blood].merge('A' => poisoned_count))
+    Rails.cache.write(PeopleController::FILTER_COUNTS_CACHE_KEY, poisoned, expires_in: PeopleController::FILTER_COUNTS_CACHE_TTL)
+
+    get people_path
+    assert_response :success
+    assert_includes response.body, "(#{poisoned_count})"
+  ensure
+    Rails.cache = original_cache
+  end
+
+  test 'creating a person invalidates the cached filter option counts' do
+    original_cache = Rails.cache
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
+    Rails.cache.clear
+
+    get people_path
+    assert_response :success
+    before_count = Rails.cache.read(PeopleController::FILTER_COUNTS_CACHE_KEY)[:blood]['AB'] || 0
+
+    Person.create!(name: 'キャッシュ失効テスト', key: 'people-index-filter-counts-expire', status: :active, blood: 'AB')
+    assert_nil Rails.cache.read(PeopleController::FILTER_COUNTS_CACHE_KEY), 'after_commitでキャッシュが削除されていること'
+
+    get people_path
+    assert_response :success
+    after_count = Rails.cache.read(PeopleController::FILTER_COUNTS_CACHE_KEY)[:blood]['AB']
+    assert_equal before_count + 1, after_count
+  ensure
+    Rails.cache = original_cache
+  end
 end
