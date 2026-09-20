@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_16_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_20_053000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -168,6 +168,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_140000) do
     t.integer "status", default: 1, null: false
     t.datetime "updated_at", null: false
     t.index ["aliases"], name: "index_people_on_aliases", using: :gin
+    t.index "((aliases)::text) gin_trgm_ops", name: "index_people_on_aliases_trgm", using: :gin
     t.index ["blood"], name: "index_people_on_blood"
     t.index ["destination_key"], name: "index_people_on_destination_key", where: "(destination_key IS NOT NULL)"
     t.index ["discarded_at"], name: "index_people_on_discarded_at"
@@ -175,6 +176,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_140000) do
     t.index ["key"], name: "index_people_on_key", unique: true
     t.index ["name"], name: "index_people_on_name", opclass: :gin_trgm_ops, using: :gin
     t.index ["name_kana"], name: "index_people_on_name_kana", opclass: :gin_trgm_ops, using: :gin
+    t.index "((name_log)::text) gin_trgm_ops", name: "index_people_on_name_log_trgm", using: :gin
     t.index ["old_history"], name: "index_people_on_old_history", opclass: :gin_trgm_ops, using: :gin
     t.index ["old_key"], name: "index_people_on_old_key", unique: true
     t.index ["parts"], name: "index_people_on_parts", using: :gin
@@ -426,11 +428,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_140000) do
     t.integer "unit_type"
     t.datetime "updated_at", null: false
     t.index ["aliases"], name: "index_units_on_aliases", using: :gin
+    t.index "((aliases)::text) gin_trgm_ops", name: "index_units_on_aliases_trgm", using: :gin
     t.index ["destination_key"], name: "index_units_on_destination_key", where: "(destination_key IS NOT NULL)"
     t.index ["discarded_at"], name: "index_units_on_discarded_at"
     t.index ["key"], name: "index_units_on_key", unique: true
     t.index ["name"], name: "index_units_on_name", opclass: :gin_trgm_ops, using: :gin
     t.index ["name_kana"], name: "index_units_on_name_kana", opclass: :gin_trgm_ops, using: :gin
+    t.index "((name_log)::text) gin_trgm_ops", name: "index_units_on_name_log_trgm", using: :gin
     t.index ["old_key"], name: "index_units_on_old_key", unique: true
   end
 
