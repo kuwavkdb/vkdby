@@ -8,6 +8,10 @@ module SidebarLoadable
   NEW_RELEASES_LIMIT = 5
   # Item#expire_new_releases_sidebar_cacheから商品登録時のキャッシュクリアにも使う
   NEW_RELEASES_CACHE_KEY_PREFIX = 'sidebar/new_releases'
+  # キャッシュ失効直後にProfilesページへのアクセスが集中しても、再生成クエリが
+  # 同時に何本も走らないよう、失効後この秒数は古い値を返しつつ1リクエストのみ
+  # 再生成させる（redis_cache_storeのrace_condition_ttl。issue #1602）
+  RACE_CONDITION_TTL = 10.seconds
 
   private
 
@@ -25,7 +29,7 @@ module SidebarLoadable
       (pages + units + persons).sort_by(&:updated_at).reverse.first(8)
     end
 
-    @birthday_people = Rails.cache.fetch("sidebar/birthday_people/#{today}", expires_in: ttl) do
+    @birthday_people = Rails.cache.fetch("sidebar/birthday_people/#{today}", expires_in: ttl, race_condition_ttl: RACE_CONDITION_TTL) do
       Person.kept.published.birthday_on(today).or(Person.kept.published.birthday_on(today + 1)).order(:name_kana).to_a
     end
   end
@@ -35,7 +39,7 @@ module SidebarLoadable
   # 同一アーティスト（key/old_key/nameのいずれかが一致）の商品は発売日が早い方のみを採用し、
   # 最大NEW_RELEASES_LIMIT件まで表示する。
   def load_new_releases(today, ttl)
-    @new_releases = Rails.cache.fetch("#{NEW_RELEASES_CACHE_KEY_PREFIX}/#{today}", expires_in: ttl) do
+    @new_releases = Rails.cache.fetch("#{NEW_RELEASES_CACHE_KEY_PREFIX}/#{today}", expires_in: ttl, race_condition_ttl: RACE_CONDITION_TTL) do
       candidates = Item.kept.where(release_date: (today - 5)..(today + 5)).order(:release_date).to_a
       used_artist_identities = Set.new
       picked = []
@@ -55,7 +59,7 @@ module SidebarLoadable
   end
 
   def load_recent_trends(today, ttl)
-    @weekly_trends = Rails.cache.fetch("sidebar/weekly_trends/#{today}", expires_in: ttl) do
+    @weekly_trends = Rails.cache.fetch("sidebar/weekly_trends/#{today}", expires_in: ttl, race_condition_ttl: RACE_CONDITION_TTL) do
       from_today = Trend.where(date: today..).order(date: :asc).limit(5).to_a
       recent     = Trend.where(date: (today - 2)..(today - 1)).order(date: :desc).limit(5).to_a
       (from_today + recent).sort_by(&:date).reverse
