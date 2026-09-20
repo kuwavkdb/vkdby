@@ -11,10 +11,10 @@ class AddTrgmIndexesToUnitsAndPeopleJsonColumns < ActiveRecord::Migration[8.1]
   disable_ddl_transaction!
 
   INDEXES = [
-    ['units', 'name_log', 'index_units_on_name_log_trgm'],
-    ['units', 'aliases', 'index_units_on_aliases_trgm'],
-    ['people', 'name_log', 'index_people_on_name_log_trgm'],
-    ['people', 'aliases', 'index_people_on_aliases_trgm']
+    %w[units name_log index_units_on_name_log_trgm],
+    %w[units aliases index_units_on_aliases_trgm],
+    %w[people name_log index_people_on_name_log_trgm],
+    %w[people aliases index_people_on_aliases_trgm]
   ].freeze
 
   def up

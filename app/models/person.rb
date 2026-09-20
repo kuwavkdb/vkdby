@@ -206,6 +206,6 @@ class Person < ApplicationRecord
   end
 
   def expire_filter_counts_cache
-    Rails.cache.delete(PeopleController::FILTER_COUNTS_CACHE_KEY)
+    PersonFilterCounts.expire
   end
 end
