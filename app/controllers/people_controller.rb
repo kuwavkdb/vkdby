@@ -3,7 +3,7 @@
 class PeopleController < ApplicationController
   # 個人データ（parts/blood/hometown/status）で直接絞り込むため、タグ運用の同名グループは一覧の絞り込みUIから除外する
   PERSON_DATA_TAG_GROUP_NAMES = %w[パート 血液型 出身地 状況].freeze
-  BLOOD_TYPES = %w[A B O AB Unknown].freeze
+  BLOOD_TYPES = Person::BLOOD_TYPES
 
   def index
     load_tag_filter_groups
@@ -63,7 +63,7 @@ class PeopleController < ApplicationController
   private
 
   def base_scope
-    @base_scope ||= Person.kept.where.not(key: [nil, ''])
+    @base_scope ||= Person.for_index
   end
 
   def load_tag_filter_groups

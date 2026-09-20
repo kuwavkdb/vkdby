@@ -23,7 +23,7 @@ class PersonFilterCounts
                                 .sort_by { |h, c| [Person::PREFECTURES.index(h) || Person::PREFECTURES.size, -c] }
     {
       part: Person::AVAILABLE_PARTS.index_with { |p| base_scope.where('parts @> ?::jsonb', [p].to_json).count },
-      blood: PeopleController::BLOOD_TYPES.index_with { |b| base_scope.where(blood: b).count },
+      blood: Person::BLOOD_TYPES.index_with { |b| base_scope.where(blood: b).count },
       hometown: hometown_counts,
       status: Person.statuses.keys.index_with { |s| base_scope.where(status: s).count }
     }
@@ -32,6 +32,6 @@ class PersonFilterCounts
   private
 
   def base_scope
-    Person.kept.where.not(key: [nil, ''])
+    Person.for_index
   end
 end
