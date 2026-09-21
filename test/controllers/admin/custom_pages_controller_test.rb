@@ -46,6 +46,42 @@ module Admin
       assert_nil top_message.reload.old_key
     end
 
+    test 'create records an UpdateLog with action create' do
+      post admin_custom_pages_path, params: {
+        custom_page: { key: 'events', title: 'イベント', body: '本文' }
+      }
+
+      custom_page = CustomPage.find_by(key: 'events')
+      assert UpdateLog.exists?(loggable: custom_page, action: 'create')
+    end
+
+    test 'update records an UpdateLog with action update' do
+      custom_page = CustomPage.create!(key: 'events', title: 'イベント')
+
+      patch admin_custom_page_path(custom_page), params: {
+        custom_page: { title: '更新後タイトル' }
+      }
+
+      assert UpdateLog.exists?(loggable: custom_page, action: 'update')
+    end
+
+    test 'destroy records an UpdateLog with action discard' do
+      custom_page = CustomPage.create!(key: 'events', title: 'イベント')
+
+      delete admin_custom_page_path(custom_page)
+
+      assert UpdateLog.exists?(loggable_type: 'CustomPage', loggable_id: custom_page.id, action: 'discard')
+    end
+
+    test 'undiscard records an UpdateLog with action undiscard' do
+      custom_page = CustomPage.create!(key: 'events', title: 'イベント')
+      custom_page.discard
+
+      patch undiscard_admin_custom_page_path(custom_page)
+
+      assert UpdateLog.exists?(loggable: custom_page, action: 'undiscard')
+    end
+
     test 'new画面の下部にMarkdownプラグインのヘルプが表示される' do
       get new_admin_custom_page_path
 

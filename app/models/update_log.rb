@@ -10,6 +10,8 @@ class UpdateLog < ApplicationRecord
       Section.with_discarded.find_by(id: loggable_id)
     when 'SnapshotPerson'
       SnapshotPerson.with_discarded.find_by(id: loggable_id)
+    when 'CustomPage'
+      CustomPage.with_discarded.find_by(id: loggable_id)
     else
       super
     end
