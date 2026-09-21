@@ -261,29 +261,48 @@ module Admin
     end
 
     def quick_unit_params
-      params.require(:unit).permit(:name, :key, :unit_type, :status)
+      quick_rename_nested_attributes_keys!
+      params.require(:unit).permit(:name, :key, :unit_type, :status,
+                                   activity_periods_attributes: %i[from to label],
+                                   links_attributes: %i[text url])
     end
 
-    # quick_new（GET）用。URL経由の事前入力に対応する（issue #1611）。quick_unit_params と異なり
+    # quick_new（GET）用。URL経由の事前入力に対応する（issue #1611, #1616）。quick_unit_params と異なり
     # params[:unit] が無い初期表示でも動くよう require ではなく緩く読み、enum に無い値は無視する。
     def quick_unit_params_for_new
-      permitted = params[:unit]&.permit(:name, :key, :unit_type, :status) || {}
+      quick_rename_nested_attributes_keys!
+      permitted = params[:unit]&.permit(:name, :key, :unit_type, :status,
+                                        activity_periods_attributes: %i[from to label],
+                                        links_attributes: %i[text url]) || {}
       permitted.delete(:unit_type) unless Unit.unit_types.key?(permitted[:unit_type])
       permitted.delete(:status) unless Unit.statuses.key?(permitted[:status])
       permitted
+    end
+
+    # unit-url スキルが生成する URL は `unit[members]` に揃えて `unit[activity_periods]` /
+    # `unit[links]` という短いキー名を使う（issue #1616）。一方 accepts_nested_attributes_for が
+    # 期待するキーは `activity_periods_attributes` / `links_attributes` なので、ここで読み替える。
+    def quick_rename_nested_attributes_keys!
+      return if params[:unit].blank?
+
+      %w[activity_periods links].each do |key|
+        value = params[:unit].delete(key)
+        params[:unit]["#{key}_attributes"] = value if value.present?
+      end
     end
 
     # quick_new（GET）用。空行を除去する quick_member_rows と異なり、入力欄の行として
     # そのまま表示するため空行も保持する。part が enum に無い値は無視する。
     def quick_member_rows_for_new
       raw_rows = params.dig(:unit, :members)
-      return QUICK_CREATE_DEFAULT_PARTS.map { |part| OpenStruct.new(person_name: '', part: part) } if raw_rows.blank?
+      return QUICK_CREATE_DEFAULT_PARTS.map { |part| OpenStruct.new(person_name: '', part: part, extra_profile: {}) } if raw_rows.blank?
 
       raw_rows.values.map do |row|
-        permitted = row.permit(:person_name, :part)
+        permitted = row.permit(:person_name, :part, extra_profile: %i[birthday birth_year blood hometown])
         part = permitted[:part]
         part = nil unless SnapshotPerson.parts.key?(part)
-        OpenStruct.new(person_name: permitted[:person_name].to_s, part: part)
+        extra_profile = permitted[:extra_profile].is_a?(ActionController::Parameters) ? permitted[:extra_profile].to_h : {}
+        OpenStruct.new(person_name: permitted[:person_name].to_s, part: part, extra_profile: extra_profile)
       end
     end
 
@@ -294,12 +313,17 @@ module Admin
     end
 
     # 空行（名前未入力）は保存時に無視する。既存の name_logs_attributes= 等と同じ考え方。
+    # extra_profile（誕生日・生年・血液型・出身地の下書き。issue #1619）も受け取れるようにする
+    # （issue #1620）。SnapshotPeopleController#snapshot_person_params と同じ考え方で、
+    # 空文字は保存せず nil にする。
     def quick_member_rows
       raw_rows = params[:unit][:members]
       return [] if raw_rows.blank?
 
       raw_rows.values.map do |row|
-        row.permit(:person_name, :part).to_h.symbolize_keys
+        attrs = row.permit(:person_name, :part, extra_profile: %i[birthday birth_year blood hometown]).to_h.symbolize_keys
+        attrs[:extra_profile] = attrs[:extra_profile].compact_blank.presence if attrs[:extra_profile].is_a?(Hash)
+        attrs
       end
     end
 

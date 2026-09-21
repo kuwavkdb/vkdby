@@ -34,6 +34,12 @@ application.register("mobile-menu", MobileMenuController)
 import PersonSelectController from "controllers/person_select_controller"
 application.register("person-select", PersonSelectController)
 
+import QuickUnitFormController from "controllers/quick_unit_form_controller"
+application.register("quick-unit-form", QuickUnitFormController)
+
+import QuickUnitYamlPasteController from "controllers/quick_unit_yaml_paste_controller"
+application.register("quick-unit-yaml-paste", QuickUnitYamlPasteController)
+
 import SearchSuggestController from "controllers/search_suggest_controller"
 application.register("search-suggest", SearchSuggestController)
 

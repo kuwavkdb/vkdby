@@ -25,7 +25,7 @@
             <% 
               is_x_account = sns_account.start_with?('@')
               sns_url = is_x_account ? "https://x.com/#{sns_account.delete_prefix('@')}" : sns_account
-              icon_title = is_x_account ? "X (Twitter)" : "Link"
+              icon_title = is_x_account ? "X (Twitter)" : "リンク"
             %>
             <%= link_to sns_url, target: "_blank", rel: "noopener noreferrer", class: "inline-flex items-center text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors", title: icon_title do %>
               <% if is_x_account %>

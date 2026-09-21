@@ -104,4 +104,44 @@ class SnapshotPersonTest < ActiveSupport::TestCase
 
     assert_not_equal original_updated_at, snapshot.reload.updated_at
   end
+
+  # issue #1619: extra_profile から Person新規作成用の属性への変換
+  test 'extra_profile_person_attributes converts a valid MM/DD birthday to a Date with the dummy year' do
+    sp = SnapshotPerson.new(extra_profile: { 'birthday' => '7/12' })
+
+    assert_equal Date.new(Person::DUMMY_BIRTH_YEAR, 7, 12), sp.extra_profile_person_attributes[:birthday]
+  end
+
+  test 'extra_profile_person_attributes accepts a full-width slash-free variety of separators' do
+    sp = SnapshotPerson.new(extra_profile: { 'birthday' => '12/25' })
+
+    assert_equal Date.new(Person::DUMMY_BIRTH_YEAR, 12, 25), sp.extra_profile_person_attributes[:birthday]
+  end
+
+  test 'extra_profile_person_attributes skips an unparsable birthday without raising' do
+    sp = SnapshotPerson.new(extra_profile: { 'birthday' => '不明' })
+
+    assert_not sp.extra_profile_person_attributes.key?(:birthday)
+  end
+
+  test 'extra_profile_person_attributes skips an out-of-range birthday' do
+    sp = SnapshotPerson.new(extra_profile: { 'birthday' => '13/40' })
+
+    assert_not sp.extra_profile_person_attributes.key?(:birthday)
+  end
+
+  test 'extra_profile_person_attributes copies birth_year, blood, and hometown as-is' do
+    sp = SnapshotPerson.new(extra_profile: { 'birth_year' => 1990, 'blood' => 'AB', 'hometown' => '東京都' })
+
+    attrs = sp.extra_profile_person_attributes
+    assert_equal 1990, attrs[:birth_year]
+    assert_equal 'AB', attrs[:blood]
+    assert_equal '東京都', attrs[:hometown]
+  end
+
+  test 'extra_profile_person_attributes returns an empty hash when extra_profile is blank' do
+    sp = SnapshotPerson.new(extra_profile: nil)
+
+    assert_equal({}, sp.extra_profile_person_attributes)
+  end
 end

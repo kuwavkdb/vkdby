@@ -1,11 +1,11 @@
 <section class="@container">
-  <h2 class="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-2">Basic Information</h2>
+  <h2 class="text-sm font-bold uppercase tracking-widest text-zinc-600 dark:text-zinc-300 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-2">基本情報</h2>
   <%
     compact_items = []
     badge_class = "inline-block whitespace-nowrap bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-200 px-2 py-0.5 rounded text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/70 transition-colors border border-indigo-200 dark:border-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
     if @resource.is_a?(Person)
       if @resource.parts.present?
-        compact_items << { label: "Parts", value: capture do %>
+        compact_items << { label: "パート", value: capture do %>
           <div class="flex flex-wrap justify-end gap-1">
             <% @resource.parts.each do |part| %>
               <%= link_to part.humanize, people_path(part: part), class: badge_class %>
@@ -14,7 +14,7 @@
         <% end }
       end
       if @resource.birthday.present?
-        compact_items << { label: "Birthday", value: capture do %>
+        compact_items << { label: "誕生日", value: capture do %>
           <div class="flex flex-wrap justify-end items-center gap-0.5">
             <% if @resource.birth_year.present? %>
               <%= link_to @resource.birth_year.to_s, yearly_path(year: @resource.birth_year), class: badge_class %>
@@ -27,17 +27,17 @@
         <% end }
       end
       if @resource.blood.present?
-        compact_items << { label: "Blood Type", value: capture { link_to @resource.blood, people_path(blood: @resource.blood), class: badge_class } }
+        compact_items << { label: "血液型", value: capture { link_to @resource.blood, people_path(blood: @resource.blood), class: badge_class } }
       end
       if @resource.hometown.present?
-        compact_items << { label: "Hometown", value: capture { link_to @resource.hometown, people_path(hometown: @resource.hometown), class: badge_class } }
+        compact_items << { label: "出身地", value: capture { link_to @resource.hometown, people_path(hometown: @resource.hometown), class: badge_class } }
       end
     elsif @resource.is_a?(Unit) && @resource.unit_type.present?
-      compact_items << { label: "Unit Type", value: capture { @resource.unit_type } }
+      compact_items << { label: "バンド種別", value: capture { @resource.unit_type } }
     end
 
     if @resource.status.present?
-      compact_items << { label: "Status", value: capture do %>
+      compact_items << { label: "ステータス", value: capture do %>
         <span class="bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded text-xs font-bold text-zinc-600 dark:text-zinc-300"><%= @resource.status_text %></span>
       <% end }
     end
@@ -59,7 +59,7 @@
 
     <% if visible_tag_indices.present? %>
       <div class="@[20rem]:col-span-2 flex flex-row justify-between items-baseline pb-3">
-        <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3">Tags</dt>
+        <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3">タグ</dt>
         <dd class="text-right flex flex-wrap justify-end gap-2">
           <% visible_tag_indices.each do |tag| %>
             <%= link_to tag.name, index_show_path(tag.id), class: badge_class %>

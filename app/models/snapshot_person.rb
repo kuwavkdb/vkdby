@@ -5,6 +5,7 @@
 # Table name: snapshot_people
 #
 #  id               :bigint           not null, primary key
+#  extra_profile    :jsonb
 #  inline_history   :text
 #  name_alias       :string
 #  old_person_key   :string
@@ -68,7 +69,45 @@ class SnapshotPerson < ApplicationRecord
     parse_history_string(inline_history)
   end
 
+  # extra_profile（Person未紐付けメンバーの下書きプロフィール）から、Personの新規作成に渡せる
+  # 属性へ変換する（issue #1619）。birthday は "07/12" のような月日のみの文字列を想定し、
+  # Person#birthday（date型、保存時に年はダミー年へ正規化される: Person#normalize_birthday_year）
+  # にそのまま渡せる形にする。パースできない値は安全にスキップし、他の項目には影響させない。
+  def extra_profile_person_attributes
+    profile = extra_profile || {}
+    attrs = {}
+
+    if profile['birthday'].present?
+      parsed = parse_extra_profile_birthday(profile['birthday'])
+      attrs[:birthday] = parsed if parsed
+    end
+    attrs[:birth_year] = profile['birth_year'] if profile['birth_year'].present?
+    attrs[:blood] = profile['blood'] if profile['blood'].present?
+    attrs[:hometown] = profile['hometown'] if profile['hometown'].present?
+
+    attrs
+  end
+
+  # Person未紐付けのこのメンバーを、Personとして独立させる（issue #1596で追加されたcreate_person
+  # アクションが呼ぶ）。name / key / parts / old_history に加え、extra_profile_person_attributes を
+  # 通じて誕生日等の下書き情報も引き継ぐ（issue #1619）。
+  def build_person_for_independence
+    Person.new({ name: person_name, key: person_key,
+                 parts: part == 'unknown' ? [] : [part],
+                 old_history: inline_history }
+                .merge(extra_profile_person_attributes))
+  end
+
   private
+
+  def parse_extra_profile_birthday(value)
+    month, day = value.to_s.split(%r{[/.\-月]}).map(&:to_i)
+    return nil unless month&.between?(1, 12) && day&.between?(1, 31)
+
+    Date.new(Person::DUMMY_BIRTH_YEAR, month, day)
+  rescue ArgumentError
+    nil
+  end
 
   def person_or_name_presence
     return unless person_id.blank? && person_name.blank?

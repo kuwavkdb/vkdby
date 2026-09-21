@@ -44,4 +44,58 @@ class LinkTest < ActiveSupport::TestCase
 
     refute link.twitter_status_url?
   end
+
+  test 'sns_info detects a Twitter profile URL' do
+    link = Link.new(url: 'https://twitter.com/nonameactorsjp')
+
+    assert_equal({ platform: 'Twitter', account: '@nonameactorsjp' }, link.sns_info)
+  end
+
+  test 'sns_info detects an x.com profile URL' do
+    link = Link.new(url: 'https://x.com/nonameactorsjp')
+
+    assert_equal({ platform: 'Twitter', account: '@nonameactorsjp' }, link.sns_info)
+  end
+
+  test 'sns_info detects an Instagram profile URL' do
+    link = Link.new(url: 'https://instagram.com/nonameactorsjp')
+
+    assert_equal({ platform: 'Instagram', account: 'nonameactorsjp' }, link.sns_info)
+  end
+
+  test 'sns_info detects a YouTube channel URL with @handle' do
+    link = Link.new(url: 'https://youtube.com/@nonameactorsjp')
+
+    assert_equal({ platform: 'YouTube', account: 'nonameactorsjp' }, link.sns_info)
+  end
+
+  test 'sns_info detects a YouTube channel URL with /c/ path' do
+    link = Link.new(url: 'https://youtube.com/c/nonameactorsjp')
+
+    assert_equal({ platform: 'YouTube', account: 'nonameactorsjp' }, link.sns_info)
+  end
+
+  test 'sns_info detects a TikTok profile URL' do
+    link = Link.new(url: 'https://tiktok.com/@nonameactorsjp')
+
+    assert_equal({ platform: 'TikTok', account: '@nonameactorsjp' }, link.sns_info)
+  end
+
+  test 'sns_info detects a Spotify artist URL' do
+    link = Link.new(url: 'https://open.spotify.com/artist/1sXDlFi6YNLaPGdCf9oMZR')
+
+    assert_equal({ platform: 'Spotify', account: '1sXDlFi6YNLaPGdCf9oMZR' }, link.sns_info)
+  end
+
+  test 'sns_info detects a Spotify artist URL with locale prefix' do
+    link = Link.new(url: 'https://open.spotify.com/intl-ja/artist/1sXDlFi6YNLaPGdCf9oMZR')
+
+    assert_equal({ platform: 'Spotify', account: '1sXDlFi6YNLaPGdCf9oMZR' }, link.sns_info)
+  end
+
+  test 'sns_info is nil for a non-SNS URL' do
+    link = Link.new(url: 'https://example.com')
+
+    assert_nil link.sns_info
+  end
 end
