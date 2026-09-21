@@ -39,33 +39,21 @@ module Admin
     end
 
     def create_person
-      if @snapshot_person.person_key.blank?
-        return redirect_to edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @unit_snapshot, @snapshot_person),
-                           alert: 'Person Key を設定してから実行してください。'
-      end
+      return redirect_to snapshot_person_path, alert: 'Person Key を設定してから実行してください。' if @snapshot_person.person_key.blank?
+      return redirect_to snapshot_person_path, alert: 'すでにPersonと紐付けられています。' if @snapshot_person.person_id.present?
 
-      if @snapshot_person.person_id.present?
-        return redirect_to edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @unit_snapshot, @snapshot_person),
-                           alert: 'すでにPersonと紐付けられています。'
-      end
-
-      person = Person.new(name: @snapshot_person.person_name, key: @snapshot_person.person_key,
-                          parts: @snapshot_person.part == 'unknown' ? [] : [@snapshot_person.part],
-                          old_history: @snapshot_person.inline_history)
+      person = @snapshot_person.build_person_for_independence
 
       if person.save
         @snapshot_person.update(person_id: person.id)
         record_update_log(person, action: 'create')
         record_update_log(@snapshot_person, action: 'update')
-        redirect_to edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @unit_snapshot, @snapshot_person),
-                    notice: 'Personを新規作成して紐付けました。'
+        redirect_to snapshot_person_path, notice: 'Personを新規作成して紐付けました。'
       else
-        redirect_to edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @unit_snapshot, @snapshot_person),
-                    alert: "Personの作成に失敗しました: #{person.errors.full_messages.join(', ')}"
+        redirect_to snapshot_person_path, alert: "Personの作成に失敗しました: #{person.errors.full_messages.join(', ')}"
       end
     rescue ActiveRecord::RecordNotUnique
-      redirect_to edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @unit_snapshot, @snapshot_person),
-                  alert: 'そのPerson Keyはすでに使用されています。既存のPersonへの紐付けをご確認ください。'
+      redirect_to snapshot_person_path, alert: 'そのPerson Keyはすでに使用されています。既存のPersonへの紐付けをご確認ください。'
     end
 
     def reorder
@@ -104,19 +92,28 @@ module Admin
       @snapshot_person = @unit_snapshot.snapshot_people.find(params[:id])
     end
 
+    def snapshot_person_path
+      edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @unit_snapshot, @snapshot_person)
+    end
+
     def snapshot_person_params
       p = params.require(:snapshot_person).permit(
         :person_id, :person_name, :part, :part_alias,
         :status, :support, :sort_order, :person_key,
-        :inline_history, :sns
+        :inline_history, :sns,
+        extra_profile: %i[birthday birth_year blood hometown]
       )
       p[:person_id] = nil if p[:person_id].to_i.zero?
-      p.delete(:inline_history) if p[:person_id].present?
+      # extra_profile も inline_history と同じく、Person未紐付けのメンバーの下書き情報のため、
+      # 紐付け済みの場合は編集させない（issue #1619）
+      %i[inline_history extra_profile].each { |key| p.delete(key) } if p[:person_id].present?
 
       if p[:sns].is_a?(String)
         p[:sns] = p[:sns].split("\n").map(&:strip).reject(&:blank?)
         p[:sns] = nil if p[:sns].empty?
       end
+
+      p[:extra_profile] = p[:extra_profile].to_h.compact_blank.presence if p[:extra_profile].is_a?(ActionController::Parameters)
 
       p
     end
