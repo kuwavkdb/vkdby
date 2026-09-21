@@ -281,6 +281,23 @@ module Admin
       assert_response :success
     end
 
+    # issue #1616: URLのクエリパラメータで活動時期・公式リンクも事前入力できることを確認する
+    test 'quick_new prefills activity periods and links from query parameters' do
+      get quick_new_admin_units_path, params: {
+        unit: {
+          name: 'Prefilled Band',
+          activity_periods: { '0' => { from: '2010/01/**', to: '', label: '結成時' } },
+          links: { '0' => { text: '公式サイト', url: 'https://example.com/' } }
+        }
+      }
+
+      assert_response :success
+      assert_includes response.body, 'value="2010/01/**"'
+      assert_includes response.body, 'value="結成時"'
+      assert_includes response.body, 'value="公式サイト"'
+      assert_includes response.body, 'value="https://example.com/"'
+    end
+
     # issue #1611: URL経由で渡されたキーが既存Unitと重複している場合、保存前に警告と
     # 重複先の編集画面へのリンクを表示する
     test 'quick_new warns with a link to the existing unit when the prefilled key is already in use' do
@@ -353,6 +370,26 @@ module Admin
       assert_equal %w[Vocalist Guitarist], snapshot.snapshot_people.order(:sort_order).map(&:person_name)
       assert UpdateLog.exists?(loggable: unit, action: 'create')
       assert UpdateLog.exists?(loggable: snapshot, action: 'create')
+    end
+
+    # issue #1616: 活動時期・公式リンクも一括作成できることを確認する
+    test 'quick_create saves activity periods and links along with the unit' do
+      assert_difference('Unit.count' => 1, 'Link.count' => 1) do
+        post quick_create_admin_units_path, params: {
+          unit: {
+            name: 'Band With Links', key: 'band-with-links', unit_type: 'band', status: 'active',
+            activity_periods: { '0' => { from: '2010/01/**', to: '', label: '結成時' } },
+            links: { '0' => { text: '公式サイト', url: 'https://example.com/' } },
+            members: { '0' => { person_name: 'Vocalist', part: 'vocal' } }
+          }
+        }
+      end
+
+      unit = Unit.find_by(key: 'band-with-links')
+      assert_redirected_to edit_admin_unit_path(unit)
+      assert_equal [{ 'from' => '2010/01/**', 'to' => nil, 'label' => '結成時' }], unit.activity_period
+      assert_equal 'https://example.com/', unit.links.sole.url
+      assert_equal '公式サイト', unit.links.sole.text
     end
 
     test 'quick_create rolls back the unit and snapshot when the unit is invalid' do
