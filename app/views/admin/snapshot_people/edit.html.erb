@@ -24,6 +24,13 @@
           名前「<%= @snapshot_person.person_name %>」/
           Key「<%= @snapshot_person.person_key.presence || "未設定" %>」/
           Part「<%= @snapshot_person.part.humanize %>」
+          <% extra_profile = @snapshot_person.extra_profile.presence %>
+          <% if extra_profile %>
+            / 誕生日「<%= extra_profile["birthday"].presence || "未設定" %>」
+            / 生年「<%= extra_profile["birth_year"].presence || "未設定" %>」
+            / 血液型「<%= extra_profile["blood"].presence || "未設定" %>」
+            / 出身地「<%= extra_profile["hometown"].presence || "未設定" %>」
+          <% end %>
         </p>
         <% if @snapshot_person.person_key.blank? %>
           <p class="mt-2 text-sm text-red-600 dark:text-red-400">Person Key を設定してから実行してください。</p>

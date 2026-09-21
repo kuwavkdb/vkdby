@@ -84,6 +84,39 @@ module Admin
       assert_equal "2020/01 加入\n2021/01 脱退", sp.person.old_history
     end
 
+    # issue #1619: extra_profile（誕生日・生年・血液型・出身地の下書き）をPerson独立化時に自動コピーする
+    test 'should carry over extra_profile to person when creating person' do
+      sp = @snapshot.snapshot_people.create!(
+        person_name: 'Profile Guy', part: 'vocal', person_key: 'profile_test_key',
+        extra_profile: { 'birthday' => '7/12', 'birth_year' => 1990, 'blood' => 'AB', 'hometown' => '東京都' }
+      )
+
+      assert_difference('Person.count', 1) do
+        post create_person_admin_unit_unit_snapshot_snapshot_person_path(@unit, @snapshot, sp)
+      end
+
+      sp.reload
+      assert_equal Date.new(Person::DUMMY_BIRTH_YEAR, 7, 12), sp.person.birthday
+      assert_equal 1990, sp.person.birth_year
+      assert_equal 'AB', sp.person.blood
+      assert_equal '東京都', sp.person.hometown
+    end
+
+    test 'should skip unparsable extra_profile birthday without failing person creation' do
+      sp = @snapshot.snapshot_people.create!(
+        person_name: 'Bad Birthday Guy', part: 'vocal', person_key: 'bad_birthday_test_key',
+        extra_profile: { 'birthday' => '不明', 'blood' => 'O' }
+      )
+
+      assert_difference('Person.count', 1) do
+        post create_person_admin_unit_unit_snapshot_snapshot_person_path(@unit, @snapshot, sp)
+      end
+
+      sp.reload
+      assert_nil sp.person.birthday
+      assert_equal 'O', sp.person.blood
+    end
+
     test 'should not create person when person_key is blank' do
       sp = @snapshot.snapshot_people.create!(person_name: 'No Key Guy', part: 'vocal')
 
@@ -130,6 +163,38 @@ module Admin
       assert_nil sp.reload.inline_history
     end
 
+    test 'should update extra_profile when person is not linked' do
+      sp = snapshot_people(:three)
+      assert_nil sp.person_id
+
+      patch admin_unit_unit_snapshot_snapshot_person_path(@unit, sp.unit_snapshot, sp), params: {
+        snapshot_person: {
+          part: sp.part, sort_order: sp.sort_order,
+          extra_profile: { birthday: '3/4', birth_year: '1995', blood: 'B', hometown: '大阪府' }
+        }
+      }
+
+      sp.reload
+      assert_equal(
+        { 'birthday' => '3/4', 'birth_year' => '1995', 'blood' => 'B', 'hometown' => '大阪府' },
+        sp.extra_profile
+      )
+    end
+
+    test 'should not update extra_profile when person is linked' do
+      sp = snapshot_people(:one)
+      assert sp.person_id.present?
+
+      patch admin_unit_unit_snapshot_snapshot_person_path(@unit, sp.unit_snapshot, sp), params: {
+        snapshot_person: {
+          part: sp.part, sort_order: sp.sort_order,
+          extra_profile: { birthday: '3/4', blood: 'B' }
+        }
+      }
+
+      assert_nil sp.reload.extra_profile
+    end
+
     test 'should link to existing person when person_key is already in use' do
       Person.create!(name: 'Existing', key: 'dup_key')
       sp = @snapshot.snapshot_people.create!(person_name: 'Dup Guy', part: 'vocal')
@@ -164,6 +229,41 @@ module Admin
       assert_response :success
       assert_select 'span', text: /未紐付け/
       assert_select 'textarea[name=?]:not([readonly])', 'snapshot_person[inline_history]'
+    end
+
+    test 'renders edit form with editable extra_profile fields when person is not linked' do
+      sp = snapshot_people(:three)
+      assert_nil sp.person_id
+
+      get edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, sp.unit_snapshot, sp)
+
+      assert_response :success
+      assert_select 'input[name=?]:not([disabled])', 'snapshot_person[extra_profile][birthday]'
+      assert_select 'input[name=?]:not([disabled])', 'snapshot_person[extra_profile][birth_year]'
+      assert_select 'input[name=?]:not([disabled])', 'snapshot_person[extra_profile][hometown]'
+    end
+
+    test 'renders edit form with disabled extra_profile fields when person is linked' do
+      sp = snapshot_people(:one)
+      assert sp.person_id.present?
+
+      get edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, sp.unit_snapshot, sp)
+
+      assert_response :success
+      assert_select 'input[name=?][disabled]', 'snapshot_person[extra_profile][birthday]'
+    end
+
+    test 'shows extra_profile in the person creation confirmation message' do
+      sp = @snapshot.snapshot_people.create!(
+        person_name: 'Confirm Guy', part: 'vocal', person_key: 'confirm_test_key',
+        extra_profile: { 'birthday' => '7/12', 'hometown' => '東京都' }
+      )
+
+      get edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, sp.unit_snapshot, sp)
+
+      assert_response :success
+      assert_includes response.body, '誕生日「7/12」'
+      assert_includes response.body, '出身地「東京都」'
     end
 
     test 'renders edit form with single unified name field' do
