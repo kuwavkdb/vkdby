@@ -261,16 +261,34 @@ module Admin
     end
 
     def quick_unit_params
-      params.require(:unit).permit(:name, :key, :unit_type, :status)
+      quick_rename_nested_attributes_keys!
+      params.require(:unit).permit(:name, :key, :unit_type, :status,
+                                   activity_periods_attributes: %i[from to label],
+                                   links_attributes: %i[text url])
     end
 
-    # quick_new（GET）用。URL経由の事前入力に対応する（issue #1611）。quick_unit_params と異なり
+    # quick_new（GET）用。URL経由の事前入力に対応する（issue #1611, #1616）。quick_unit_params と異なり
     # params[:unit] が無い初期表示でも動くよう require ではなく緩く読み、enum に無い値は無視する。
     def quick_unit_params_for_new
-      permitted = params[:unit]&.permit(:name, :key, :unit_type, :status) || {}
+      quick_rename_nested_attributes_keys!
+      permitted = params[:unit]&.permit(:name, :key, :unit_type, :status,
+                                        activity_periods_attributes: %i[from to label],
+                                        links_attributes: %i[text url]) || {}
       permitted.delete(:unit_type) unless Unit.unit_types.key?(permitted[:unit_type])
       permitted.delete(:status) unless Unit.statuses.key?(permitted[:status])
       permitted
+    end
+
+    # unit-url スキルが生成する URL は `unit[members]` に揃えて `unit[activity_periods]` /
+    # `unit[links]` という短いキー名を使う（issue #1616）。一方 accepts_nested_attributes_for が
+    # 期待するキーは `activity_periods_attributes` / `links_attributes` なので、ここで読み替える。
+    def quick_rename_nested_attributes_keys!
+      return if params[:unit].blank?
+
+      %w[activity_periods links].each do |key|
+        value = params[:unit].delete(key)
+        params[:unit]["#{key}_attributes"] = value if value.present?
+      end
     end
 
     # quick_new（GET）用。空行を除去する quick_member_rows と異なり、入力欄の行として
