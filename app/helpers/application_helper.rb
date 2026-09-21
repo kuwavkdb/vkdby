@@ -465,17 +465,18 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # YouTube動画IDを指定して埋め込みプレーヤーを表示する（例: {{youtube C-PqwPsrDd0}}）。
   # 動画IDはYouTube仕様上、英数字・"-"・"_"の11文字固定。それ以外の入力（URL丸ごと等）は
   # iframeのsrc属性に渡す値として想定外のため、埋め込まず何も出力しない。
-  # 幅は上限なしとし、高さのみ360pxに固定する（issue #1398。Wiki側の
-  # WikiLinkHelper#render_youtube_embedと表示を揃える）。aspect-video（16:9）と
-  # h-[360px]の組み合わせにより、幅はh-0/width:autoの比率計算で自動算出される
+  # 最大幅640pxとし、16:9のアスペクト比を保ちながら画面幅に応じて縮小する
+  # （issue #1636。モバイルでのはみ出しを防ぐため、高さ固定ではなく
+  # pb-[56.25%]/h-0のパディングトリックで幅基準のレスポンシブにする。Wiki側の
+  # WikiLinkHelper#render_youtube_embedと表示を揃える）
   def expand_youtube_plugin(args, _sectionable, placeholders, _open_tags)
     # 動画IDに加え、動画URL（watch/youtu.be/shorts）も許容する（issue #1398）
     video_id = WikiLinkHelper.extract_youtube_video_id(args.strip)
     return '' unless video_id.match?(/\A[\w-]{11}\z/)
 
     html = <<~HTML.chomp
-      <div class="flex justify-center my-4">
-        <iframe src="https://www.youtube.com/embed/#{video_id}" title="YouTube動画" loading="lazy" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen class="aspect-video h-[360px] rounded-xl border-0"></iframe>
+      <div class="relative w-full max-w-[640px] mx-auto my-4 pb-[56.25%] h-0 overflow-hidden rounded-xl">
+        <iframe src="https://www.youtube.com/embed/#{video_id}" title="YouTube動画" loading="lazy" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen class="absolute top-0 left-0 w-full h-full border-0"></iframe>
       </div>
     HTML
     register_plugin_placeholder(placeholders, html)

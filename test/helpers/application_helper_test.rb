@@ -260,10 +260,10 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_no_match(/<iframe/, result)
   end
 
-  test '{{youtube 動画ID}}の埋め込みは高さが360pxに固定される（issue #1398）' do
+  test '{{youtube 動画ID}}の埋め込みは最大幅640px・16:9のアスペクト比で画面幅に応じて縮小する（issue #1636）' do
     result = markdown('{{youtube C-PqwPsrDd0}}')
 
-    assert_match(/class="aspect-video h-\[360px\][^"]*"/, result)
+    assert_match(/class="relative w-full max-w-\[640px\] mx-auto my-4 pb-\[56\.25%\] h-0[^"]*"/, result)
   end
 
   test '{{youtube 動画URL}}でwatch形式のURLからも動画が埋め込まれる（issue #1398）' do

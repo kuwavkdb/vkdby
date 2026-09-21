@@ -88,11 +88,11 @@ class WikiLinkHelperTest < ActionView::TestCase
     assert_match(%r{youtube\.com/embed/dQw4w9WgXcQ}, result)
   end
 
-  test 'YouTube embedには高さの上限（360px、幅は上限なし）が指定される' do
+  test 'YouTube embedには最大幅（640px）と16:9のアスペクト比が指定される（モバイルではみ出さないよう幅基準でレスポンシブにする、issue #1636）' do
     result = format_wiki_content('{{youtube2 dQw4w9WgXcQ}}')
 
-    assert_match(/h-\[360px\]/, result)
-    assert_no_match(/max-w-\[\d+px\]/, result)
+    assert_match(/max-w-\[640px\]/, result)
+    assert_match(/pb-\[56\.25%\]/, result)
   end
 
   test '文中の一部として書かれたYouTube URLはembedされずリンクとして扱われる' do

@@ -347,16 +347,17 @@ module WikiLinkHelper # rubocop:disable Metrics/ModuleLength
     link_to(display.html_safe, '#', class: 'text-indigo-600 hover:text-indigo-800 dark:text-amber-400 dark:hover:text-amber-300 underline')
   end
 
-  # YouTube動画をembed表示する。幅は上限なしとし、高さのみ360pxに固定する。
-  # aspect-video（16:9）とh-[360px]の組み合わせにより、幅はh-0/width:autoの
-  # 比率計算で640px相当に自動算出される（widthは指定しない）
+  # YouTube動画をembed表示する。最大幅640pxとし、16:9のアスペクト比を保ちながら
+  # 画面幅に応じて縮小する（issue #1636。モバイルでのはみ出しを防ぐため、
+  # 高さ固定ではなくpb-[56.25%]/h-0のパディングトリックで幅基準のレスポンシブにする。
+  # YoutubeEmbedComponentと表示を揃える）
   def render_youtube_embed(video_id)
-    tag.div(class: 'flex justify-center my-4') do
+    tag.div(class: 'relative w-full max-w-[640px] mx-auto my-4 pb-[56.25%] h-0 overflow-hidden rounded-xl') do
       tag.iframe(src: "https://www.youtube.com/embed/#{video_id}",
                  frameborder: '0',
                  allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
                  allowfullscreen: true,
-                 class: 'aspect-video h-[360px] rounded-xl border-0')
+                 class: 'absolute top-0 left-0 w-full h-full border-0')
     end
   end
 
