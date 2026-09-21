@@ -251,6 +251,80 @@ module Admin
       assert_includes response.body, 'Unit簡単登録'
     end
 
+    # issue #1611: URLのクエリパラメータで事前入力できることを確認する
+    test 'quick_new prefills the form from query parameters' do
+      get quick_new_admin_units_path, params: {
+        unit: {
+          name: 'Prefilled Band', key: 'prefilled-band', unit_type: 'unit', status: 'freeze',
+          snapshot_date: '2024-04-01', snapshot_label: '結成時',
+          members: {
+            '0' => { person_name: 'Vocalist', part: 'vocal' },
+            '1' => { person_name: 'Guitarist', part: 'guitar' }
+          }
+        }
+      }
+
+      assert_response :success
+      assert_includes response.body, 'value="Prefilled Band"'
+      assert_includes response.body, 'value="prefilled-band"'
+      assert_includes response.body, 'value="2024-04-01"'
+      assert_includes response.body, 'value="結成時"'
+      assert_includes response.body, 'value="Vocalist"'
+      assert_includes response.body, 'value="Guitarist"'
+    end
+
+    test 'quick_new ignores unknown enum values from query parameters' do
+      get quick_new_admin_units_path, params: {
+        unit: { unit_type: 'not_a_real_type', status: 'not_a_real_status' }
+      }
+
+      assert_response :success
+    end
+
+    # issue #1611: URL経由で渡されたキーが既存Unitと重複している場合、保存前に警告と
+    # 重複先の編集画面へのリンクを表示する
+    test 'quick_new warns with a link to the existing unit when the prefilled key is already in use' do
+      get quick_new_admin_units_path, params: { unit: { key: @unit.key } }
+
+      assert_response :success
+      assert_includes response.body, 'このキーはすでに'
+      assert_includes response.body, @unit.name
+      assert_includes response.body, edit_admin_unit_path(@unit)
+    end
+
+    test 'quick_new detects a duplicated key case-insensitively' do
+      get quick_new_admin_units_path, params: { unit: { key: @unit.key.upcase } }
+
+      assert_response :success
+      assert_includes response.body, 'このキーはすでに'
+      assert_includes response.body, edit_admin_unit_path(@unit)
+    end
+
+    test 'quick_new does not warn when the key is unique' do
+      get quick_new_admin_units_path, params: { unit: { key: 'brand-new-unique-key' } }
+
+      assert_response :success
+      assert_not_includes response.body, 'このキーはすでに'
+    end
+
+    test 'quick_new does not warn when no key is given' do
+      get quick_new_admin_units_path
+
+      assert_response :success
+      assert_not_includes response.body, 'このキーはすでに'
+    end
+
+    test 'quick_new warns and links to the unit even when the duplicated key belongs to a discarded unit' do
+      @unit.discard
+
+      get quick_new_admin_units_path, params: { unit: { key: @unit.key } }
+
+      assert_response :success
+      assert_includes response.body, 'このキーはすでに'
+      assert_includes response.body, '（削除済み）'
+      assert_includes response.body, edit_admin_unit_path(@unit)
+    end
+
     # issue #1596: バンド名・メンバー名をまとめて入力し、Unit・現在のラインナップ用のUnitSnapshot・
     # SnapshotPersonを1回のsubmitで一括作成できることを確認する
     test 'quick_create creates the unit, a current snapshot, and its members in one submission' do
