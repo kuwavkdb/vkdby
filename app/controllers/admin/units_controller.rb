@@ -60,8 +60,11 @@ module Admin
     # SnapshotPerson を1回のsubmitで一括作成する簡易フォーム（issue #1596）。
     # データ構造・既存フローには手を加えず、入り口を追加するのみ。
     def quick_new
-      @unit = Unit.new
-      @member_rows = QUICK_CREATE_DEFAULT_PARTS.map { |part| OpenStruct.new(person_name: '', part: part) }
+      @unit = Unit.new(quick_unit_params_for_new)
+      @snapshot_date_prefill = params.dig(:unit, :snapshot_date).presence
+      @snapshot_label_prefill = params.dig(:unit, :snapshot_label).presence
+      @member_rows = quick_member_rows_for_new
+      @duplicated_unit = Unit.with_discarded.find_by('key ILIKE ?', @unit.key) if @unit.key.present?
     end
 
     def quick_create
@@ -259,6 +262,29 @@ module Admin
 
     def quick_unit_params
       params.require(:unit).permit(:name, :key, :unit_type, :status)
+    end
+
+    # quick_new（GET）用。URL経由の事前入力に対応する（issue #1611）。quick_unit_params と異なり
+    # params[:unit] が無い初期表示でも動くよう require ではなく緩く読み、enum に無い値は無視する。
+    def quick_unit_params_for_new
+      permitted = params[:unit]&.permit(:name, :key, :unit_type, :status) || {}
+      permitted.delete(:unit_type) unless Unit.unit_types.key?(permitted[:unit_type])
+      permitted.delete(:status) unless Unit.statuses.key?(permitted[:status])
+      permitted
+    end
+
+    # quick_new（GET）用。空行を除去する quick_member_rows と異なり、入力欄の行として
+    # そのまま表示するため空行も保持する。part が enum に無い値は無視する。
+    def quick_member_rows_for_new
+      raw_rows = params.dig(:unit, :members)
+      return QUICK_CREATE_DEFAULT_PARTS.map { |part| OpenStruct.new(person_name: '', part: part) } if raw_rows.blank?
+
+      raw_rows.values.map do |row|
+        permitted = row.permit(:person_name, :part)
+        part = permitted[:part]
+        part = nil unless SnapshotPerson.parts.key?(part)
+        OpenStruct.new(person_name: permitted[:person_name].to_s, part: part)
+      end
     end
 
     def quick_snapshot_params
