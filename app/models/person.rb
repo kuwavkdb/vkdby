@@ -206,7 +206,7 @@ class Person < ApplicationRecord
   end
 
   def expire_sidebar_cache
-    Rails.cache.delete('sidebar/recently_updated')
+    Rails.cache.delete(SidebarLoadable::RECENTLY_UPDATED_CACHE_KEY)
   end
 
   def expire_filter_counts_cache

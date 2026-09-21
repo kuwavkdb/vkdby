@@ -78,7 +78,7 @@ class CustomPage < ApplicationRecord
   def expire_cache
     # 現時点ではページ固有のキャッシュはないが、将来的な拡張に備えたフック
     # サイドバーキャッシュも念のため削除
-    Rails.cache.delete('sidebar/recently_updated')
+    Rails.cache.delete(SidebarLoadable::RECENTLY_UPDATED_CACHE_KEY)
   end
 
   def rebuild_include_relations
@@ -133,7 +133,7 @@ class CustomPage < ApplicationRecord
   end
 
   def expire_sidebar_cache
-    Rails.cache.delete('sidebar/recently_updated')
+    Rails.cache.delete(SidebarLoadable::RECENTLY_UPDATED_CACHE_KEY)
   end
 
   def expire_blocked_ips_cache
