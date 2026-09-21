@@ -32,8 +32,19 @@
 
         <div>
           <%= form.label :key, "キー", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
-          <%= form.text_field :key, required: true, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">プロフィールページのURL（/profile/キー）に使われます。半角英数字推奨。</p>
+          <%= form.text_field :key, required: true,
+              "aria-describedby": @duplicated_unit ? "unit_key_duplicated_warning" : nil,
+              class: "mt-1 block w-full rounded-md border shadow-sm px-2 py-2 text-base dark:bg-gray-700 dark:text-white #{@duplicated_unit ? 'border-red-400 focus:border-red-500 focus:ring-red-500 dark:border-red-500' : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600'}" %>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">プロフィールページのURL（/キー）に使われます。半角英数字推奨。</p>
+          <% if @duplicated_unit %>
+            <p id="unit_key_duplicated_warning" class="mt-1 text-xs font-semibold text-red-600 dark:text-red-400">
+              このキーはすでに
+              <%= link_to "「#{@duplicated_unit.name}」#{@duplicated_unit.discarded? ? '（削除済み）' : ''}",
+                  edit_admin_unit_path(@duplicated_unit),
+                  class: "underline hover:text-red-800 dark:hover:text-red-300", target: "_blank", rel: "noopener" %>
+              で使われています（重複した状態のまま保存しようとするとエラーになります）。別のキーに変更してください。
+            </p>
+          <% end %>
         </div>
 
         <div>
@@ -41,7 +52,7 @@
           <div class="mt-2 space-x-4">
             <% Unit.unit_types.keys.each do |type| %>
               <label class="inline-flex items-center">
-                <%= form.radio_button :unit_type, type, checked: type == "band", class: "form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
+                <%= form.radio_button :unit_type, type, checked: type == (@unit.unit_type || "band"), class: "form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
                 <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"><%= type.humanize %></span>
               </label>
             <% end %>
@@ -68,7 +79,7 @@
             <div>
               <%= label_tag "unit_snapshot_date", "日付（任意）", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
               <div class="flex gap-2">
-                <%= text_field_tag "unit[snapshot_date]", nil, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white", data: { date_picker_target: "input", action: "input->date-picker#syncPickerFromInput" } %>
+                <%= text_field_tag "unit[snapshot_date]", @snapshot_date_prefill, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white", data: { date_picker_target: "input", action: "input->date-picker#syncPickerFromInput" } %>
                 <button type="button" data-action="click->date-picker#open" aria-label="カレンダーから日付を選択" title="カレンダーから日付を選択" class="mt-1 flex w-11 shrink-0 items-center justify-center rounded-md border border-gray-300 shadow-sm hover:bg-gray-50 focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-500 dark:text-gray-300" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
@@ -79,7 +90,7 @@
             </div>
             <div>
               <%= label_tag "unit_snapshot_label", "ラベル（任意）", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
-              <%= text_field_tag "unit[snapshot_label]", nil, placeholder: "例: 結成時", class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+              <%= text_field_tag "unit[snapshot_label]", @snapshot_label_prefill, placeholder: "例: 結成時", class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
             </div>
           </div>
 
