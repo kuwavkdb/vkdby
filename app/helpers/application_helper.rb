@@ -662,7 +662,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # 視認性が落ちるため（issue #1510 レビューで指摘）、あえて無彩色にして背景色ごとの
   # くっきりさを揃えている。
   ENVIRONMENT_THEMES = {
-    production: { badge: nil, bg: 'bg-amber-500' }, # items/show等の既存テーマカラーに合わせる
+    production: { badge: nil, bg: 'bg-amber-400' }, # トップページのロゴ画像背景色(#FABB0D)に近づけた（amber-400が最も近似）
     development: { badge: 'DEV', bg: 'bg-emerald-500' },
     preview: { badge: 'PREVIEW', bg: 'bg-fuchsia-400' }
   }.freeze
