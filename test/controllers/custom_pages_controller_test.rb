@@ -149,7 +149,7 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     get custom_page_path(key: page.key)
 
     assert_response :success
-    assert_not_includes response.body, 'Management Information'
+    assert_not_includes response.body, '管理情報'
   end
 
   test 'sidebar shows an item released within 5 days of today' do
@@ -215,7 +215,7 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     get custom_page_path(key: page.key)
 
     assert_response :success
-    assert_includes response.body, 'Management Information'
+    assert_includes response.body, '管理情報'
     assert_includes response.body, page.id.to_s
     assert_includes response.body, page.key
     assert_includes response.body,
@@ -229,7 +229,7 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     get custom_page_path(key: page.key)
 
     assert_response :success
-    assert_includes response.body, 'Last updated'
+    assert_includes response.body, '最終更新'
   end
 
   test 'root page hides the Last updated and Management Information footer even for a super_operator (issue #1383)' do
@@ -239,8 +239,8 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
-    assert_not_includes response.body, 'Last updated'
-    assert_not_includes response.body, 'Management Information'
+    assert_not_includes response.body, '最終更新'
+    assert_not_includes response.body, '管理情報'
   end
 
   test '/pages/index shows the Last updated footer like a normal custom page (issue #1383)' do
@@ -249,7 +249,7 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     get custom_page_path(key: 'index')
 
     assert_response :success
-    assert_includes response.body, 'Last updated'
+    assert_includes response.body, '最終更新'
   end
 
   test '<title> does not duplicate the site name when the page title already contains it (issue #1252)' do
