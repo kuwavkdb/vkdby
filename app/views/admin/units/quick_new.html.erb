@@ -12,9 +12,9 @@
       詳細な設定は保存後に編集画面から行えます。
     </p>
 
-    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6" data-controller="quick-unit-yaml-paste">
-      <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">YAMLから一括入力（任意）</h2>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+    <details class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6" data-controller="quick-unit-yaml-paste">
+      <summary class="text-sm font-semibold text-gray-900 dark:text-gray-100 cursor-pointer select-none">YAMLから一括入力（任意）</summary>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 mb-3">
         unit-url スキル等が出力したYAMLを貼り付けて「フォームに反映」を押すと、下のフォームの各欄に自動入力されます。
         URLのパラメーターと違って長さの制限を受けないため、メンバーが多い場合や誕生日等の補足情報もまとめて渡せます。
         あくまで入力の下書きで、反映後の内容は保存前に画面で確認・修正してください。
@@ -33,7 +33,7 @@
         <p data-quick-unit-yaml-paste-target="error" class="text-xs text-red-600 dark:text-red-400 hidden" role="alert"></p>
         <p data-quick-unit-yaml-paste-target="success" class="text-xs text-green-600 dark:text-green-400 hidden" role="status"></p>
       </div>
-    </div>
+    </details>
 
     <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6" data-controller="quick-unit-form" data-quick-unit-form-part-options-value="<%= SnapshotPerson.parts.keys.to_json %>">
       <%= form_with model: @unit, url: quick_create_admin_units_path, class: "space-y-6" do |form| %>
