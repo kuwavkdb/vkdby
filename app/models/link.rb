@@ -50,6 +50,10 @@ class Link < ApplicationRecord
       { platform: 'Instagram', account: ::Regexp.last_match(1) }
     when %r{youtube\.com/@([^/?]+)}, %r{youtube\.com/c/([^/?]+)}
       { platform: 'YouTube', account: ::Regexp.last_match(1) }
+    when %r{tiktok\.com/@([^/?]+)}
+      { platform: 'TikTok', account: "@#{::Regexp.last_match(1)}" }
+    when %r{open\.spotify\.com/(?:intl-[a-zA-Z-]+/)?artist/([a-zA-Z0-9]+)}
+      { platform: 'Spotify', account: ::Regexp.last_match(1) }
     end
   end
 
