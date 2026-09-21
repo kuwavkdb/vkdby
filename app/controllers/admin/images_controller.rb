@@ -17,7 +17,7 @@ module Admin
         scope = scope.where(blob_id: blob_ids)
       end
 
-      @pagy, @attachments = pagy(scope)
+      @pagy, @attachments = pagy(scope, limit: 15)
     end
 
     def show

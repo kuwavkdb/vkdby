@@ -5,12 +5,22 @@ require 'digest'
 
 module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   class ExternalAwareHtmlRenderer < Redcarpet::Render::HTML
+    # variantのURL生成（rails_representation_path）に使う。ActionView::Base外の
+    # クラスなので、ビューのURLヘルパーを個別にincludeする必要がある。
+    include Rails.application.routes.url_helpers
+
     # Active StorageのBlobリダイレクト/プロキシURL（rails_blob_path等が生成する
     # /rails/active_storage/blobs/redirect/:signed_id/:filename 形式）からsigned_id部分を
     # 抜き出すためのパターン。管理画面（Admin::ImagesController#show）で発行されるURLを
     # 本文中に貼り付ける運用のため、markdown内画像はほぼ必ずこの形式になる。
     IMAGE_BLOB_URL_PATTERN = %r{/rails/active_storage/blobs/(?:redirect|proxy)/([^/?]+)}
     IMAGE_DIMENSIONS_CACHE_TTL = 7.days
+
+    # 本文（wiki-content）の表示幅はページ側のレイアウトに依存するが、実際にこれ以上の
+    # 幅で表示されることはないため、これを上限にvariantでリサイズする（issue #1632）。
+    # Retina等の高DPR環境でも十分な解像度を確保しつつ、管理画面からそのまま貼り付けられる
+    # 原寸画像（スマホ撮影の数MB画像等）をそのまま配信しないようにする。
+    MARKDOWN_IMAGE_MAX_WIDTH = 1200
 
     # prioritize_first_image: 本文中最初に出現する画像にfetchpriority="high"を付与するか
     # （LCP対策、issue #1215）。ページ内で複数箇所のmarkdownを描画する場合に全箇所で
@@ -38,11 +48,14 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     # Redcarpetのデフォルト実装(html.c#rndr_image)を踏襲しつつ、
     # width/height（Active Storageのblobメタデータから判明する場合）とfetchpriorityを追加する
     # （issue #1215: markdown本文内画像のwidth/height未指定によるCLS・LCP悪化）。
+    # 表示元URLもMARKDOWN_IMAGE_MAX_WIDTHを上限にリサイズしたvariantのURLに差し替える
+    # （issue #1632: 管理画面から貼り付けられた原寸画像をそのまま配信すると重い）。
     def image(link, title, alt_text)
-      safe_link = CGI.escapeHTML(link.to_s)
+      meta = image_meta_for(link)
+      safe_link = CGI.escapeHTML(meta[:src] || link.to_s)
       alt_attr = CGI.escapeHTML(alt_text.to_s)
       title_attr = title.present? ? " title=\"#{CGI.escapeHTML(title)}\"" : ''
-      "<img src=\"#{safe_link}\" alt=\"#{alt_attr}\"#{title_attr}#{dimension_attrs(link)}#{fetchpriority_attr}>"
+      "<img src=\"#{safe_link}\" alt=\"#{alt_attr}\"#{title_attr}#{dimension_attrs(meta)}#{fetchpriority_attr}>"
     end
 
     private
@@ -56,16 +69,18 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
       true
     end
 
-    def dimension_attrs(link)
-      width, height = image_dimensions_for(link)
+    def dimension_attrs(meta)
+      width = meta[:width]
+      height = meta[:height]
       return '' unless width.present? && height.present?
 
       " width=\"#{width}\" height=\"#{height}\""
     end
 
     # Active Storageのblobリダイレクト/プロキシURLからsigned_idを取り出し、対応するblobの
-    # メタデータ（width/height）を引く。外部URLの画像や、解析が行われていない
-    # （metadataにwidth/heightが記録されていない）blobの場合はnilを返し、
+    # メタデータ（width/height）と、表示に使うsrc（MARKDOWN_IMAGE_MAX_WIDTHを超える場合は
+    # variantのURL、それ以外は元URLのまま）をまとめて引く。外部URLの画像や、解析が行われて
+    # いない（metadataにwidth/heightが記録されていない）blobの場合はwidth/heightにnilを返し、
     # 呼び出し側はwidth/height属性を出力しない（ベストエフォート）。
     # 見つかった場合のみsigned_idごとにRails.cacheへ結果をキャッシュする（画像が
     # 差し替えられた場合はblob自体・signed_idが変わるため自然に無効化される。issue #1215）。
@@ -73,19 +88,37 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     # その後の解析（rakeタスクや新規アップロード時の非同期解析）でメタデータが埋まっても
     # 「無し」という結果がTTL分（最大7日）居座り続けページに反映されない
     # （実運用でblobをrakeタスクで解析済みにした後もwidth/heightが出ない事象で発覚）。
-    def image_dimensions_for(link)
+    def image_meta_for(link)
       match = link.to_s.match(IMAGE_BLOB_URL_PATTERN)
-      return nil unless match
+      return {} unless match
 
-      Rails.cache.fetch(['markdown_image_dimensions', match[1]], expires_in: IMAGE_DIMENSIONS_CACHE_TTL,
-                                                                 skip_nil: true) do
+      Rails.cache.fetch(['markdown_image_meta', match[1], MARKDOWN_IMAGE_MAX_WIDTH], expires_in: IMAGE_DIMENSIONS_CACHE_TTL,
+                                                                                     skip_nil: true) do
         blob = ActiveStorage::Blob.find_signed(match[1])
         width = blob&.metadata&.[]('width')
         height = blob&.metadata&.[]('height')
-        width.present? && height.present? ? [width, height] : nil
-      end
+        next nil unless width.present? && height.present?
+
+        { width:, height:, src: resized_src_for(blob, width, link) }
+      end || {}
     rescue StandardError
-      nil
+      {}
+    end
+
+    # 元画像の幅がMARKDOWN_IMAGE_MAX_WIDTHを超える場合のみvariant URLを生成する
+    # （それ以下ならアップスケールになってしまうため元URLのまま配信する）。
+    # blobがvariant生成不可（非対応フォーマット等）の場合は元URLにフォールバックする。
+    def resized_src_for(blob, width, original_link)
+      return original_link.to_s if width.to_i <= MARKDOWN_IMAGE_MAX_WIDTH
+      return original_link.to_s unless blob.representable?
+
+      # .processed.urlではなくrails_representation_pathを使う: 前者はストレージ
+      # サービスへの署名付き直リンクを生成し、config.active_storage.resolve_model_to_route
+      # = :rails_storage_proxy（issue #1241）の意図に反してしまう。variantも他の
+      # Active Storage URL同様アプリ経由のproxy URLで配信する。
+      rails_representation_path(blob.variant(resize_to_limit: [MARKDOWN_IMAGE_MAX_WIDTH, nil]), only_path: true)
+    rescue StandardError
+      original_link.to_s
     end
 
     def fetchpriority_attr
