@@ -24,7 +24,7 @@
       <% @attachments.each do |attachment| %>
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden flex flex-col">
           <%= link_to admin_image_path(attachment), class: "aspect-square bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden block hover:opacity-80 transition-opacity" do %>
-            <%= image_tag url_for(attachment),
+            <%= image_tag admin_image_thumbnail_source(attachment),
                   alt: attachment.blob.filename.to_s,
                   class: "w-full h-full object-cover",
                   loading: "lazy" %>
