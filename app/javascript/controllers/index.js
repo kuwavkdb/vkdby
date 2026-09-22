@@ -67,6 +67,9 @@ application.register("toggle", ToggleController)
 import UnitGraphController from "controllers/unit_graph_controller"
 application.register("unit-graph", UnitGraphController)
 
+import UnitLinkInsertController from "controllers/unit_link_insert_controller"
+application.register("unit-link-insert", UnitLinkInsertController)
+
 import UnitSelectController from "controllers/unit_select_controller"
 application.register("unit-select", UnitSelectController)
 
