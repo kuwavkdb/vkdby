@@ -162,15 +162,17 @@ export default class extends Controller {
 
   insertLink(name, key) {
     const textarea = this.textareaTarget
-    const linkText = `[${name}](/${key})`
+    // 経歴は「→」区切りのタイムライン形式のため、新しい活動項目として
+    // 挿入されるよう常に「→ 」を付ける。
+    const linkText = `→ [${name}](/${key})`
 
     let insertion
     let position
     if (this.savedPosition === null) {
-      // カーソル位置が不明（一度もフォーカスされていない）な場合は、既存の
-      // 経歴（→区切りのタイムライン）に新しい項目を追加する形式で末尾に挿入する。
+      // カーソル位置が不明（一度もフォーカスされていない）な場合は、末尾に
+      // 改行してから追加する。
       const needsNewline = textarea.value.length > 0 && !textarea.value.endsWith('\n')
-      insertion = `${needsNewline ? '\n' : ''}→ ${linkText}`
+      insertion = `${needsNewline ? '\n' : ''}${linkText}`
       position = textarea.value.length
     } else {
       insertion = linkText
