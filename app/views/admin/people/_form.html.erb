@@ -190,9 +190,31 @@
       </div>
     </div>
 
-    <div class="mb-6 break-inside-avoid">
-      <%= form.label :old_history, "経歴（旧Wiki形式）", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
-      <%= form.text_area :old_history, rows: 14, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-sm font-mono dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <div class="mb-6 break-inside-avoid" data-controller="unit-link-insert" data-unit-link-insert-url-value="<%= search_admin_units_path %>">
+      <div class="flex items-center justify-between gap-2 flex-wrap">
+        <%= form.label :old_history, "経歴（旧Wiki形式）", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+        <button type="button"
+                data-action="click->unit-link-insert#toggle"
+                class="inline-flex items-center rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600">
+          ユニットへのリンクを挿入
+        </button>
+      </div>
+
+      <div data-unit-link-insert-target="panel" class="hidden relative mt-2">
+        <label for="person_old_history_unit_search" class="sr-only">ユニット名で検索</label>
+        <input type="text"
+               id="person_old_history_unit_search"
+               placeholder="ユニット名で検索..."
+               autocomplete="off"
+               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+               data-unit-link-insert-target="input"
+               data-action="input->unit-link-insert#search keydown->unit-link-insert#onKeydown">
+        <div data-unit-link-insert-target="results"
+             class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 hidden max-h-60 overflow-y-auto"></div>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">2文字以上入力すると候補が表示されます。選択すると経歴欄のカーソル位置（未フォーカス時は末尾）にリンクが挿入されます。</p>
+      </div>
+
+      <%= form.text_area :old_history, rows: 14, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-sm font-mono dark:bg-gray-700 dark:border-gray-600 dark:text-white", data: { unit_link_insert_target: "textarea", action: "blur->unit-link-insert#rememberPosition" } %>
       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Wiki形式の経歴テキスト</p>
     </div>
 
