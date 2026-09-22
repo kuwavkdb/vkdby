@@ -3,7 +3,7 @@
 require 'test_helper'
 
 module Admin
-  class CustomPagesControllerTest < ActionDispatch::IntegrationTest
+  class CustomPagesControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
     setup do
       post login_path, params: { email: users(:one).email, password: 'password' }
     end
