@@ -8,16 +8,17 @@ module LoggableLinkChanges
   def record_link_changes(unit, pre_link_ids)
     unit.links.each do |link|
       if pre_link_ids.include?(link.id)
-        record_update_log(link, action: 'update') if link.saved_changes.except('updated_at').any?
+        record_update_log(link, action: 'update', subject: unit) if link.saved_changes.except('updated_at').any?
       else
-        record_update_log(link, action: 'create')
+        record_update_log(link, action: 'create', subject: unit)
       end
     end
 
     destroyed_ids = pre_link_ids - unit.links.map(&:id)
     destroyed_ids.each do |link_id|
       UpdateLog.create!(user: current_user, action: 'discard',
-                        loggable_type: 'Link', loggable_id: link_id, diff: nil)
+                        loggable_type: 'Link', loggable_id: link_id,
+                        subject: unit, diff: nil)
     end
   end
 end

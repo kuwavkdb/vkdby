@@ -10,7 +10,7 @@ module Admin
       @snapshot_person = @unit_snapshot.snapshot_people.build(snapshot_person_params)
 
       if @snapshot_person.save
-        record_update_log(@snapshot_person, action: 'create')
+        record_update_log(@snapshot_person, action: 'create', subject: @unit)
         redirect_to edit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
                     notice: 'Member was successfully added.'
       else
@@ -23,7 +23,7 @@ module Admin
 
     def update
       if @snapshot_person.update(snapshot_person_params)
-        record_update_log(@snapshot_person, action: 'update')
+        record_update_log(@snapshot_person, action: 'update', subject: @unit)
         redirect_to edit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
                     notice: 'Member was successfully updated.'
       else
@@ -33,7 +33,7 @@ module Admin
 
     def destroy
       @snapshot_person.discard
-      record_update_log(@snapshot_person, action: 'discard')
+      record_update_log(@snapshot_person, action: 'discard', subject: @unit)
       redirect_to edit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
                   notice: 'Member was successfully removed.'
     end
@@ -47,7 +47,7 @@ module Admin
       if person.save
         @snapshot_person.update(person_id: person.id)
         record_update_log(person, action: 'create')
-        record_update_log(@snapshot_person, action: 'update')
+        record_update_log(@snapshot_person, action: 'update', subject: @unit)
         redirect_to snapshot_person_path, notice: 'Personを新規作成して紐付けました。'
       else
         redirect_to snapshot_person_path, alert: "Personの作成に失敗しました: #{person.errors.full_messages.join(', ')}"
@@ -72,7 +72,7 @@ module Admin
       end
 
       SnapshotPersonCopyMover.new(snapshot_people, target_snapshot, params[:mode]).call do |record, action|
-        record_update_log(record, action: action)
+        record_update_log(record, action: action, subject: @unit)
       end
       redirect_to edit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
                   notice: "#{snapshot_people.size}件のメンバーを#{params[:mode] == 'move' ? '移動' : 'コピー'}しました。"
