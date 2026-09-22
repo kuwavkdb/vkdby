@@ -27,7 +27,7 @@ export default class extends Controller {
 
   // テキストエリアからフォーカスが外れる瞬間の位置を、挿入位置として記憶する。
   // 一度もフォーカスされていなければsavedPositionはnullのままとなり、
-  // insertLinkでテキスト末尾扱いになる。
+  // insertLinkで「カーソル位置不明」扱い（→区切りで末尾に追加）になる。
   rememberPosition() {
     this.savedPosition = this.textareaTarget.selectionStart
   }
@@ -162,14 +162,25 @@ export default class extends Controller {
 
   insertLink(name, key) {
     const textarea = this.textareaTarget
-    const insertion = `[${name}](/${key})`
-    const position = this.savedPosition ?? textarea.value.length
+    const linkText = `[${name}](/${key})`
+
+    let insertion
+    let position
+    if (this.savedPosition === null) {
+      // カーソル位置が不明（一度もフォーカスされていない）な場合は、既存の
+      // 経歴（→区切りのタイムライン）に新しい項目を追加する形式で末尾に挿入する。
+      const needsNewline = textarea.value.length > 0 && !textarea.value.endsWith('\n')
+      insertion = `${needsNewline ? '\n' : ''}→ ${linkText}`
+      position = textarea.value.length
+    } else {
+      insertion = linkText
+      position = this.savedPosition
+    }
 
     textarea.value = textarea.value.slice(0, position) + insertion + textarea.value.slice(position)
 
     const newPosition = position + insertion.length
     textarea.selectionStart = textarea.selectionEnd = newPosition
-    this.savedPosition = newPosition
     textarea.dispatchEvent(new Event('input'))
     textarea.focus()
   }

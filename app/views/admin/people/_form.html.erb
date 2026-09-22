@@ -211,7 +211,7 @@
                data-action="input->unit-link-insert#search keydown->unit-link-insert#onKeydown">
         <div data-unit-link-insert-target="results"
              class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 hidden max-h-60 overflow-y-auto"></div>
-        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">2文字以上入力すると候補が表示されます。選択すると経歴欄のカーソル位置（未フォーカス時は末尾）にリンクが挿入されます。</p>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">2文字以上入力すると候補が表示されます。選択すると経歴欄のカーソル位置に挿入されます（未フォーカス時は末尾に改行して「→ [表示名](/key)」の形式で追加されます）。</p>
       </div>
 
       <%= form.text_area :old_history, rows: 14, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-sm font-mono dark:bg-gray-700 dark:border-gray-600 dark:text-white", data: { unit_link_insert_target: "textarea", action: "blur->unit-link-insert#rememberPosition" } %>
