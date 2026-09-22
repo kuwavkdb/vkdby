@@ -61,7 +61,7 @@ module SidebarLoadable
     rows = UpdateLog.for_sidebar.limit(RECENTLY_UPDATED_FETCH_LIMIT).pluck(:subject_type, :subject_id, :created_at)
 
     latest_updated_at = {}
-    rows.each { |type, id, updated_at| (latest_updated_at[[type, id]] ||= updated_at) }
+    rows.each { |type, id, updated_at| latest_updated_at[[type, id]] ||= updated_at }
 
     visible_subjects = fetch_visible_subjects(latest_updated_at.keys)
 
