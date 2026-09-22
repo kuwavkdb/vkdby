@@ -1,14 +1,10 @@
 # frozen_string_literal: true
 
 class LinksComponent < ViewComponent::Base
+  include SnsIconHelper
+
   # sns_info の platform 値とアイコン種別（アイコンSVGの切り替えに使うキー）の対応
-  PLATFORM_ICONS = {
-    'Twitter' => :x,
-    'Instagram' => :instagram,
-    'YouTube' => :youtube,
-    'TikTok' => :tiktok,
-    'Spotify' => :spotify
-  }.freeze
+  PLATFORM_ICONS = SnsInfoIcon::PLATFORM_ICONS
 
   def initialize(links:)
     @links = links
