@@ -19,7 +19,10 @@ module Admin
       redirect_to admin_root_path, alert: '権限がありません'
     end
 
-    def record_update_log(record, action:)
+    # subjectは、この編集をサイドバー「最近の更新」等でどのページの更新として扱うかを表す。
+    # 省略時はrecord自身（Unit/Person/CustomPageの直接編集）。Link/Section等のネストした
+    # レコードを編集する呼び出し元では、親ページを明示的に渡す（issue #1530）。
+    def record_update_log(record, action:, subject: record)
       diff = case action
              when 'create'
                record.saved_changes.except('created_at', 'updated_at')
@@ -31,8 +34,11 @@ module Admin
         user: current_user,
         action: action,
         loggable: record,
+        subject: subject,
         diff: diff
       )
+
+      Rails.cache.delete(SidebarLoadable::RECENTLY_UPDATED_CACHE_KEY)
     end
   end
 end
