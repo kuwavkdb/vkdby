@@ -56,6 +56,26 @@ module Admin
       assert section.reload.active?
     end
 
+    test 'create/update/discard/undiscard record an UpdateLog with subject set to the sectionable (issue #1530)' do
+      unit = Unit.create!(name: 'Section Subject Unit', key: 'sections-subject-unit', status: :active)
+
+      post admin_sections_path, params: {
+        sectionable_type: 'Unit', sectionable_id: unit.id,
+        section: { name: 'about', wiki_text: '本文です' }
+      }
+      section = unit.sections.last
+      assert UpdateLog.exists?(loggable: section, action: 'create', subject: unit)
+
+      patch admin_section_path(section), params: { section: { wiki_text: '更新後の本文' } }
+      assert UpdateLog.exists?(loggable: section, action: 'update', subject: unit)
+
+      delete admin_section_path(section)
+      assert UpdateLog.exists?(loggable: section, action: 'discard', subject: unit)
+
+      patch undiscard_admin_section_path(section)
+      assert UpdateLog.exists?(loggable: section, action: 'undiscard', subject: unit)
+    end
+
     test 'create/edit/redirect works for an Item sectionable' do
       item = Item.create!(title: 'Section Target Item', release_date: Date.current,
                           link_url: "https://example.com/section-target-item-#{SecureRandom.hex(4)}")

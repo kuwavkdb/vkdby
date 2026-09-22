@@ -76,13 +76,13 @@ module Admin
         record_update_log(@unit, action: 'create')
 
         @unit_snapshot = @unit.unit_snapshots.create!(quick_snapshot_params.merge(current: true, active: true))
-        record_update_log(@unit_snapshot, action: 'create')
+        record_update_log(@unit_snapshot, action: 'create', subject: @unit)
 
         member_rows.each_with_index do |attrs, index|
           next if attrs[:person_name].blank?
 
           snapshot_person = @unit_snapshot.snapshot_people.create!(attrs.merge(sort_order: index))
-          record_update_log(snapshot_person, action: 'create')
+          record_update_log(snapshot_person, action: 'create', subject: @unit)
         end
       end
 

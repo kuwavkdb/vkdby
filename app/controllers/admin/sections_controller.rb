@@ -15,7 +15,7 @@ module Admin
     def create
       @section = @sectionable.sections.build(section_params)
       if @section.save
-        record_update_log(@section, action: 'create')
+        record_update_log(@section, action: 'create', subject: @sectionable)
         redirect_to edit_admin_section_path(@section, sectionable_type: @sectionable.class.name, sectionable_id: @sectionable.id),
                     notice: 'セクションを追加しました。'
       else
@@ -25,7 +25,7 @@ module Admin
 
     def update
       if @section.update(section_params)
-        record_update_log(@section, action: 'update')
+        record_update_log(@section, action: 'update', subject: @sectionable)
         redirect_to sectionable_edit_path, notice: 'セクションを更新しました。'
       else
         render :edit, status: :unprocessable_entity
@@ -34,13 +34,13 @@ module Admin
 
     def destroy
       @section.discard
-      record_update_log(@section, action: 'discard')
+      record_update_log(@section, action: 'discard', subject: @sectionable)
       redirect_to sectionable_edit_path, notice: 'セクションを削除しました。'
     end
 
     def undiscard
       @section.undiscard
-      record_update_log(@section, action: 'undiscard')
+      record_update_log(@section, action: 'undiscard', subject: @sectionable)
       redirect_to sectionable_edit_path, notice: 'セクションを復元しました。'
     end
 

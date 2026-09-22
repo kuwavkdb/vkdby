@@ -3,6 +3,13 @@
 class UpdateLog < ApplicationRecord
   belongs_to :user
   belongs_to :loggable, polymorphic: true, optional: true
+  # 実際に編集されたレコード(loggable)とは別に、その編集をどのページの更新として
+  # 扱うかを表す。Unit/Person/CustomPage自身の編集ではloggableと同じレコードを指すが、
+  # Link/Section/UnitSnapshot/SnapshotPersonのようなネストしたレコードの編集では、
+  # 書き込み時に親ページ（Unit/Person/CustomPage）を指すよう明示的に渡す。
+  # サイドバー「最近の更新」の集計元をUpdateLogベースに切り替える際に利用する予定
+  # （issue #1530）。まずはこのsubjectをデータとして溜めておくためのステップ。
+  belongs_to :subject, polymorphic: true, optional: true
 
   def loggable
     case loggable_type
@@ -10,6 +17,8 @@ class UpdateLog < ApplicationRecord
       Section.with_discarded.find_by(id: loggable_id)
     when 'SnapshotPerson'
       SnapshotPerson.with_discarded.find_by(id: loggable_id)
+    when 'CustomPage'
+      CustomPage.with_discarded.find_by(id: loggable_id)
     else
       super
     end
