@@ -110,6 +110,18 @@ module Admin
       assert_equal 'existing-unit-controller-test', @unit.reload.key
     end
 
+    test 'update records an UpdateLog for a link change with subject set to the unit (issue #1530)' do
+      patch admin_unit_path(@unit), params: {
+        unit: {
+          name: @unit.name, status: @unit.status,
+          links_attributes: { '0' => { text: '公式サイト', url: 'https://example.com/subject-test' } }
+        }
+      }
+
+      link = @unit.links.last
+      assert UpdateLog.exists?(loggable: link, action: 'create', subject: @unit)
+    end
+
     test 'change_key updates the key and creates a redirect stub when admin' do
       login_as_admin
 
@@ -384,8 +396,11 @@ module Admin
       assert_equal '結成時', snapshot.label
       assert_equal Date.new(2024, 4, 1), snapshot.snapshot_date
       assert_equal %w[Vocalist Guitarist], snapshot.snapshot_people.order(:sort_order).map(&:person_name)
-      assert UpdateLog.exists?(loggable: unit, action: 'create')
-      assert UpdateLog.exists?(loggable: snapshot, action: 'create')
+      assert UpdateLog.exists?(loggable: unit, action: 'create', subject: unit)
+      assert UpdateLog.exists?(loggable: snapshot, action: 'create', subject: unit)
+      snapshot.snapshot_people.each do |sp|
+        assert UpdateLog.exists?(loggable: sp, action: 'create', subject: unit)
+      end
     end
 
     # issue #1616: 活動時期・公式リンクも一括作成できることを確認する

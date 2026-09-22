@@ -21,7 +21,7 @@ module Admin
       @unit_snapshot = @unit.unit_snapshots.build(unit_snapshot_params)
 
       if @unit_snapshot.save
-        record_update_log(@unit_snapshot, action: 'create')
+        record_update_log(@unit_snapshot, action: 'create', subject: @unit)
         redirect_to edit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
                     notice: 'Snapshot was successfully created.'
       else
@@ -31,7 +31,7 @@ module Admin
 
     def update
       if @unit_snapshot.update(unit_snapshot_params)
-        record_update_log(@unit_snapshot, action: 'update')
+        record_update_log(@unit_snapshot, action: 'update', subject: @unit)
         redirect_to admin_unit_unit_snapshots_path(@unit),
                     notice: 'Snapshot was successfully updated.'
       else
@@ -42,7 +42,7 @@ module Admin
 
     def destroy
       @unit_snapshot.destroy
-      record_update_log(@unit_snapshot, action: 'discard')
+      record_update_log(@unit_snapshot, action: 'discard', subject: @unit)
       redirect_to admin_unit_unit_snapshots_path(@unit),
                   notice: 'Snapshot was successfully destroyed.'
     end
@@ -120,7 +120,7 @@ module Admin
         @unit_snapshot.snapshot_people.each do |sp|
           new_snapshot.snapshot_people.create!(sp.attributes.except('id', 'unit_snapshot_id', 'created_at', 'updated_at'))
         end
-        record_update_log(new_snapshot, action: 'create')
+        record_update_log(new_snapshot, action: 'create', subject: target_unit)
       end
 
       new_snapshot
