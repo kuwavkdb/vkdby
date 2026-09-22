@@ -38,6 +38,7 @@ module Admin
       @custom_page = CustomPage.new(custom_page_params)
 
       if @custom_page.save
+        record_update_log(@custom_page, action: 'create')
         redirect_to admin_custom_pages_path, notice: 'ページを作成しました。'
       else
         render :new, status: :unprocessable_entity
@@ -46,6 +47,7 @@ module Admin
 
     def update
       if @custom_page.update(custom_page_params)
+        record_update_log(@custom_page, action: 'update')
         redirect_to edit_admin_custom_page_path(@custom_page), notice: 'ページを更新しました。'
       else
         render :edit, status: :unprocessable_entity
@@ -54,11 +56,13 @@ module Admin
 
     def destroy
       @custom_page.discard
+      record_update_log(@custom_page, action: 'discard')
       redirect_to admin_custom_pages_path, notice: 'ページを削除しました。'
     end
 
     def undiscard
       @custom_page.undiscard
+      record_update_log(@custom_page, action: 'undiscard')
       redirect_to admin_custom_pages_path, notice: 'ページを復元しました。'
     end
 
