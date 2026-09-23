@@ -13,6 +13,8 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
   test 'sidebar does not render a discarded unit or person referenced by a weekly trend' do
     unit = Unit.create!(name: 'Discarded Sidebar Unit', key: 'discarded-unit-sidebar-test', status: :active)
     person = Person.create!(name: 'Discarded Sidebar Person', key: 'discarded-person-sidebar-test', status: :active)
+    UpdateLog.create!(user: users(:one), action: 'create', loggable: unit, subject: unit)
+    UpdateLog.create!(user: users(:one), action: 'create', loggable: person, subject: person)
     unit.discard
     person.discard
     Trend.create!(title: 'Sidebar trend with discarded refs', date: Date.current, publish_start_at: Time.current,
@@ -28,14 +30,15 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(%r{<span class="inline-block[^"]*">\s*</span>}, response.body)
   end
 
-  test 'merely viewing a page does not bump its updated_at, which is what the sidebar recent updates list sorts by (issue #1528)' do
+  test 'merely viewing a page does not bump its updated_at (issue #1528)' do
     old_page = CustomPage.create!(key: 'ogp-touch-old-page', title: 'Old Page', active: true, body: 'body')
     old_page.update_column(:updated_at, 1.year.ago)
     original_updated_at = old_page.reload.updated_at
 
     # ページ閲覧時にOGP画像が遅延生成される。ActiveStorageのtouch仕様で対象レコードの
-    # updated_atが書き換わってしまうと、実際には編集していないこのページがサイドバーの
-    # 「最近の更新」に浮上してしまう
+    # updated_atが書き換わってしまう副作用を防ぐ（サイドバー「最近の更新」自体は
+    # issue #1530でUpdateLogベースの集計に変更済みのためこの副作用の影響は受けないが、
+    # updated_at自体が意図せず書き換わらないことは引き続き保証する）
     stub_class_method(OgpImageGenerator, :call, 'dummy-png-bytes') { get custom_page_path(key: old_page.key) }
 
     assert_response :success
@@ -102,6 +105,8 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     unit = Unit.create!(name: 'Unpublished Sidebar Unit', key: 'unpublished-unit-sidebar-test', status: :active)
     person = Person.create!(name: 'Unpublished Sidebar Person', key: 'unpublished-person-sidebar-test',
                             status: :active)
+    UpdateLog.create!(user: users(:one), action: 'create', loggable: unit, subject: unit)
+    UpdateLog.create!(user: users(:one), action: 'create', loggable: person, subject: person)
     tag_index = TagIndex.create!(id: Rails.application.config.unpublished_tag_ids.first, name: '掲載停止')
     TagIndexItem.create!(tag_index: tag_index, indexable: unit)
     TagIndexItem.create!(tag_index: tag_index, indexable: person)
@@ -113,6 +118,49 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_not_includes response.body, 'Unpublished Sidebar Unit'
     assert_not_includes response.body, 'Unpublished Sidebar Person'
+  end
+
+  test 'sidebar shows a unit whose UpdateLog action is create or update, but not discard or change_key (issue #1530)' do
+    shown_unit = Unit.create!(name: 'Shown Sidebar Unit', key: 'shown-unit-sidebar-test', status: :active)
+    hidden_unit = Unit.create!(name: 'Hidden Sidebar Unit', key: 'hidden-unit-sidebar-test', status: :active)
+    UpdateLog.create!(user: users(:one), action: 'update', loggable: shown_unit, subject: shown_unit)
+    UpdateLog.create!(user: users(:one), action: 'discard', loggable: hidden_unit, subject: hidden_unit)
+    UpdateLog.create!(user: users(:one), action: 'change_key', loggable: hidden_unit, subject: hidden_unit)
+    page = CustomPage.create!(key: 'update-log-action-sidebar-test-page', title: 'Update Log Action Sidebar Test',
+                              active: true, body: 'body')
+
+    get custom_page_path(key: page.key)
+
+    assert_response :success
+    assert_includes response.body, 'Shown Sidebar Unit'
+    assert_not_includes response.body, 'Hidden Sidebar Unit'
+  end
+
+  test 'sidebar surfaces a unit whose nested section was edited, via UpdateLog#subject (issue #1530)' do
+    unit = Unit.create!(name: 'Section Edit Sidebar Unit', key: 'section-edit-sidebar-test-unit', status: :active)
+    section = unit.sections.create!(name: 'profile', markdown: 'body')
+    UpdateLog.create!(user: users(:one), action: 'update', loggable: section, subject: unit)
+    page = CustomPage.create!(key: 'section-edit-sidebar-test-page', title: 'Section Edit Sidebar Test',
+                              active: true, body: 'body')
+
+    get custom_page_path(key: page.key)
+
+    assert_response :success
+    assert_includes response.body, 'Section Edit Sidebar Unit'
+  end
+
+  test 'sidebar shows only the latest entry for a subject with multiple UpdateLog rows' do
+    unit = Unit.create!(name: 'Dedup Sidebar Unit', key: 'dedup-sidebar-test-unit', status: :active)
+    UpdateLog.create!(user: users(:one), action: 'create', loggable: unit, subject: unit, created_at: 2.days.ago)
+    UpdateLog.create!(user: users(:one), action: 'update', loggable: unit, subject: unit, created_at: 1.day.ago)
+    page = CustomPage.create!(key: 'dedup-sidebar-test-page', title: 'Dedup Sidebar Test', active: true, body: 'body')
+
+    get custom_page_path(key: page.key)
+
+    assert_response :success
+    # サイドバーはPC/モバイル向けに1レスポンス中2回描画される（shared/_with_sidebar.html.erb）ため、
+    # dedupが効いていれば「1件のみ」が2回描画されて2件、効いていなければ4件以上現れる
+    assert_equal 2, response.body.scan('Dedup Sidebar Unit').size
   end
 
   test 'sidebar excludes a person tagged as unpublished from birthdays' do
