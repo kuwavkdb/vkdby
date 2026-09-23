@@ -30,6 +30,7 @@ class SnapshotPersonCopyMover
 
   def duplicate(snapshot_person, sort_order)
     attributes = snapshot_person.attributes.except('id', 'unit_snapshot_id', 'created_at', 'updated_at', 'sort_order')
-    @target_snapshot.snapshot_people.create!(attributes.merge('sort_order' => sort_order))
+    # 紐付け済みメンバーの複製であり紐付けの変更ではないため、SNSのマージは行わない（issue #1654）
+    @target_snapshot.snapshot_people.create!(attributes.merge('sort_order' => sort_order, 'skip_sns_merge' => true))
   end
 end

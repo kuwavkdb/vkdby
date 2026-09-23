@@ -98,4 +98,20 @@ class LinkTest < ActiveSupport::TestCase
 
     assert_nil link.sns_info
   end
+
+  # issue #1654: SNSのマージ時の重複判定
+  test 'comparable_url treats scheme, www, trailing slash, case and twitter.com as the same' do
+    expected = Link.comparable_url('https://x.com/foo')
+
+    assert_equal expected, Link.comparable_url('http://twitter.com/Foo/')
+    assert_equal expected, Link.comparable_url('https://www.x.com/foo')
+    assert_equal expected, Link.comparable_url('https://mobile.twitter.com/foo#top')
+    assert_equal Link.comparable_url('https://instagram.com/bar'),
+                 Link.comparable_url('https://www.instagram.com/bar/')
+  end
+
+  test 'comparable_url distinguishes different accounts and hosts' do
+    assert_not_equal Link.comparable_url('https://x.com/foo'), Link.comparable_url('https://x.com/foo2')
+    assert_not_equal Link.comparable_url('https://twitter.community/foo'), Link.comparable_url('https://x.com/foo')
+  end
 end

@@ -118,7 +118,12 @@ class PersonImporter < BaseWikipageImporter
   def link_existing_snapshot_people(person)
     return if person.old_key.blank?
 
-    SnapshotPerson.where(old_person_key: person.old_key).update_all(person_id: person.id, person_key: person.key)
+    targets = SnapshotPerson.where(old_person_key: person.old_key)
+    # 紐付け先が変わるものだけSNSをマージする（既に同じPersonに紐付いていれば対象外）
+    relinked_ids = targets.where.not(person_id: person.id).or(targets.where(person_id: nil)).ids
+    targets.update_all(person_id: person.id, person_key: person.key)
+    # update_all ではコールバックが走らないため、SNSのマージを明示的に行う（issue #1654）
+    SnapshotPerson.where(id: relinked_ids).find_each(&:merge_sns_into_person)
   end
 
   def parse_categories_data

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Admin
-  class UnitSnapshotsController < Admin::BaseController
+  class UnitSnapshotsController < Admin::BaseController # rubocop:disable Metrics/ClassLength
     before_action :set_unit
     before_action :set_unit_snapshot, only: %i[edit update destroy copy copy_to_unit]
 
@@ -118,7 +118,9 @@ module Admin
 
       if new_snapshot.save
         @unit_snapshot.snapshot_people.each do |sp|
-          new_snapshot.snapshot_people.create!(sp.attributes.except('id', 'unit_snapshot_id', 'created_at', 'updated_at'))
+          # 紐付け済みメンバーの複製であり紐付けの変更ではないため、SNSのマージは行わない（issue #1654）
+          new_snapshot.snapshot_people.create!(sp.attributes.except('id', 'unit_snapshot_id', 'created_at', 'updated_at')
+                                                 .merge('skip_sns_merge' => true))
         end
         record_update_log(new_snapshot, action: 'create', subject: target_unit)
       end

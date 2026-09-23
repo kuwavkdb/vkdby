@@ -155,6 +155,24 @@ module Admin
       assert_equal 1, UnitSnapshot.last.snapshot_people.last.sort_order
     end
 
+    # issue #1654: Personに紐付いたメンバーを振り分けたとき、sns を Person#links にマージする
+    test 'should merge sns into the linked person links when assigning to multiple snapshots' do
+      linked = TemporarySnapshotPerson.create!(
+        person: people(:one), part: :vocal, status: :left, hint_unit: @unit, sns: ['@pooled']
+      )
+
+      assert_difference({ 'people(:one).links.count' => 1, 'UpdateLog.where(loggable_type: "Link").count' => 1 }) do
+        post assign_admin_temporary_snapshot_person_path(linked), params: {
+          unit_id: @unit.id,
+          unit_snapshot_ids: [@snapshot.id, @other_snapshot.id],
+          part: 'vocal',
+          status: 'left'
+        }
+      end
+
+      assert_equal 'https://x.com/pooled', people(:one).links.last.url
+    end
+
     test 'should carry over old_person_key when assigning' do
       @temporary_snapshot_person.update!(old_person_key: '旧キー太郎')
 

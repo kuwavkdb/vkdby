@@ -77,7 +77,10 @@ module Admin
 
     def save_assignment(target_snapshots, snapshot_people)
       ActiveRecord::Base.transaction { target_snapshots.each(&:save!) }
-      snapshot_people.each { |sp| record_update_log(sp, action: 'create', subject: @unit) }
+      snapshot_people.each do |sp|
+        record_update_log(sp, action: 'create', subject: @unit)
+        record_merged_sns_links(sp)
+      end
       @temporary_snapshot_person.destroy
 
       redirect_to admin_temporary_snapshot_people_path(

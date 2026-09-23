@@ -172,4 +172,64 @@ class SnapshotPersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/Cla
     person = sp.build_person_for_independence
     assert_equal ['https://x.com/sns_guy'], person.links.map(&:url)
   end
+
+  # issue #1654: 既存Personへの紐付け時に sns を Person#links にマージする
+  test 'merges sns into person links when linked to an existing person' do
+    person = people(:one)
+    person.links.create!(url: 'https://twitter.com/already/', sort_order: 5)
+    sp = unit_snapshots(:one).snapshot_people.create!(
+      person_name: 'Sns Guy', part: :vocal, sns: ['@already', '@new_handle', 'https://www.instagram.com/new/']
+    )
+
+    assert_difference('person.links.count', 2) do
+      sp.update!(person: person)
+    end
+
+    added = person.links.where.not(url: 'https://twitter.com/already/').order(:sort_order)
+    assert_equal ['https://x.com/new_handle', 'https://www.instagram.com/new/'], added.map(&:url)
+    assert_equal [6, 7], added.map(&:sort_order)
+    assert_equal added.to_a, sp.merged_links
+  end
+
+  test 'merges sns when linked by person_key' do
+    person = people(:one)
+
+    assert_difference('person.links.count', 1) do
+      unit_snapshots(:one).snapshot_people.create!(person_key: person.key, part: :vocal, sns: ['@by_key'])
+    end
+    assert_equal 'https://x.com/by_key', person.links.last.url
+  end
+
+  test 'merges sns into the new person when relinked to another person' do
+    sp = unit_snapshots(:one).snapshot_people.create!(person: people(:one), part: :vocal, sns: ['@relink'])
+
+    assert_difference('people(:two).links.count', 1) do
+      sp.update!(person: people(:two))
+    end
+    assert_equal 1, people(:one).links.count
+  end
+
+  test 'does not merge sns when person is unchanged' do
+    sp = unit_snapshots(:one).snapshot_people.create!(person: people(:one), part: :vocal, sns: ['@unchanged'])
+    people(:one).links.destroy_all
+
+    assert_no_difference('Link.count') do
+      sp.update!(sns: ['@unchanged', '@another'], part: :guitar)
+    end
+  end
+
+  test 'does not merge sns when skip_sns_merge is set' do
+    assert_no_difference('Link.count') do
+      unit_snapshots(:one).snapshot_people.create!(person: people(:one), part: :vocal, sns: ['@copied'],
+                                                   skip_sns_merge: true)
+    end
+  end
+
+  test 'sns_urls_missing_from excludes urls already on the person and known urls' do
+    person = people(:one)
+    person.links.create!(url: 'https://x.com/exists')
+    sp = SnapshotPerson.new(sns: ['@exists', '@planned', '@missing'])
+
+    assert_equal ['https://x.com/missing'], sp.sns_urls_missing_from(person, known_urls: ['https://twitter.com/planned'])
+  end
 end

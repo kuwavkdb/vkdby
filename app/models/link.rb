@@ -26,6 +26,17 @@ class Link < ApplicationRecord
 
   validates :url, presence: true
 
+  # 同じページを指すURLかを比べるための正規化（issue #1654）。スキーム・www/mobile/m・末尾スラッシュ・
+  # フラグメント・大文字小文字の違いを無視し、twitter.com は x.com とみなす。
+  def self.comparable_url(url)
+    url.to_s.strip.downcase
+       .sub(%r{\Ahttps?://}, '')
+       .sub(/\A(?:www|mobile|m)\./, '')
+       .sub(%r{\Atwitter\.com(?=[/?]|\z)}, 'x.com')
+       .sub(/#.*\z/, '')
+       .sub(%r{/+\z}, '')
+  end
+
   def twitter_status_url?
     url.present? && url.match?(TWITTER_STATUS_URL_PATTERN)
   end

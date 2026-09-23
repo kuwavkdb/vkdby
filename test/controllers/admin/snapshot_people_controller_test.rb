@@ -118,6 +118,24 @@ module Admin
       assert_equal [1, 2], links.map(&:sort_order)
     end
 
+    # issue #1654: 既存Personへ手動で紐付けたとき、sns を Person#links にマージし UpdateLog に記録する
+    test 'should merge sns into existing person links and log them when linking a person' do
+      sp = @snapshot.snapshot_people.create!(person_name: 'Link Me', part: 'vocal', sns: ['@link_me'])
+      person = people(:one)
+
+      assert_difference({ 'person.links.count' => 1, 'UpdateLog.where(loggable_type: "Link").count' => 1 }) do
+        patch admin_unit_unit_snapshot_snapshot_person_path(@unit, @snapshot, sp), params: {
+          snapshot_person: { person_id: person.id, person_name: 'Link Me', part: 'vocal' }
+        }
+      end
+
+      link = person.links.last
+      assert_equal 'https://x.com/link_me', link.url
+      log = UpdateLog.find_by(loggable: link)
+      assert_equal 'create', log.action
+      assert_equal person, log.subject
+    end
+
     test 'should create person without links when sns is blank' do
       sp = @snapshot.snapshot_people.create!(
         person_name: 'No Sns Guy', part: 'vocal', person_key: 'no_sns_test_key', sns: nil
