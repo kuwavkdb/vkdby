@@ -31,6 +31,10 @@
             / 血液型「<%= extra_profile["blood"].presence || "未設定" %>」
             / 出身地「<%= extra_profile["hometown"].presence || "未設定" %>」
           <% end %>
+          <% sns_links = @snapshot_person.sns_link_attributes %>
+          <% if sns_links.any? %>
+            / リンク「<%= sns_links.map { |link| link[:url] }.join("、") %>」
+          <% end %>
         </p>
         <% if @snapshot_person.person_key.blank? %>
           <p class="mt-2 text-sm text-red-600 dark:text-red-400">Person Key を設定してから実行してください。</p>

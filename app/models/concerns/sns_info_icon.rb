@@ -20,4 +20,11 @@ module SnsInfoIcon
   def icon_for_url(url)
     PLATFORM_ICONS[Link.new(url: url).sns_info&.[](:platform)]
   end
+
+  # UnitPerson#sns / SnapshotPerson#sns 等の1要素（"@handle"形式、またはURL）をURLに変換する。
+  # "@"始まりは常にX(Twitter)アカウントの記法として扱い、それ以外はそのまま返す。
+  # MemberRowComponent（表示用リンク）と SnapshotPerson#sns_link_attributes（issue #1653）で共通。
+  def url_for_account(sns_account)
+    sns_account.start_with?('@') ? "https://x.com/#{sns_account.delete_prefix('@')}" : sns_account
+  end
 end

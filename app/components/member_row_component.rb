@@ -23,7 +23,7 @@ class MemberRowComponent < ViewComponent::Base
   end
 
   def sns_url_for(sns_account)
-    sns_account.start_with?('@') ? "https://x.com/#{sns_account.delete_prefix('@')}" : sns_account
+    SnsInfoIcon.url_for_account(sns_account)
   end
 
   private

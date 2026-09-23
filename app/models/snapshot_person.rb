@@ -39,6 +39,9 @@ class SnapshotPerson < ApplicationRecord
   include Discard::Model
   include WikiParser
 
+  # sns_link_attributes で Link として取り込む値（空白を含まない http(s) URL）
+  SNS_LINK_URL_PATTERN = %r{\Ahttps?://\S+\z}i
+
   default_scope { kept }
 
   # touch: true は {{snapshot}}プラグイン（application_helper.rb）のキャッシュキーが
@@ -88,14 +91,33 @@ class SnapshotPerson < ApplicationRecord
     attrs
   end
 
+  # sns（"@handle"形式、またはURLの配列）から、Person#links に作成する Link の属性へ変換する（issue #1653）。
+  # "@handle" は X(Twitter) のURLへ変換し、URLはそのまま使う。どちらでもない値（"@"のみ、
+  # スキーム無しの文字列等）はリンク先を特定できないためスキップする。空要素・重複URLは除く。
+  # text は空のままにし、表示名・アイコンは Link#sns_info のURL判定に任せる。
+  def sns_link_attributes
+    urls = Array(sns).filter_map do |account|
+      account = account.to_s.strip
+      next if account.blank? || account == '@'
+
+      url = SnsInfoIcon.url_for_account(account)
+      url if url.match?(SNS_LINK_URL_PATTERN)
+    end
+
+    urls.uniq.each_with_index.map { |url, index| { url: url, sort_order: index + 1 } }
+  end
+
   # Person未紐付けのこのメンバーを、Personとして独立させる（issue #1596で追加されたcreate_person
   # アクションが呼ぶ）。name / key / parts / old_history に加え、extra_profile_person_attributes を
-  # 通じて誕生日等の下書き情報も引き継ぐ（issue #1619）。
+  # 通じて誕生日等の下書き情報も引き継ぐ（issue #1619）。sns は Person#links として引き継ぎ、
+  # Person の保存と同時に作成される（issue #1653）。
   def build_person_for_independence
-    Person.new({ name: person_name, key: person_key,
-                 parts: part == 'unknown' ? [] : [part],
-                 old_history: inline_history }
-                .merge(extra_profile_person_attributes))
+    person = Person.new({ name: person_name, key: person_key,
+                          parts: part == 'unknown' ? [] : [part],
+                          old_history: inline_history }
+                         .merge(extra_profile_person_attributes))
+    sns_link_attributes.each { |attrs| person.links.build(attrs) }
+    person
   end
 
   private

@@ -102,6 +102,36 @@ module Admin
       assert_equal '東京都', sp.person.hometown
     end
 
+    # issue #1653: sns（"@handle"形式・URL）をPerson独立化時にPerson#linksとして引き継ぐ
+    test 'should carry over sns to person links when creating person' do
+      sp = @snapshot.snapshot_people.create!(
+        person_name: 'Sns Guy', part: 'vocal', person_key: 'sns_test_key',
+        sns: ['@sns_guy', 'https://www.instagram.com/sns_guy/']
+      )
+
+      assert_difference({ 'Person.count' => 1, 'Link.count' => 2 }) do
+        post create_person_admin_unit_unit_snapshot_snapshot_person_path(@unit, @snapshot, sp)
+      end
+
+      links = sp.reload.person.links.order(:sort_order)
+      assert_equal ['https://x.com/sns_guy', 'https://www.instagram.com/sns_guy/'], links.map(&:url)
+      assert_equal [1, 2], links.map(&:sort_order)
+    end
+
+    test 'should create person without links when sns is blank' do
+      sp = @snapshot.snapshot_people.create!(
+        person_name: 'No Sns Guy', part: 'vocal', person_key: 'no_sns_test_key', sns: nil
+      )
+
+      assert_difference('Person.count', 1) do
+        assert_no_difference('Link.count') do
+          post create_person_admin_unit_unit_snapshot_snapshot_person_path(@unit, @snapshot, sp)
+        end
+      end
+
+      assert_empty sp.reload.person.links
+    end
+
     test 'should skip unparsable extra_profile birthday without failing person creation' do
       sp = @snapshot.snapshot_people.create!(
         person_name: 'Bad Birthday Guy', part: 'vocal', person_key: 'bad_birthday_test_key',
