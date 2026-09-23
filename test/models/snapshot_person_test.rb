@@ -26,7 +26,7 @@
 #
 require 'test_helper'
 
-class SnapshotPersonTest < ActiveSupport::TestCase
+class SnapshotPersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
   include ActiveSupport::Testing::TimeHelpers
 
   test 'valid snapshot_person with person' do
@@ -143,5 +143,33 @@ class SnapshotPersonTest < ActiveSupport::TestCase
     sp = SnapshotPerson.new(extra_profile: nil)
 
     assert_equal({}, sp.extra_profile_person_attributes)
+  end
+
+  # issue #1653
+  test 'sns_link_attributes converts @handle to x.com url and keeps urls as-is' do
+    sp = SnapshotPerson.new(sns: ['@handle', 'https://www.instagram.com/handle/'])
+
+    assert_equal [{ url: 'https://x.com/handle', sort_order: 1 },
+                  { url: 'https://www.instagram.com/handle/', sort_order: 2 }],
+                 sp.sns_link_attributes
+  end
+
+  test 'sns_link_attributes skips blank, bare @, non-url values and duplicates' do
+    sp = SnapshotPerson.new(sns: ['', '  ', '@', 'handle_only', '@dup', 'https://x.com/dup', ' https://example.com '])
+
+    assert_equal [{ url: 'https://x.com/dup', sort_order: 1 },
+                  { url: 'https://example.com', sort_order: 2 }],
+                 sp.sns_link_attributes
+  end
+
+  test 'sns_link_attributes returns an empty array when sns is nil' do
+    assert_equal [], SnapshotPerson.new(sns: nil).sns_link_attributes
+  end
+
+  test 'build_person_for_independence builds links from sns' do
+    sp = SnapshotPerson.new(person_name: 'Sns Guy', person_key: 'sns_guy', part: :vocal, sns: ['@sns_guy'])
+
+    person = sp.build_person_for_independence
+    assert_equal ['https://x.com/sns_guy'], person.links.map(&:url)
   end
 end
