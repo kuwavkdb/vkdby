@@ -33,7 +33,7 @@ class TrendListRowComponentTest < ActiveSupport::TestCase
     assert_equal ['Old Name'], component.unit_badges
   end
 
-  test 'unit_badges always includes a different unit referenced by the trend' do
+  test 'unit_badges does not include a different unit referenced by the trend' do
     resource_unit = Unit.create!(name: 'Resource Unit', key: 'trend-row-multi-resource', status: :active)
     other_unit = Unit.create!(name: 'Other Unit', key: 'trend-row-multi-other', status: :active)
     trend = Trend.create!(title: 'Trend', date: Date.current, publish_start_at: Time.current,
@@ -45,21 +45,21 @@ class TrendListRowComponentTest < ActiveSupport::TestCase
                                           related_units: { resource_unit.id => resource_unit,
                                                            other_unit.id => other_unit })
 
-    assert_equal ['Other Unit'], component.unit_badges
+    assert_empty component.unit_badges
   end
 
-  test 'unit_badges omits an entry for a discarded unit with no recorded name' do
-    unit = Unit.create!(name: 'Discarded Badge Unit', key: 'trend-row-discarded', status: :active)
-    resource_unit = Unit.create!(name: 'Resource Unit 2', key: 'trend-row-discarded-resource', status: :active)
-    unit.discard
+  test 'unit_badges includes the resource alias even when another unit is also referenced' do
+    resource_unit = Unit.create!(name: 'Renamed Now', key: 'trend-row-multi-alias', status: :active)
+    other_unit = Unit.create!(name: 'Other Unit', key: 'trend-row-multi-alias-other', status: :active)
     trend = Trend.create!(title: 'Trend', date: Date.current, publish_start_at: Time.current,
                           unit_phenomenon: :other,
-                          units: [{ 'unit_id' => resource_unit.id, 'name' => 'Resource Unit 2' },
-                                  { 'unit_id' => unit.id }])
+                          units: [{ 'unit_id' => resource_unit.id, 'name' => 'Old Name' },
+                                  { 'unit_id' => other_unit.id, 'name' => 'Other Unit' }])
 
     component = TrendListRowComponent.new(trend: trend, resource: resource_unit,
-                                          related_units: { resource_unit.id => resource_unit })
+                                          related_units: { resource_unit.id => resource_unit,
+                                                           other_unit.id => other_unit })
 
-    assert_empty component.unit_badges
+    assert_equal ['Old Name'], component.unit_badges
   end
 end

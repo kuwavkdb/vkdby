@@ -18,25 +18,17 @@ class TrendListRowComponent < ViewComponent::Base
 
   def current? = @current
 
-  # resource（現在表示中のUnit）と表記が異なるユニットのみバッジ表示対象にする
+  # 自ユニット（resource）が動向登録時点で現在と異なる名前で登録されている場合のみ、
+  # その別名をバッジ表示する。他ユニットが併記されている動向でも他ユニット名は表示しない（issue #1658）
   def unit_badges
-    return [] if @resource.nil? || @trend.units.blank?
+    return [] unless @resource.is_a?(Unit) && @trend.units.present?
 
-    @trend.units.filter_map do |unit_data|
-      unit = @related_units[unit_data['unit_id']]
-      display_name = trend_unit_display_name(unit_data, unit)
-      next if display_name.blank?
-      next if same_as_current_resource?(unit_data, display_name)
+    unit_data = @trend.units.find { |data| data['unit_id'] == @resource.id }
+    return [] if unit_data.nil?
 
-      display_name
-    end
-  end
+    display_name = trend_unit_display_name(unit_data, @resource)
+    return [] if display_name.blank? || display_name == @resource.name
 
-  private
-
-  def same_as_current_resource?(unit_data, display_name)
-    return false unless @resource.is_a?(Unit) && unit_data['unit_id'] == @resource.id
-
-    display_name == @resource.name
+    [display_name]
   end
 end
