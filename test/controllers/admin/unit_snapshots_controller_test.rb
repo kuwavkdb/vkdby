@@ -72,6 +72,21 @@ module Admin
       assert_redirected_to admin_unit_unit_snapshots_path(@unit)
     end
 
+    test 'should copy unit_snapshot within the same unit and clear snapshot_date' do
+      assert_difference('UnitSnapshot.count', 1) do
+        assert_difference('SnapshotPerson.count', @snapshot.snapshot_people.count) do
+          post copy_admin_unit_unit_snapshot_path(@unit, @snapshot)
+        end
+      end
+
+      new_snapshot = UnitSnapshot.last
+      assert_equal @unit, new_snapshot.unit
+      assert_equal @snapshot.label, new_snapshot.label
+      assert_nil new_snapshot.snapshot_date
+      assert_not new_snapshot.current?
+      assert_redirected_to edit_admin_unit_unit_snapshot_path(@unit, new_snapshot)
+    end
+
     test 'should get copy_to_unit form' do
       get copy_to_unit_admin_unit_unit_snapshot_path(@unit, @snapshot)
       assert_response :success

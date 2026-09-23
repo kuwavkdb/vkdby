@@ -48,7 +48,7 @@ module Admin
     end
 
     def copy
-      new_snapshot = copy_snapshot_to(@unit)
+      new_snapshot = copy_snapshot_to(@unit, snapshot_date: nil)
 
       if new_snapshot.persisted?
         redirect_to edit_admin_unit_unit_snapshot_path(@unit, new_snapshot),
@@ -107,9 +107,9 @@ module Admin
       params.require(:unit_snapshot).permit(:snapshot_date, :label, :current, :active, :past)
     end
 
-    def copy_snapshot_to(target_unit)
+    def copy_snapshot_to(target_unit, snapshot_date: @unit_snapshot.snapshot_date)
       new_snapshot = target_unit.unit_snapshots.build(
-        snapshot_date: @unit_snapshot.snapshot_date,
+        snapshot_date: snapshot_date,
         label: @unit_snapshot.label,
         current: false,
         past: @unit_snapshot.past,
