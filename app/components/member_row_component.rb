@@ -2,6 +2,7 @@
 
 class MemberRowComponent < ViewComponent::Base
   include WikiLinkHelper
+  include SnsIconHelper
   with_collection_parameter :member
 
   def initialize(member:, hide_active: false, hide_left: false, hide_status: false)
@@ -9,6 +10,20 @@ class MemberRowComponent < ViewComponent::Base
     @hide_active = hide_active
     @hide_left = hide_left
     @hide_status = hide_status
+  end
+
+  # @member.sns の1要素（"@handle"形式、またはURL）からアイコン種別を判定する。
+  # "@"始まりは常にX(Twitter)アカウントの記法として扱う（{{member}}プラグイン記法、
+  # app/helpers/application_helper.rb参照）。それ以外はURLとしてSnsInfoIconで判定し、
+  # SNSとして判定できない場合（公式サイト等）はnil（汎用の外部リンクアイコンにフォールバック）
+  def sns_icon_for(sns_account)
+    return :x if sns_account.start_with?('@')
+
+    SnsInfoIcon.icon_for_url(sns_account)
+  end
+
+  def sns_url_for(sns_account)
+    sns_account.start_with?('@') ? "https://x.com/#{sns_account.delete_prefix('@')}" : sns_account
   end
 
   private

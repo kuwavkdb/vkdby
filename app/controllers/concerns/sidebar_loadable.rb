@@ -21,9 +21,10 @@ module SidebarLoadable
 
   # 最終的に表示するRecent Updatesの件数
   RECENTLY_UPDATED_LIMIT = 8
-  # 各モデルから取得する件数の上限（8件全てが1モデルに偏るケースを考慮し、
-  # RECENTLY_UPDATED_LIMITと同数まで取得すれば十分）
-  RECENTLY_UPDATED_PER_MODEL_LIMIT = RECENTLY_UPDATED_LIMIT
+  # UpdateLogから取得する件数の上限。discard済み・非公開のsubjectや、同一subjectへの
+  # 複数回の編集を除外・重複排除した上でRECENTLY_UPDATED_LIMIT件を確保できるよう、
+  # 表示件数より多めに取得しておく。
+  RECENTLY_UPDATED_FETCH_LIMIT = RECENTLY_UPDATED_LIMIT * 4
 
   # サイドバーのRecent Updatesで表示するために必要な属性のみを持つ軽量な構造体（issue #1603）。
   # ActiveRecordオブジェクトを丸ごとキャッシュするとMarshalシリアライズのコストが大きいため、
@@ -44,11 +45,7 @@ module SidebarLoadable
     load_recent_trends(today, ttl)
 
     @recently_updated = Rails.cache.fetch(RECENTLY_UPDATED_CACHE_KEY, expires_in: 10.minutes) do
-      pages   = recently_updated_entries(CustomPage.published, :custom_page, :title)
-      units   = recently_updated_entries(Unit.kept.published.where.not(key: nil), :unit, :name)
-      persons = recently_updated_entries(Person.kept.published.where.not(key: nil), :person, :name)
-
-      (pages + units + persons).sort_by(&:updated_at).reverse.first(RECENTLY_UPDATED_LIMIT)
+      recently_updated_entries
     end
 
     @birthday_people = Rails.cache.fetch("sidebar/birthday_people/#{today}", expires_in: ttl, race_condition_ttl: RACE_CONDITION_TTL) do
@@ -56,14 +53,51 @@ module SidebarLoadable
     end
   end
 
-  # `pluck`でカラムを絞り込んで取得し、表示に必要な属性のみを持つ軽量な構造体に詰め直す。
-  # label_columnはCustomPageなら:title、Unit/Personなら:name。Unit/Personの`name`は
-  # モデル側でCGI.unescapeHTMLするoverrideが入っているため、ここでも同様の処理を行う。
-  def recently_updated_entries(relation, type, label_column)
-    relation.order(updated_at: :desc).limit(RECENTLY_UPDATED_PER_MODEL_LIMIT).pluck(:key, label_column, :updated_at).map do |key, label, updated_at|
-      label = CGI.unescapeHTML(label.to_s).presence unless type == :custom_page
-      RecentlyUpdatedEntry.new(type:, key:, label:, updated_at:)
+  # Unit/Person/CustomPage自身、またはそれらに紐づくLink/Section/UnitSnapshot/
+  # SnapshotPersonの編集操作を記録したUpdateLog（UpdateLog#subjectが書き込み時点で
+  # 親ページを指すよう記録済み。issue #1530）から直近の更新を集計する。
+  # 同一subjectへの複数回の編集は最新の1件に、discard済み・非公開のsubjectは除外する。
+  def recently_updated_entries
+    rows = UpdateLog.for_sidebar.limit(RECENTLY_UPDATED_FETCH_LIMIT).pluck(:subject_type, :subject_id, :created_at)
+
+    latest_updated_at = {}
+    rows.each { |type, id, updated_at| latest_updated_at[[type, id]] ||= updated_at }
+
+    visible_subjects = fetch_visible_subjects(latest_updated_at.keys)
+
+    latest_updated_at.filter_map do |key, updated_at|
+      attrs = visible_subjects[key]
+      next unless attrs
+
+      RecentlyUpdatedEntry.new(type: attrs[:type], key: attrs[:key], label: attrs[:label], updated_at:)
+    end.sort_by(&:updated_at).reverse.first(RECENTLY_UPDATED_LIMIT)
+  end
+
+  # subject_keys（[subject_type, subject_id]の配列）のうち、実際に公開されている
+  # （discard済み・非公開でない）レコードのみを型ごとにまとめて取得する。
+  # Unit/Personの`name`はモデル側でCGI.unescapeHTMLするoverrideが入っているため、
+  # `pluck`で生カラムを取得するここでも同様の処理を行う。
+  def fetch_visible_subjects(subject_keys)
+    ids_by_type = subject_keys.group_by(&:first).transform_values { |pairs| pairs.map(&:last) }
+    visible = {}
+
+    if (ids = ids_by_type['Unit'])
+      Unit.kept.published.where(id: ids).where.not(key: nil).pluck(:id, :key, :name).each do |id, key, name|
+        visible[['Unit', id]] = { type: :unit, key:, label: CGI.unescapeHTML(name.to_s).presence }
+      end
     end
+    if (ids = ids_by_type['Person'])
+      Person.kept.published.where(id: ids).where.not(key: nil).pluck(:id, :key, :name).each do |id, key, name|
+        visible[['Person', id]] = { type: :person, key:, label: CGI.unescapeHTML(name.to_s).presence }
+      end
+    end
+    if (ids = ids_by_type['CustomPage'])
+      CustomPage.published.where(id: ids).pluck(:id, :key, :title).each do |id, key, title|
+        visible[['CustomPage', id]] = { type: :custom_page, key:, label: title }
+      end
+    end
+
+    visible
   end
 
   # 当日前後5日間に発売されたアイテムをサイドバー表示用に抽出する。

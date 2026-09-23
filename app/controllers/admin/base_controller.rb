@@ -37,6 +37,8 @@ module Admin
         subject: subject,
         diff: diff
       )
+
+      Rails.cache.delete(SidebarLoadable::RECENTLY_UPDATED_CACHE_KEY)
     end
   end
 end
