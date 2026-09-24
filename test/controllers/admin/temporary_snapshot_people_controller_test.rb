@@ -87,6 +87,105 @@ module Admin
       assert_equal '上書き太郎', @snapshot.reload.snapshot_people.last.person_name
     end
 
+    test 'should save part_alias as blank when it is cleared in the form' do
+      @temporary_snapshot_person.update!(part_alias: '旧名→新名')
+
+      post assign_admin_temporary_snapshot_person_path(@temporary_snapshot_person), params: {
+        unit_id: @unit.id,
+        unit_snapshot_ids: [@snapshot.id],
+        person_name: 'テスト太郎',
+        part_alias: '',
+        part: 'vocal',
+        status: 'left'
+      }
+
+      assert_nil @snapshot.reload.snapshot_people.last.part_alias
+    end
+
+    test 'should save person_name as blank when it is cleared in the form for a linked person' do
+      linked = TemporarySnapshotPerson.create!(
+        person: people(:one),
+        person_name: '旧表記',
+        part: :vocal,
+        status: :left,
+        hint_unit: @unit
+      )
+
+      post assign_admin_temporary_snapshot_person_path(linked), params: {
+        unit_id: @unit.id,
+        unit_snapshot_ids: [@snapshot.id],
+        person_name: '',
+        part: 'vocal',
+        status: 'left'
+      }
+
+      assigned = @snapshot.reload.snapshot_people.last
+      assert_nil assigned.person_name
+      assert_equal people(:one), assigned.person
+    end
+
+    test 'should not assign when the name is cleared and no person is linked' do
+      assert_no_difference('SnapshotPerson.count') do
+        assert_no_difference('TemporarySnapshotPerson.count') do
+          post assign_admin_temporary_snapshot_person_path(@temporary_snapshot_person), params: {
+            unit_id: @unit.id,
+            unit_snapshot_ids: [@snapshot.id],
+            person_name: '',
+            part: 'vocal',
+            status: 'left'
+          }
+        end
+      end
+
+      assert_response :unprocessable_entity
+    end
+
+    test 'should append assigned member to the end of existing members' do
+      max_sort_order = @snapshot.snapshot_people.maximum(:sort_order)
+
+      post assign_admin_temporary_snapshot_person_path(@temporary_snapshot_person), params: {
+        unit_id: @unit.id,
+        unit_snapshot_ids: [@snapshot.id],
+        create_new_snapshot: '1',
+        part: 'vocal',
+        status: 'left'
+      }
+
+      assert_equal max_sort_order + 1, @snapshot.reload.snapshot_people.last.sort_order
+      assert_equal 1, UnitSnapshot.last.snapshot_people.last.sort_order
+    end
+
+    # issue #1654: Personに紐付いたメンバーを振り分けたとき、sns を Person#links にマージする
+    test 'should merge sns into the linked person links when assigning to multiple snapshots' do
+      linked = TemporarySnapshotPerson.create!(
+        person: people(:one), part: :vocal, status: :left, hint_unit: @unit, sns: ['@pooled']
+      )
+
+      assert_difference({ 'people(:one).links.count' => 1, 'UpdateLog.where(loggable_type: "Link").count' => 1 }) do
+        post assign_admin_temporary_snapshot_person_path(linked), params: {
+          unit_id: @unit.id,
+          unit_snapshot_ids: [@snapshot.id, @other_snapshot.id],
+          part: 'vocal',
+          status: 'left'
+        }
+      end
+
+      assert_equal 'https://x.com/pooled', people(:one).links.last.url
+    end
+
+    test 'should carry over old_person_key when assigning' do
+      @temporary_snapshot_person.update!(old_person_key: '旧キー太郎')
+
+      post assign_admin_temporary_snapshot_person_path(@temporary_snapshot_person), params: {
+        unit_id: @unit.id,
+        unit_snapshot_ids: [@snapshot.id],
+        part: 'vocal',
+        status: 'left'
+      }
+
+      assert_equal '旧キー太郎', @snapshot.reload.snapshot_people.last.old_person_key
+    end
+
     test 'should assign to multiple snapshots at once' do
       assert_difference('SnapshotPerson.count', 2) do
         assert_difference('TemporarySnapshotPerson.count', -1) do

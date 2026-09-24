@@ -83,6 +83,7 @@ module Admin
 
           snapshot_person = @unit_snapshot.snapshot_people.create!(attrs.merge(sort_order: index))
           record_update_log(snapshot_person, action: 'create', subject: @unit)
+          record_merged_sns_links(snapshot_person)
         end
       end
 

@@ -11,6 +11,7 @@ module Admin
 
       if @snapshot_person.save
         record_update_log(@snapshot_person, action: 'create', subject: @unit)
+        record_merged_sns_links(@snapshot_person)
         redirect_to edit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
                     notice: 'Member was successfully added.'
       else
@@ -24,6 +25,7 @@ module Admin
     def update
       if @snapshot_person.update(snapshot_person_params)
         record_update_log(@snapshot_person, action: 'update', subject: @unit)
+        record_merged_sns_links(@snapshot_person)
         redirect_to edit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
                     notice: 'Member was successfully updated.'
       else
@@ -48,6 +50,7 @@ module Admin
         @snapshot_person.update(person_id: person.id)
         record_update_log(person, action: 'create')
         record_update_log(@snapshot_person, action: 'update', subject: @unit)
+        record_merged_sns_links(@snapshot_person)
         redirect_to snapshot_person_path, notice: 'Personを新規作成して紐付けました。'
       else
         redirect_to snapshot_person_path, alert: "Personの作成に失敗しました: #{person.errors.full_messages.join(', ')}"

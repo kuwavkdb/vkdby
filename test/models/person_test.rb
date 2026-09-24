@@ -412,4 +412,14 @@ class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
     assert_not visible_alias.hidden
     assert hidden_alias.hidden
   end
+
+  # issue #1654: Person作成時の自動紐付け（update_all）でも sns を links にマージする
+  test 'auto_link_snapshot_people merges sns of linked snapshot people into links' do
+    unit_snapshots(:one).snapshot_people.create!(person_name: 'Auto Link', person_key: 'auto-link-sns',
+                                                 part: :vocal, sns: ['@auto_link', 'https://twitter.com/auto_link'])
+
+    person = Person.create!(name: 'Auto Link', key: 'auto-link-sns', status: :active)
+
+    assert_equal ['https://x.com/auto_link'], person.links.pluck(:url)
+  end
 end

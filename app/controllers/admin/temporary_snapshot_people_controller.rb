@@ -44,7 +44,9 @@ module Admin
         return
       end
 
-      snapshot_people = target_snapshots.map { |snapshot| snapshot.snapshot_people.build(snapshot_person_attributes) }
+      snapshot_people = target_snapshots.map do |snapshot|
+        snapshot.snapshot_people.build(snapshot_person_attributes.merge(sort_order: next_sort_order(snapshot)))
+      end
 
       if target_snapshots.all?(&:valid?)
         save_assignment(target_snapshots, snapshot_people)
@@ -75,7 +77,10 @@ module Admin
 
     def save_assignment(target_snapshots, snapshot_people)
       ActiveRecord::Base.transaction { target_snapshots.each(&:save!) }
-      snapshot_people.each { |sp| record_update_log(sp, action: 'create', subject: @unit) }
+      snapshot_people.each do |sp|
+        record_update_log(sp, action: 'create', subject: @unit)
+        record_merged_sns_links(sp)
+      end
       @temporary_snapshot_person.destroy
 
       redirect_to admin_temporary_snapshot_people_path(
@@ -90,13 +95,27 @@ module Admin
       render :assign, status: :unprocessable_entity
     end
 
+    # 既存メンバーの末尾に追加する（SnapshotPersonCopyMover と同じ考え方）
+    def next_sort_order(snapshot)
+      return 1 if snapshot.new_record?
+
+      snapshot.snapshot_people.maximum(:sort_order).to_i + 1
+    end
+
+    # フォームには元の値が初期入力されているため、送信された値はそのまま使う（空欄なら空で保存）。
+    # フォームから送られていない場合のみプールの値を使う。
+    def form_value_or_pool(key)
+      params.key?(key) ? params[key].presence : @temporary_snapshot_person.public_send(key)
+    end
+
     def snapshot_person_attributes
       {
         person_id: @temporary_snapshot_person.person_id,
         person_key: @temporary_snapshot_person.person_key,
-        person_name: params[:person_name].presence || @temporary_snapshot_person.person_name,
+        old_person_key: @temporary_snapshot_person.old_person_key,
+        person_name: form_value_or_pool(:person_name),
         part: params[:part].presence || @temporary_snapshot_person.part,
-        part_alias: params[:part_alias].presence || @temporary_snapshot_person.part_alias,
+        part_alias: form_value_or_pool(:part_alias),
         status: params[:status].presence || @temporary_snapshot_person.status,
         support: ActiveModel::Type::Boolean.new.cast(params[:support]) || false,
         sns: @temporary_snapshot_person.sns,

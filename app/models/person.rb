@@ -202,7 +202,11 @@ class Person < ApplicationRecord
   def auto_link_snapshot_people
     return if key.blank?
 
-    SnapshotPerson.where(person_key: key, person_id: nil).update_all(person_id: id)
+    targets = SnapshotPerson.where(person_key: key, person_id: nil)
+    target_ids = targets.ids
+    targets.update_all(person_id: id)
+    # update_all ではコールバックが走らないため、SNSのマージを明示的に行う（issue #1654）
+    SnapshotPerson.where(id: target_ids).find_each(&:merge_sns_into_person)
   end
 
   def expire_sidebar_cache

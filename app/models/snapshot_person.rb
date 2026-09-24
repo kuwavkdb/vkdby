@@ -59,6 +59,17 @@ class SnapshotPerson < ApplicationRecord
   validate :person_or_name_presence
 
   before_validation :find_person_by_key, if: -> { person_id.blank? && person_key.present? }
+  # 紐付け先のPersonが変わったら、sns を Person#links にマージする（issue #1654）。
+  # update_all で person_id を書き換える経路（Person#auto_link_snapshot_people、
+  # PersonImporter#link_existing_snapshot_people）ではコールバックが走らないため、各経路で明示的に呼ぶ。
+  after_save :merge_sns_into_person, if: -> { saved_change_to_person_id? && person_id.present? && !skip_sns_merge }
+
+  # 既に紐付け済みのメンバーを複製するとき（スナップショットのコピー・移動）は、紐付けの変更ではないため
+  # マージしない。Person側で意図的に削除したLinkが復活するのを防ぐ。
+  attr_accessor :skip_sns_merge
+
+  # 直近の merge_sns_into_person で追加したLink（管理画面で UpdateLog を記録するために参照する）
+  attr_reader :merged_links
 
   def name
     person_name.presence || person&.name
@@ -105,6 +116,30 @@ class SnapshotPerson < ApplicationRecord
     end
 
     urls.uniq.each_with_index.map { |url, index| { url: url, sort_order: index + 1 } }
+  end
+
+  # sns のうち、Person#links にまだ無いURL（Link.comparable_url で比較）を返す（issue #1654）。
+  # known_urls には、Personにはまだ保存されていないが追加予定のURLを渡せる（rakeのdry-run用）。
+  def sns_urls_missing_from(person, known_urls: [])
+    return [] if sns.blank?
+
+    existing = (person.links.pluck(:url) + known_urls).to_set { |url| Link.comparable_url(url) }
+
+    sns_link_attributes.map { |attrs| attrs[:url] }
+                       .reject { |url| existing.include?(Link.comparable_url(url)) }
+                       .uniq { |url| Link.comparable_url(url) }
+  end
+
+  # sns のうち Person#links にまだ無いものを、既存Linkの末尾に追加する（issue #1654）。
+  # 追加したLinkの配列を返し、merged_links からも参照できる。
+  def merge_sns_into_person
+    @merged_links = []
+    return @merged_links if person.nil?
+
+    base_sort_order = person.links.maximum(:sort_order).to_i
+    @merged_links = sns_urls_missing_from(person).each_with_index.map do |url, index|
+      person.links.create!(url: url, sort_order: base_sort_order + index + 1)
+    end
   end
 
   # Person未紐付けのこのメンバーを、Personとして独立させる（issue #1596で追加されたcreate_person

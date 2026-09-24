@@ -17,7 +17,11 @@ class PersonCardComponent < ViewComponent::Base
 
   def card_classes
     'group block bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 ' \
-    'hover:border-person dark:hover:border-amber-400 hover:scale-[1.01] transition-all relative overflow-hidden p-4 rounded-lg'
+    'hover:border-person hover:ring-1 hover:ring-person hover:shadow-lg hover:shadow-person/15 ' \
+    'dark:hover:border-amber-400 dark:hover:ring-amber-400 dark:hover:bg-zinc-800 dark:hover:shadow-black/40 ' \
+    'motion-safe:hover:-translate-y-0.5 ' \
+    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-person dark:focus-visible:outline-amber-400 ' \
+    'transition-all relative overflow-hidden p-4 rounded-lg'
   end
 
   def icon_padding_classes
