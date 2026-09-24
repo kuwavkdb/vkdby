@@ -2,7 +2,7 @@
 <div class="flex justify-center">
   <div class="bg-white dark:bg-zinc-900 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
     <!-- ヘッダー（タイトル） -->
-    <div class="bg-amber-500 p-6 md:p-8 border-b border-amber-600/30 relative">
+    <div class="bg-amber-400 p-6 md:p-8 border-b border-amber-600/30 relative">
       <%= render HeaderActionLinkComponent.new(label: "Edit", url: edit_admin_item_path(@item),
             visible: defined?(logged_in?) && logged_in?) %>
       <%
@@ -156,7 +156,7 @@
 
       <% if @upcoming_items.any? %>
         <div class="mt-8">
-          <div class="-mx-5 md:-mx-8 px-5 md:px-8 py-4 bg-amber-500">
+          <div class="-mx-5 md:-mx-8 px-5 md:px-8 py-4 bg-amber-400">
             <h2 class="text-base font-bold text-zinc-900 mb-4">近日リリースの作品</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <%= render ItemCardComponent.with_collection(@upcoming_items) %>
