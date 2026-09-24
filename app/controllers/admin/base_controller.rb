@@ -40,5 +40,12 @@ module Admin
 
       Rails.cache.delete(SidebarLoadable::RECENTLY_UPDATED_CACHE_KEY)
     end
+
+    # SnapshotPersonの紐付けに伴い、snsからPerson#linksへ追加されたLinkを記録する（issue #1654）
+    def record_merged_sns_links(snapshot_person)
+      Array(snapshot_person.merged_links).each do |link|
+        record_update_log(link, action: 'create', subject: link.linkable)
+      end
+    end
   end
 end
