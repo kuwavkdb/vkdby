@@ -152,5 +152,59 @@ module Admin
       assert_redirected_to admin_venues_path
       assert_not @venue.reload.discarded?
     end
+
+    test 'update ignores key' do
+      login_as(users(:one))
+
+      patch admin_venue_path(@venue), params: { venue: { key: 'hacked', name: '新宿LOFT（更新）' } }
+
+      assert_redirected_to edit_admin_venue_path(@venue)
+      @venue.reload
+      assert_equal 'shinjuku-loft', @venue.key
+      assert_equal '新宿LOFT（更新）', @venue.name
+    end
+
+    test 'change_key requires admin role' do
+      login_as(users(:one))
+
+      patch change_key_admin_venue_path(@venue), params: { new_key: 'loft' }
+
+      assert_redirected_to root_path
+      assert_equal 'shinjuku-loft', @venue.reload.key
+    end
+
+    test 'change_key changes the key and creates a redirect stub when admin' do
+      login_as(users(:admin))
+
+      assert_difference('Venue.with_discarded.count', 1) do
+        patch change_key_admin_venue_path(@venue), params: { new_key: 'loft-shinjuku' }
+      end
+
+      assert_redirected_to edit_admin_venue_path(@venue)
+      assert_equal 'loft-shinjuku', @venue.reload.key
+      assert_equal 'loft-shinjuku', Venue.with_discarded.find_by!(key: 'shinjuku-loft').destination_key
+      assert UpdateLog.exists?(loggable: @venue, action: 'change_key')
+    end
+
+    test 'change_key shows an error when the new key is already taken' do
+      login_as(users(:admin))
+      Venue.create!(key: 'taken', name: '別の会場')
+
+      patch change_key_admin_venue_path(@venue), params: { new_key: 'taken' }
+
+      assert_redirected_to edit_admin_venue_path(@venue)
+      assert flash[:alert].present?
+      assert_equal 'shinjuku-loft', @venue.reload.key
+    end
+
+    test 'index can list redirect sources' do
+      login_as(users(:one))
+      @venue.change_key!('loft-shinjuku')
+
+      get admin_venues_path, params: { redirect_source: 'only' }
+
+      assert_response :success
+      assert_includes response.body, '→ loft-shinjuku'
+    end
   end
 end

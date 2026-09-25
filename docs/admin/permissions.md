@@ -59,7 +59,7 @@
 | Users 管理 | 全アクション |
 | Operation Logs（ログイン履歴） | index（全アクション） |
 | Wiki Page Imports | 全アクション |
-| Units / People — キー変更 | change_key |
+| Units / People / Venues — キー変更（旧キーは転送用スタブとして残り、新キーへ転送される） | change_key |
 | Units / People — リダイレクト元の物理削除 | purge |
 | Units / People — 一覧からのStatus一括更新 | bulk_update_status |
 | Unit Submissions（ログイン不要の投稿フォームからの投稿一覧・却下） | 全アクション |
@@ -93,7 +93,7 @@
 | `super_operator_or_above?` でない | 画像管理の削除ボタン |
 | `admin?` でない | Section / Custom Page 編集画面のアップロードボタン |
 | `admin?` でない | ナビの Images リンク |
-| `admin?` でない | Units / People 編集画面の「キー変更」ボタン |
+| `admin?` でない | Units / People / Venues 編集画面の「キー変更」ボタン |
 | `admin?` でない | Units / People 一覧のリダイレクト元「物理削除」ボタン |
 | `admin?` でない | Units / People 一覧のチェックボックス・一括Status更新バー |
 

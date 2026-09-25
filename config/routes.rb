@@ -78,6 +78,7 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
     resources :venues do
       member do
         patch :undiscard
+        patch :change_key
       end
     end
 

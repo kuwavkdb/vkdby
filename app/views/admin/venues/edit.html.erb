@@ -6,9 +6,15 @@
     <% if @venue.discarded? %>
       <p class="mb-4 px-4 py-2 rounded-md bg-red-50 text-red-700 text-sm dark:bg-red-900/40 dark:text-red-200">この会場は論理削除されています。</p>
     <% end %>
+    <% if @venue.destination_key.present? %>
+      <p class="mb-4 px-4 py-2 rounded-md bg-amber-50 text-amber-800 text-sm dark:bg-amber-900/40 dark:text-amber-200">
+        この会場は <code class="font-mono"><%= @venue.destination_key %></code> へ転送されます。
+      </p>
+    <% end %>
     <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
       <%= render "form", venue: @venue %>
     </div>
+    <%= render "admin/shared/change_key_form", change_key_path: change_key_admin_venue_path(@venue), form_id: "change_key_form" %>
 
     <% if current_user.super_operator_or_above? && !@venue.discarded? %>
       <div class="mt-4 flex justify-end">

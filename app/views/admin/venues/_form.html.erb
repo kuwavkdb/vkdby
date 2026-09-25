@@ -29,8 +29,26 @@
 
   <div>
     <%= form.label :key, "キー", class: label_class %>
-    <%= form.text_field :key, required: true, class: input_class %>
-    <p class="<%= help_class %>">公開ページのURLに使う予定のキーです（公開ページは未実装）。</p>
+    <% if venue.new_record? %>
+      <%= form.text_field :key, required: true, class: input_class %>
+      <p class="<%= help_class %>">公開ページのURLに使う予定のキーです（公開ページは未実装）。作成後は「キー変更」からのみ変更できます。</p>
+    <% else %>
+      <div class="mt-1 block w-full rounded-md bg-gray-100 border border-gray-300 px-2 py-2 text-base text-gray-600 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-400">
+        <%= venue.key %>
+      </div>
+      <% if current_user&.admin? %>
+        <p class="<%= help_class %>">直接編集はできません。変更する場合は下の「キー変更」から行ってください</p>
+      <% else %>
+        <p class="<%= help_class %>">キーは変更できません</p>
+      <% end %>
+      <%= render "admin/shared/change_key_trigger", resource: venue, form_id: "change_key_form" %>
+    <% end %>
+  </div>
+
+  <div>
+    <%= form.label :destination_key, "転送先キー", class: label_class %>
+    <%= form.text_field :destination_key, placeholder: "統合先の会場の key（旧URL転送用）", class: input_class %>
+    <p class="<%= help_class %>">設定すると、この会場のキーへのアクセスが転送先の会場へ 301 リダイレクトされます（公開ページの実装後に有効）。重複登録した会場の統合時に使用。</p>
   </div>
 
   <div>

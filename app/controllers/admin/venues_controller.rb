@@ -5,8 +5,9 @@ module Admin
   class VenuesController < Admin::BaseController
     include LoggableLinkChanges
 
-    before_action :set_venue, only: %i[show edit update destroy undiscard]
+    before_action :set_venue, only: %i[show edit update destroy undiscard change_key]
     before_action :require_super_operator, only: %i[destroy undiscard]
+    before_action :require_admin, only: %i[change_key]
 
     def index
       @q = params[:q]
@@ -16,6 +17,8 @@ module Admin
               when 'all'  then Venue.with_discarded
               else             Venue.kept
               end
+      # キー変更で残した転送用スタブ（論理削除済み・destination_keyあり）だけを表示する
+      scope = Venue.with_discarded.where.not(destination_key: nil) if params[:redirect_source] == 'only'
       if @q.present?
         scope = scope.where(
           'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
@@ -59,7 +62,7 @@ module Admin
     def update
       pre_link_ids = @venue.links.pluck(:id)
 
-      if @venue.update(venue_params)
+      if @venue.update(venue_update_params)
         record_update_log(@venue, action: 'update')
         record_link_changes(@venue, pre_link_ids)
         redirect_to edit_admin_venue_path(@venue), notice: '会場を更新しました。'
@@ -83,6 +86,19 @@ module Admin
       redirect_to admin_venues_path, notice: '会場を復元しました。'
     end
 
+    def change_key
+      new_key = params[:new_key].to_s.strip
+      return redirect_to edit_admin_venue_path(@venue), alert: '新しいキーを入力してください。' if new_key.blank?
+
+      @venue.change_key!(new_key)
+      record_update_log(@venue, action: 'change_key')
+      redirect_to edit_admin_venue_path(@venue), notice: 'キーを変更しました。旧キーは新しいキーへ転送されます。'
+    rescue ActiveRecord::RecordNotUnique
+      redirect_to edit_admin_venue_path(@venue), alert: 'そのキーはすでに使われています。'
+    rescue ActiveRecord::RecordInvalid => e
+      redirect_to edit_admin_venue_path(@venue), alert: e.message
+    end
+
     private
 
     def set_venue
@@ -91,10 +107,15 @@ module Admin
 
     def venue_params
       params.require(:venue).permit(:key, :name, :name_kana, :venue_type, :prefecture, :area, :address,
-                                    :capacity, :status, :note, :old_key,
+                                    :capacity, :status, :note, :old_key, :destination_key,
                                     links_attributes: %i[id text url active sort_order _destroy],
                                     name_logs_attributes: %i[name name_kana date],
                                     aliases_attributes: %i[name kana old_key hidden])
+    end
+
+    # key はキー変更専用の操作（change_key）でのみ変更できる。通常の update では受け付けない
+    def venue_update_params
+      venue_params.except(:key)
     end
   end
 end

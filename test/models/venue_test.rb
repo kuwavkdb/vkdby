@@ -143,4 +143,64 @@ class VenueTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
     assert_not_includes Venue.kept, venue
     assert_includes Venue.with_discarded, venue
   end
+
+  test 'key cannot be changed by a normal update' do
+    venue = build_venue
+    venue.save!
+
+    assert_not venue.update(key: 'renamed')
+    assert venue.errors[:key].any?
+  end
+
+  test 'destination_key cannot point to itself' do
+    venue = build_venue(destination_key: 'SHINJUKU-LOFT')
+
+    assert_not venue.valid?
+    assert venue.errors[:destination_key].any?
+  end
+
+  test 'change_key! changes the key and leaves a discarded redirect stub' do
+    venue = build_venue(old_key: '%BF%B7%BD%C9LOFT')
+    venue.save!
+
+    venue.change_key!('loft-shinjuku')
+
+    assert_equal 'loft-shinjuku', venue.reload.key
+    assert_equal '%BF%B7%BD%C9LOFT', venue.old_key
+    stub = Venue.with_discarded.find_by!(key: 'shinjuku-loft')
+    assert stub.discarded?
+    assert_equal 'loft-shinjuku', stub.destination_key
+    assert_nil stub.old_key
+    assert stub.redirect_source?
+  end
+
+  test 'change_key! does not rewrite item artist keys of a unit with the same key' do
+    venue = build_venue(key: 'same-key')
+    venue.save!
+    item = Item.create!(title: 'CD', release_date: Date.new(2020, 1, 1), link_url: 'https://example.com/cd',
+                        artists: [{ 'key' => 'same-key', 'name' => 'Unit' }])
+
+    venue.change_key!('venue-new-key')
+
+    assert_equal 'same-key', item.reload.artists.first['key']
+  end
+
+  test 'resolve_by_key follows destination_key chains' do
+    venue = build_venue(key: 'a')
+    venue.save!
+    venue.change_key!('b')
+    venue.change_key!('c')
+
+    assert_equal venue, Venue.resolve_by_key('a')
+    assert_equal venue, Venue.resolve_by_key('b')
+    assert_equal venue, Venue.resolve_by_key('c')
+    assert_nil Venue.resolve_by_key('missing')
+  end
+
+  test 'resolve_by_key returns nil for a redirect loop' do
+    Venue.create!(key: 'x', name: 'X', destination_key: 'y')
+    Venue.create!(key: 'y', name: 'Y', destination_key: 'x')
+
+    assert_nil Venue.resolve_by_key('x')
+  end
 end
