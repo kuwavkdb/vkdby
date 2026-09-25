@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_22_020000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_25_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -460,6 +460,37 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_22_020000) do
     t.integer "role", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
+  end
+
+  create_table "venues", force: :cascade do |t|
+    t.string "address"
+    t.jsonb "aliases", default: [], null: false
+    t.string "area"
+    t.integer "capacity"
+    t.datetime "created_at", null: false
+    t.string "destination_key"
+    t.datetime "discarded_at"
+    t.string "key", null: false
+    t.string "name", null: false
+    t.string "name_kana"
+    t.jsonb "name_log", default: [], null: false
+    t.text "note"
+    t.string "old_key"
+    t.integer "old_wiki_id"
+    t.text "old_wiki_text"
+    t.string "prefecture"
+    t.integer "status", default: 1, null: false
+    t.datetime "updated_at", null: false
+    t.integer "venue_type", default: 0, null: false
+    t.index "((aliases)::text) gin_trgm_ops", name: "index_venues_on_aliases_trgm", using: :gin
+    t.index "((name_log)::text) gin_trgm_ops", name: "index_venues_on_name_log_trgm", using: :gin
+    t.index ["destination_key"], name: "index_venues_on_destination_key", where: "(destination_key IS NOT NULL)"
+    t.index ["discarded_at"], name: "index_venues_on_discarded_at"
+    t.index ["key"], name: "index_venues_on_key", unique: true
+    t.index ["name"], name: "index_venues_on_name", opclass: :gin_trgm_ops, using: :gin
+    t.index ["old_key"], name: "index_venues_on_old_key", unique: true
+    t.index ["prefecture"], name: "index_venues_on_prefecture"
+    t.index ["venue_type"], name: "index_venues_on_venue_type"
   end
 
   create_table "wiki_page_imports", force: :cascade do |t|
