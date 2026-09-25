@@ -2,7 +2,7 @@
   <div>
     <div class="flex items-center justify-between gap-3 md:gap-4 flex-wrap sm:flex-nowrap">
       <div class="flex items-center gap-3 md:gap-4 flex-1">
-        <span class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest min-w-[4rem]" title="<%= (@member.part_alias.present? || @member.support?) ? @member.part.upcase : '' %>">
+        <span class="text-xs font-black text-slate-500 uppercase tracking-widest min-w-[4rem]" title="<%= (@member.part_alias.present? || @member.support?) ? @member.part.upcase : '' %>">
           <%= (@member.support? ? "サポート " : "") + (@member.part_alias.presence || @member.part.upcase) %>
         </span>
         <%# role="heading"のdivを使用（<h3>にしない）: {{member}}/{{member2}}/{{snapshot}}
@@ -22,7 +22,7 @@
       <div class="flex items-center gap-2">
         <% if @member.sns.present? && @member.sns.is_a?(Array) %>
           <% @member.sns.each do |sns_account| %>
-            <%= link_to sns_url_for(sns_account), target: "_blank", rel: "noopener noreferrer", class: "inline-flex items-center text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors" do %>
+            <%= link_to sns_url_for(sns_account), target: "_blank", rel: "noopener noreferrer", class: "inline-flex items-center text-slate-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors" do %>
               <%= sns_icon(sns_icon_for(sns_account), css_class: "w-4 h-4") %>
             <% end %>
           <% end %>

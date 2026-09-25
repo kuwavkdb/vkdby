@@ -20,7 +20,7 @@
           <%= link_to helpers.sanitize_with_ruby(item[:unit_name]), "/#{item[:old_key]}.html", class: "text-indigo-700 dark:text-amber-400 underline decoration-indigo-600/25 dark:decoration-amber-400/40 underline-offset-2 hover:decoration-indigo-600 dark:hover:decoration-amber-400 transition-colors" %>
         <% else %>
           <% if item[:is_temp] %>
-            <span class="text-slate-400 dark:text-slate-500"><%= helpers.sanitize_with_ruby(item[:unit_name]) %></span>
+            <span class="text-slate-500"><%= helpers.sanitize_with_ruby(item[:unit_name]) %></span>
           <% else %>
             <%= helpers.sanitize_with_ruby(item[:unit_name]) %>
           <% end %>
