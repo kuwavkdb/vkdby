@@ -25,12 +25,12 @@
                           "#{sp.name} (#{sp_part})"
                         end
                       end %>
-          <span class="text-slate-300 dark:text-slate-600">[<%= loggable_label %><%= ": #{detail}" if detail %>]</span>
+          <span class="text-slate-500 dark:text-slate-600">[<%= loggable_label %><%= ": #{detail}" if detail %>]</span>
         <% end %>
-        <span class="text-slate-400 dark:text-slate-500"><%= log.user.name %></span>
+        <span class="text-slate-500"><%= log.user.name %></span>
       </li>
     <% end %>
   </ol>
 <% else %>
-  <p class="text-xs text-slate-400 dark:text-slate-500">更新ログはありません</p>
+  <p class="text-xs text-slate-500">更新ログはありません</p>
 <% end %>

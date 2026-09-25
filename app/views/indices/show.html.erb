@@ -4,7 +4,7 @@
     <div class="mb-6">
       <% index_group = @index.index_group %>
       <%= link_to index_group ? indices_group_path(index_group.id) : indices_groups_path,
-            class: "inline-flex items-center gap-1 text-sm font-bold text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-amber-400 transition-colors" do %>
+            class: "inline-flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-indigo-500 dark:hover:text-amber-400 transition-colors" do %>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
         </svg>
@@ -17,7 +17,7 @@
         <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-base rounded-lg font-black uppercase tracking-widest">INDEX</span>
         <span><%= @index.name %></span>
       </h1>
-      <div class="mt-2 flex gap-4 text-sm text-slate-400 dark:text-slate-500 font-bold">
+      <div class="mt-2 flex gap-4 text-sm text-slate-500 font-bold">
         <span><%= @units.count %> units</span>
         <span><%= @people.count %> people</span>
       </div>
@@ -45,7 +45,7 @@
 
     <% if @units.empty? && @people.empty? %>
       <div class="py-20 text-center">
-        <p class="text-slate-400 dark:text-slate-500 font-bold">このインデックスに該当するデータはありません。</p>
+        <p class="text-slate-500 font-bold">このインデックスに該当するデータはありません。</p>
       </div>
     <% end %>
   </div>

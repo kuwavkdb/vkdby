@@ -22,7 +22,7 @@
                   <img src="<%= amazon_image?(item.image_url) ? amazon_image_url(item.image_url, 80) : item.image_url %>"
                        width="80" height="80" alt="<%= item.title %>" class="w-20 h-20 object-scale-down">
                 <% else %>
-                  <span class="text-zinc-300 dark:text-zinc-600 text-[0.6rem] leading-tight text-center px-0.5">画像なし</span>
+                  <span class="text-zinc-500 dark:text-zinc-600 text-[0.6rem] leading-tight text-center px-0.5">画像なし</span>
                 <% end %>
               </div>
               <div class="flex-1 min-w-0">
@@ -89,7 +89,7 @@
           </li>
         <% end %>
       <% else %>
-        <li class="px-4 py-3 text-sm text-slate-400 dark:text-slate-500">データなし</li>
+        <li class="px-4 py-3 text-sm text-slate-500">データなし</li>
       <% end %>
     </ul>
     <div class="px-4 py-2 border-t border-slate-100 dark:border-slate-700 text-right">
@@ -128,7 +128,7 @@
           </li>
         <% end %>
       <% else %>
-        <li class="px-4 py-3 text-sm text-slate-400 dark:text-slate-500">データなし</li>
+        <li class="px-4 py-3 text-sm text-slate-500">データなし</li>
       <% end %>
     </ul>
   </div>
