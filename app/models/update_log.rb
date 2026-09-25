@@ -45,6 +45,13 @@ class UpdateLog < ApplicationRecord
       .or(where(loggable_type: 'Section', loggable_id: section_ids))
   end
 
+  def self.for_venue(venue)
+    link_ids = venue.links.pluck(:id)
+
+    where(loggable_type: 'Venue', loggable_id: venue.id)
+      .or(where(loggable_type: 'Link', loggable_id: link_ids))
+  end
+
   def self.for_person(person)
     link_ids = person.links.pluck(:id)
     section_ids = Section.with_discarded.where(sectionable_type: 'Person', sectionable_id: person.id).pluck(:id)

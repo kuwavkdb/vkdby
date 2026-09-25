@@ -26,6 +26,7 @@
 | People — 閲覧・作成・編集 | index / new / create / edit / update / search |
 | Index Groups / タグ（Tag Indices）— 閲覧・作成・編集・削除・並べ替え・グループ移動 | 全アクション |
 | Trends — 閲覧・作成・編集 | index / new / create / edit / update |
+| Venues（会場）— 閲覧・作成・編集（名前の履歴・別名・リンクの編集を含む） | index / new / create / edit / update / show |
 | External Sites | 全アクション |
 | Custom Pages — 閲覧・作成・編集 | index / new / create / edit / update |
 | Custom Pages — サーバーサイドプレビュー（`{{include}}`/`{{snapshot}}`/`{{item}}` 等のプラグイン記法を反映） | preview |
@@ -40,6 +41,7 @@
 | Units — 削除・復元 | destroy / undiscard |
 | People — 削除 | destroy |
 | Trends — 削除 | destroy |
+| Venues（会場）— 削除・復元 | destroy / undiscard |
 | Items — 閲覧・作成・編集 | index / new / create / edit / update |
 | Items — アーティスト一括変更（index にアーティスト検索条件がある場合のみUI表示） | bulk_artist_update |
 | Custom Pages — 削除・復元 | destroy / undiscard |
@@ -86,7 +88,7 @@
 
 | 条件 | 非表示になる操作 |
 |---|---|
-| `super_operator_or_above?` でない | Units / People / Trends / Custom Pages の削除・復元ボタン |
+| `super_operator_or_above?` でない | Units / People / Trends / Custom Pages / Venues の削除・復元ボタン |
 | `super_operator_or_above?` でない | Items の新規作成・編集ボタン |
 | `super_operator_or_above?` でない | 画像管理の削除ボタン |
 | `admin?` でない | Section / Custom Page 編集画面のアップロードボタン |

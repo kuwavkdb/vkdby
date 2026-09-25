@@ -1,0 +1,180 @@
+<%
+  label_class = "block text-sm font-semibold text-gray-900 dark:text-gray-100"
+  small_label_class = "block text-xs font-semibold text-gray-900 dark:text-gray-100"
+  input_class = "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+  small_input_class = "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+  help_class = "mt-1 text-xs text-gray-500 dark:text-gray-400"
+%>
+<%= form_with(model: [:admin, venue], class: "space-y-6") do |form| %>
+  <% if venue.errors.any? %>
+    <div class="bg-red-50 dark:bg-red-900/50 p-4 rounded text-red-700 dark:text-red-100" role="alert">
+      <h2><%= venue.errors.count %>件のエラーがあるため保存できませんでした:</h2>
+      <ul class="list-disc list-inside">
+        <% venue.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :name, "名前（現在の名称）", class: label_class %>
+    <%= form.text_field :name, required: true, class: input_class %>
+  </div>
+
+  <div>
+    <%= form.label :name_kana, "ヨミガナ", class: label_class %>
+    <%= form.text_field :name_kana, class: input_class %>
+  </div>
+
+  <div>
+    <%= form.label :key, "キー", class: label_class %>
+    <%= form.text_field :key, required: true, class: input_class %>
+    <p class="<%= help_class %>">公開ページのURLに使う予定のキーです（公開ページは未実装）。</p>
+  </div>
+
+  <div>
+    <%= form.label :old_key, "旧キー", class: label_class %>
+    <%= form.text_field :old_key, class: input_class %>
+    <p class="<%= help_class %>">旧サイトのページ名。旧URLからの転送に使います。</p>
+  </div>
+
+  <fieldset>
+    <legend class="<%= label_class %>">種別</legend>
+    <div class="mt-2 flex flex-wrap gap-4">
+      <% Venue::VENUE_TYPE_TRANSLATIONS.each do |type, label| %>
+        <label class="inline-flex items-center">
+          <%= form.radio_button :venue_type, type, class: "form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
+          <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"><%= label %></span>
+        </label>
+      <% end %>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend class="<%= label_class %>">ステータス</legend>
+    <div class="mt-2 flex flex-wrap gap-4">
+      <% Venue::STATUS_TRANSLATIONS.each do |status, label| %>
+        <label class="inline-flex items-center">
+          <%= form.radio_button :status, status, class: "form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
+          <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"><%= label %></span>
+        </label>
+      <% end %>
+    </div>
+  </fieldset>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <%= form.label :prefecture, "都道府県", class: label_class %>
+      <%= form.select :prefecture, Venue::PREFECTURES, { include_blank: "（未設定）" }, class: input_class %>
+    </div>
+    <div>
+      <%= form.label :area, "エリア", class: label_class %>
+      <%= form.text_field :area, placeholder: "例: 新宿", class: input_class %>
+    </div>
+  </div>
+
+  <div>
+    <%= form.label :address, "住所", class: label_class %>
+    <%= form.text_field :address, class: input_class %>
+  </div>
+
+  <div>
+    <%= form.label :capacity, "キャパシティ", class: label_class %>
+    <%= form.number_field :capacity, min: 1, step: 1, class: input_class %>
+    <p class="<%= help_class %>">不明な場合は空欄にしてください。</p>
+  </div>
+
+  <fieldset>
+    <legend class="<%= label_class %> mb-2">名前の履歴</legend>
+    <div class="space-y-4">
+      <% logs_for_form = venue.name_logs + [OpenStruct.new(name: "", name_kana: "", date: "")] %>
+      <%= form.fields_for :name_logs, logs_for_form do |log_form| %>
+        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+          <div class="flex-1 w-full">
+            <%= log_form.label :name, "名前", class: small_label_class %>
+            <%= log_form.text_field :name, class: small_input_class %>
+          </div>
+          <div class="flex-1 w-full">
+            <%= log_form.label :name_kana, "ヨミガナ", class: small_label_class %>
+            <%= log_form.text_field :name_kana, class: small_input_class %>
+          </div>
+          <div class="w-full sm:w-36">
+            <%= log_form.label :date, "使用開始日", class: small_label_class %>
+            <%= log_form.text_field :date, placeholder: "例: 2019-04-01", class: small_input_class %>
+          </div>
+        </div>
+      <% end %>
+      <p class="text-xs text-gray-500 dark:text-gray-400">
+        現在の名前も含めて、改名・ネーミングライツ変更の履歴を入力します。使用開始日は YYYY / YYYY-MM / YYYY-MM-DD のいずれか。
+        動向の日付時点の会場名はこの履歴から決まります。名前を空にすると保存時に削除されます。
+      </p>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend class="<%= label_class %> mb-2">別名</legend>
+    <div class="space-y-4">
+      <% aliases_for_form = venue.aliases + [OpenStruct.new(name: "", kana: "", old_key: "", hidden: false)] %>
+      <%= form.fields_for :aliases, aliases_for_form do |alias_form| %>
+        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+          <div class="flex-1 w-full">
+            <%= alias_form.label :name, "別名", class: small_label_class %>
+            <%= alias_form.text_field :name, class: small_input_class %>
+          </div>
+          <div class="flex-1 w-full">
+            <%= alias_form.label :kana, "ヨミガナ", class: small_label_class %>
+            <%= alias_form.text_field :kana, class: small_input_class %>
+          </div>
+          <div class="flex-1 w-full">
+            <%= alias_form.label :old_key, "旧キー", class: small_label_class %>
+            <%= alias_form.text_field :old_key, class: small_input_class %>
+          </div>
+          <div class="flex items-center gap-2 sm:pb-2">
+            <%= alias_form.check_box :hidden, class: "rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700" %>
+            <%= alias_form.label :hidden, "非表示", class: "text-xs font-medium text-gray-900 dark:text-gray-100" %>
+          </div>
+        </div>
+      <% end %>
+      <p class="text-xs text-gray-500 dark:text-gray-400">表記揺れ・略称など。名前を空にすると保存時に削除されます。「非表示」にチェックすると、検索には使われますが画面には表示されなくなります。</p>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend class="<%= label_class %> mb-2">リンク</legend>
+    <div class="space-y-3">
+      <%= form.fields_for :links, venue.links.sort_by { |l| [l.new_record? ? 1 : 0, l.sort_order || Float::INFINITY, l.id || 0] } do |link_form| %>
+        <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+          <%= link_form.text_field :text, placeholder: "タイトル（例: 公式サイト）", "aria-label": "リンクのタイトル", class: "block w-full sm:w-44 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+          <%= link_form.text_field :url, placeholder: "URL（https://...）", "aria-label": "リンクのURL", class: "block w-full flex-1 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+          <% if link_form.object.persisted? %>
+            <div class="flex items-center gap-1 shrink-0">
+              <%= link_form.check_box :_destroy, class: "rounded border-gray-300 text-red-600 shadow-sm focus:border-red-500 focus:ring-red-500 dark:bg-gray-700 dark:border-gray-600" %>
+              <%= link_form.label :_destroy, "削除", class: "text-xs text-red-600 font-medium dark:text-red-400" %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+      <p class="text-xs text-gray-500 dark:text-gray-400">URLが空欄の行は無視されます。保存すると新しい入力欄が追加されます。</p>
+    </div>
+  </fieldset>
+
+  <% if venue.old_wiki_text.present? %>
+    <div>
+      <%= form.label :old_wiki_text, "旧Wikiテキスト", class: label_class %>
+      <%= form.text_area :old_wiki_text, rows: 10, readonly: true, class: "mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 shadow-sm px-2 py-2 text-sm font-mono text-gray-600 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed" %>
+      <p class="<%= help_class %>">移行元のWikiテキスト（読み取り専用）</p>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :note, "メモ", class: label_class %>
+    <%= form.text_area :note, rows: 5, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <p class="<%= help_class %>">自由記入欄（最寄り駅・備考など）</p>
+  </div>
+
+  <div class="sticky bottom-0 z-10 -mx-6 -mb-6 flex justify-end gap-x-4 rounded-b-lg border-t border-gray-200 bg-white/95 px-6 py-4 backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/95">
+    <%= link_to "キャンセル", admin_venues_path, class: "px-4 py-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" %>
+    <%= form.submit venue.persisted? ? "更新" : "作成", class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+  </div>
+<% end %>
