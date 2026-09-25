@@ -11,6 +11,17 @@ module TrendsHelper
     person_data['name'].presence || person&.name
   end
 
+  # 動向に紐づくユニットのうち、Unitレコードが無く名前だけ保存されているもののバッジ。
+  # trends/index・daily・monthly・yearlyで同じ<span>をコピーしていたため集約した（issue #1672）。
+  # 公開側のグレーはzincにそろえる方針（issue #1667）
+  UNIT_NAME_BADGE_CLASS = 'inline-block px-2 py-0.5 rounded text-sm font-semibold ' \
+                          'bg-zinc-50 text-zinc-700 border border-zinc-200 ' \
+                          'dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-600 mr-1'
+
+  def unit_name_badge(name)
+    tag.span(name, class: UNIT_NAME_BADGE_CLASS)
+  end
+
   # trends/show のヘッダで、件名（h1）の前に個人名バッヂを表示すべきかどうか。
   # trend.person_name_in_title（issue #1419）が設定されていれば動向種別の内容に関わらず
   # それを最優先し、未設定の場合は#1411までの自動判定（個人の動向種別が設定されていて、
