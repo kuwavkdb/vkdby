@@ -4,13 +4,13 @@
         Roboto Mono等にフォールバックし、Menlo/Consolas等デスクトップ用より字幅が広い）で
         "YYYY/MM/DD"がはみ出し、gap-3の余白を食いつぶして隣列と間隔がなくなっていた。
         固定幅をやめてwhitespace-nowrapで折り返しのみ防止し、実際の描画幅に委ねる（issue #1322） %>
-    <div class="shrink-0 whitespace-nowrap text-slate-400 dark:text-slate-500 font-mono text-sm pt-0.5 font-bold">
+    <div class="shrink-0 whitespace-nowrap text-slate-500 font-mono text-sm pt-0.5 font-bold">
       <%= @trend.date.strftime('%Y/%m/%d') %>
     </div>
     <div class="grow">
-      <p class="font-bold text-slate-400 dark:text-slate-500">
+      <p class="font-bold text-slate-500">
         <% unit_badges.each do |name| %>
-          <span class="px-1.5 py-0.5 rounded text-[11px] align-middle bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"><%= name %></span>
+          <span class="px-1.5 py-0.5 rounded text-[11px] align-middle bg-slate-100 dark:bg-slate-800 text-slate-500"><%= name %></span>
         <% end %>
         <%= format_wiki_title(@trend.title, link: false) %>
       </p>

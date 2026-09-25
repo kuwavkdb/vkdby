@@ -39,7 +39,7 @@
               <% if index > 0 %>
                 <span class="mx-1">、</span>
               <% end %>
-              <span class="<%= item[:is_temp] ? 'text-slate-400 dark:text-slate-500' : 'font-semibold' %>"><%= helpers.sanitize_with_ruby(item[:unit_name]) %></span>
+              <span class="<%= item[:is_temp] ? 'text-slate-500' : 'font-semibold' %>"><%= helpers.sanitize_with_ruby(item[:unit_name]) %></span>
               <% if item[:part_and_name].present? %>
                 <span class="text-xs opacity-80">(<%= helpers.sanitize_with_ruby(item[:part_and_name]) %>)</span>
               <% end %>
@@ -55,7 +55,7 @@
     <% end %>
 
     <% if @show_details %>
-      <div class="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center text-[0.65rem] font-bold text-zinc-400 dark:text-zinc-600 tracking-widest uppercase">
+      <div class="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center text-[0.65rem] font-bold text-zinc-500 dark:text-zinc-600 tracking-widest uppercase">
         <span class="uppercase tracking-widest">Update</span>
         <span><%= @person.updated_at.strftime("%Y.%m.%d") %></span>
       </div>

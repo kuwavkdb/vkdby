@@ -21,11 +21,11 @@
             <!-- Date -->
             <% if count > 0 %>
               <%= link_to daily_path(year: date.year, month: date.month, day: date.day),
-                  class: "block text-sm font-bold #{is_current_month ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400 dark:text-slate-600'} #{wday == 0 ? 'text-red-600 dark:text-red-400' : wday == 6 ? 'text-blue-600 dark:text-blue-400' : ''} hover:text-indigo-600 dark:hover:text-amber-400" do %>
+                  class: "block text-sm font-bold #{is_current_month ? 'text-slate-800 dark:text-slate-200' : 'text-slate-500 dark:text-slate-600'} #{wday == 0 ? 'text-red-600 dark:text-red-400' : wday == 6 ? 'text-blue-600 dark:text-blue-400' : ''} hover:text-indigo-600 dark:hover:text-amber-400" do %>
                 <%= date.day %>
               <% end %>
             <% else %>
-              <div class="text-sm font-bold <%= is_current_month ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400 dark:text-slate-600' %> <%= wday == 0 ? 'text-red-600 dark:text-red-400' : wday == 6 ? 'text-blue-600 dark:text-blue-400' : '' %>">
+              <div class="text-sm font-bold <%= is_current_month ? 'text-slate-800 dark:text-slate-200' : 'text-slate-500 dark:text-slate-600' %> <%= wday == 0 ? 'text-red-600 dark:text-red-400' : wday == 6 ? 'text-blue-600 dark:text-blue-400' : '' %>">
                 <%= date.day %>
               </div>
             <% end %>

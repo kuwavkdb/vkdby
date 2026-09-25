@@ -36,7 +36,7 @@
         <%= link_to @item.display_link_url, target: "_blank", rel: "noopener noreferrer",
             "aria-label": "#{@item.title} をAmazonで購入",
             class: "absolute inset-0 flex items-center justify-center hover:opacity-90 transition-opacity" do %>
-          <span class="text-zinc-400 dark:text-zinc-500 text-sm">画像なし</span>
+          <span class="text-zinc-500 text-sm">画像なし</span>
         <% end %>
         <%= link_to @item.display_link_url, target: "_blank", rel: "noopener noreferrer",
             style: "position:absolute; bottom:8px; left:50%; transform:translateX(-50%);",
@@ -48,7 +48,7 @@
         <% end %>
       <% else %>
         <div class="w-40 h-40 flex items-center justify-center">
-          <span class="text-zinc-400 dark:text-zinc-500 text-sm">画像なし</span>
+          <span class="text-zinc-500 text-sm">画像なし</span>
         </div>
       <% end %>
     </div>
