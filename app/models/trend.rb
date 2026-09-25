@@ -22,12 +22,14 @@
 #  title                :string
 #  unit_phenomenon      :integer
 #  units                :jsonb
+#  venue_name           :string
 #  via_name             :string
 #  via_url              :string
 #  created_at           :datetime         not null
 #  updated_at           :datetime         not null
 #  old_trend_id         :integer
 #  old_wiki_id          :integer
+#  venue_id             :bigint
 #
 # Indexes
 #
@@ -35,9 +37,17 @@
 #  index_trends_on_people           (people) USING gin
 #  index_trends_on_unit_phenomenon  (unit_phenomenon)
 #  index_trends_on_units            (units) USING gin
+#  index_trends_on_venue_id         (venue_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (venue_id => venues.id)
 #
 class Trend < ApplicationRecord
   include OgpImageAttachable
+
+  # 開催場所（issue #1689）。1件のTrendにつき会場は1件のみ
+  belongs_to :venue, optional: true
 
   # Enums
   enum :unit_phenomenon, {
@@ -87,6 +97,8 @@ class Trend < ApplicationRecord
   # 公開画面に表示してよいTrend（非公開active: falseと、公開開始日時が未到来のものを除く）
   scope :published, -> { where(active: true).where(publish_start_at: ..Time.current) }
 
+  before_validation { self.venue_name = venue_name.to_s.strip.presence }
+
   # Validations
   validates :date, presence: true
   validates :active, inclusion: { in: [true, false] }
@@ -115,6 +127,17 @@ class Trend < ApplicationRecord
   # 上記からさらに末尾の半角括弧書きを取り除いたもの
   def title_without_trailing_parenthetical
     title_as_plain_text.sub(TITLE_TRAILING_PARENTHETICAL_PATTERN, '')
+  end
+
+  # 会場の表示名（issue #1689）。venue_nameで上書きされていればそれを使い、なければ紐付けた会場の
+  # Trendの日付時点の名前（name_log）を返す。論理削除された会場は表示しないが、統合で転送元に
+  # なった会場（destination_keyあり）は当時の名前として引き続き表示する
+  def venue_display_name
+    return venue_name if venue_name.present?
+    return nil if venue.nil?
+    return nil if venue.discarded? && !venue.redirect_source?
+
+    venue.name_at(date)
   end
 
   # 公開画面での閲覧可否（`published`スコープの単一レコード版）。管理画面プレビュー時の
