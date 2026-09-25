@@ -9,7 +9,6 @@
 @theme {
   --color-unit: #2563eb;
   --color-person: #e11d48;
-  --color-brand: #f59e0b;
 }
 
 @layer base {
