@@ -16,7 +16,7 @@
         <%= render "layouts/google_cse_search", query: @not_found_query %>
       </div>
 
-      <div class="mt-4 flex items-center gap-3 text-xs font-medium text-zinc-400 dark:text-zinc-500">
+      <div class="mt-4 flex items-center gap-3 text-xs font-medium text-zinc-500">
         <span class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></span>
         <span>または、サイト内検索で探す</span>
         <span class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></span>
@@ -38,19 +38,19 @@
 
     <div class="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-2xl mx-auto">
       <%= link_to units_path, class: "flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-3 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-amber-400 transition-colors" do %>
-        Units <span class="text-xs text-zinc-400">バンド</span>
+        Units <span class="text-xs text-zinc-500 dark:text-zinc-400">バンド</span>
       <% end %>
       <%= link_to people_path, class: "flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-3 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-amber-400 transition-colors" do %>
-        People <span class="text-xs text-zinc-400">個人</span>
+        People <span class="text-xs text-zinc-500 dark:text-zinc-400">個人</span>
       <% end %>
       <%= link_to trends_path, class: "flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-3 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-amber-400 transition-colors" do %>
-        Trends <span class="text-xs text-zinc-400">動向</span>
+        Trends <span class="text-xs text-zinc-500 dark:text-zinc-400">動向</span>
       <% end %>
       <%= link_to items_path, class: "flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-3 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-amber-400 transition-colors" do %>
-        Items <span class="text-xs text-zinc-400">アイテム</span>
+        Items <span class="text-xs text-zinc-500 dark:text-zinc-400">アイテム</span>
       <% end %>
       <%= link_to timeline_path, class: "flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-3 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-amber-400 transition-colors" do %>
-        Timeline <span class="text-xs text-zinc-400">年表</span>
+        Timeline <span class="text-xs text-zinc-500 dark:text-zinc-400">年表</span>
       <% end %>
       <%= link_to root_path, class: "flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-3 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-amber-400 transition-colors" do %>
         トップページ
