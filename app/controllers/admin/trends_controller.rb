@@ -108,6 +108,7 @@ module Admin
         :quote, :quote_title, :quote_url,
         :via_name, :via_url,
         :unit_phenomenon, :person_phenomenon, :etc_phenomenon, :person_name_in_title,
+        :venue_id, :venue_name,
         units_json: {},
         people_json: {}
       ).tap do |whitelisted|

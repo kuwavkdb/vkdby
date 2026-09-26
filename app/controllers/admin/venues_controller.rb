@@ -2,7 +2,7 @@
 
 module Admin
   # ライブハウス・ホールなどの会場の管理（issue #1687）
-  class VenuesController < Admin::BaseController
+  class VenuesController < Admin::BaseController # rubocop:disable Metrics/ClassLength
     include LoggableLinkChanges
 
     before_action :set_venue, only: %i[show edit update destroy undiscard change_key]
@@ -19,12 +19,7 @@ module Admin
               end
       # キー変更で残した転送用スタブ（論理削除済み・destination_keyあり）だけを表示する
       scope = Venue.with_discarded.where.not(destination_key: nil) if params[:redirect_source] == 'only'
-      if @q.present?
-        scope = scope.where(
-          'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
-          q: "%#{Venue.sanitize_sql_like(normalize_search_query(@q))}%"
-        )
-      end
+      scope = scope.matching(normalize_search_query(@q)) if @q.present?
       scope = scope.where(venue_type: params[:venue_type]) if Venue.venue_types.key?(params[:venue_type])
       scope = scope.where(prefecture: params[:prefecture]) if Venue::PREFECTURES.include?(params[:prefecture])
       scope = scope.where(status: params[:status]) if Venue.statuses.key?(params[:status])
@@ -33,6 +28,21 @@ module Admin
 
     def show
       redirect_to edit_admin_venue_path(@venue)
+    end
+
+    # Trendフォームの会場入力欄のサジェスト用（issue #1689）。転送元のスタブ・論理削除済みは除く
+    def search
+      q = params[:q].to_s.strip
+      venues = if q.present?
+                 Venue.kept.where(destination_key: nil).matching(normalize_search_query(q)).order(:name).limit(10)
+               else
+                 Venue.none
+               end
+
+      render json: venues.map { |v|
+        { id: v.id, name: v.name, name_kana: v.name_kana, key: v.key,
+          location: [v.prefecture, v.area].compact_blank.join(' ').presence }
+      }
     end
 
     def new

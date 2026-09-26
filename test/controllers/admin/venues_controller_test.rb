@@ -206,5 +206,27 @@ module Admin
       assert_response :success
       assert_includes response.body, '→ loft-shinjuku'
     end
+
+    test 'search returns kept venues matching name or alias as JSON' do
+      login_as(users(:one))
+      discarded = Venue.create!(key: 'closed-loft', name: 'ロフト跡地')
+      discarded.discard
+
+      get search_admin_venues_path, params: { q: 'ロフト' }
+
+      assert_response :success
+      json = response.parsed_body
+      assert_equal [@venue.id], json.pluck('id')
+      assert_equal '東京都 新宿', json.first['location']
+    end
+
+    test 'search excludes redirect stubs left by a key change' do
+      login_as(users(:one))
+      @venue.change_key!('loft-shinjuku')
+
+      get search_admin_venues_path, params: { q: 'shinjuku' }
+
+      assert_equal ['loft-shinjuku'], response.parsed_body.pluck('key')
+    end
   end
 end

@@ -25,8 +25,8 @@
 | Units — 閲覧・作成・編集 | index / new / create / edit / update / show / search / quick_new / quick_create |
 | People — 閲覧・作成・編集 | index / new / create / edit / update / search |
 | Index Groups / タグ（Tag Indices）— 閲覧・作成・編集・削除・並べ替え・グループ移動 | 全アクション |
-| Trends — 閲覧・作成・編集 | index / new / create / edit / update |
-| Venues（会場）— 閲覧・作成・編集（名前の履歴・別名・リンクの編集を含む） | index / new / create / edit / update / show |
+| Trends — 閲覧・作成・編集（会場の紐付け・会場の表示名の上書きを含む） | index / new / create / edit / update |
+| Venues（会場）— 閲覧・作成・編集（名前の履歴・別名・リンクの編集を含む）、Trendフォームの会場サジェスト | index / new / create / edit / update / show / search |
 | External Sites | 全アクション |
 | Custom Pages — 閲覧・作成・編集 | index / new / create / edit / update |
 | Custom Pages — サーバーサイドプレビュー（`{{include}}`/`{{snapshot}}`/`{{item}}` 等のプラグイン記法を反映） | preview |
