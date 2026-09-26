@@ -70,6 +70,11 @@ module Vkdby
     require_relative '../lib/middleware/ip_blocker'
     config.middleware.insert_after Middleware::EucJpUrlFixer, Middleware::IpBlocker
 
+    # 存在しないアセットへのエラー応答をキャッシュさせない（issue #1698）。
+    # 404ページ（ShowExceptions）や他のミドルウェアの応答も含めて最終的な応答に効かせるため最も外側に置く
+    require_relative '../lib/middleware/asset_error_no_store'
+    config.middleware.insert_before Middleware::LegacyDomainRedirector, Middleware::AssetErrorNoStore
+
     # Set default locale to Japanese
     config.i18n.default_locale = :ja
 
