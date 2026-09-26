@@ -23,7 +23,7 @@ class Link < ApplicationRecord
   TWITTER_STATUS_URL_PATTERN = %r{^https?://(?:www\.)?(?:twitter\.com|x\.com)/[^/]+/status/\d+}
 
   # hrefにそのまま入るため、javascript: などのスキームを保存させない（issue #1707）
-  HTTP_URL_PATTERN = %r{\Ahttps?://}i
+  HTTP_URL_PATTERN = %r{\Ahttps?://.+\z}i
 
   belongs_to :linkable, polymorphic: true
 

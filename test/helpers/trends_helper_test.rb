@@ -37,8 +37,10 @@ class TrendsHelperTest < ActionView::TestCase
 
     html = twitter_embed('https://x.com/band/status/1', quote)
 
-    assert_not_includes html, 'alert'
-    assert_not_includes html, '<img'
+    # <script> はタグだけが取り除かれ、中身は実行されない文字として残る
+    assert_includes html, '<p>本文</p>alert(2)<a>リンク</a>'
+    %w[onclick onerror javascript: <img].each { |fragment| assert_not_includes html, fragment }
     assert_equal 1, html.scan('<script').size
+    assert_includes html, '<script async="async" src="https://platform.twitter.com/widgets.js"'
   end
 end
