@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-class VenueImporterTest < ActiveSupport::TestCase
+class VenueImporterTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
   WikipageStub = Struct.new(:id, :wiki, :name, :title) do
     def attributes
       {}
@@ -104,6 +104,60 @@ class VenueImporterTest < ActiveSupport::TestCase
     venue = import(id: 5, name: 'テストホール', wiki: wiki)
 
     assert_equal 350, venue.capacity
+  end
+
+  test 'キャパシティが不明（?）で後続セクションが空の場合、以降のセクションの数字を誤って取り込まない' do
+    wiki = <<~WIKI
+      !!!大分DRUM Be-0（ドラム ビーゼロ）
+      *{{category ライブハウス・ホール}}
+
+      !住所
+      *大分県大分市金池町2-13-20
+
+      !最寄り駅等
+      *JR大分駅(正面出口より徒歩5分)
+
+      !!キャパシティ
+      *?
+
+      !!備考
+
+
+      !!情報
+      *キャパシティ３５０人 - 名無し (2012年01月11日 13時16分08秒)
+      {{comment}}
+    WIKI
+
+    venue = import(id: 7, name: '大分DRUM Be-0', wiki: wiki)
+
+    assert_nil venue.capacity
+    assert_equal '大分県大分市金池町2-13-20', venue.address
+    assert_equal '大分県', venue.prefecture
+  end
+
+  test '住所セクションの直後が空セクションの場合、以降のセクションの内容を住所に含めない' do
+    wiki = <<~WIKI
+      !!!テスト会場（テストカイジョウ）
+      *{{category ライブハウス・ホール}}
+
+      !住所
+      *仙台市青葉区国分町3-3-7
+
+      !最寄り駅等
+
+
+      !!備考
+      1,590席
+
+      !!情報
+      *宮城県から東京都に移転しました - 名無しさん
+      {{comment}}
+    WIKI
+
+    venue = import(id: 8, name: 'テスト会場', wiki: wiki)
+
+    assert_equal '仙台市青葉区国分町3-3-7', venue.address
+    assert_nil venue.prefecture
   end
 
   test '同じ old_key で再実行しても重複作成されない' do

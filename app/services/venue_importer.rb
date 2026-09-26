@@ -160,7 +160,7 @@ class VenueImporter < BaseWikipageImporter
   def address_section_content
     return @address_section_content if defined?(@address_section_content)
 
-    @address_section_content = (Regexp.last_match(1).strip if @wiki_content =~ /^!!?住所\s*\n((?:.*\n)*?)(?=^!|\z)/m)
+    @address_section_content = (Regexp.last_match(1).strip if @wiki_content =~ /^!!?住所\n((?:(?!^!).*\n)*)/)
   end
 
   def extract_address
@@ -180,7 +180,7 @@ class VenueImporter < BaseWikipageImporter
   end
 
   def extract_capacity
-    return nil unless @wiki_content =~ /^!!キャパシティ\s*\n((?:.*\n)*?)(?=^!|\z)/m
+    return nil unless @wiki_content =~ /^!!キャパシティ\n((?:(?!^!).*\n)*)/
 
     section = Regexp.last_match(1).strip
     match = section.match(/(\d[\d,]*)/)
