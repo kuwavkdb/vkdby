@@ -11,7 +11,7 @@
 
 ## 前提
 
-先に Venue が登録されている必要があります。本番では #1688 の取り込み（`import:venues`、手順は [venue_import_spec.md](venue_import_spec.md)）を実行してから、このタスクを実行してください。
+先に Venue が登録されている必要があります。本番DBには `wikipages` がないため、本番では `import:venues` は使えません。ローカルで取り込んだ Venue を `script/transfer_venues_to_render.sh` で本番に移してから、このタスクを実行してください（手順は [venue_import_spec.md の「本番への反映」](venue_import_spec.md#本番への反映)）。
 
 ## rake タスクの使い方
 

@@ -61,6 +61,13 @@ class TrendSubmissionTest < ActiveSupport::TestCase
     assert_includes submission.errors[:via_url], 'を入力してください'
   end
 
+  test 'via_url に javascript: などのスキームは保存できない' do
+    submission = TrendSubmission.new(valid_attributes.merge(via_url: 'javascript:alert(1)'))
+
+    assert_not submission.valid?
+    assert_includes submission.errors[:via_url], 'は http:// または https:// で始まるURLを入力してください'
+  end
+
   test 'phenomenon is required' do
     submission = TrendSubmission.new(valid_attributes.except(:phenomenon))
 

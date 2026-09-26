@@ -21,6 +21,24 @@
 require 'test_helper'
 
 class LinkTest < ActiveSupport::TestCase
+  test 'url は http:// / https:// で始まるものだけ受け付ける' do
+    %w[https://example.com http://example.com HTTPS://EXAMPLE.COM].each do |url|
+      link = Link.new(url:)
+      link.validate
+
+      assert_empty link.errors[:url], url
+    end
+  end
+
+  test 'url に javascript: などのスキームやスキームのないURLは保存できない' do
+    ['javascript:alert(1)', ' javascript:alert(1)', 'data:text/html,<script>alert(1)</script>', 'example.com'].each do |url|
+      link = Link.new(url:)
+      link.validate
+
+      assert_includes link.errors[:url], 'は http:// または https:// で始まるURLを入力してください', url
+    end
+  end
+
   test 'twitter_status_url? is true for a twitter.com status URL' do
     link = Link.new(url: 'https://twitter.com/nonameactorsjp/status/892008297930268674')
 

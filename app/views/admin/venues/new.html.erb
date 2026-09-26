@@ -3,6 +3,22 @@
 <div class="container mx-auto px-4 py-8">
   <div class="max-w-2xl mx-auto">
     <h1 class="text-2xl font-bold mb-6"><%= title %></h1>
+    <% if @similar_venues.present? %>
+      <div class="mb-4 px-4 py-3 rounded-md bg-amber-50 border border-amber-200 text-sm text-amber-900 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-100" role="status">
+        <p class="font-semibold">名前・別名・旧名が一致しそうな会場がすでにあります。重複して登録しないよう確認してください。</p>
+        <ul class="mt-2 list-disc list-inside space-y-1">
+          <% @similar_venues.each do |venue| %>
+            <li>
+              <%= link_to venue.name, edit_admin_venue_path(venue), target: "_blank", rel: "noopener",
+                    class: "underline text-indigo-700 hover:text-indigo-900 dark:text-amber-300 dark:hover:text-amber-200" %>
+              <span class="text-amber-800 dark:text-amber-200">
+                （<%= [venue.prefecture, venue.area].compact_blank.join(" ").presence || "所在地未設定" %><%= "・削除済み" if venue.discarded? %>）
+              </span>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
     <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
       <%= render "form", venue: @venue %>
     </div>

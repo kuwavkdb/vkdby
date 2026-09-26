@@ -72,12 +72,17 @@ module TrendsHelper
     url.match?(Link::TWITTER_STATUS_URL_PATTERN)
   end
 
+  # Xの oEmbed HTML（<blockquote class="twitter-tweet">…）で使うタグ・属性。quoteは管理画面の入力や
+  # trend-urlスキルの事前入力で入るため、これ以外（<script>、javascript: の href など）は取り除く（issue #1707）
+  TWITTER_EMBED_TAGS = %w[blockquote p a br].freeze
+  TWITTER_EMBED_ATTRIBUTES = %w[class lang dir href data-lang data-theme data-dnt data-conversation data-cards
+                                data-width data-align].freeze
+
   def twitter_embed(_url, quote)
-    html = <<~HTML
-      #{quote}
-      <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-    HTML
-    html.html_safe
+    safe_join([
+                sanitize(quote, tags: TWITTER_EMBED_TAGS, attributes: TWITTER_EMBED_ATTRIBUTES),
+                tag.script(async: true, src: 'https://platform.twitter.com/widgets.js', charset: 'utf-8')
+              ], "\n")
   end
 
   # Sanitize URL to prevent XSS attacks
