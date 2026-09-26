@@ -41,6 +41,11 @@ services:
       # 計装。原因の切り分けが済んだら本変数ごと削除してよい。
       - key: MEMORY_WATCHDOG_LOG_INTERVAL
         value: 60
+      # ASSETS_VERSION（任意・通常は未設定）: 設定するとアセットのバージョン（config/initializers/assets.rb）
+      # の後ろにつながり、全アセットのURLが変わる。デプロイ中の取得失敗などで利用者のブラウザ・CDNに
+      # 壊れたアセットのキャッシュが残ったときに、コードを触らずにリセットするための非常用（issue #1698）。
+      # ダッシュボードで値を変え（例: 1 → 2）、「Save, rebuild, and deploy」で再ビルドすること。
+      # ここ（Blueprint）には書かず、ダッシュボードで管理する。
     region: singapore
     # 512MBのStarterでOOM再起動が頻発したため2GB/1CPUのStandardに増強していた
     # （#1344）。tag_index_itemsのN+1修正（#1384）を受けて一度Starterに戻した
