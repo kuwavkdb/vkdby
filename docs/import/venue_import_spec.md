@@ -41,6 +41,32 @@ LIMIT=10 MODE=ALL bundle exec rails import:venues  # 最大10件まで
 
 **再実行しても重複作成されない**: `old_key`（Wikipage名を EUC-JP エンコードしたもの）で既存 Venue を検索するため、同じ Wikipage を対象に再実行しても Venue が重複作成されることはない（既存レコードが更新される）。
 
+## 本番への反映
+
+本番DB（Render）には `wikipages` がないため、本番で `import:venues` を実行しても何も取り込まれません。ローカルの開発DBで取り込み、結果（`venues` と Venue の `links`）だけを `script/transfer_venues_to_render.sh` で本番に追加します。
+
+```bash
+# 1. ローカルで取り込む（上記「rake タスクの使い方」）
+DRY_RUN=1 bundle exec rails import:venues
+MODE=ALL bundle exec rails import:venues
+
+# 2. 本番DBをバックアップする（tmp/backup/ 以下にダンプをダウンロード）
+bin/backup-db.sh tmp/backup/before_venue_transfer
+
+# 3. 本番に追加する（.envrc の DB_CONNECTION を使う。実行前に y/N の確認あり）
+script/transfer_venues_to_render.sh
+```
+
+`transfer_venues_to_render.sh` の動作:
+
+- ローカルと本番で `venues` のカラムが一致すること、本番の `venues` と Venue の `links` が 0 件であることを確認し、条件を満たさなければ何もせずに中止する（既存データの上書き・削除はしない）
+- `venues` は ID をそのまま移す（`links.linkable_id` の参照先を保つため）。`links` は本番の Unit/Person のリンクと ID が衝突するため、本番側で ID を振り直す
+- 移したあと、以降に管理画面で作る Venue の ID が衝突しないよう `venues` の連番を進める
+- 1トランザクションで実行し、途中で失敗した場合は何も反映しない
+- `wiki_page_imports` は本番に `wikipages` がないため移さない
+
+本番に移したあと、既存 Trend への会場の後付けは [trend_venue_backfill.md](trend_venue_backfill.md) の手順で行う。
+
 ## 会場名と改名履歴 (Name Log)
 
 インポーターは Wiki コンテンツから、コメント行を除いて **最初に `!` で始まる行**（`!!!会場名（かな）` などの見出し行）を解析し、会場名・読み仮名・改名履歴を特定する。旧サイトでは見出し行の前に `[[ライブハウス・ホール一覧]]` のようなナビゲーションリンク行が入ることが多いため、単純な1行目ではなく見出し行を探す点が Unit/Person のインポーターと異なる。
