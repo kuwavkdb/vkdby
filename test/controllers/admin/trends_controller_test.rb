@@ -155,5 +155,42 @@ module Admin
       assert_predicate submission, :converted?
       assert_equal Trend.last, submission.converted_trend
     end
+
+    # issue #1689: 会場の紐付け
+    test 'create saves venue_id and venue_name' do
+      venue = Venue.create!(key: 'club-quattro', name: 'CLUB QUATTRO')
+
+      post admin_trends_path, params: {
+        trend: { date: '2026/09/01', publish_start_at: Time.current, active: '1', unit_phenomenon: 'live',
+                 title: 'ワンマン', venue_id: venue.id, venue_name: '渋谷CLUB QUATTRO' }
+      }
+
+      trend = Trend.last
+      assert_equal venue, trend.venue
+      assert_equal '渋谷CLUB QUATTRO', trend.venue_name
+    end
+
+    test 'update can clear the venue' do
+      venue = Venue.create!(key: 'club-quattro', name: 'CLUB QUATTRO')
+      @trend.update!(venue: venue)
+
+      patch admin_trend_path(@trend), params: { trend: { venue_id: '', venue_name: '' } }
+
+      assert_redirected_to edit_admin_trend_path(@trend)
+      @trend.reload
+      assert_nil @trend.venue
+      assert_nil @trend.venue_name
+    end
+
+    test 'edit shows the selected venue and its display name' do
+      venue = Venue.create!(key: 'club-quattro', name: 'CLUB QUATTRO')
+      @trend.update!(venue: venue)
+
+      get edit_admin_trend_path(@trend)
+
+      assert_response :success
+      assert_select "input[type=hidden][name='trend[venue_id]'][value='#{venue.id}']"
+      assert_select "[data-venue-picker-target='selectedName']", text: 'CLUB QUATTRO'
+    end
   end
 end

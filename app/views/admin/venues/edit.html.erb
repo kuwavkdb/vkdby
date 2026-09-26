@@ -1,0 +1,34 @@
+<% title = "会場の編集: #{@venue.name}" %>
+<% content_for :title, title %>
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-2xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6"><%= title %></h1>
+    <% if @venue.discarded? %>
+      <p class="mb-4 px-4 py-2 rounded-md bg-red-50 text-red-700 text-sm dark:bg-red-900/40 dark:text-red-200">この会場は論理削除されています。</p>
+    <% end %>
+    <% if @venue.destination_key.present? %>
+      <p class="mb-4 px-4 py-2 rounded-md bg-amber-50 text-amber-800 text-sm dark:bg-amber-900/40 dark:text-amber-200">
+        この会場は <code class="font-mono"><%= @venue.destination_key %></code> へ転送されます。
+      </p>
+    <% end %>
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+      <%= render "form", venue: @venue %>
+    </div>
+    <%= render "admin/shared/change_key_form", change_key_path: change_key_admin_venue_path(@venue), form_id: "change_key_form" %>
+
+    <% if current_user.super_operator_or_above? && !@venue.discarded? %>
+      <div class="mt-4 flex justify-end">
+        <%= button_to "論理削除", admin_venue_path(@venue), method: :delete,
+            form_class: "inline",
+            onclick: "return confirm('#{j @venue.name} を論理削除しますか？')",
+            class: "px-3 py-1.5 text-sm text-white bg-red-600 hover:bg-red-700 rounded cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" %>
+      </div>
+    <% end %>
+
+    <div class="mt-6">
+      <%= render "admin/wiki_page_imports/import_target_panel", wiki_page_imports: @wiki_page_imports, import_target: @venue %>
+    </div>
+
+    <%= render "admin/shared/update_logs", update_logs: @update_logs %>
+  </div>
+</div>

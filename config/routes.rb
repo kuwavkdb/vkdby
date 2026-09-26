@@ -75,6 +75,16 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
 
     resources :trends
 
+    resources :venues do
+      collection do
+        get :search
+      end
+      member do
+        patch :undiscard
+        patch :change_key
+      end
+    end
+
     resources :index_groups do
       member do
         patch :reorder_indices

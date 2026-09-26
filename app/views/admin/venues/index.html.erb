@@ -1,0 +1,107 @@
+<% title = "会場管理" %>
+<% content_for :title, title %>
+<% filter_class = "rounded-md border border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+<div class="container mx-auto px-4 py-8">
+  <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+    <h1 class="text-2xl font-bold"><%= title %></h1>
+    <%= link_to "会場を追加", new_admin_venue_path, class: "px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+  </div>
+
+  <%= form_with url: admin_venues_path, method: :get, local: true, class: "flex flex-wrap items-center gap-2 mb-4" do |f| %>
+    <%= f.hidden_field :discarded, value: params[:discarded] %>
+    <%= f.select :venue_type, options_for_select(Venue::VENUE_TYPE_TRANSLATIONS.map { |key, label| [label, key] }, params[:venue_type]),
+          { include_blank: "すべての種別" },
+          { onchange: "this.form.requestSubmit()", "aria-label": "種別で絞り込み", class: filter_class } %>
+    <%= f.select :prefecture, options_for_select(Venue::PREFECTURES, params[:prefecture]),
+          { include_blank: "すべての都道府県" },
+          { onchange: "this.form.requestSubmit()", "aria-label": "都道府県で絞り込み", class: filter_class } %>
+    <%= f.select :status, options_for_select(Venue::STATUS_TRANSLATIONS.map { |key, label| [label, key] }, params[:status]),
+          { include_blank: "すべてのStatus" },
+          { onchange: "this.form.requestSubmit()", "aria-label": "Statusで絞り込み", class: filter_class } %>
+    <div class="flex">
+      <%= f.text_field :q, value: params[:q], placeholder: "名前・別名・旧名・キーで検索", "aria-label": "検索キーワード",
+            class: "w-64 rounded-l-md border border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+      <%= f.submit "検索", class: "px-4 py-2 text-sm bg-white text-gray-700 border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600" %>
+    </div>
+  <% end %>
+
+  <div class="flex space-x-2 mb-4">
+    <% filter_params = params.permit(:q, :venue_type, :prefecture, :status).to_h %>
+    <%= link_to "通常", admin_venues_path(filter_params),
+        class: "px-3 py-1 rounded text-sm #{params[:discarded].blank? && params[:redirect_source].blank? ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}" %>
+    <%= link_to "削除済みのみ", admin_venues_path(filter_params.merge(discarded: "only")),
+        class: "px-3 py-1 rounded text-sm #{params[:discarded] == 'only' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}" %>
+    <%= link_to "全件", admin_venues_path(filter_params.merge(discarded: "all")),
+        class: "px-3 py-1 rounded text-sm #{params[:discarded] == 'all' ? 'bg-gray-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}" %>
+    <%= link_to "リダイレクト元", admin_venues_path(filter_params.merge(redirect_source: "only")),
+        class: "px-3 py-1 rounded text-sm #{params[:redirect_source] == 'only' ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}" %>
+  </div>
+
+  <div class="mb-4">
+    <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
+  </div>
+
+  <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg mb-4">
+    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+      <thead class="bg-gray-50 dark:bg-gray-700">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">名前</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">種別</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">所在地</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">キャパ</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Key</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"><span class="sr-only">操作</span></th>
+        </tr>
+      </thead>
+      <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+        <% @venues.each do |venue| %>
+          <tr class="<%= venue.discarded? ? 'bg-red-50 dark:bg-red-900/20' : '' %>">
+            <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+              <%= venue.name %>
+              <% if venue.discarded? %>
+                <span class="ml-1 text-xs text-red-600 dark:text-red-400">削除済み</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"><%= venue.venue_type_text %></td>
+            <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400"><%= [venue.prefecture, venue.area].compact_blank.join(" ") %></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"><%= venue.capacity %></td>
+            <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs break-all">
+              <%= venue.key %>
+              <% if venue.destination_key.present? %>
+                <div class="text-xs text-amber-700 dark:text-amber-400 mt-0.5">→ <%= venue.destination_key %></div>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"><%= venue.status_text %></td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <% if venue.discarded? %>
+                <% if current_user.super_operator_or_above? %>
+                  <%= button_to "復元", undiscard_admin_venue_path(venue), method: :patch,
+                      form: { class: "inline-block" },
+                      class: "text-green-700 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 bg-transparent border-0 cursor-pointer p-0 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+                <% end %>
+              <% else %>
+                <%= link_to "Edit", edit_admin_venue_path(venue), "aria-label": "#{venue.name} を編集", class: "text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-4" %>
+                <% if current_user.super_operator_or_above? %>
+                  <%= button_to "論理削除", admin_venue_path(venue), method: :delete,
+                      form_class: "inline",
+                      onclick: "return confirm('#{j venue.name} を論理削除しますか？')",
+                      class: "text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 bg-transparent border-0 cursor-pointer p-0 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+                <% end %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @venues.empty? %>
+          <tr>
+            <td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">会場はまだ登録されていません。</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4">
+    <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
+  </div>
+</div>
