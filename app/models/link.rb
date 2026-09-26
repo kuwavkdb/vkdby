@@ -22,9 +22,14 @@ class Link < ApplicationRecord
   # X(Twitter) の個別ツイートURL（twitter.com / x.com どちらも対象）
   TWITTER_STATUS_URL_PATTERN = %r{^https?://(?:www\.)?(?:twitter\.com|x\.com)/[^/]+/status/\d+}
 
+  # hrefにそのまま入るため、javascript: などのスキームを保存させない（issue #1707）
+  HTTP_URL_PATTERN = %r{\Ahttps?://}i
+
   belongs_to :linkable, polymorphic: true
 
   validates :url, presence: true
+  validates :url, format: { with: HTTP_URL_PATTERN, message: 'は http:// または https:// で始まるURLを入力してください' },
+                  allow_blank: true
 
   # 同じページを指すURLかを比べるための正規化（issue #1654）。スキーム・www/mobile/m・末尾スラッシュ・
   # フラグメント・大文字小文字の違いを無視し、twitter.com は x.com とみなす。
