@@ -9,6 +9,14 @@ module Admin
     before_action :require_super_operator, only: %i[destroy undiscard]
     before_action :require_admin, only: %i[change_key]
 
+    # new の URL パラメーターで事前入力できる項目（venue-url スキル、issue #1705）
+    PREFILL_ATTRIBUTES = %i[name name_kana key venue_type status prefecture area address capacity note].freeze
+    PREFILL_NESTED = {
+      links: %i[text url],
+      aliases: %i[name kana],
+      name_logs: %i[name name_kana date]
+    }.freeze
+
     def index
       @q = params[:q]
       @show_discarded = params[:discarded]
@@ -45,9 +53,12 @@ module Admin
       }
     end
 
+    # URLパラメーター（venue[...]）での事前入力に対応する（venue-urlスキル、issue #1705）。
+    # 事前入力された名前と一致しそうな既存の会場を表示して、重複登録を防ぐ
     def new
-      @venue = Venue.new
+      @venue = Venue.new(venue_params_for_new)
       @venue.links.build
+      @similar_venues = similar_venues_for(@venue)
     end
 
     def edit
@@ -121,6 +132,44 @@ module Admin
                                     links_attributes: %i[id text url active sort_order _destroy],
                                     name_logs_attributes: %i[name name_kana date],
                                     aliases_attributes: %i[name kana old_key hidden])
+    end
+
+    # new（GET）用。params[:venue] が無い初期表示でも動くよう require ではなく緩く読み、
+    # enum・都道府県に無い値や正の整数でないキャパシティは無視する（trend-url / unit-url と同じ考え方）。
+    # 繰り返し項目は unit-url と同じく短いキー名（venue[links] 等）で受け取り、*_attributes に読み替える
+    def venue_params_for_new
+      raw = params[:venue]
+      return {} unless raw.is_a?(ActionController::Parameters)
+
+      attrs = raw.permit(*PREFILL_ATTRIBUTES).to_h.symbolize_keys
+      attrs.delete(:venue_type) unless Venue.venue_types.key?(attrs[:venue_type])
+      attrs.delete(:status) unless Venue.statuses.key?(attrs[:status])
+      attrs.delete(:prefecture) unless Venue::PREFECTURES.include?(attrs[:prefecture])
+      attrs.delete(:capacity) unless attrs[:capacity].to_s.match?(/\A[1-9]\d*\z/)
+      PREFILL_NESTED.each do |name, keys|
+        rows = nested_prefill_rows(raw[name], keys)
+        attrs[:"#{name}_attributes"] = rows if rows.present?
+      end
+      attrs
+    end
+
+    def nested_prefill_rows(value, keys)
+      return {} unless value.is_a?(ActionController::Parameters)
+
+      value.to_unsafe_h.each_with_object({}) do |(index, row), rows|
+        next unless row.is_a?(Hash)
+
+        rows[index.to_s] = row.slice(*keys.map(&:to_s))
+      end
+    end
+
+    def similar_venues_for(venue)
+      names = [venue.name, *venue.aliases.map(&:name)].compact_blank.uniq
+      return Venue.none if names.empty?
+
+      # 論理削除済みも含める（削除済みの会場を作り直してしまわないように）。キー変更の転送用スタブは除く
+      names.map { |name| Venue.with_discarded.where(destination_key: nil).matching(name) }.reduce(:or)
+           .order(:name).limit(10)
     end
 
     # key はキー変更専用の操作（change_key）でのみ変更できる。通常の update では受け付けない
