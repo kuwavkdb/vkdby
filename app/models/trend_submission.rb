@@ -58,6 +58,9 @@ class TrendSubmission < ApplicationRecord
   validates :year, format: { with: /\A\d{4}\z/, message: 'は4桁の数字で入力してください' }, allow_blank: true
   validates :date, presence: true
   validates :via_url, presence: true
+  # 管理画面の投稿一覧でhrefにそのまま入るため、javascript: などのスキームを保存させない（issue #1707）
+  validates :via_url, format: { with: Link::HTTP_URL_PATTERN, message: 'は http:// または https:// で始まるURLを入力してください' },
+                      allow_blank: true
   validates :phenomenon, presence: true
 
   scope :recent, -> { order(created_at: :desc) }
