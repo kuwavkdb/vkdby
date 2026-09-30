@@ -4,6 +4,8 @@ require 'test_helper'
 
 module Admin
   class UnitSubmissionsControllerTest < ActionDispatch::IntegrationTest
+    include ActiveJob::TestHelper
+
     setup do
       @submission = UnitSubmission.create!(name: 'Pending Unit', unit_type: :band, status: :active,
                                            links_attributes: { '0' => { url: 'https://example.com' } })
@@ -57,7 +59,35 @@ module Admin
       assert_predicate @submission.reload, :rejected?
     end
 
+    test 'index shows attached images and the usage consent' do
+      login_as_admin
+      attach_image(@submission)
+
+      get admin_unit_submissions_path
+
+      assert_response :success
+      assert_select 'img[alt=?]', 'Pending Unit の投稿画像1'
+      assert_includes response.body, 'サイト上での利用: 了承済み'
+    end
+
+    test 'reject purges attached images' do
+      login_as_admin
+      attach_image(@submission)
+
+      assert_enqueued_with(job: ActiveStorage::PurgeJob) do
+        patch reject_admin_unit_submission_path(@submission)
+      end
+
+      assert_predicate @submission.reload, :rejected?
+    end
+
     private
+
+    def attach_image(submission)
+      submission.update!(is_related_person: true, image_usage_consented: true)
+      submission.images.attach(io: file_fixture('submission_image.png').open, filename: 'image.png',
+                               content_type: 'image/png')
+    end
 
     def login_as_admin
       post login_path, params: { email: users(:admin).email, password: 'password' }

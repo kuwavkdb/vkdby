@@ -1,9 +1,9 @@
 <% content_for :title, "ユニット（バンド）情報を投稿する" %>
 <div class="flex justify-center">
-  <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-3xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
+  <div class="bg-white dark:bg-zinc-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-3xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
     <header class="mb-8 text-center flex flex-col items-center">
-      <h1 class="text-3xl font-black text-slate-800 dark:text-slate-100">ユニット（バンド）情報を投稿する</h1>
-      <p class="mt-3 text-sm text-slate-500 dark:text-slate-400 max-w-xl">
+      <h1 class="text-3xl font-black text-zinc-800 dark:text-zinc-100">ユニット（バンド）情報を投稿する</h1>
+      <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400 max-w-xl">
         まだ掲載されていないユニット（バンド）の情報をお寄せください。ログインは不要です。<br>
         いただいた内容は管理者が確認したうえで掲載を検討します。
       </p>
@@ -20,27 +20,28 @@
       </div>
     <% end %>
 
-    <%= form_with model: @unit_submission, url: unit_submissions_path, local: true, class: "space-y-6" do |form| %>
+    <%= form_with model: @unit_submission, url: unit_submissions_path, local: true, multipart: true, class: "space-y-6",
+                  data: { controller: "unit-submission-form" } do |form| %>
       <div>
-        <%= form.label :name, "バンド（ユニット）名", class: "block text-sm font-bold text-slate-700 dark:text-slate-200" %>
+        <%= form.label :name, "バンド（ユニット）名", class: "block text-sm font-bold text-zinc-700 dark:text-zinc-200" %>
         <span class="text-red-500 text-xs align-top">必須</span>
         <%= form.text_field :name, required: true,
-            class: "mt-1 block w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+            class: "mt-1 block w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
       </div>
 
       <div>
-        <%= form.label :name_kana, "ヨミガナ", class: "block text-sm font-bold text-slate-700 dark:text-slate-200" %>
+        <%= form.label :name_kana, "ヨミガナ", class: "block text-sm font-bold text-zinc-700 dark:text-zinc-200" %>
         <%= form.text_field :name_kana,
-            class: "mt-1 block w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+            class: "mt-1 block w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
       </div>
 
       <fieldset>
-        <legend class="block text-sm font-bold text-slate-700 dark:text-slate-200">種別</legend>
+        <legend class="block text-sm font-bold text-zinc-700 dark:text-zinc-200">種別</legend>
         <span class="text-red-500 text-xs align-top">必須</span>
         <div class="mt-2 flex flex-wrap gap-4">
           <% UnitSubmission::UNIT_TYPE_TRANSLATIONS.each_key do |type| %>
-            <label class="inline-flex items-center gap-1.5 text-sm text-slate-700 dark:text-slate-200">
-              <%= form.radio_button :unit_type, type, required: true, class: "text-indigo-600 focus:ring-2 focus:ring-indigo-500 border-slate-300" %>
+            <label class="inline-flex items-center gap-1.5 text-sm text-zinc-700 dark:text-zinc-200">
+              <%= form.radio_button :unit_type, type, required: true, class: "text-indigo-600 focus:ring-2 focus:ring-indigo-500 border-zinc-300" %>
               <%= UnitSubmission::UNIT_TYPE_TRANSLATIONS[type] %>
             </label>
           <% end %>
@@ -48,12 +49,12 @@
       </fieldset>
 
       <fieldset>
-        <legend class="block text-sm font-bold text-slate-700 dark:text-slate-200">活動状況</legend>
+        <legend class="block text-sm font-bold text-zinc-700 dark:text-zinc-200">活動状況</legend>
         <span class="text-red-500 text-xs align-top">必須</span>
         <div class="mt-2 flex flex-wrap gap-4">
           <% UnitSubmission.statuses.each_key do |status| %>
-            <label class="inline-flex items-center gap-1.5 text-sm text-slate-700 dark:text-slate-200">
-              <%= form.radio_button :status, status, required: true, class: "text-indigo-600 focus:ring-2 focus:ring-indigo-500 border-slate-300" %>
+            <label class="inline-flex items-center gap-1.5 text-sm text-zinc-700 dark:text-zinc-200">
+              <%= form.radio_button :status, status, required: true, class: "text-indigo-600 focus:ring-2 focus:ring-indigo-500 border-zinc-300" %>
               <%= Unit::STATUS_TRANSLATIONS[status] %>
             </label>
           <% end %>
@@ -61,39 +62,64 @@
       </fieldset>
 
       <fieldset>
-        <legend class="block text-sm font-bold text-slate-700 dark:text-slate-200">リンク</legend>
+        <legend class="block text-sm font-bold text-zinc-700 dark:text-zinc-200">リンク</legend>
         <span class="text-red-500 text-xs align-top">必須（1件以上）</span>
-        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">公式サイト・SNSなど、参照できるURLを入力してください。</p>
+        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">公式サイト・SNSなど、参照できるURLを入力してください。</p>
         <div class="mt-2 space-y-3">
           <%= form.fields_for :links do |link_form| %>
             <div>
               <%= link_form.label :url, "URL", class: "sr-only" %>
               <%= link_form.url_field :url, placeholder: "https://...",
-                  class: "block w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+                  class: "block w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
             </div>
           <% end %>
         </div>
       </fieldset>
 
+      <%# 画像欄は本人・関係者のチェックと連動して表示するが、連動していることは案内しない。
+          チェックボックスから離れた位置に置き、表示するときも強調しない（issue #1718）。
+          非表示のあいだはfieldsetごとdisabledにして、中の入力を送信しない %>
+      <% images_enabled = @unit_submission.is_related_person? %>
+      <fieldset data-unit-submission-form-target="images" class="<%= "hidden" unless images_enabled %>" <%= "disabled" unless images_enabled %>>
+        <legend class="block text-sm font-bold text-zinc-700 dark:text-zinc-200">画像</legend>
+        <p id="unit_submission_image_files_hint" class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+          JPEG・PNG・WebP形式、1枚<%= UnitSubmission::MAX_IMAGE_SIZE / 1.megabyte %>MBまで、<%= UnitSubmission::MAX_IMAGES %>枚まで添付できます（任意）。
+        </p>
+        <% if @unit_submission.errors.any? %>
+          <p class="mt-1 text-xs text-red-700 dark:text-red-300">入力内容を修正したうえで、画像をもう一度選択してください。</p>
+        <% end %>
+        <%= form.label :image_files, "画像ファイル", class: "sr-only" %>
+        <%= form.file_field :image_files, multiple: true, include_hidden: false,
+            accept: "image/jpeg,image/png,image/webp",
+            aria: { describedby: "unit_submission_image_files_hint" },
+            class: "mt-2 block w-full text-sm text-zinc-700 dark:text-zinc-200 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 dark:file:bg-zinc-700 file:px-3 file:py-2 file:text-sm file:font-bold file:text-zinc-700 dark:file:text-zinc-100 hover:file:bg-zinc-200 dark:hover:file:bg-zinc-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 rounded-lg" %>
+        <div class="mt-3 flex items-start gap-2">
+          <%= form.check_box :image_usage_consented, class: "mt-1 rounded border-zinc-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500" %>
+          <%= form.label :image_usage_consented, "添付した画像を、当サイト上で掲載・利用することを了承します", class: "text-sm text-zinc-700 dark:text-zinc-200" %>
+        </div>
+        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">ご自身で撮影・制作した画像、または権利者の許諾を得た画像を添付してください。</p>
+      </fieldset>
+
       <div>
-        <%= form.label :note, "投稿理由・補足情報", class: "block text-sm font-bold text-slate-700 dark:text-slate-200" %>
+        <%= form.label :note, "投稿理由・補足情報", class: "block text-sm font-bold text-zinc-700 dark:text-zinc-200" %>
         <%= form.text_area :note, rows: 4, placeholder: "見つからなかった経緯や補足があればご記入ください（任意）",
-            class: "mt-1 block w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+            class: "mt-1 block w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
       </div>
 
       <div>
-        <%= form.label :email, "メールアドレス（任意）", class: "block text-sm font-bold text-slate-700 dark:text-slate-200" %>
+        <%= form.label :email, "メールアドレス（任意）", class: "block text-sm font-bold text-zinc-700 dark:text-zinc-200" %>
         <%= form.email_field :email, placeholder: "内容確認のためご連絡する場合があります",
-            class: "mt-1 block w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
-        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">返信を目的とするものではなく、内容確認のご連絡用です。</p>
+            class: "mt-1 block w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">返信を目的とするものではなく、内容確認のご連絡用です。</p>
       </div>
 
       <div class="flex items-start gap-2">
-        <%= form.check_box :is_related_person, class: "mt-1 rounded border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500" %>
-        <%= form.label :is_related_person, "本人またはユニット（バンド）関係者です", class: "text-sm text-slate-700 dark:text-slate-200" %>
+        <%= form.check_box :is_related_person, data: { unit_submission_form_target: "relatedPerson", action: "unit-submission-form#sync" },
+            class: "mt-1 rounded border-zinc-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500" %>
+        <%= form.label :is_related_person, "本人またはユニット（バンド）関係者です", class: "text-sm text-zinc-700 dark:text-zinc-200" %>
       </div>
 
-      <p class="text-center text-sm font-bold text-slate-700 dark:text-slate-200">
+      <p class="text-center text-sm font-bold text-zinc-700 dark:text-zinc-200">
         ※ 内容がそのまま公開されるわけではありません。<br>
         ※ 掲載をお約束するものではありません。
       </p>

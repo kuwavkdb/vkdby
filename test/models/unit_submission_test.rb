@@ -6,19 +6,20 @@ require 'test_helper'
 #
 # Table name: unit_submissions
 #
-#  id                :bigint           not null, primary key
-#  email             :string
-#  is_related_person :boolean          default(FALSE), not null
-#  name              :string           not null
-#  name_kana         :string
-#  note              :text
-#  status            :integer
-#  submission_status :integer          default(0), not null
-#  submitter_ip      :string
-#  unit_type         :integer
-#  created_at        :datetime         not null
-#  updated_at        :datetime         not null
-#  converted_unit_id :bigint
+#  id                    :bigint           not null, primary key
+#  email                 :string
+#  image_usage_consented :boolean          default(FALSE), not null
+#  is_related_person     :boolean          default(FALSE), not null
+#  name                  :string           not null
+#  name_kana             :string
+#  note                  :text
+#  status                :integer
+#  submission_status     :integer          default(0), not null
+#  submitter_ip          :string
+#  unit_type             :integer
+#  created_at            :datetime         not null
+#  updated_at            :datetime         not null
+#  converted_unit_id     :bigint
 #
 # Indexes
 #
