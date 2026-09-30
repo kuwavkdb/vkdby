@@ -326,6 +326,22 @@ module Admin
       assert_includes response.body, 'value="東京都"'
     end
 
+    # メンバーのSNSアカウントもURLのクエリパラメータ（配列）で事前入力できることを確認する
+    test 'quick_new prefills member sns from query parameters' do
+      get quick_new_admin_units_path, params: {
+        unit: {
+          name: 'Prefilled Band',
+          members: {
+            '0' => { person_name: 'Vocalist', part: 'vocal', sns: ['@vocalist_x', 'https://www.instagram.com/vocalist/'] }
+          }
+        }
+      }
+
+      assert_response :success
+      assert_select 'textarea[name=?]', 'unit[members][0][sns]',
+                    text: "@vocalist_x\nhttps://www.instagram.com/vocalist/"
+    end
+
     # issue #1611: URL経由で渡されたキーが既存Unitと重複している場合、保存前に警告と
     # 重複先の編集画面へのリンクを表示する
     test 'quick_new warns with a link to the existing unit when the prefilled key is already in use' do
@@ -461,6 +477,25 @@ module Admin
       unit = Unit.find_by(key: 'band-with-blank-profile')
       snapshot_person = unit.unit_snapshots.sole.snapshot_people.sole
       assert_equal({ 'blood' => 'O' }, snapshot_person.extra_profile)
+    end
+
+    # YAML貼り付け機能で入力されるメンバーのSNSアカウント（テキストエリアに1行1アカウント）を
+    # SnapshotPerson#sns として保存できることを確認する
+    test 'quick_create saves member sns along with the unit' do
+      post quick_create_admin_units_path, params: {
+        unit: {
+          name: 'Band With Sns', key: 'band-with-sns', unit_type: 'band', status: 'active',
+          members: {
+            '0' => { person_name: 'Vocalist', part: 'vocal', sns: "@vocalist_x\r\n\r\nhttps://www.instagram.com/vocalist/\n" },
+            '1' => { person_name: 'Guitarist', part: 'guitar', sns: '' }
+          }
+        }
+      }
+
+      unit = Unit.find_by(key: 'band-with-sns')
+      vocalist, guitarist = unit.unit_snapshots.sole.snapshot_people.order(:sort_order).to_a
+      assert_equal ['@vocalist_x', 'https://www.instagram.com/vocalist/'], vocalist.sns
+      assert_nil guitarist.sns
     end
 
     test 'quick_create rolls back the unit and snapshot when the unit is invalid' do

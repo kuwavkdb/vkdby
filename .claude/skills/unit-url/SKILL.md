@@ -18,7 +18,7 @@ ARGUMENTS（または会話中）で渡された **バンド公式サイト / SN
 
 ## 出力形式の選び方
 
-- **メンバーの誕生日・出身地等（`extra_profile`）を書き添えたい場合、メンバーが6人を超える場合、または項目数が多く見通しが悪くなる場合 → YAML を使う（手順4A）**
+- **メンバーの誕生日・出身地等（`extra_profile`）やメンバーのSNSを書き添えたい場合、メンバーが6人を超える場合、または項目数が多く見通しが悪くなる場合 → YAML を使う（手順4A）**
 - **バンド名・メンバー数名・簡単な情報だけで済む、URLとしてすぐ開ける状態が欲しい場合 → URLクエリパラメーターを使う（手順4B）**
 - 迷ったら YAML 方式を使う（情報を落とさず渡せるため）
 
@@ -46,11 +46,15 @@ members:
       birth_year: 1990
       blood: AB
       hometown: 東京都
+    sns:
+      - "@handle"
+      - https://www.instagram.com/handle/
 ```
 
 - トップレベルの各キーは省略可（分かる範囲だけ書けばよい）
 - `part` は `vocal` / `guitar` / `bass` / `drums` / `keyboard` / `dj` / `unknown`
 - `extra_profile` の各項目も省略可。`birthday` は `Unit#activity_period` と同じマスク形式ではなく、月日のみの文字列（例: `7/12`）を想定（`SnapshotPerson#extra_profile_person_attributes` がこの形式をパースする。issue #1619）
+- `sns` はメンバー個人の SNS アカウントの配列（省略可）。`SnapshotPerson#sns` に保存され、後で Person として独立・紐付けしたときに Person のリンクへ引き継がれる。X（Twitter）は `"@handle"`、それ以外のサービスは URL で書く。**`@` で始まる値は YAML の予約文字のため必ずダブルクォートで囲む**（囲まないと「フォームに反映」でエラーになる）
 - `activity_periods` の `from` / `to` は `Unit#activity_period`（`****/**/**` のようなマスク形式を許容するテキスト）に入る値
 
 ## URL の形式（手順4B）
@@ -71,13 +75,14 @@ https://www.vkdb.jp/admin/units/quick_new?<パラメーター>
 | `unit[snapshot_label]` | ラインナップのラベル（任意）。例: `結成時`, `現体制` |
 | `unit[members][<index>][person_name]` | メンバー名。`<index>` は `0` 始まりの連番 |
 | `unit[members][<index>][part]` | パート。`vocal` / `guitar` / `bass` / `drums` / `keyboard` / `dj` / `unknown` |
+| `unit[members][<index>][sns][]` | メンバー個人の SNS アカウント（任意・複数可）。X は `@handle`、それ以外は URL。複数あればパラメーターを繰り返す |
 | `unit[activity_periods][<index>][from]` | 活動期間の開始（任意）。`Unit#activity_period`（マスク形式を許容するテキスト）に入る値で、結成日・活動開始日が読み取れれば入れる。例: `2010/01/**` |
 | `unit[activity_periods][<index>][to]` | 活動期間の終了（任意）。活動中なら空にする |
 | `unit[activity_periods][<index>][label]` | 活動期間のラベル（任意）。例: `結成時`, `活動休止前` |
 | `unit[links][<index>][text]` | リンクのタイトル（任意）。例: `公式サイト`, `X（Twitter）`, `YouTube` |
 | `unit[links][<index>][url]` | リンクの URL。公式サイト・SNS・YouTube 等、読み取れたものを入れる |
 
-複数メンバー・複数活動期間・複数リンクがある場合は、それぞれ `unit[members][0][...]`, `unit[members][1][...]` ... のように `<index>` を `0` 始まりの連番で並べる。メンバーの人数が本来のフォームの初期表示行数（5行）を超えても構わない（フォームはその行数だけ表示される）。URL方式では `extra_profile`（メンバーの誕生日等）は渡せない。
+複数メンバー・複数活動期間・複数リンクがある場合は、それぞれ `unit[members][0][...]`, `unit[members][1][...]` ... のように `<index>` を `0` 始まりの連番で並べる。メンバーの人数が本来のフォームの初期表示行数（5行）を超えても構わない（フォームはその行数だけ表示される）。URL方式では `extra_profile`（メンバーの誕生日等）は渡せない（メンバーの `sns` は渡せる）。
 
 ## 情報源のルール（必ず守る）
 
@@ -101,6 +106,7 @@ https://www.vkdb.jp/admin/units/quick_new?<パラメーター>
    - `status` は「現在活動中」であることが明確な場合のみ `active` にする。活動休止・脱退ラッシュ中などの記載があれば `freeze` や `unknown` も検討する。判断が難しければ省略してフォームのデフォルトに任せる
    - 結成日・活動開始日が読み取れれば `activity_periods` の `from`（と分かれば `label`）に入れる。年のみ・年月のみなど不完全な情報でもマスク形式（`2010/**/**` のような書き方）で構わない
    - 公式サイト・X（Twitter）・Instagram・YouTube 等、読み取れたリンクは `links` に入れる（`text` にサービス名、`url` にリンク先）
+   - メンバー個人の SNS アカウント（公式サイトのメンバー紹介・個別プロフィールページに載っている X・Instagram 等へのリンク）が読み取れた場合は、メンバーごとの `sns` に入れる。X は `https://x.com/<handle>` / `https://twitter.com/<handle>` から `"@handle"` の形にし、それ以外は URL のまま入れる。バンド全体の公式アカウントはメンバーの `sns` ではなく `links` に入れる。公式サイトに載っていないアカウントを検索等で探して補わない（「情報源のルール」参照）
    - メンバーごとの誕生日・生年・血液型・出身地が読み取れた場合は `extra_profile` としてメモしておく（YAML方式なら `members[].extra_profile` にそのまま入れられる。URL方式の場合は手順4B参照）
 3. **`key` を決める**
    - **推測でよいのでなるべく設定する**。ドメイン名（例: `gummy-official.com` → `gummy`）、英語表記のロゴ、SNSのユーザー名など読み取れる手がかりから機械的に組み立ててよい。半角英数字・ハイフン程度に正規化する。手がかりが全くない場合のみ空のままにする
@@ -117,7 +123,7 @@ https://www.vkdb.jp/admin/units/quick_new?<パラメーター>
    - リンクが途中で途切れないよう、URL 中の `(` `)` は `%28` `%29` にエンコードしておく（`urllib.parse.quote(s, safe="")` ならエンコードされる）
 
    **共通**
-   - 抽出した内容（バンド名・メンバー一覧・種別・ステータス・活動時期・リンク・分かればメンバーごとの誕生日等）を箇条書きで添える
+   - 抽出した内容（バンド名・メンバー一覧・種別・ステータス・活動時期・リンク・分かればメンバーごとの誕生日・SNS等）を箇条書きで添える
    - `key` を設定した場合は**推測であることを明記**し、管理者に保存前の確認を促す。空にした場合はその旨と理由を書く。判断に迷った点があれば明記する
 
 ## 注意

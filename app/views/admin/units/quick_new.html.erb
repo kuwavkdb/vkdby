@@ -190,18 +190,23 @@
           <div class="space-y-3" data-quick-unit-form-target="memberContainer">
             <% @member_rows.each_with_index do |member, index| %>
               <% extra_profile = member.respond_to?(:extra_profile) ? (member.extra_profile || {}) : {} %>
+              <% sns = member.respond_to?(:sns) ? Array(member.sns) : [] %>
               <div class="rounded-md border border-gray-200 dark:border-gray-700 p-3" data-quick-unit-form-target="memberRow">
                 <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
                   <%= text_field_tag "unit[members][#{index}][person_name]", member.person_name, placeholder: "メンバー名", "aria-label": "メンバー#{index + 1}の名前", class: "block w-full flex-1 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
                   <%= select_tag "unit[members][#{index}][part]", options_for_select(SnapshotPerson.parts.keys.map { |k| [k.humanize, k] }, member.part), "aria-label": "メンバー#{index + 1}のパート", class: "block w-full sm:w-40 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
                 </div>
-                <details class="mt-2">
-                  <summary class="text-xs text-gray-500 dark:text-gray-400 cursor-pointer select-none">補足プロフィール（誕生日・出身地等。任意）</summary>
+                <details class="mt-2"<%= " open" if extra_profile.values.any?(&:present?) || sns.any? %>>
+                  <summary class="text-xs text-gray-500 dark:text-gray-400 cursor-pointer select-none">補足プロフィール（誕生日・出身地・SNS等。任意）</summary>
                   <div class="mt-2 grid grid-cols-2 gap-2">
                     <%= text_field_tag "unit[members][#{index}][extra_profile][birthday]", extra_profile["birthday"], placeholder: "誕生日 例: 7/12", "aria-label": "メンバー#{index + 1}の誕生日", class: "block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1 text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
                     <%= number_field_tag "unit[members][#{index}][extra_profile][birth_year]", extra_profile["birth_year"], placeholder: "生年 例: 1990", "aria-label": "メンバー#{index + 1}の生年", class: "block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1 text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
                     <%= text_field_tag "unit[members][#{index}][extra_profile][blood]", extra_profile["blood"], placeholder: "血液型 例: AB", "aria-label": "メンバー#{index + 1}の血液型", class: "block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1 text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
                     <%= text_field_tag "unit[members][#{index}][extra_profile][hometown]", extra_profile["hometown"], placeholder: "出身地 例: 東京都", "aria-label": "メンバー#{index + 1}の出身地", class: "block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1 text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+                  </div>
+                  <div class="mt-2">
+                    <%= label_tag "unit_members_#{index}_sns", "SNSアカウント（1行につき1アカウント）", class: "block text-xs text-gray-500 dark:text-gray-400" %>
+                    <%= text_area_tag "unit[members][#{index}][sns]", sns.join("\n"), id: "unit_members_#{index}_sns", rows: 2, placeholder: "@username\nhttps://example.com/profile", class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1 text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono" %>
                   </div>
                 </details>
               </div>
@@ -218,17 +223,21 @@
                 </select>
               </div>
               <details class="mt-2">
-                <summary class="text-xs text-gray-500 dark:text-gray-400 cursor-pointer select-none">補足プロフィール（誕生日・出身地等。任意）</summary>
+                <summary class="text-xs text-gray-500 dark:text-gray-400 cursor-pointer select-none">補足プロフィール（誕生日・出身地・SNS等。任意）</summary>
                 <div class="mt-2 grid grid-cols-2 gap-2">
                   <input type="text" name="unit[members][__INDEX__][extra_profile][birthday]" placeholder="誕生日 例: 7/12" aria-label="メンバーの誕生日" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1 text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                   <input type="number" name="unit[members][__INDEX__][extra_profile][birth_year]" placeholder="生年 例: 1990" aria-label="メンバーの生年" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1 text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                   <input type="text" name="unit[members][__INDEX__][extra_profile][blood]" placeholder="血液型 例: AB" aria-label="メンバーの血液型" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1 text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                   <input type="text" name="unit[members][__INDEX__][extra_profile][hometown]" placeholder="出身地 例: 東京都" aria-label="メンバーの出身地" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1 text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 </div>
+                <div class="mt-2">
+                  <label for="unit_members___INDEX___sns" class="block text-xs text-gray-500 dark:text-gray-400">SNSアカウント（1行につき1アカウント）</label>
+                  <textarea name="unit[members][__INDEX__][sns]" id="unit_members___INDEX___sns" rows="2" placeholder="@username&#10;https://example.com/profile" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1 text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono"></textarea>
+                </div>
               </details>
             </div>
           </template>
-          <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">※名前が空欄の行は無視されます。Personとの紐付けやSNS・経歴などの詳細は保存後に編集画面から設定できます。</p>
+          <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">※名前が空欄の行は無視されます。Personとの紐付けや経歴などの詳細は保存後に編集画面から設定できます。</p>
         </div>
 
         <div class="flex justify-end gap-x-4">

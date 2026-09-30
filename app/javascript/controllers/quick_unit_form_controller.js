@@ -14,7 +14,8 @@ export default class extends Controller {
   static values = { partOptions: Array }
 
   // data: unit-url スキル等が出力するYAMLをパースした結果のプレーンオブジェクト
-  // {name, key, unit_type, status, activity_periods: [...], links: [...], members: [...],
+  // {name, key, unit_type, status, activity_periods: [...], links: [...],
+  //  members: [{person_name, part, extra_profile: {...}, sns: [...]}],
   //  snapshot_date, snapshot_label}
   applyData(data) {
     if (data.name != null) this.nameTarget.value = data.name
@@ -59,7 +60,12 @@ export default class extends Controller {
           this.setFieldValue(row, "[extra_profile][birth_year]", extraProfile.birth_year)
           this.setFieldValue(row, "[extra_profile][blood]", extraProfile.blood)
           this.setFieldValue(row, "[extra_profile][hometown]", extraProfile.hometown)
-          if (extraProfile.birthday || extraProfile.birth_year || extraProfile.blood || extraProfile.hometown) {
+          // sns: "@handle" / URL の配列（1件だけなら文字列でもよい）。テキストエリアには1行1アカウントで入れる
+          const sns = (Array.isArray(member.sns) ? member.sns : [member.sns])
+            .filter((account) => account != null && String(account).trim() !== "")
+            .map((account) => String(account).trim())
+          this.setFieldValue(row, "[sns]", sns.join("\n"))
+          if (extraProfile.birthday || extraProfile.birth_year || extraProfile.blood || extraProfile.hometown || sns.length > 0) {
             const details = row.querySelector("details")
             if (details) details.open = true
           }
@@ -98,7 +104,7 @@ export default class extends Controller {
 
   setFieldValue(row, nameSuffixPattern, value) {
     if (value == null || value === "") return
-    const field = Array.from(row.querySelectorAll("input, select")).find((el) => el.name.includes(nameSuffixPattern))
+    const field = Array.from(row.querySelectorAll("input, select, textarea")).find((el) => el.name.includes(nameSuffixPattern))
     if (field) field.value = value
   }
 
