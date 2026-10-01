@@ -106,5 +106,5 @@
 - 各コントローラーの `before_action`: `app/controllers/admin/` 以下
 - ログイン履歴（`OperationLog`）の記録: `app/controllers/sessions_controller.rb`（ログイン成功時）
 - ログイン履歴の参照: `app/controllers/admin/operation_logs_controller.rb`（`require_admin`）
-- Unit Submissions（投稿の一覧・添付画像の確認・却下、承認時のUnit新規作成フォームへの引き継ぎ）: `app/controllers/admin/unit_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/units_controller.rb#new/#create`
+- Unit Submissions（投稿の一覧・添付画像の確認・却下、変換済みで利用了承済みの投稿画像のMarkdownコピー、承認時のUnit新規作成フォームへの引き継ぎ）: `app/controllers/admin/unit_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/units_controller.rb#new/#create`
 - Trend Submissions（投稿の一覧・却下、承認時のTrend新規作成フォームへの引き継ぎ）: `app/controllers/admin/trend_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/trends_controller.rb#new/#create`

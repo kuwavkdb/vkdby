@@ -81,6 +81,43 @@ module Admin
       assert_predicate @submission.reload, :rejected?
     end
 
+    test 'index lets admins copy converted submission images as markdown' do
+      login_as_admin
+      attach_image(@submission)
+      @submission.update!(submission_status: :converted, converted_unit: units(:one))
+
+      get admin_unit_submissions_path(status: 'converted')
+
+      assert_response :success
+      assert_select 'button[data-markdown]', count: 1 do |buttons|
+        assert_match %r{\A!\[MyString\]\(/rails/active_storage/blobs/(?:redirect|proxy)/[^)]+/image\.png\)\z},
+                     buttons.first['data-markdown']
+      end
+      assert_not_includes response.body, 'サイト上での利用: 了承済み'
+    end
+
+    test 'index does not offer markdown copy without image usage consent' do
+      login_as_admin
+      attach_image(@submission)
+      @submission.update_columns(image_usage_consented: false)
+      @submission.update!(submission_status: :converted, converted_unit: units(:one))
+
+      get admin_unit_submissions_path(status: 'converted')
+
+      assert_response :success
+      assert_select 'button[data-markdown]', count: 0
+    end
+
+    test 'index does not offer markdown copy for pending submissions' do
+      login_as_admin
+      attach_image(@submission)
+
+      get admin_unit_submissions_path
+
+      assert_response :success
+      assert_select 'button[data-markdown]', count: 0
+    end
+
     private
 
     def attach_image(submission)
