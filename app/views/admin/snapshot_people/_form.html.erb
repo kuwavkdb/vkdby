@@ -152,6 +152,14 @@
         </p>
       <% end %>
       <div class="grid grid-cols-2 gap-4">
+        <div class="col-span-2">
+          <%= label_tag "snapshot_person_extra_profile_name_kana", "ヨミガナ", class: "block text-xs font-semibold text-gray-900 dark:text-gray-100" %>
+          <%= text_field_tag "snapshot_person[extra_profile][name_kana]", extra_profile["name_kana"],
+                id: "snapshot_person_extra_profile_name_kana",
+                placeholder: "例: ヤマダタロウ",
+                disabled: snapshot_person.person_id.present?,
+                class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:bg-gray-50 dark:disabled:bg-gray-800" %>
+        </div>
         <div>
           <%= label_tag "snapshot_person_extra_profile_birthday", "誕生日", class: "block text-xs font-semibold text-gray-900 dark:text-gray-100" %>
           <%= text_field_tag "snapshot_person[extra_profile][birthday]", extra_profile["birthday"],

@@ -98,6 +98,7 @@ class SnapshotPerson < ApplicationRecord
     attrs[:birth_year] = profile['birth_year'] if profile['birth_year'].present?
     attrs[:blood] = profile['blood'] if profile['blood'].present?
     attrs[:hometown] = profile['hometown'] if profile['hometown'].present?
+    attrs[:name_kana] = profile['name_kana'] if profile['name_kana'].present?
 
     attrs
   end

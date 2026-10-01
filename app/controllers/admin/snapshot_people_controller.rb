@@ -104,7 +104,7 @@ module Admin
         :person_id, :person_name, :part, :part_alias,
         :status, :support, :sort_order, :person_key,
         :inline_history, :sns,
-        extra_profile: %i[birthday birth_year blood hometown]
+        extra_profile: %i[name_kana birthday birth_year blood hometown]
       )
       p[:person_id] = nil if p[:person_id].to_i.zero?
       # extra_profile も inline_history と同じく、Person未紐付けのメンバーの下書き情報のため、

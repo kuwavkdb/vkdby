@@ -139,6 +139,12 @@ class SnapshotPersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/Cla
     assert_equal '東京都', attrs[:hometown]
   end
 
+  test 'extra_profile_person_attributes copies name_kana as-is' do
+    sp = SnapshotPerson.new(extra_profile: { 'name_kana' => 'ヤマダタロウ' })
+
+    assert_equal 'ヤマダタロウ', sp.extra_profile_person_attributes[:name_kana]
+  end
+
   test 'extra_profile_person_attributes returns an empty hash when extra_profile is blank' do
     sp = SnapshotPerson.new(extra_profile: nil)
 
