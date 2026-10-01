@@ -30,7 +30,7 @@ class UnitSubmissionsController < ApplicationController
   def unit_submission_params
     params.require(:unit_submission).permit(
       :name, :name_kana, :unit_type, :status, :note, :email, :is_related_person,
-      links_attributes: %i[url]
+      :image_usage_consented, image_files: [], links_attributes: %i[url]
     )
   end
 
