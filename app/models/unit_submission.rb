@@ -41,7 +41,7 @@
 # （関係者チェックと画像欄が連動していることを投稿者に知らせないため）。
 class UnitSubmission < ApplicationRecord
   MAX_IMAGES = 3
-  MAX_IMAGE_SIZE = 5.megabytes
+  MAX_IMAGE_SIZE = 3.megabytes
 
   belongs_to :converted_unit, class_name: 'Unit', optional: true
   has_many :links, as: :linkable, dependent: :destroy

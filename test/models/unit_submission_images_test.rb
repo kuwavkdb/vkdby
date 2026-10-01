@@ -74,7 +74,7 @@ class UnitSubmissionImagesTest < ActiveSupport::TestCase
       submission = UnitSubmission.new(related_attributes(image_files: [large]))
 
       assert_not submission.valid?
-      assert_includes submission.errors[:base], '画像は1枚5MBまでです'
+      assert_includes submission.errors[:base], '画像は1枚3MBまでです'
     end
   end
 
