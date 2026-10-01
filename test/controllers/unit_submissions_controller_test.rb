@@ -56,4 +56,68 @@ class UnitSubmissionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
   end
+
+  def image_params(is_related_person:, consented: '1')
+    valid_params.deep_merge(
+      unit_submission: {
+        is_related_person: is_related_person,
+        image_usage_consented: consented,
+        image_files: [fixture_file_upload('submission_image.png', 'image/png')]
+      }
+    )
+  end
+
+  def with_stubbed_sanitizer(&)
+    result = lambda do |file|
+      SubmissionImageSanitizer::Result.new(io: StringIO.new(File.binread(file.path)), filename: 'sanitized.png',
+                                           content_type: 'image/png')
+    end
+    stub_class_method(SubmissionImageSanitizer, :call, result, &)
+  end
+
+  test 'new renders the image fields hidden and disabled by default' do
+    get new_unit_submission_path
+
+    assert_select 'fieldset.hidden[disabled][data-unit-submission-form-target=images]' do
+      assert_select 'input[type=file][name=?]', 'unit_submission[image_files][]'
+      assert_select 'input[type=checkbox][name=?]', 'unit_submission[image_usage_consented]'
+    end
+  end
+
+  test 'create attaches images submitted by a related person with consent' do
+    with_stubbed_sanitizer do
+      assert_difference('UnitSubmission.count') do
+        post unit_submissions_path, params: image_params(is_related_person: '1')
+      end
+    end
+
+    submission = UnitSubmission.last
+    assert_equal 1, submission.images.count
+    assert_predicate submission, :image_usage_consented?
+    assert_redirected_to new_unit_submission_path
+  end
+
+  test 'create silently drops images when the submitter is not a related person' do
+    with_stubbed_sanitizer do
+      assert_difference('UnitSubmission.count') do
+        post unit_submissions_path, params: image_params(is_related_person: '0')
+      end
+    end
+
+    submission = UnitSubmission.last
+    assert_not submission.images.attached?
+    assert_not submission.image_usage_consented?
+    assert_redirected_to new_unit_submission_path
+  end
+
+  test 'create rejects images without consent and keeps the image fields visible' do
+    with_stubbed_sanitizer do
+      assert_no_difference('UnitSubmission.count') do
+        post unit_submissions_path, params: image_params(is_related_person: '1', consented: '0')
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_select 'fieldset[data-unit-submission-form-target=images]:not(.hidden):not([disabled])'
+  end
 end

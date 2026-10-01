@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_26_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_30_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -400,6 +400,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_26_010000) do
     t.bigint "converted_unit_id"
     t.datetime "created_at", null: false
     t.string "email"
+    t.boolean "image_usage_consented", default: false, null: false
     t.boolean "is_related_person", default: false, null: false
     t.string "name", null: false
     t.string "name_kana"

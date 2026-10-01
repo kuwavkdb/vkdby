@@ -73,6 +73,9 @@ application.register("unit-link-insert", UnitLinkInsertController)
 import UnitSelectController from "controllers/unit_select_controller"
 application.register("unit-select", UnitSelectController)
 
+import UnitSubmissionFormController from "controllers/unit_submission_form_controller"
+application.register("unit-submission-form", UnitSubmissionFormController)
+
 import VenuePickerController from "controllers/venue_picker_controller"
 application.register("venue-picker", VenuePickerController)
 
