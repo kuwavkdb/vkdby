@@ -191,9 +191,13 @@
             <% @member_rows.each_with_index do |member, index| %>
               <% extra_profile = member.respond_to?(:extra_profile) ? (member.extra_profile || {}) : {} %>
               <% sns = member.respond_to?(:sns) ? Array(member.sns) : [] %>
+              <%# ヨミガナは保存時に extra_profile の name_kana へ入るため、エラーで再表示したときは extra_profile から読む %>
+              <% name_kana = (member.name_kana if member.respond_to?(:name_kana)).presence || extra_profile["name_kana"] %>
+              <% extra_profile = extra_profile.except("name_kana") %>
               <div class="rounded-md border border-gray-200 dark:border-gray-700 p-3" data-quick-unit-form-target="memberRow">
                 <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
                   <%= text_field_tag "unit[members][#{index}][person_name]", member.person_name, placeholder: "メンバー名", "aria-label": "メンバー#{index + 1}の名前", class: "block w-full flex-1 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+                  <%= text_field_tag "unit[members][#{index}][name_kana]", name_kana, placeholder: "ヨミガナ", "aria-label": "メンバー#{index + 1}のヨミガナ", class: "block w-full flex-1 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
                   <%= select_tag "unit[members][#{index}][part]", options_for_select(SnapshotPerson.parts.keys.map { |k| [k.humanize, k] }, member.part), "aria-label": "メンバー#{index + 1}のパート", class: "block w-full sm:w-40 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
                 </div>
                 <details class="mt-2"<%= " open" if extra_profile.values.any?(&:present?) || sns.any? %>>
@@ -216,6 +220,7 @@
             <div class="rounded-md border border-gray-200 dark:border-gray-700 p-3" data-quick-unit-form-target="memberRow">
               <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
                 <input type="text" name="unit[members][__INDEX__][person_name]" placeholder="メンバー名" aria-label="メンバー名" class="block w-full flex-1 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <input type="text" name="unit[members][__INDEX__][name_kana]" placeholder="ヨミガナ" aria-label="メンバーのヨミガナ" class="block w-full flex-1 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 <select name="unit[members][__INDEX__][part]" aria-label="メンバーのパート" class="block w-full sm:w-40 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                   <% SnapshotPerson.parts.keys.each do |part| %>
                     <option value="<%= part %>"><%= part.humanize %></option>

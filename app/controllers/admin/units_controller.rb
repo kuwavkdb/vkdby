@@ -10,9 +10,10 @@ module Admin
 
     QUICK_CREATE_MEMBER_ROWS = 5
     QUICK_CREATE_DEFAULT_PARTS = %w[vocal guitar guitar bass drums].freeze
-    # sns はフォームからは改行区切りの文字列、URLクエリパラメーターからは配列で届くため両方許可する
+    # sns はフォームからは改行区切りの文字列、URLクエリパラメーターからは配列で届くため両方許可する。
+    # name_kana は SnapshotPerson にカラムが無いため、保存時に extra_profile へ入れる（quick_member_rows）
     QUICK_MEMBER_PERMITTED_ATTRIBUTES = [
-      :person_name, :part, :sns, { sns: [], extra_profile: %i[birthday birth_year blood hometown] }
+      :person_name, :name_kana, :part, :sns, { sns: [], extra_profile: %i[birthday birth_year blood hometown] }
     ].freeze
 
     def index
@@ -307,8 +308,8 @@ module Admin
         part = permitted[:part]
         part = nil unless SnapshotPerson.parts.key?(part)
         extra_profile = permitted[:extra_profile].is_a?(ActionController::Parameters) ? permitted[:extra_profile].to_h : {}
-        OpenStruct.new(person_name: permitted[:person_name].to_s, part: part, extra_profile: extra_profile,
-                       sns: normalize_quick_member_sns(permitted[:sns]) || [])
+        OpenStruct.new(person_name: permitted[:person_name].to_s, name_kana: permitted[:name_kana].to_s, part: part,
+                       extra_profile: extra_profile, sns: normalize_quick_member_sns(permitted[:sns]) || [])
       end
     end
 
@@ -323,12 +324,16 @@ module Admin
     # （issue #1620）。SnapshotPeopleController#snapshot_person_params と同じ考え方で、
     # 空文字は保存せず nil にする。
     # sns（メンバーのSNSアカウント）も同様に受け取り、SnapshotPerson#sns に保存する。
+    # name_kana（ヨミガナ）は extra_profile の name_kana として保存し、Personとして独立させる際に
+    # Person#name_kana へ引き継ぐ（SnapshotPerson#extra_profile_person_attributes）。
     def quick_member_rows
       raw_rows = params[:unit][:members]
       return [] if raw_rows.blank?
 
       raw_rows.values.map do |row|
         attrs = row.permit(*QUICK_MEMBER_PERMITTED_ATTRIBUTES).to_h.symbolize_keys
+        name_kana = attrs.delete(:name_kana).to_s.strip
+        attrs[:extra_profile] = (attrs[:extra_profile] || {}).merge('name_kana' => name_kana) if name_kana.present?
         attrs[:extra_profile] = attrs[:extra_profile].compact_blank.presence if attrs[:extra_profile].is_a?(Hash)
         attrs[:sns] = normalize_quick_member_sns(attrs[:sns]) if attrs.key?(:sns)
         attrs

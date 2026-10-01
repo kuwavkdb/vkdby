@@ -342,6 +342,15 @@ module Admin
                     text: "@vocalist_x\nhttps://www.instagram.com/vocalist/"
     end
 
+    test 'quick_new prefills member name_kana from query parameters' do
+      get quick_new_admin_units_path, params: {
+        unit: { name: 'Prefilled Band', members: { '0' => { person_name: '山田太郎', name_kana: 'ヤマダタロウ', part: 'vocal' } } }
+      }
+
+      assert_response :success
+      assert_select 'input[name=?][value=?]', 'unit[members][0][name_kana]', 'ヤマダタロウ'
+    end
+
     # issue #1611: URL経由で渡されたキーが既存Unitと重複している場合、保存前に警告と
     # 重複先の編集画面へのリンクを表示する
     test 'quick_new warns with a link to the existing unit when the prefilled key is already in use' do
@@ -496,6 +505,24 @@ module Admin
       vocalist, guitarist = unit.unit_snapshots.sole.snapshot_people.order(:sort_order).to_a
       assert_equal ['@vocalist_x', 'https://www.instagram.com/vocalist/'], vocalist.sns
       assert_nil guitarist.sns
+    end
+
+    # メンバーのヨミガナは SnapshotPerson にカラムが無いため、extra_profile の name_kana として保存する
+    test 'quick_create saves member name_kana into extra_profile' do
+      post quick_create_admin_units_path, params: {
+        unit: {
+          name: 'Band With Kana', key: 'band-with-kana', unit_type: 'band', status: 'active',
+          members: {
+            '0' => { person_name: '山田太郎', name_kana: ' ヤマダタロウ ', part: 'vocal', extra_profile: { blood: 'O' } },
+            '1' => { person_name: 'Guitarist', name_kana: '', part: 'guitar' }
+          }
+        }
+      }
+
+      unit = Unit.find_by(key: 'band-with-kana')
+      vocalist, guitarist = unit.unit_snapshots.sole.snapshot_people.order(:sort_order).to_a
+      assert_equal({ 'blood' => 'O', 'name_kana' => 'ヤマダタロウ' }, vocalist.extra_profile)
+      assert_nil guitarist.extra_profile
     end
 
     test 'quick_create rolls back the unit and snapshot when the unit is invalid' do

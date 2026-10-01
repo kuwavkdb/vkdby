@@ -15,7 +15,7 @@ export default class extends Controller {
 
   // data: unit-url スキル等が出力するYAMLをパースした結果のプレーンオブジェクト
   // {name, key, unit_type, status, activity_periods: [...], links: [...],
-  //  members: [{person_name, part, extra_profile: {...}, sns: [...]}],
+  //  members: [{person_name, name_kana, part, extra_profile: {...}, sns: [...]}],
   //  snapshot_date, snapshot_label}
   applyData(data) {
     if (data.name != null) this.nameTarget.value = data.name
@@ -52,6 +52,7 @@ export default class extends Controller {
         data.members, this.memberContainerTarget, this.memberTemplateTarget, "memberRow",
         (row, member) => {
           this.setFieldValue(row, "[person_name]", member.person_name)
+          this.setFieldValue(row, "[name_kana]", member.name_kana)
           if (member.part != null && this.partOptionsValue.includes(member.part)) {
             this.setFieldValue(row, "[part]", member.part)
           }

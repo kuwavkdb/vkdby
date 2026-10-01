@@ -40,6 +40,7 @@ links:
     url: https://example.com/
 members:
   - person_name: 名前
+    name_kana: ナマエ
     part: vocal
     extra_profile:
       birthday: "7/12"
@@ -53,6 +54,7 @@ members:
 
 - トップレベルの各キーは省略可（分かる範囲だけ書けばよい）
 - `part` は `vocal` / `guitar` / `bass` / `drums` / `keyboard` / `dj` / `unknown`
+- `name_kana` はメンバー名のヨミガナ（省略可）。`SnapshotPerson#extra_profile` の `name_kana` に保存され、後で Person として独立させたときに `Person#name_kana` へ引き継がれる
 - `extra_profile` の各項目も省略可。`birthday` は `Unit#activity_period` と同じマスク形式ではなく、月日のみの文字列（例: `7/12`）を想定（`SnapshotPerson#extra_profile_person_attributes` がこの形式をパースする。issue #1619）
 - `sns` はメンバー個人の SNS アカウントの配列（省略可）。`SnapshotPerson#sns` に保存され、後で Person として独立・紐付けしたときに Person のリンクへ引き継がれる。X（Twitter）は `"@handle"`、それ以外のサービスは URL で書く。**`@` で始まる値は YAML の予約文字のため必ずダブルクォートで囲む**（囲まないと「フォームに反映」でエラーになる）
 - `activity_periods` の `from` / `to` は `Unit#activity_period`（`****/**/**` のようなマスク形式を許容するテキスト）に入る値
@@ -74,6 +76,7 @@ https://www.vkdb.jp/admin/units/quick_new?<パラメーター>
 | `unit[snapshot_date]` | 現在のラインナップの基準日（任意）。結成日ではなく「このラインナップが確認できた日」の意味。通常の date 型で `Unit#activity_period`（`****/**/**` のようなマスク形式を許容）とは別物であり、年月日が完全に分かる日付しか入れられない。日・月が不明な場合は仮埋めせず空にする |
 | `unit[snapshot_label]` | ラインナップのラベル（任意）。例: `結成時`, `現体制` |
 | `unit[members][<index>][person_name]` | メンバー名。`<index>` は `0` 始まりの連番 |
+| `unit[members][<index>][name_kana]` | メンバー名のヨミガナ（任意） |
 | `unit[members][<index>][part]` | パート。`vocal` / `guitar` / `bass` / `drums` / `keyboard` / `dj` / `unknown` |
 | `unit[members][<index>][sns][]` | メンバー個人の SNS アカウント（任意・複数可）。X は `@handle`、それ以外は URL。複数あればパラメーターを繰り返す |
 | `unit[activity_periods][<index>][from]` | 活動期間の開始（任意）。`Unit#activity_period`（マスク形式を許容するテキスト）に入る値で、結成日・活動開始日が読み取れれば入れる。例: `2010/01/**` |
@@ -82,7 +85,7 @@ https://www.vkdb.jp/admin/units/quick_new?<パラメーター>
 | `unit[links][<index>][text]` | リンクのタイトル（任意）。例: `公式サイト`, `X（Twitter）`, `YouTube` |
 | `unit[links][<index>][url]` | リンクの URL。公式サイト・SNS・YouTube 等、読み取れたものを入れる |
 
-複数メンバー・複数活動期間・複数リンクがある場合は、それぞれ `unit[members][0][...]`, `unit[members][1][...]` ... のように `<index>` を `0` 始まりの連番で並べる。メンバーの人数が本来のフォームの初期表示行数（5行）を超えても構わない（フォームはその行数だけ表示される）。URL方式では `extra_profile`（メンバーの誕生日等）は渡せない（メンバーの `sns` は渡せる）。
+複数メンバー・複数活動期間・複数リンクがある場合は、それぞれ `unit[members][0][...]`, `unit[members][1][...]` ... のように `<index>` を `0` 始まりの連番で並べる。メンバーの人数が本来のフォームの初期表示行数（5行）を超えても構わない（フォームはその行数だけ表示される）。URL方式では `extra_profile`（メンバーの誕生日等）は渡せない（メンバーの `name_kana`・`sns` は渡せる）。
 
 ## 情報源のルール（必ず守る）
 
@@ -102,7 +105,7 @@ https://www.vkdb.jp/admin/units/quick_new?<パラメーター>
    - 取得に失敗する場合（JS 描画のみのサイトなど）は chrome-devtools MCP で開いて読む。それもダメならユーザーに主要情報（バンド名・メンバー名・パート）の貼り付けを依頼する。他サイトの検索で代替しない（「情報源のルール」参照）
 2. **情報を抽出する**
    - バンド名は表記ゆれに注意し、公式サイトのロゴ・タイトルタグから最も正式な表記を採用する
-   - メンバー名とパートを読み取る。パートが明記されていない・複数パート兼任などで `SnapshotPerson.parts` のいずれにも当てはまらない場合は `unknown` にする（無理に推測しない）
+   - メンバー名とパートを読み取る。公式サイトにメンバー名の読み（ふりがな等）が載っていれば `name_kana` にカタカナで入れる。読みが載っていない名前を推測で埋めない。パートが明記されていない・複数パート兼任などで `SnapshotPerson.parts` のいずれにも当てはまらない場合は `unknown` にする（無理に推測しない）
    - `status` は「現在活動中」であることが明確な場合のみ `active` にする。活動休止・脱退ラッシュ中などの記載があれば `freeze` や `unknown` も検討する。判断が難しければ省略してフォームのデフォルトに任せる
    - 結成日・活動開始日が読み取れれば `activity_periods` の `from`（と分かれば `label`）に入れる。年のみ・年月のみなど不完全な情報でもマスク形式（`2010/**/**` のような書き方）で構わない
    - 公式サイト・X（Twitter）・Instagram・YouTube 等、読み取れたリンクは `links` に入れる（`text` にサービス名、`url` にリンク先）
