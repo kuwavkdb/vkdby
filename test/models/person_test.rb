@@ -245,6 +245,17 @@ class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
     assert_nil history[1][0][:part_and_name]
   end
 
+  test 'parse_old_history は括弧で囲んだリンクに続く(Part)をpart_and_nameとして扱う (issue #1736)' do
+    person = Person.new(old_history: '[[D\'e lude]](悠) → ([[クロネコ大和]])(篠宮悠) → ([[バンドC]])')
+    history = person.parse_old_history
+
+    assert_equal 3, history.size
+    assert_equal '(クロネコ大和)', history[1][0][:unit_name]
+    assert_equal '篠宮悠', history[1][0][:part_and_name]
+    assert_equal '(バンドC)', history[2][0][:unit_name]
+    assert_nil history[2][0][:part_and_name]
+  end
+
   test 'parse_old_history encodes space in band name as plus sign for old_key' do
     # DBのold_keyはスペースが+で保存されるため、+でエンコードされることを確認
     person = Person.new(old_history: '[[BULL ZEICHEN 88]]')
