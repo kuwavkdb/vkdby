@@ -27,4 +27,45 @@ class DailyControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_not_includes response.body, 'Unpublished Daily Person'
   end
+
+  test '年指定なしの日付ページは「今日はなんの日？」見出しとtitleを表示する（issue #1732）' do
+    get birthday_date_path(month: 5, day: 30)
+
+    assert_response :success
+    assert_select 'title', text: /\A5月30日はなんの日？/
+    assert_select 'p', text: '今日はなんの日？'
+    assert_not_includes response.body, 'All Years Summary'
+  end
+
+  test '年指定なしの日付ページはadminにのみ「今日はなんの日？」シェア用テキストを表示する（issue #1732）' do
+    Trend.create!(title: 'シェア対象の動向', date: Date.new(1995, 5, 30), publish_start_at: Time.current,
+                  unit_phenomenon: :other)
+
+    get birthday_date_path(month: 5, day: 30)
+    assert_select '#on-this-day-share-text', count: 0
+
+    operator = User.create!(email: 'on-this-day-operator@example.com', name: 'Operator', password: 'password',
+                            role: :super_operator)
+    post login_path, params: { email: operator.email, password: 'password' }
+    get birthday_date_path(month: 5, day: 30)
+    assert_select '#on-this-day-share-text', count: 0
+
+    delete logout_path
+    admin = User.create!(email: 'on-this-day-admin@example.com', name: 'Admin', password: 'password', role: :admin)
+    post login_path, params: { email: admin.email, password: 'password' }
+    get birthday_date_path(month: 5, day: 30)
+
+    assert_select '#on-this-day-share-text', text: /ヴィジュアル系今日はなんの日？\n・1995年 シェア対象の動向\n/
+  end
+
+  test '年指定なしの日付ページは動向がなくても誕生日があればadminにシェア用テキストを表示する（issue #1732）' do
+    Person.create!(name: 'シェア対象の誕生日', key: 'person-on-this-day-share', status: :active,
+                   birthday: Date.new(1970, 6, 1))
+    admin = User.create!(email: 'on-this-day-admin2@example.com', name: 'Admin', password: 'password', role: :admin)
+    post login_path, params: { email: admin.email, password: 'password' }
+
+    get birthday_date_path(month: 6, day: 1)
+
+    assert_select '#on-this-day-share-text', text: /ヴィジュアル系今日はなんの日？\n誕生日: シェア対象の誕生日\n/
+  end
 end

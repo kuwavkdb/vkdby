@@ -96,6 +96,7 @@
 | `admin?` でない | Units / People / Venues 編集画面の「キー変更」ボタン |
 | `admin?` でない | Units / People 一覧のリダイレクト元「物理削除」ボタン |
 | `admin?` でない | Units / People 一覧のチェックボックス・一括Status更新バー |
+| `admin?` でない | 年指定なしの日付ページ（`/date/-/:month/:day`）下部の「今日はなんの日？」Xシェア用テキスト・コピーボタン（動向・誕生日から抽出） |
 
 ---
 
