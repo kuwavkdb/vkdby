@@ -107,7 +107,7 @@ class TrendsHelperTest < ActionView::TestCase
 
     assert_includes lines, '・1995年 解散'
     assert_includes lines, '・2005年 活動休止'
-    assert_equal 3, lines.count { |l| l.match?(/\A・\d{4}年/) }
+    assert_equal(3, lines.count { |l| l.match?(/\A・\d{4}年/) })
     assert_includes lines, '・他'
   end
 end
