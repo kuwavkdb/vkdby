@@ -1,7 +1,7 @@
 <header class="p-8 md:p-10 text-center text-white relative <%= bg_class %> border-b border-white/10">
   <div class="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 mb-1">
     <h1 class="text-3xl md:text-4xl font-black tracking-tight letter-spacing-tight">
-      <% if name_kana.present? %>
+      <% if show_kana?(name, name_kana) %>
         <ruby><%= name %><rt class="text-sm font-medium opacity-90"><%= name_kana %></rt></ruby>
       <% else %>
         <%= name %>
@@ -11,7 +11,7 @@
       <span class="text-2xl md:text-3xl opacity-40 font-thin">/</span>
       <span class="text-2xl md:text-3xl opacity-75 font-medium">
         <% display_aliases.each_with_index do |a, i| %>
-          <%= " / " if i > 0 %><% if a.kana.present? %><ruby><%= a.name %><rt><%= a.kana %></rt></ruby><% else %><%= a.name %><% end %>
+          <%= " / " if i > 0 %><% if show_kana?(a.name, a.kana) %><ruby><%= a.name %><rt><%= a.kana %></rt></ruby><% else %><%= a.name %><% end %>
         <% end %>
       </span>
     <% end %>
