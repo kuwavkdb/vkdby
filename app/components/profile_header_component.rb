@@ -23,6 +23,11 @@ class ProfileHeaderComponent < ViewComponent::Base
     @resource.name_kana
   end
 
+  # 名前とヨミガナが同じ文字列ならルビは冗長なので出さない
+  def show_kana?(text, kana)
+    kana.present? && kana.strip != text.to_s.strip
+  end
+
   def display_aliases
     @resource.aliases.reject { |a| a.name.blank? || a.hidden }
   end
