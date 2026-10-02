@@ -23,6 +23,10 @@ class ProfileHeaderComponent < ViewComponent::Base
     @resource.name_kana
   end
 
+  def show_kana?(text, kana)
+    helpers.show_kana?(text, kana)
+  end
+
   def display_aliases
     @resource.aliases.reject { |a| a.name.blank? || a.hidden }
   end

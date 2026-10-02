@@ -1,4 +1,4 @@
-<% content_for :title, @resource.name_kana.present? ? "#{@resource.name}（#{@resource.name_kana}）" : @resource.name %>
+<% content_for :title, name_with_kana(@resource.name, @resource.name_kana) %>
 <%# ユニット名/メンバー名入りのog:image（issue #1259）。生成できない場合（libvips未導入等）は
     ogp_image_relative_urlがnilを返し、application_helper#og_image_urlのデフォルト画像
     フォールバックに任せる %>
