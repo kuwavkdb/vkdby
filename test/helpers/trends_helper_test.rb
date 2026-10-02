@@ -44,29 +44,53 @@ class TrendsHelperTest < ActionView::TestCase
     assert_includes html, '<script async="async" src="https://platform.twitter.com/widgets.js"'
   end
 
-  test 'on_this_day_share_textは動向から3件を選び、末尾の括弧書きを除いて出力する（issue #1732）' do
+  test 'on_this_day_share_textは動向から3件を選び、末尾の括弧書きを除き、4件以上なら「他」を付ける（issue #1732）' do
     trends = [
       Trend.new(title: 'ワンマン (渋谷公会堂)', date: Date.new(1995, 5, 30), units: [{ 'name' => 'ユニットA' }]),
       Trend.new(title: '解散発表（公式サイト）', date: Date.new(2000, 5, 30), units: [{ 'name' => 'ユニットB' }]),
       Trend.new(title: '結成', date: Date.new(2005, 5, 30)),
       Trend.new(title: '再結成', date: Date.new(2010, 5, 30), units: [{ 'name' => 'ユニットC' }])
     ]
+    birthdays = [Person.new(name: '誕生日の人')]
 
-    lines = on_this_day_share_text(trends, month: 5, day: 30).split("\n")
+    lines = on_this_day_share_text(trends, month: 5, day: 30, birthdays: birthdays).split("\n")
 
     assert_equal 'ヴィジュアル系今日はなんの日？', lines.first
-    assert_equal 3, lines.count { |l| l.start_with?('・') }
-    assert_equal birthday_date_url(month: 5, day: 30), lines[-2]
-    assert_equal '#vkdb', lines.last
     candidates = ['・1995年 ユニットA ワンマン', '・2000年 ユニットB 解散発表', '・2005年 結成', '・2010年 ユニットC 再結成']
     lines[1..3].each { |line| assert_includes candidates, line }
+    assert_equal ['・他', birthday_date_url(month: 5, day: 30), '#vkdb'], lines[4..]
   end
 
-  test 'on_this_day_share_textは動向が3件未満ならある分だけ出力する' do
+  test 'on_this_day_share_textは動向がちょうど3件なら「他」も誕生日も付けない' do
+    trends = (1..3).map { |i| Trend.new(title: "動向#{i}", date: Date.new(2000 + i, 5, 30)) }
+    birthdays = [Person.new(name: '誕生日の人')]
+
+    text = on_this_day_share_text(trends, month: 5, day: 30, birthdays: birthdays)
+
+    assert_equal "ヴィジュアル系今日はなんの日？\n・2001年 動向1\n・2002年 動向2\n・2003年 動向3\n" \
+                 "#{birthday_date_url(month: 5, day: 30)}\n#vkdb", text
+  end
+
+  test 'on_this_day_share_textは動向が3件未満なら誕生日を加える（issue #1732）' do
     trends = [Trend.new(title: '結成', date: Date.new(2005, 5, 30))]
+    birthdays = [Person.new(name: '甲'), Person.new(name: '乙')]
 
-    text = on_this_day_share_text(trends, month: 5, day: 30)
+    text = on_this_day_share_text(trends, month: 5, day: 30, birthdays: birthdays)
 
-    assert_equal "ヴィジュアル系今日はなんの日？\n・2005年 結成\n#{birthday_date_url(month: 5, day: 30)}\n#vkdb", text
+    assert_equal "ヴィジュアル系今日はなんの日？\n・2005年 結成\n誕生日: 甲、乙\n" \
+                 "#{birthday_date_url(month: 5, day: 30)}\n#vkdb", text
+  end
+
+  test 'on_this_day_share_textは誕生日が4件以上なら3件をランダムに選び「他」を付ける' do
+    names = %w[甲 乙 丙 丁]
+    birthdays = names.map { |name| Person.new(name: name) }
+
+    lines = on_this_day_share_text([], month: 5, day: 30, birthdays: birthdays).split("\n")
+
+    birthday_line = lines[1]
+    assert_match(/\A誕生日: .+、他\z/, birthday_line)
+    picked = birthday_line.delete_prefix('誕生日: ').split('、')[0..-2]
+    assert_equal 3, picked.size
+    assert_equal picked.sort_by { |name| names.index(name) }, picked
   end
 end

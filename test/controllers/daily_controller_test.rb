@@ -57,4 +57,15 @@ class DailyControllerTest < ActionDispatch::IntegrationTest
 
     assert_select '#on-this-day-share-text', text: /ヴィジュアル系今日はなんの日？\n・1995年 シェア対象の動向\n/
   end
+
+  test '年指定なしの日付ページは動向がなくても誕生日があればadminにシェア用テキストを表示する（issue #1732）' do
+    Person.create!(name: 'シェア対象の誕生日', key: 'person-on-this-day-share', status: :active,
+                   birthday: Date.new(1970, 6, 1))
+    admin = User.create!(email: 'on-this-day-admin2@example.com', name: 'Admin', password: 'password', role: :admin)
+    post login_path, params: { email: admin.email, password: 'password' }
+
+    get birthday_date_path(month: 6, day: 1)
+
+    assert_select '#on-this-day-share-text', text: /ヴィジュアル系今日はなんの日？\n誕生日: シェア対象の誕生日\n/
+  end
 end

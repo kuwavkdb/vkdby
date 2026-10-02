@@ -69,14 +69,22 @@ module TrendsHelper
   # 末尾の括弧書き（半角・全角）。Trend::TITLE_TRAILING_PARENTHETICAL_PATTERNは半角のみのため別に持つ
   TITLE_TRAILING_ANY_PARENTHETICAL_PATTERN = /\s*[(（][^()（）]*[)）]\z/
   ON_THIS_DAY_SHARE_TREND_COUNT = 3
+  ON_THIS_DAY_SHARE_BIRTHDAY_COUNT = 3
 
   # 年指定なしの日付ページ（/date/-/:month/:day）の「今日はなんの日？」シェア用テキスト（issue #1732）。
-  # 表示中の動向からランダムに3件選び、ページと同じく「年 ユニット名 タイトル」を1行にする。
-  # タイトル末尾の括弧書き（会場名等の補足）は除去する
-  def on_this_day_share_text(trends, month:, day:, related_units: {})
+  # 表示中の動向からランダムに3件選び、ページと同じく「年 ユニット名 タイトル」を1行にする
+  # （4件以上あれば「・他」を付ける）。タイトル末尾の括弧書き（会場名等の補足）は除去する。
+  # 動向が3件未満の場合は、誕生日の人物を最大3件ランダムに「誕生日: A、B、C、他」として加える
+  def on_this_day_share_text(trends, month:, day:, birthdays: [], related_units: {})
+    trends = trends.to_a
     lines = ['ヴィジュアル系今日はなんの日？']
-    trends.to_a.sample(ON_THIS_DAY_SHARE_TREND_COUNT).sort_by(&:date).each do |trend|
+    trends.sample(ON_THIS_DAY_SHARE_TREND_COUNT).sort_by(&:date).each do |trend|
       lines << "・#{on_this_day_share_trend_line(trend, related_units)}"
+    end
+    lines << '・他' if trends.size > ON_THIS_DAY_SHARE_TREND_COUNT
+    if trends.size < ON_THIS_DAY_SHARE_TREND_COUNT
+      birthday_line = on_this_day_share_birthday_line(birthdays.to_a)
+      lines << birthday_line if birthday_line
     end
     lines << birthday_date_url(month: month, day: day)
     lines << '#vkdb'
@@ -119,5 +127,14 @@ module TrendsHelper
     end.join('、')
     title = trend.title_as_plain_text.sub(TITLE_TRAILING_ANY_PARENTHETICAL_PATTERN, '')
     ["#{trend.date.year}年", unit_names, title].compact_blank.join(' ')
+  end
+
+  # 表示順（ヨミガナ順）は保ったままランダムに選ぶ
+  def on_this_day_share_birthday_line(birthdays)
+    return if birthdays.empty?
+
+    names = birthdays.each_with_index.to_a.sample(ON_THIS_DAY_SHARE_BIRTHDAY_COUNT).sort_by(&:last).map { |person, _| person.name }
+    names << '他' if birthdays.size > ON_THIS_DAY_SHARE_BIRTHDAY_COUNT
+    "誕生日: #{names.join('、')}"
   end
 end

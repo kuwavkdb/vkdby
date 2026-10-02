@@ -125,14 +125,14 @@
     <% end %>
 
     <!-- 「今日はなんの日？」シェア用テキスト（adminのみ、issue #1732） -->
-    <% if @year_agnostic && @trends.present? && current_user&.admin? %>
+    <% if @year_agnostic && (@trends.present? || @birthdays.present?) && current_user&.admin? %>
       <section class="mb-12 pt-6 border-t border-zinc-200 dark:border-zinc-700">
         <h2 class="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">X（Twitter）シェア用テキスト（管理者のみ表示）</h2>
         <div class="flex items-start gap-2">
           <textarea id="on-this-day-share-text"
                     rows="7"
                     class="flex-1 text-sm font-mono rounded-lg border border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 px-3 py-2"
-                    aria-label="Xシェア用テキスト"><%= on_this_day_share_text(@trends, month: @date.month, day: @date.day, related_units: @related_units || {}) %></textarea>
+                    aria-label="Xシェア用テキスト"><%= on_this_day_share_text(@trends, month: @date.month, day: @date.day, birthdays: @birthdays, related_units: @related_units || {}) %></textarea>
           <button type="button"
                   onclick="navigator.clipboard.writeText(document.getElementById('on-this-day-share-text').value).then(() => { this.textContent = 'コピー済み'; setTimeout(() => this.textContent = 'コピー', 2000) })"
                   class="text-xs px-2 py-1 border border-zinc-300 dark:border-zinc-600 rounded text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 dark:focus-visible:ring-amber-400"
