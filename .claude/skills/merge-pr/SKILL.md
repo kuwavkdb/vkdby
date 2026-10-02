@@ -14,8 +14,8 @@ description: mainブランチの最新タグを元に、feat/merge-{release_tag}
    git fetch origin --tags
    git tag --sort=-creatordate | head -1
    ```
-   - タグは `v0.YYYY.MMDD` 形式（例: `v0.2026.0303`）
-   - ブランチ名用に先頭の `v` を除いた文字列を使う（例: `0.2026.0303`）
+   - タグは `v1.YYYY.MMDD` 形式（例: `v1.2026.0303`）
+   - ブランチ名用に先頭の `v` を除いた文字列を使う（例: `1.2026.0303`）
 
 2. `main` ブランチを最新化する
    ```

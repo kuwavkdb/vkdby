@@ -1,6 +1,6 @@
 ---
 name: release-pr
-description: developブランチから release/v0.yyyy.mmdd ブランチを切ってpushし、PRを作成する
+description: developブランチから release/v1.yyyy.mmdd ブランチを切ってpushし、PRを作成する
 ---
 
 # Release PR 作成
@@ -10,7 +10,7 @@ description: developブランチから release/v0.yyyy.mmdd ブランチを切�
 ## 手順
 
 1. 今日の日付を取得して、ブランチ名を決定する
-   - フォーマット: `release/v0.YYYY.MMDD`（例: `release/v0.2026.0227`）
+   - フォーマット: `release/v1.YYYY.MMDD`（例: `release/v1.2026.0227`）
    - Bash で `date +%Y.%m%d` を実行して取得する
 
 2. `develop` ブランチに切り替えて最新化する
@@ -32,10 +32,10 @@ description: developブランチから release/v0.yyyy.mmdd ブランチを切�
      git tag --sort=-creatordate | head -1
      ```
    - 最新タグが今日の日付文字列（`<date>`）を含む場合: 末尾のサフィックス番号を +1 する
-     - 例: 最新タグが `v0.2026.0227` → `release/v0.2026.0227.2`
-     - 例: 最新タグが `v0.2026.0227.2` → `release/v0.2026.0227.3`
-   - 最新タグが今日の日付文字列を含まない場合: `release/v0.<date>` をそのまま使う
-   - 確定したブランチ名から `release/` を除いた部分を `<version>` とする（例: `v0.2026.0227.2`）。サフィックスが付与された場合は必ず `<version>` にも反映すること
+     - 例: 最新タグが `v1.2026.0227` → `release/v1.2026.0227.2`
+     - 例: 最新タグが `v1.2026.0227.2` → `release/v1.2026.0227.3`
+   - 最新タグが今日の日付文字列を含まない場合: `release/v1.<date>` をそのまま使う
+   - 確定したブランチ名から `release/` を除いた部分を `<version>` とする（例: `v1.2026.0227.2`）。サフィックスが付与された場合は必ず `<version>` にも反映すること
 
 5. リリースブランチを作成する
    ```
