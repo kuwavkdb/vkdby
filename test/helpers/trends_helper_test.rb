@@ -43,4 +43,30 @@ class TrendsHelperTest < ActionView::TestCase
     assert_equal 1, html.scan('<script').size
     assert_includes html, '<script async="async" src="https://platform.twitter.com/widgets.js"'
   end
+
+  test 'on_this_day_share_textは動向から3件を選び、末尾の括弧書きを除いて出力する（issue #1732）' do
+    trends = [
+      Trend.new(title: 'ワンマン (渋谷公会堂)', date: Date.new(1995, 5, 30), units: [{ 'name' => 'ユニットA' }]),
+      Trend.new(title: '解散発表（公式サイト）', date: Date.new(2000, 5, 30), units: [{ 'name' => 'ユニットB' }]),
+      Trend.new(title: '結成', date: Date.new(2005, 5, 30)),
+      Trend.new(title: '再結成', date: Date.new(2010, 5, 30), units: [{ 'name' => 'ユニットC' }])
+    ]
+
+    lines = on_this_day_share_text(trends, month: 5, day: 30).split("\n")
+
+    assert_equal 'ヴィジュアル系今日はなんの日？', lines.first
+    assert_equal 3, lines.count { |l| l.start_with?('・') }
+    assert_equal birthday_date_url(month: 5, day: 30), lines[-2]
+    assert_equal '#vkdb', lines.last
+    candidates = ['・1995年 ユニットA ワンマン', '・2000年 ユニットB 解散発表', '・2005年 結成', '・2010年 ユニットC 再結成']
+    lines[1..3].each { |line| assert_includes candidates, line }
+  end
+
+  test 'on_this_day_share_textは動向が3件未満ならある分だけ出力する' do
+    trends = [Trend.new(title: '結成', date: Date.new(2005, 5, 30))]
+
+    text = on_this_day_share_text(trends, month: 5, day: 30)
+
+    assert_equal "ヴィジュアル系今日はなんの日？\n・2005年 結成\n#{birthday_date_url(month: 5, day: 30)}\n#vkdb", text
+  end
 end

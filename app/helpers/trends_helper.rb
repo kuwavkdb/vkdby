@@ -66,6 +66,23 @@ module TrendsHelper
     lines.join("\n")
   end
 
+  # 末尾の括弧書き（半角・全角）。Trend::TITLE_TRAILING_PARENTHETICAL_PATTERNは半角のみのため別に持つ
+  TITLE_TRAILING_ANY_PARENTHETICAL_PATTERN = /\s*[(（][^()（）]*[)）]\z/
+  ON_THIS_DAY_SHARE_TREND_COUNT = 3
+
+  # 年指定なしの日付ページ（/date/-/:month/:day）の「今日はなんの日？」シェア用テキスト（issue #1732）。
+  # 表示中の動向からランダムに3件選び、ページと同じく「年 ユニット名 タイトル」を1行にする。
+  # タイトル末尾の括弧書き（会場名等の補足）は除去する
+  def on_this_day_share_text(trends, month:, day:, related_units: {})
+    lines = ['ヴィジュアル系今日はなんの日？']
+    trends.to_a.sample(ON_THIS_DAY_SHARE_TREND_COUNT).sort_by(&:date).each do |trend|
+      lines << "・#{on_this_day_share_trend_line(trend, related_units)}"
+    end
+    lines << birthday_date_url(month: month, day: day)
+    lines << '#vkdb'
+    lines.join("\n")
+  end
+
   def twitter_url?(url)
     return false if url.blank?
 
@@ -92,5 +109,15 @@ module TrendsHelper
 
     url_string = url.to_s
     url_string.start_with?('http://', 'https://') ? url_string : nil
+  end
+
+  private
+
+  def on_this_day_share_trend_line(trend, related_units)
+    unit_names = (trend.units || []).filter_map do |unit_data|
+      trend_unit_display_name(unit_data, related_units[unit_data['unit_id']])
+    end.join('、')
+    title = trend.title_as_plain_text.sub(TITLE_TRAILING_ANY_PARENTHETICAL_PATTERN, '')
+    ["#{trend.date.year}年", unit_names, title].compact_blank.join(' ')
   end
 end
