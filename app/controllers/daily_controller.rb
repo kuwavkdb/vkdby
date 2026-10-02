@@ -16,7 +16,7 @@ class DailyController < ApplicationController
     if @year_agnostic
       month = @date.month
       day = @date.day
-      @trends = Trend.on_month_day(month, day).select(:id, :date, :title, :units).order(date: :asc)
+      @trends = Trend.on_month_day(month, day).select(:id, :date, :title, :units, :unit_phenomenon).order(date: :asc)
       @birthdays = Person.kept.published.birthday_on(@date).select(*PERSON_CARD_COLUMNS).order(name_kana: :asc)
       @releases = Item.released_on_month_day(month, day).order(release_date: :asc)
     else

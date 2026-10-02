@@ -93,4 +93,21 @@ class TrendsHelperTest < ActionView::TestCase
     assert_equal 3, picked.size
     assert_equal picked.sort_by { |name| names.index(name) }, picked
   end
+
+  test 'on_this_day_share_textは解散・活動休止の動向を優先し、足りない分を他の動向から補う（issue #1732）' do
+    trends = [
+      Trend.new(title: 'ライブ1', date: Date.new(1990, 5, 30), unit_phenomenon: :live),
+      Trend.new(title: '解散', date: Date.new(1995, 5, 30), unit_phenomenon: :finish),
+      Trend.new(title: 'ライブ2', date: Date.new(2000, 5, 30), unit_phenomenon: :live),
+      Trend.new(title: '活動休止', date: Date.new(2005, 5, 30), unit_phenomenon: :suspend),
+      Trend.new(title: 'ライブ3', date: Date.new(2010, 5, 30), unit_phenomenon: :live)
+    ]
+
+    lines = on_this_day_share_text(trends, month: 5, day: 30).split("\n")
+
+    assert_includes lines, '・1995年 解散'
+    assert_includes lines, '・2005年 活動休止'
+    assert_equal 3, lines.count { |l| l.match?(/\A・\d{4}年/) }
+    assert_includes lines, '・他'
+  end
 end

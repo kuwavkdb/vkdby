@@ -70,15 +70,18 @@ module TrendsHelper
   TITLE_TRAILING_ANY_PARENTHETICAL_PATTERN = /\s*[(（][^()（）]*[)）]\z/
   ON_THIS_DAY_SHARE_TREND_COUNT = 3
   ON_THIS_DAY_SHARE_BIRTHDAY_COUNT = 3
+  # シェア用に優先して選ぶユニットの動向種別（解散・活動休止）
+  ON_THIS_DAY_SHARE_PRIORITY_UNIT_PHENOMENA = %w[finish suspend].freeze
 
   # 年指定なしの日付ページ（/date/-/:month/:day）の「今日はなんの日？」シェア用テキスト（issue #1732）。
-  # 表示中の動向からランダムに3件選び、ページと同じく「年 ユニット名 タイトル」を1行にする
+  # 表示中の動向から3件選び（解散・活動休止を優先し、足りなければ他からランダムに補う）、
+  # ページと同じく「年 ユニット名 タイトル」を1行にする
   # （4件以上あれば「・他」を付ける）。タイトル末尾の括弧書き（会場名等の補足）は除去する。
   # 動向が3件未満の場合は、誕生日の人物を最大3件ランダムに「誕生日: A、B、C、他」として加える
   def on_this_day_share_text(trends, month:, day:, birthdays: [], related_units: {})
     trends = trends.to_a
     lines = ['ヴィジュアル系今日はなんの日？']
-    trends.sample(ON_THIS_DAY_SHARE_TREND_COUNT).sort_by(&:date).each do |trend|
+    on_this_day_share_pick_trends(trends).sort_by(&:date).each do |trend|
       lines << "・#{on_this_day_share_trend_line(trend, related_units)}"
     end
     lines << '・他' if trends.size > ON_THIS_DAY_SHARE_TREND_COUNT
@@ -136,5 +139,11 @@ module TrendsHelper
     names = birthdays.each_with_index.to_a.sample(ON_THIS_DAY_SHARE_BIRTHDAY_COUNT).sort_by(&:last).map { |person, _| person.name }
     names << '他' if birthdays.size > ON_THIS_DAY_SHARE_BIRTHDAY_COUNT
     "誕生日: #{names.join('、')}"
+  end
+
+  def on_this_day_share_pick_trends(trends)
+    priority, others = trends.partition { |t| ON_THIS_DAY_SHARE_PRIORITY_UNIT_PHENOMENA.include?(t.unit_phenomenon) }
+    picked = priority.sample(ON_THIS_DAY_SHARE_TREND_COUNT)
+    picked + others.sample(ON_THIS_DAY_SHARE_TREND_COUNT - picked.size)
   end
 end
