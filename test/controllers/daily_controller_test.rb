@@ -27,4 +27,13 @@ class DailyControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_not_includes response.body, 'Unpublished Daily Person'
   end
+
+  test '年指定なしの日付ページは「今日はなんの日？」見出しとtitleを表示する（issue #1732）' do
+    get birthday_date_path(month: 5, day: 30)
+
+    assert_response :success
+    assert_select 'title', text: /\A5\/30 5月30日はなんの日？/
+    assert_select 'p', text: '今日はなんの日？'
+    assert_not_includes response.body, 'All Years Summary'
+  end
 end
