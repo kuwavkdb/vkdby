@@ -97,6 +97,15 @@ class Trend < ApplicationRecord
   # 公開画面に表示してよいTrend（非公開active: falseと、公開開始日時が未到来のものを除く）
   scope :published, -> { where(active: true).where(publish_start_at: ..Time.current) }
 
+  # メジャー経験バンド（メジャーデビューの動向が登録されているユニット）のID一覧。
+  # 年表（TimelineController）と「今日はなんの日？」の投稿文（OnThisDayPostBuilder、issue #1742）で共有する
+  def self.major_debut_unit_ids
+    where(unit_phenomenon: :major_debut, active: true)
+      .pluck(:units)
+      .flat_map { |arr| Array(arr).map { |u| u['unit_id'].to_i } }
+      .uniq
+  end
+
   before_validation { self.venue_name = venue_name.to_s.strip.presence }
 
   # Validations

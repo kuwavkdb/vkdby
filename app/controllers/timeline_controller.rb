@@ -22,11 +22,7 @@ class TimelineController < ApplicationController
     @zoom    = @year_px == DEFAULT_YEAR_PX ? '1' : params[:zoom]
 
     @timeline_data = Rails.cache.fetch(CACHE_KEY, expires_in: CACHE_TTL) do
-      major_debut_unit_ids = Trend
-                             .where(unit_phenomenon: :major_debut, active: true)
-                             .pluck(:units)
-                             .flat_map { |arr| Array(arr).map { |u| u['unit_id'].to_i } }
-                             .uniq
+      major_debut_unit_ids = Trend.major_debut_unit_ids
 
       units = Unit.kept
                   .where(id: major_debut_unit_ids)

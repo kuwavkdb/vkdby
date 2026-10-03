@@ -1,0 +1,17 @@
+<%= @result.date.month %>月<%= @result.date.day %>日の「今日はなんの日？」投稿文
+
+<%= @admin_user.name %> さん、
+本日の「今日はなんの日？」ページの紹介ポスト文です。内容を確認のうえ、X へ投稿してください。
+
+----------
+<%= @result.text %>
+----------
+文字数（X換算）: <%= @result.weighted_length %> / <%= XPostLength::MAX %>
+
+X の投稿画面を開く（投稿文入力済み）:
+<%= @result.intent_url %>
+
+「今日はなんの日？」ページ: <%= @result.page_url %>
+
+Thanks,
+VKDBY Team

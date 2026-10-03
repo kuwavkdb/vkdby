@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_03_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -136,6 +136,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_000000) do
     t.string "via"
     t.string "via_url"
     t.integer "wikipage_id"
+  end
+
+  create_table "on_this_day_mail_deliveries", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.date "date", null: false
+    t.datetime "updated_at", null: false
+    t.index ["date"], name: "index_on_this_day_mail_deliveries_on_date", unique: true
   end
 
   create_table "operation_logs", force: :cascade do |t|

@@ -21,4 +21,12 @@ class UserMailer < ApplicationMailer
     @url = admin_trend_submissions_url
     mail(to: @admin_user.email, subject: "[VKDBY] 新しい動向投稿があります: #{@trend_submission.target_name}")
   end
+
+  # 「今日はなんの日？」の紹介ポスト文（issue #1742）。result は OnThisDayPost
+  def on_this_day_post_email(admin_user, result)
+    @admin_user = admin_user
+    @result = result
+    mail(to: @admin_user.email,
+         subject: "[VKDBY] #{result.date.month}月#{result.date.day}日の「今日はなんの日？」投稿文")
+  end
 end
