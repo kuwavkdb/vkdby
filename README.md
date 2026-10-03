@@ -88,6 +88,40 @@ bin/backup-db.sh /path/to/dir
 pg_restore --no-owner --no-acl -d <接続先DB> vkdby_YYYYMMDD_HHMMSS.dump
 ```
 
+## 「今日はなんの日？」投稿文
+
+X に投稿する「今日はなんの日？」の紹介文を、GitHub Actions の **On This Day** ワークフロー（`.github/workflows/on_this_day.yml`）が毎日 JST 0:00 に作り、GitHub の Issue にコメントします。
+
+### 見方
+
+1. GitHub の Issues で、ラベル `on-this-day` の付いた Issue を開く（初回の実行で自動作成される）
+2. その日のコメントにある投稿文をコピーするか、「X の投稿画面を開く（投稿文入力済み）」から投稿する
+   - 載せる動向・誕生日がない日は「投稿文はありません」とコメントされる
+   - 同じ内容は Actions の実行結果ページ（Job Summary）にも表示される
+
+コメントが付くたびに通知を受け取るには、リポジトリを Watch するか、その Issue を Subscribe してください（モバイルアプリにも届きます）。Issue を close すると、次回の実行で新しい Issue が作られます。
+
+### 手動実行
+
+GitHub → Actions → On This Day → Run workflow から実行できます。`date` に `MM-DD` を入れるとその日の投稿文を、空なら JST の当日分をコメントします（何度実行してもその都度コメントされます）。
+
+```bash
+gh workflow run on_this_day.yml --repo kuwavkdb/vkdby -f date=05-30
+```
+
+Issue に書き込まずにローカルで投稿文だけ確認する場合:
+
+```bash
+bin/rails on_this_day:preview DATE=05-30
+```
+
+### 必要な設定
+
+| 設定先 | 名前 | 内容 |
+|--------|------|------|
+| Render の環境変数 | `ON_THIS_DAY_MAIL_TOKEN` | 投稿文 API（`GET /internal/on_this_day_post`）の認証トークン。未設定なら API は 404 |
+| GitHub の Secrets | `ON_THIS_DAY_MAIL_TOKEN` | 上と同じ値 |
+
 ## 注意事項
 - サーバー起動後は `http://127.0.0.1:3000` でアクセス可能です。
 - `bin/rails` 等を直接叩くとシステム Ruby が呼ばれてエラーになる可能性があるため、上記のように明示的にパスを通した実行を強く推奨します。
