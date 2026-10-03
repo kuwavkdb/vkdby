@@ -73,25 +73,23 @@
                     <% end %>
                   <% end %>
                 </div>
-                <%# 変換済みでサイト上での利用を了承済みの投稿は、画像をUnitのセクション本文に貼れるようMarkdownでコピーできるようにする。
-                    コピーボタンがあれば了承済みであることは分かるため、そのときは了承の有無を表示しない %>
-                <% copyable = submission.converted? && submission.image_usage_consented? %>
-                <% unless copyable %>
+                <%# 変換済みでサイト上での利用を了承済みの投稿は、残っている（縮小済みの）画像を変換先Unitの「画像」セクションへ
+                    追加できるようにする（issue #1719）。追加ボタンがあれば了承済みであることは分かるため、そのときは了承の有無を表示しない %>
+                <% addable = submission.converted? && UnitSubmissionImageTransfer.usable?(submission) &&
+                             submission.converted_unit&.kept? %>
+                <% unless addable %>
                   <span class="block mt-1 text-xs <%= submission.image_usage_consented? ? 'text-gray-500 dark:text-gray-400' : 'text-red-700 dark:text-red-300' %>">
                     サイト上での利用: <%= submission.image_usage_consented? ? '了承済み' : '未了承' %>
                   </span>
                 <% end %>
-                <% if copyable %>
-                  <% image_alt = (submission.converted_unit&.name || submission.name).delete('[]') %>
+                <% if addable %>
                   <div class="mt-2 flex flex-wrap gap-1">
                     <% submission.images.each_with_index do |image, index| %>
-                      <button type="button"
-                              data-markdown="<%= "![#{image_alt}](#{url_for(image)})" %>"
-                              onclick="navigator.clipboard.writeText(this.dataset.markdown).then(() => { this.textContent = 'コピー済み'; setTimeout(() => this.textContent = 'コピー', 2000) })"
-                              class="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                              aria-label="投稿画像<%= index + 1 %>のMarkdownをクリップボードにコピー">
-                        コピー
-                      </button>
+                      <%= button_to "Unitに追加", add_image_to_unit_admin_unit_submission_path(submission),
+                            params: { attachment_id: image.id },
+                            form: { class: "inline" },
+                            aria: { label: "投稿画像#{index + 1}をUnitに追加（#{submission.converted_unit.name}の「#{UnitSubmissionImageTransfer::SECTION_NAME}」セクション）" },
+                            class: "text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
                     <% end %>
                   </div>
                 <% end %>

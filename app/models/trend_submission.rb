@@ -21,6 +21,7 @@
 #  via_url             :string           not null
 #  created_at          :datetime         not null
 #  updated_at          :datetime         not null
+#  venue_name          :string
 #  converted_trend_id  :bigint
 #
 # Indexes
@@ -52,6 +53,7 @@ class TrendSubmission < ApplicationRecord
   attr_accessor :year, :month, :day
 
   before_validation :build_date_from_parts
+  before_validation { self.venue_name = venue_name.to_s.strip.presence }
 
   validates :target_type, presence: true
   validates :target_name, presence: true

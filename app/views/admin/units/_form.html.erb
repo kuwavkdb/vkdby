@@ -176,6 +176,31 @@
     <%= hidden_field_tag :unit_submission_id, unit_submission_id %>
   <% end %>
 
+  <%# 投稿画像の引き継ぎ（issue #1719）。選んだ画像はUnitの「画像」セクションへ移し、選ばなかった画像は縮小して投稿に残す %>
+  <% if @unit_submission_images.present? %>
+    <fieldset>
+      <legend class="block text-sm font-semibold text-gray-900 dark:text-gray-100">投稿画像</legend>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        チェックした画像は、作成するUnitの「<%= UnitSubmissionImageTransfer::SECTION_NAME %>」セクションに追加します。チェックしなかった画像は縮小して投稿に残します。
+      </p>
+      <%= hidden_field_tag "unit_submission_image_ids[]", "", id: nil %>
+      <div class="mt-2 flex flex-wrap gap-3">
+        <% @unit_submission_images.each_with_index do |image, index| %>
+          <label class="flex flex-col items-center gap-1 cursor-pointer">
+            <%= image_tag rails_blob_path(image, disposition: :inline), alt: "投稿画像#{index + 1}",
+                  loading: "lazy", class: "h-24 w-24 object-cover rounded border border-gray-200 dark:border-gray-700" %>
+            <span class="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300">
+              <%= check_box_tag "unit_submission_image_ids[]", image.id, @selected_unit_submission_image_ids.include?(image.id),
+                    id: "unit_submission_image_#{image.id}",
+                    class: "rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600" %>
+              使う
+            </span>
+          </label>
+        <% end %>
+      </div>
+    </fieldset>
+  <% end %>
+
   <% if unit.old_wiki_text.present? %>
     <div>
       <%= form.label :old_wiki_text, "旧Wikiテキスト", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>

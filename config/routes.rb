@@ -54,6 +54,7 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
     resources :unit_submissions, only: %i[index] do
       member do
         patch :reject
+        post :add_image_to_unit
       end
     end
     resources :trend_submissions, only: %i[index] do
@@ -209,6 +210,9 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
   # Daily page
   get '/date/:year/:month/:day', to: 'daily#show', as: :daily,
                                  constraints: { year: /\d{4}/, month: /\d{1,2}/, day: /\d{1,2}/ }
+
+  # 「今日はなんの日？」投稿文を管理者へメールする（GitHub Actions のcronから毎日呼ぶ、issue #1742）
+  post '/internal/on_this_day_mail', to: 'internal/on_this_day_mails#create', as: :internal_on_this_day_mail
 
   # Custom pages
   get '/pages/:key', to: 'custom_pages#show', as: :custom_page,

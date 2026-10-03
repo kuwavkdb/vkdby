@@ -123,6 +123,7 @@ module Admin
         redirect_to admin_units_path, notice: 'Unit created successfully.'
       else
         @unit.links.build if @unit.links.none?(&:new_record?)
+        set_unit_submission_images(params[:unit_submission_id], selected_ids: selected_unit_submission_image_ids)
         render :new, status: :unprocessable_entity
       end
     end
@@ -361,6 +362,25 @@ module Admin
       unit.status = unit_submission.status
       unit_submission.links.each { |link| unit.links.build(text: link.text, url: link.url) }
       unit.note = unit_submission_note(unit_submission)
+      set_unit_submission_images(unit_submission_id)
+    end
+
+    # 投稿画像の選択欄（issue #1719）。adminに限り、本人・関係者の投稿でサイト上での利用を
+    # 了承している場合だけ出す。selected_ids が nil のとき（最初に開いたとき）は全部選んだ状態にする
+    def set_unit_submission_images(unit_submission_id, selected_ids: nil)
+      return unless current_user.admin?
+
+      unit_submission = UnitSubmission.pending.find_by(id: unit_submission_id)
+      return unless unit_submission && UnitSubmissionImageTransfer.usable?(unit_submission)
+
+      @unit_submission_images = unit_submission.images_attachments.includes(:blob).order(:id).to_a
+      @selected_unit_submission_image_ids = selected_ids || @unit_submission_images.map(&:id)
+    end
+
+    # フォームは何も選ばなかったときにも空文字を送るため、未送信（nil）と区別できる
+    def selected_unit_submission_image_ids
+      ids = params[:unit_submission_image_ids]
+      ids && Array(ids).compact_blank.map(&:to_i)
     end
 
     def unit_submission_note(unit_submission)
@@ -376,6 +396,17 @@ module Admin
       return unless unit_submission
 
       unit_submission.update!(submission_status: :converted, converted_unit: unit)
+      transfer_unit_submission_images(unit_submission, unit)
+    end
+
+    # 選んだ画像はUnitの「画像」Sectionへ移し、残りは縮小して投稿に残す（issue #1719）
+    def transfer_unit_submission_images(unit_submission, unit)
+      return unless current_user.admin?
+
+      transfer = UnitSubmissionImageTransfer.new(unit_submission, unit)
+      section = transfer.move(selected_unit_submission_image_ids)
+      record_update_log(section, action: section.previously_new_record? ? 'create' : 'update', subject: unit) if section
+      transfer.shrink_remaining
     end
   end
 end

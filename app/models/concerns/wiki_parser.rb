@@ -34,18 +34,15 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
         item_segment = process_plugins(item_segment.strip, metadata)
         next if item_segment.empty? && metadata[:notes].empty?
 
-        # Check if the entire segment is wrapped in parentheses
-        wrapped_in_parens = item_segment.start_with?('(') && item_segment.end_with?(')')
-
-        # Remove outer parentheses for pattern matching if wrapped
-        # Remove outer parentheses for pattern matching if wrapped
-        content = wrapped_in_parens ? item_segment[1..-2] : item_segment
+        # 全体が括弧で囲まれている場合（"([[X]])"）、または括弧の後に役割が続く場合（"([[X]])(Part)"）は
+        # 外側の括弧を外してパターンマッチし、後続の(Part)の中身は wrapped_part として受け取る
+        wrapped_in_parens, content, wrapped_part = unwrap_leading_parens(item_segment)
 
         case content
         # Pattern 1: [[UnitName]] or [[UnitName]](Part) or [[UnitName]]Role - Internal unit link
         when /\[\[([^\]]+)\]\](?:\(([^)]+)\))?/
           unit_text = ::Regexp.last_match(1)
-          part_and_name = ::Regexp.last_match(2)
+          part_and_name = ::Regexp.last_match(2) || wrapped_part
 
           # [[バンド名]]ローディー のように括弧なしで役割テキストが続く場合に取り込む
           unless part_and_name
@@ -80,7 +77,7 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
         when /\[([^\]|]+)\]\(([^)]+)\)(?:\(([^)]+)\))?/
           link_text = ::Regexp.last_match(1)
           target = ::Regexp.last_match(2).strip
-          part_and_name = ::Regexp.last_match(3)
+          part_and_name = ::Regexp.last_match(3) || wrapped_part
 
           display_link_text = wrapped_in_parens ? "(#{link_text.strip})" : link_text.strip
 
@@ -95,7 +92,7 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
         when /\[([^\]|]+)\|([^\]]+)\](?:\(([^)]+)\))?/
           link_text = ::Regexp.last_match(1)
           url = ::Regexp.last_match(2).strip
-          part_and_name = ::Regexp.last_match(3)
+          part_and_name = ::Regexp.last_match(3) || wrapped_part
 
           # If wrapped in parentheses, add them to display
           display_link_text = wrapped_in_parens ? "(#{link_text.strip})" : link_text.strip
@@ -167,6 +164,38 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
         match
       end
     end.strip
+  end
+
+  # 先頭の "(" と対になる ")" を探し、[外側の括弧を外したか, パターンマッチ対象の文字列, 後続の(Part)の中身] を返す
+  #   "([[X]])"         → [true,  "[[X]]", nil]
+  #   "([[X]])(篠宮悠)" → [true,  "[[X]]", "篠宮悠"]
+  #   "(A)B" のように対の括弧の後ろに(Part)以外が続く場合は外さない
+  def unwrap_leading_parens(segment)
+    return [false, segment, nil] unless segment.start_with?('(')
+
+    close_index = matching_paren_index(segment)
+    return [false, segment, nil] unless close_index
+
+    inner = segment[1...close_index]
+    rest = segment[(close_index + 1)..]
+    return [true, inner, nil] if rest.empty?
+
+    part = rest[/\A\(([^()]+)\)\z/, 1]
+    part ? [true, inner, part] : [false, segment, nil]
+  end
+
+  # text 先頭の "(" と対になる ")" の位置を返す（見つからなければ nil）
+  def matching_paren_index(text)
+    depth = 0
+    text.each_char.with_index do |char, i|
+      if char == '('
+        depth += 1
+      elsif char == ')'
+        depth -= 1
+        return i if depth.zero?
+      end
+    end
+    nil
   end
 
   # 指定の区切り文字で分割するが、括弧()・角括弧[[]]・波括弧{{}}内の区切り文字は無視する

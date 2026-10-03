@@ -5,6 +5,9 @@
 
 対象: <%= @trend_submission.target_name %>（<%= @trend_submission.target_type == 'unit' ? 'ユニット' : '個人' %>）
 タイトル: <%= @trend_submission.title %>
+<% if @trend_submission.venue_name.present? -%>
+会場: <%= @trend_submission.venue_name %>
+<% end -%>
 
 内容を確認のうえ、承認・却下の判断をお願いします。
 

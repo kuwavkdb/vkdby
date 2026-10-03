@@ -60,6 +60,16 @@ module Admin
       assert_select "div[data-autocomplete-field-name-value='units'] span", count: 0
     end
 
+    # issue #1692: trend-url スキルから会場名を渡すと、会場の検索欄に入るだけで紐付けや表示名の上書きはしない
+    test 'new shows venue_name in the venue search input without linking it' do
+      get new_admin_trend_path(venue_name: '渋谷CLUB QUATTRO')
+
+      assert_response :success
+      assert_select "input#trend_venue_search[value='渋谷CLUB QUATTRO']"
+      assert_select "input[type=hidden][name='trend[venue_id]']:not([value])"
+      assert_select "input[name='trend[venue_name]']:not([value])"
+    end
+
     test 'new still presets the unit from unit_id as linked from the profile page' do
       unit = units(:one)
 
@@ -132,6 +142,19 @@ module Admin
 
       assert_response :success
       assert_select "div[data-autocomplete-field-name-value='units'] span", count: 0
+    end
+
+    test 'new puts the venue name of the trend submission in the venue search input' do
+      submission = TrendSubmission.create!(target_type: :unit, target_name: 'Submitted Unit',
+                                           date: Date.new(2026, 1, 1), via_url: 'https://example.com/submitted',
+                                           venue_name: '高田馬場CLUB PHASE',
+                                           phenomenon: Trend.unit_phenomenons['announcement'])
+
+      get new_admin_trend_path(trend_submission_id: submission.id)
+
+      assert_response :success
+      assert_select "input#trend_venue_search[value='高田馬場CLUB PHASE']"
+      assert_select "input[type=hidden][name='trend[venue_id]']:not([value])"
     end
 
     test 'create converts the pending trend submission and links it to the created trend' do

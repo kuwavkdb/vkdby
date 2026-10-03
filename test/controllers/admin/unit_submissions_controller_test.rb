@@ -3,7 +3,7 @@
 require 'test_helper'
 
 module Admin
-  class UnitSubmissionsControllerTest < ActionDispatch::IntegrationTest
+  class UnitSubmissionsControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
     include ActiveJob::TestHelper
 
     setup do
@@ -81,7 +81,7 @@ module Admin
       assert_predicate @submission.reload, :rejected?
     end
 
-    test 'index lets admins copy converted submission images as markdown' do
+    test 'index lets admins add converted submission images to the unit' do
       login_as_admin
       attach_image(@submission)
       @submission.update!(submission_status: :converted, converted_unit: units(:one))
@@ -89,14 +89,11 @@ module Admin
       get admin_unit_submissions_path(status: 'converted')
 
       assert_response :success
-      assert_select 'button[data-markdown]', count: 1 do |buttons|
-        assert_match %r{\A!\[MyString\]\(/rails/active_storage/blobs/(?:redirect|proxy)/[^)]+/image\.png\)\z},
-                     buttons.first['data-markdown']
-      end
+      assert_select 'form[action=?] button', add_image_to_unit_admin_unit_submission_path(@submission), count: 1
       assert_not_includes response.body, 'サイト上での利用: 了承済み'
     end
 
-    test 'index does not offer markdown copy without image usage consent' do
+    test 'index does not offer adding images without image usage consent' do
       login_as_admin
       attach_image(@submission)
       @submission.update_columns(image_usage_consented: false)
@@ -105,17 +102,76 @@ module Admin
       get admin_unit_submissions_path(status: 'converted')
 
       assert_response :success
-      assert_select 'button[data-markdown]', count: 0
+      assert_select 'form[action=?]', add_image_to_unit_admin_unit_submission_path(@submission), count: 0
     end
 
-    test 'index does not offer markdown copy for pending submissions' do
+    test 'index does not offer adding images for pending submissions' do
       login_as_admin
       attach_image(@submission)
 
       get admin_unit_submissions_path
 
       assert_response :success
-      assert_select 'button[data-markdown]', count: 0
+      assert_select 'form[action=?]', add_image_to_unit_admin_unit_submission_path(@submission), count: 0
+    end
+
+    test 'add_image_to_unit requires admin role' do
+      post login_path, params: { email: users(:one).email, password: 'password' }
+      attachment = attach_image(@submission)
+      @submission.update!(submission_status: :converted, converted_unit: units(:one))
+
+      post add_image_to_unit_admin_unit_submission_path(@submission), params: { attachment_id: attachment.id }
+
+      assert_redirected_to root_path
+      assert_equal 1, @submission.images.reload.count
+    end
+
+    test 'add_image_to_unit moves the image to the image section of the converted unit' do
+      login_as_admin
+      attachment = attach_image(@submission)
+      unit = units(:one)
+      @submission.update!(submission_status: :converted, converted_unit: unit)
+
+      assert_difference(-> { unit.sections.count } => 1, -> { UpdateLog.count } => 1) do
+        post add_image_to_unit_admin_unit_submission_path(@submission), params: { attachment_id: attachment.id }
+      end
+
+      assert_redirected_to admin_unit_submissions_path(status: 'converted')
+      section = unit.sections.find_by!(name: UnitSubmissionImageTransfer::SECTION_NAME)
+      assert_equal [attachment.blob_id], section.images.map(&:blob_id)
+      assert_match %r{/rails/active_storage/blobs/(?:redirect|proxy)/#{Regexp.escape(attachment.blob.signed_id)}/},
+                   section.markdown
+      assert_not @submission.reload.images.attached?
+    end
+
+    test 'add_image_to_unit refuses images without image usage consent' do
+      login_as_admin
+      attachment = attach_image(@submission)
+      @submission.update_columns(image_usage_consented: false)
+      @submission.update!(submission_status: :converted, converted_unit: units(:one))
+
+      assert_no_difference(-> { Section.count }) do
+        post add_image_to_unit_admin_unit_submission_path(@submission), params: { attachment_id: attachment.id }
+      end
+
+      assert_equal 'この画像はUnitに追加できません', flash[:alert]
+      assert_equal 1, @submission.images.reload.count
+    end
+
+    test 'add_image_to_unit refuses images of another submission' do
+      login_as_admin
+      other = UnitSubmission.create!(name: 'Other Unit', unit_type: :band, status: :active,
+                                     links_attributes: { '0' => { url: 'https://example.com/other' } })
+      other_attachment = attach_image(other)
+      attach_image(@submission)
+      @submission.update!(submission_status: :converted, converted_unit: units(:one))
+
+      assert_no_difference(-> { Section.count }) do
+        post add_image_to_unit_admin_unit_submission_path(@submission), params: { attachment_id: other_attachment.id }
+      end
+
+      assert_equal '画像が見つかりませんでした', flash[:alert]
+      assert_equal 1, other.images.reload.count
     end
 
     private
@@ -124,6 +180,7 @@ module Admin
       submission.update!(is_related_person: true, image_usage_consented: true)
       submission.images.attach(io: file_fixture('submission_image.png').open, filename: 'image.png',
                                content_type: 'image/png')
+      submission.images_attachments.reload.last
     end
 
     def login_as_admin

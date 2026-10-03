@@ -52,6 +52,18 @@ class TrendSubmissionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_trend_submission_path
   end
 
+  test 'create saves the venue name' do
+    post trend_submissions_path, params: valid_params(venue_name: ' 渋谷CLUB QUATTRO ')
+
+    assert_equal '渋谷CLUB QUATTRO', TrendSubmission.last.venue_name
+  end
+
+  test 'create saves a blank venue name as nil' do
+    post trend_submissions_path, params: valid_params(venue_name: '  ')
+
+    assert_nil TrendSubmission.last.venue_name
+  end
+
   test 'create builds date from year with month/day left unknown' do
     post trend_submissions_path, params: valid_params(month: '', day: '')
 

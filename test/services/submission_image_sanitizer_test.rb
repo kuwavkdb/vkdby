@@ -69,4 +69,19 @@ class SubmissionImageSanitizerTest < ActiveSupport::TestCase
       end
     end
   end
+
+  test 'shrinks to the given dimension and names the file after the given filename' do
+    skip 'libvips is not installed in this environment' unless ActiveStorage::VIPS_AVAILABLE
+
+    Tempfile.create(['blob', '.jpg']) do |file|
+      Vips::Image.black(1200, 600).write_to_file(file.path)
+
+      result = SubmissionImageSanitizer.call(File.open(file.path), max_dimension: 800, quality: 80,
+                                                                   filename: 'original.jpeg')
+
+      assert_equal 'original.jpg', result.filename
+      image = Vips::Image.new_from_buffer(result.io.read, '')
+      assert_equal [800, 400], [image.width, image.height]
+    end
+  end
 end

@@ -83,6 +83,120 @@ module Admin
       assert_predicate submission.reload, :pending?
     end
 
+    # issue #1719: 投稿画像は、adminが承認したときに選んだものをUnitの「画像」セクションへ移し、
+    # 選ばなかったものは縮小して投稿に残す
+    test 'new shows submission images to admins with all of them selected' do
+      login_as_admin
+      submission = submission_with_images(2)
+
+      get new_admin_unit_path(unit_submission_id: submission.id)
+
+      assert_response :success
+      assert_select 'input[type=checkbox][name=?][checked]', 'unit_submission_image_ids[]', count: 2
+    end
+
+    test 'new does not show submission images to non-admins' do
+      submission = submission_with_images(1)
+
+      get new_admin_unit_path(unit_submission_id: submission.id)
+
+      assert_response :success
+      assert_select 'input[name=?]', 'unit_submission_image_ids[]', count: 0
+    end
+
+    test 'new does not show submission images without image usage consent' do
+      login_as_admin
+      submission = submission_with_images(1)
+      submission.update_columns(image_usage_consented: false)
+
+      get new_admin_unit_path(unit_submission_id: submission.id)
+
+      assert_select 'input[name=?]', 'unit_submission_image_ids[]', count: 0
+    end
+
+    test 'create moves the selected submission images to a new image section and shrinks the rest' do
+      login_as_admin
+      submission = submission_with_images(2)
+      selected, remaining = submission.images_attachments.order(:id).to_a
+      shrunk = []
+      # stub_class_method はキーワード引数をハッシュのまま渡す
+      shrink = lambda do |file, options|
+        shrunk << options
+        SubmissionImageSanitizer::Result.new(io: StringIO.new(File.binread(file.path)), filename: 'small.png',
+                                             content_type: 'image/png')
+      end
+
+      stub_class_method(SubmissionImageSanitizer, :call, shrink) do
+        post admin_units_path, params: {
+          unit: { name: 'Submitted [Unit]', key: 'submitted-unit-with-images', status: 'active' },
+          unit_submission_id: submission.id,
+          unit_submission_image_ids: ['', selected.id.to_s]
+        }
+      end
+
+      unit = Unit.find_by!(key: 'submitted-unit-with-images')
+      section = unit.sections.sole
+      assert_equal UnitSubmissionImageTransfer::SECTION_NAME, section.name
+      assert_predicate section, :active?
+      assert_equal [selected.blob_id], section.images.map(&:blob_id)
+      assert_match %r{\A!\[Submitted Unit\]\(/rails/active_storage/blobs/(?:redirect|proxy)/[^)]+\)\z}, section.markdown
+      assert UpdateLog.exists?(loggable: section, action: 'create', subject: unit)
+
+      assert_equal [{ max_dimension: 800, quality: 80, filename: 'image.png' }], shrunk
+      submission.reload
+      assert_predicate submission, :converted?
+      assert_equal(['small.png'], submission.images.map { |image| image.filename.to_s })
+      assert_not ActiveStorage::Attachment.exists?(remaining.id)
+    end
+
+    test 'create keeps the remaining images as they are when they cannot be shrunk' do
+      login_as_admin
+      submission = submission_with_images(1)
+
+      stub_class_method(SubmissionImageSanitizer, :vips_available?, false) do
+        post admin_units_path, params: {
+          unit: { name: 'Submitted Unit', key: 'submitted-unit-unshrunk', status: 'active' },
+          unit_submission_id: submission.id,
+          unit_submission_image_ids: ['']
+        }
+      end
+
+      assert_empty Unit.find_by!(key: 'submitted-unit-unshrunk').sections
+      assert_equal(['image.png'], submission.reload.images.map { |image| image.filename.to_s })
+    end
+
+    test 'create does not transfer submission images for non-admins' do
+      submission = submission_with_images(1)
+      attachment = submission.images_attachments.first
+
+      post admin_units_path, params: {
+        unit: { name: 'Submitted Unit', key: 'submitted-unit-by-operator', status: 'active' },
+        unit_submission_id: submission.id,
+        unit_submission_image_ids: [attachment.id.to_s]
+      }
+
+      assert_predicate submission.reload, :converted?
+      assert_empty Unit.find_by!(key: 'submitted-unit-by-operator').sections
+      assert_equal [attachment.id], submission.images_attachments.pluck(:id)
+    end
+
+    test 'create keeps the image selection when the unit fails to save' do
+      login_as_admin
+      submission = submission_with_images(2)
+      selected = submission.images_attachments.order(:id).first
+
+      post admin_units_path, params: {
+        unit: { name: 'Submitted Unit', key: '', status: 'active' },
+        unit_submission_id: submission.id,
+        unit_submission_image_ids: ['', selected.id.to_s]
+      }
+
+      assert_response :unprocessable_entity
+      assert_select 'input[type=checkbox][name=?][checked]', 'unit_submission_image_ids[]', count: 1
+      assert_select 'input[type=checkbox][value=?][checked]', selected.id.to_s
+      assert_equal 2, submission.reload.images.count
+    end
+
     # issue #1277: keyが空のまま作成できると、以降Unit一覧ページ(管理画面・公開ページとも)が
     # profile_path(key)のUrlGenerationErrorで全面的に500エラーになっていた
     test 'create rejects a blank key and re-renders the form' do
@@ -715,6 +829,17 @@ module Admin
     def login_as_operator
       operator = User.create!(email: 'operator-discard-test@example.com', name: 'Operator', password: 'password', role: :operator)
       post login_path, params: { email: operator.email, password: 'password' }
+    end
+
+    def submission_with_images(count)
+      submission = UnitSubmission.create!(name: 'Submitted Unit', unit_type: 'band', status: 'active',
+                                          is_related_person: true, image_usage_consented: true,
+                                          links_attributes: { '0' => { url: 'https://example.com/submitted' } })
+      count.times do
+        submission.images.attach(io: file_fixture('submission_image.png').open, filename: 'image.png',
+                                 content_type: 'image/png')
+      end
+      submission
     end
   end
 end

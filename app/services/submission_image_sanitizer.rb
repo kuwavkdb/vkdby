@@ -8,6 +8,8 @@
 #   画素に反映する（先に消すと写真が横倒しになるため）。
 # - 長辺がMAX_DIMENSIONを超える画像は縮小する。Vips::Image.thumbnailは読み込み時に
 #   縮小するため、大きな画像でもメモリを使いすぎない。
+# - 長辺・品質は引数で変えられる。Unit作成時に使わなかった投稿画像を縮小して残すのにも使う
+#   （UnitSubmissionImageTransfer、issue #1719）。
 #
 # libvipsが入っていない環境（開発機・CI等）では作り直せないため、Unavailableを投げる
 # （メタデータを残したまま保存しないよう、呼び出し側では画像を受け付けない扱いにする）。
@@ -17,18 +19,21 @@ class SubmissionImageSanitizer
   class UnsupportedImage < Error; end
 
   MAX_DIMENSION = 4000
+  QUALITY = 90
 
-  # libvipsのローダー名 => [保存時の拡張子, Content-Type, 保存オプション]
+  # libvipsのローダー名 => [保存時の拡張子, Content-Type, 品質を指定できるか]
   FORMATS = {
-    'jpegload' => ['.jpg', 'image/jpeg', { Q: 90 }],
-    'pngload' => ['.png', 'image/png', {}],
-    'webpload' => ['.webp', 'image/webp', { Q: 90 }]
+    'jpegload' => ['.jpg', 'image/jpeg', true],
+    'pngload' => ['.png', 'image/png', false],
+    'webpload' => ['.webp', 'image/webp', true]
   }.freeze
 
   Result = Data.define(:io, :filename, :content_type)
 
-  def self.call(file)
-    new(file).call
+  # file は path を持つもの（アップロードされたファイルやTempfile）。保存時のファイル名は
+  # filename（拡張子は無視する）、無ければ file.original_filename から作る
+  def self.call(file, max_dimension: MAX_DIMENSION, quality: QUALITY, filename: nil)
+    new(file, max_dimension:, quality:, filename:).call
   end
 
   # OgpImageGenerator.vips_available? と同じく、テストでstubできるようメソッド経由にしている
@@ -36,8 +41,11 @@ class SubmissionImageSanitizer
     ActiveStorage::VIPS_AVAILABLE
   end
 
-  def initialize(file)
+  def initialize(file, max_dimension: MAX_DIMENSION, quality: QUALITY, filename: nil)
     @file = file
+    @max_dimension = max_dimension
+    @quality = quality
+    @filename = filename
   end
 
   def call
@@ -50,8 +58,9 @@ class SubmissionImageSanitizer
 
   # libvipsが無い環境ではVips::Errorも定義されないため、rescueはこのメソッドに閉じ込める
   def sanitize
-    extension, content_type, save_options = detect_format
-    image = Vips::Image.thumbnail(@file.path, MAX_DIMENSION, height: MAX_DIMENSION, size: :down)
+    extension, content_type, lossy = detect_format
+    image = Vips::Image.thumbnail(@file.path, @max_dimension, height: @max_dimension, size: :down)
+    save_options = lossy ? { Q: @quality } : {}
     buffer = image.write_to_buffer(extension, **save_options, **strip_options)
 
     Result.new(io: StringIO.new(buffer), filename: "#{basename}#{extension}", content_type:)
@@ -71,7 +80,7 @@ class SubmissionImageSanitizer
   end
 
   def basename
-    name = File.basename(@file.original_filename.to_s, '.*')
+    name = File.basename((@filename || @file.original_filename).to_s, '.*')
     name.presence || 'image'
   end
 end

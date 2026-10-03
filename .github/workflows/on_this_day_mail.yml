@@ -1,0 +1,31 @@
+name: On This Day Mail
+
+# 「今日はなんの日？」投稿文を管理者へメールする（issue #1742）。
+# アプリ側（POST /internal/on_this_day_mail）が投稿文を作ってadminへ送信する（送信記録は残さず、再実行すれば再度届く）。
+# 必要なSecrets: ON_THIS_DAY_MAIL_TOKEN（Renderの環境変数 ON_THIS_DAY_MAIL_TOKEN と同じ値）
+on:
+  schedule:
+    - cron: '0 15 * * *' # 毎日 JST 00:00 (= UTC 15:00)
+  workflow_dispatch:
+    inputs:
+      date:
+        description: '対象日（MM-DD）。空ならJSTの当日'
+        required: false
+        default: ''
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Request on-this-day mail
+        env:
+          TOKEN: ${{ secrets.ON_THIS_DAY_MAIL_TOKEN }}
+          DATE: ${{ inputs.date }}
+        run: |
+          curl --fail-with-body --silent --show-error \
+            --retry 3 --retry-delay 30 --retry-all-errors --max-time 120 \
+            -X POST \
+            -H "Authorization: Bearer ${TOKEN}" \
+            --data-urlencode "date=${DATE}" \
+            https://www.vkdb.jp/internal/on_this_day_mail

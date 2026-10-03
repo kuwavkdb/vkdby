@@ -62,8 +62,10 @@
 | Units / People / Venues — キー変更（旧キーは転送用スタブとして残り、新キーへ転送される） | change_key |
 | Units / People — リダイレクト元の物理削除 | purge |
 | Units / People — 一覧からのStatus一括更新 | bulk_update_status |
-| Unit Submissions（ログイン不要の投稿フォームからの投稿一覧・添付画像の確認・却下。却下時に添付画像を削除） | 全アクション |
+| Unit Submissions（ログイン不要の投稿フォームからの投稿一覧・添付画像の確認・却下。却下時に添付画像を削除。変換済み投稿に残った画像を変換先 Unit の「画像」セクションへ追加） | 全アクション（index / reject / add_image_to_unit） |
+| Units — 投稿からの新規作成時に、投稿画像を「画像」セクションへ引き継ぐ（admin 以外が作成した場合は画像を引き継がない） | new / create（画像の選択欄・引き継ぎのみ） |
 | Trend Submissions（ログイン不要の投稿フォームからの投稿一覧・却下） | 全アクション |
+| 「今日はなんの日？」投稿文メールの受信（毎日 JST 0:00、`User.admin` 全員宛） | ― （GitHub Actions から `POST /internal/on_this_day_mail` を呼んで送信） |
 
 ---
 
@@ -78,6 +80,8 @@
 | `POST /admin/sections/:id/upload_image` | `require_admin` |
 | `POST /admin/custom_pages/:id/upload_image` | `require_admin` |
 | `/admin/images`（一覧・詳細・削除） | `require_admin` |
+| Unit 新規作成フォームの投稿画像の選択欄・作成時の引き継ぎ | `current_user.admin?` のときのみ |
+| `POST /admin/unit_submissions/:id/add_image_to_unit` | `require_admin` |
 | ナビゲーションの Images リンク | `current_user.admin?` のときのみ表示 |
 
 ---
@@ -92,6 +96,7 @@
 | `super_operator_or_above?` でない | Items の新規作成・編集ボタン |
 | `super_operator_or_above?` でない | 画像管理の削除ボタン |
 | `admin?` でない | Section / Custom Page 編集画面のアップロードボタン |
+| `admin?` でない | Unit 新規作成フォーム（投稿からの承認）の投稿画像の選択欄 |
 | `admin?` でない | ナビの Images リンク |
 | `admin?` でない | Units / People / Venues 編集画面の「キー変更」ボタン |
 | `admin?` でない | Units / People 一覧のリダイレクト元「物理削除」ボタン |
@@ -107,5 +112,7 @@
 - 各コントローラーの `before_action`: `app/controllers/admin/` 以下
 - ログイン履歴（`OperationLog`）の記録: `app/controllers/sessions_controller.rb`（ログイン成功時）
 - ログイン履歴の参照: `app/controllers/admin/operation_logs_controller.rb`（`require_admin`）
-- Unit Submissions（投稿の一覧・添付画像の確認・却下、変換済みで利用了承済みの投稿画像のMarkdownコピー、承認時のUnit新規作成フォームへの引き継ぎ）: `app/controllers/admin/unit_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/units_controller.rb#new/#create`
+- Unit Submissions（投稿の一覧・添付画像の確認・却下、変換済みで利用了承済みの投稿画像の変換先 Unit への追加、承認時のUnit新規作成フォームへの引き継ぎ）: `app/controllers/admin/unit_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/units_controller.rb#new/#create`
+- 投稿画像の引き継ぎ（選んだ画像を Unit の「画像」セクションへ移し、残りは縮小して投稿に残す）: `app/services/unit_submission_image_transfer.rb`。`Admin::UnitsController#new/#create` では `current_user.admin?` のときだけ行う
 - Trend Submissions（投稿の一覧・却下、承認時のTrend新規作成フォームへの引き継ぎ）: `app/controllers/admin/trend_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/trends_controller.rb#new/#create`
+- 「今日はなんの日？」投稿文メール（issue #1742）: 投稿文の生成 `app/services/on_this_day_post_builder.rb`、送信 `app/services/on_this_day_mail_sender.rb`（`User.admin` 全員宛。動向・誕生日がない日はその旨を送る）、起動 `.github/workflows/on_this_day_mail.yml` → `app/controllers/internal/on_this_day_mails_controller.rb`。エンドポイントはログインではなく環境変数 `ON_THIS_DAY_MAIL_TOKEN` の Bearer トークンで認証し、未設定なら 404 になる
