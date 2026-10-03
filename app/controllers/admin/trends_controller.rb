@@ -6,7 +6,8 @@ module Admin
     before_action :require_super_operator, only: %i[destroy]
 
     # 新規作成フォームをURLパラメーター（trend[...]）で事前入力する際に受け付ける属性（issue #1582）。
-    # ユニット・個人は対象をフォームのサジェストで確定するため、名前のみ unit_name/person_name で渡す
+    # ユニット・個人は対象をフォームのサジェストで確定するため、名前のみ unit_name/person_name で渡す。
+    # 会場も同様に、venue_name（trend[venue_name]の表示名上書きとは別）で会場の検索欄に入れるだけにする（issue #1692）
     PREFILL_ATTRIBUTES = %i[date day_unknown month_unknown title content quote quote_url via_name via_url].freeze
     PREFILL_PHENOMENONS = %i[unit_phenomenon person_phenomenon etc_phenomenon].freeze
 
@@ -33,6 +34,7 @@ module Admin
     def new
       @unit_name_prefill = params[:unit_name].to_s.presence
       @person_name_prefill = params[:person_name].to_s.presence
+      @venue_name_prefill = params[:venue_name].to_s.presence
       @trend = Trend.new(trend_params_for_new)
       @trend.date ||= Date.current
       @trend.publish_start_at ||= Time.current
