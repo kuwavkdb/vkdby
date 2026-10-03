@@ -207,6 +207,10 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
   get '/date/-/:month/:day', to: 'daily#show', as: :birthday_date,
                              constraints: { month: /\d{1,2}/, day: /\d{1,2}/ }
 
+  # 年指定なしの日付ページのog:image（issue #1746）
+  get '/date/-/:month/:day/ogp.png', to: 'on_this_day_ogp_images#show', as: :birthday_date_ogp_image,
+                                     constraints: { month: /\d{1,2}/, day: /\d{1,2}/ }
+
   # Daily page
   get '/date/:year/:month/:day', to: 'daily#show', as: :daily,
                                  constraints: { year: /\d{4}/, month: /\d{1,2}/, day: /\d{1,2}/ }
