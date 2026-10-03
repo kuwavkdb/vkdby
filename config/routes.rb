@@ -54,6 +54,7 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
     resources :unit_submissions, only: %i[index] do
       member do
         patch :reject
+        post :add_image_to_unit
       end
     end
     resources :trend_submissions, only: %i[index] do
