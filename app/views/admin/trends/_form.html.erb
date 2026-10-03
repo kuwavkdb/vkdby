@@ -3,6 +3,8 @@
 <% person_name_prefill = unlinked_trend_submission&.target_name if unlinked_trend_submission&.person? %>
 <% unit_name_prefill ||= local_assigns[:unit_name] %>
 <% person_name_prefill ||= local_assigns[:person_name] %>
+<%# 会場は検索欄に名前を入れるだけで、紐付けは人が候補から選んで確定する（issue #1692） %>
+<% venue_name_prefill = (local_assigns[:venue_name].presence || local_assigns[:trend_submission]&.venue_name) if trend.venue_id.blank? %>
 <%= form_with(model: [:admin, trend], class: "space-y-6") do |form| %>
   <% if local_assigns[:trend_submission_id].present? %>
     <%= hidden_field_tag :trend_submission_id, trend_submission_id %>
@@ -17,6 +19,10 @@
       </p>
       <% if trend_submission.target_id.blank? %>
         <p class="mt-1 text-xs">サイト内のデータと自動紐付けされていません。下記の<%= trend_submission.target_type == 'unit' ? 'ユニット' : '個人' %>欄に対象名を入力済みです。検索結果から選択して紐付けてください。</p>
+      <% end %>
+      <% if trend_submission.venue_name.present? %>
+        <p class="mt-1">会場: <%= trend_submission.venue_name %></p>
+        <p class="mt-1 text-xs">下記の会場欄に会場名を入力済みです。検索結果から選択して紐付けてください。</p>
       <% end %>
     </div>
   <% end %>
@@ -186,7 +192,8 @@
       <div class="mt-1 relative">
         <input type="text" id="trend_venue_search"
                data-venue-picker-target="input"
-               data-action="input->venue-picker#search keydown->venue-picker#onKeydown"
+               data-action="input->venue-picker#search focus->venue-picker#search keydown->venue-picker#onKeydown"
+               value="<%= venue_name_prefill %>"
                placeholder="会場名・別名・旧名で検索..."
                role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="trend_venue_results"
                autocomplete="off"

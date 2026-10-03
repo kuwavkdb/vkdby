@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_30_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -309,6 +309,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_30_000000) do
     t.integer "target_type", null: false
     t.string "title"
     t.datetime "updated_at", null: false
+    t.string "venue_name"
     t.string "via_url", null: false
     t.index ["converted_trend_id"], name: "index_trend_submissions_on_converted_trend_id"
     t.index ["submission_status"], name: "index_trend_submissions_on_submission_status"
