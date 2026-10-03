@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       date:
-        description: '対象日（YYYY-MM-DD）。空ならJSTの当日'
+        description: '対象日（MM-DD）。空ならJSTの当日'
         required: false
         default: ''
 

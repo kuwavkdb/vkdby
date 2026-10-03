@@ -9,7 +9,6 @@ module Internal
     include ActionController::HttpAuthentication::Token::ControllerMethods
 
     TOKEN_ENV = 'ON_THIS_DAY_MAIL_TOKEN'
-    TIME_ZONE = 'Asia/Tokyo'
 
     before_action :authenticate
 
@@ -18,7 +17,7 @@ module Internal
       return render json: { error: 'invalid date' }, status: :unprocessable_entity unless date
 
       status = OnThisDayMailSender.new(date).call
-      render json: { status: status, date: date.iso8601 }
+      render json: { status: status, date: date.strftime('%m-%d') }
     end
 
     private
@@ -32,13 +31,11 @@ module Internal
       end
     end
 
-    # 既定は JST の当日。手動実行で過去日を送り直す場合などに date=YYYY-MM-DD で指定できる
+    # 既定は JST の当日。手動実行で別の日を送る場合などに date=MM-DD で指定できる（年は使わない）
     def target_date
-      return Time.find_zone(TIME_ZONE).today if params[:date].blank?
+      return OnThisDayPostBuilder.today if params[:date].blank?
 
-      Date.iso8601(params[:date].to_s)
-    rescue Date::Error
-      nil
+      OnThisDayPostBuilder.parse_month_day(params[:date])
     end
   end
 end

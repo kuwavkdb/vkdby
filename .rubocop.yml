@@ -24,3 +24,4 @@ Metrics/ClassLength:
     - 'test/controllers/profiles_controller_test.rb'
     - 'test/controllers/custom_pages_controller_test.rb'
     - 'test/controllers/trends_controller_test.rb'
+    - 'test/services/on_this_day_post_builder_test.rb'

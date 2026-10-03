@@ -15,7 +15,7 @@ class OnThisDayPostBuilderTest < ActiveSupport::TestCase
 
     result = OnThisDayPostBuilder.new(DATE).build
 
-    assert_equal "ヴィジュアル系今日はなんの日？\n・1995年 黒夢 ワンマン\nhttps://example.com/date/-/5/30\n#vkdb", result.text
+    assert_equal "ヴィジュアル系今日はなんの日？（05/30）\n・1995年 黒夢 ワンマン\nhttps://example.com/date/-/5/30\n#vkdb", result.text
     assert_equal 'https://example.com/date/-/5/30', result.page_url
     assert_equal "https://x.com/intent/post?text=#{ERB::Util.url_encode(result.text)}", result.intent_url
   end
@@ -108,10 +108,36 @@ class OnThisDayPostBuilderTest < ActiveSupport::TestCase
     assert_operator result.weighted_length, :<=, XPostLength::MAX
   end
 
+  test '誕生日が2人以上入らなければ誕生日の行を省く' do
+    create_trend(create_unit('黒夢'), title: '結成', year: 1991)
+    create_person('あ' * 70, 'あ')
+    create_person('い' * 70, 'い')
+
+    text = OnThisDayPostBuilder.new(DATE).build.text
+
+    assert_not_includes text, '誕生日:'
+  end
+
+  test '動向がなく、誕生日の行も載らない日はnilを返す' do
+    create_person('あ' * 70, 'あ')
+    create_person('い' * 70, 'い')
+
+    assert_nil OnThisDayPostBuilder.new(DATE).build
+  end
+
+  test 'parse_month_dayはMM-DDとM/Dを受け付け、不正ならnil' do
+    may30 = OnThisDayPostBuilder.parse_month_day('05-30')
+    feb29 = OnThisDayPostBuilder.parse_month_day('2/29')
+    assert_equal [5, 30], [may30.month, may30.day]
+    assert_equal [2, 29], [feb29.month, feb29.day]
+    assert_nil OnThisDayPostBuilder.parse_month_day('2026-05-30')
+    assert_nil OnThisDayPostBuilder.parse_month_day('13-40')
+  end
+
   test '動向がなく誕生日だけの日も出力する' do
     create_person('甲', 'こう')
 
-    assert_equal "ヴィジュアル系今日はなんの日？\n誕生日: 甲\nhttps://example.com/date/-/5/30\n#vkdb",
+    assert_equal "ヴィジュアル系今日はなんの日？（05/30）\n誕生日: 甲\nhttps://example.com/date/-/5/30\n#vkdb",
                  OnThisDayPostBuilder.new(DATE).build.text
   end
 

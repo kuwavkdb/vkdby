@@ -6,30 +6,50 @@
 # - 動向は最大5件。OnThisDayTrendRanker の優先順位（解散・活動休止を最優先し、その中でメジャー経験バンドを
 #   先にする。同じ優先度の中はランダム）の高いものから選ぶ。1バンド1件まで
 # - 入りきらなかった動向があれば「・他」を付ける
-# - 文字数に余裕があれば、誕生日の人物を入るだけ「誕生日: A、B、他」として加える
+# - 文字数に余裕があれば、誕生日の人物を入るだけ「誕生日: A、B、他」として加える。2人以上入らない場合は
+#   行ごと省く（誕生日の人物が1人だけの日は、その1人が入れば載せる）
 #
 # 管理画面のシェア用テキスト（TrendsHelper#on_this_day_share_text、issue #1732）とは別のルールで、
 # そちらには適用しない
 class OnThisDayPostBuilder
   HEADER = 'ヴィジュアル系今日はなんの日？'
+  TIME_ZONE = 'Asia/Tokyo'
+  # 年を問わない日付（MM-DD）を Date にするときの年。2/29 も扱えるよううるう年にする
+  MONTH_DAY_YEAR = 2000
+  MONTH_DAY_PATTERN = %r{\A(\d{1,2})[-/](\d{1,2})\z}
   HASHTAG = '#vkdb'
   OTHERS_LINE = '・他'
   MAX_TRENDS = 5
   # 末尾の括弧書き（半角・全角）。会場名等の補足を除く
   TITLE_TRAILING_PARENTHETICAL_PATTERN = /\s*[(（][^()（）]*[)）]\z/
 
+  # JST の当日
+  def self.today
+    Time.find_zone(TIME_ZONE).today
+  end
+
+  # "MM-DD"（"M/D" も可）を Date にする。年は使わないため MONTH_DAY_YEAR で固定。不正なら nil
+  def self.parse_month_day(value)
+    match = MONTH_DAY_PATTERN.match(value.to_s.strip)
+    return nil unless match
+
+    Date.new(MONTH_DAY_YEAR, match[1].to_i, match[2].to_i)
+  rescue Date::Error
+    nil
+  end
+
   def initialize(date, random: Random.new)
     @date = date
     @random = random
   end
 
-  # OnThisDayPost を返す。動向も誕生日もない日は nil
+  # OnThisDayPost を返す。載せる内容がない日（動向がなく、誕生日の行も載らない日）は nil
   def build
-    return nil if trends.empty? && birthdays.empty?
-
     selected = select_trends
     others = trends.size > selected.size
     birthday_line = build_birthday_line(selected, others)
+    return nil if trends.empty? && birthday_line.nil?
+
     OnThisDayPost.new(date: @date, text: compose(selected, others, birthday_line), page_url: page_url)
   end
 
@@ -71,7 +91,8 @@ class OnThisDayPostBuilder
     selected
   end
 
-  # 入るだけ人名を並べる（ランダムに選び、ヨミガナ順に並べる）。1人も入らなければ nil
+  # 入るだけ人名を並べる（ランダムに選び、ヨミガナ順に並べる）。
+  # 2人以上入らなければ nil（誕生日の人物が1人だけの日は、その1人が入れば載せる）
   def build_birthday_line(selected, others)
     names = []
     birthdays.each_with_index.to_a.shuffle(random: @random).each do |person, index|
@@ -79,7 +100,10 @@ class OnThisDayPostBuilder
       line = birthday_line(candidate)
       names = candidate if XPostLength.fits?(compose(selected, others, line))
     end
-    names.empty? ? nil : birthday_line(names)
+    return nil if names.empty?
+    return nil if names.size < 2 && names.size < birthdays.size
+
+    birthday_line(names)
   end
 
   def birthday_line(names_with_index)
@@ -89,7 +113,7 @@ class OnThisDayPostBuilder
   end
 
   def compose(selected, others, birthday_line)
-    lines = [HEADER]
+    lines = ["#{HEADER}（#{@date.strftime('%m/%d')}）"]
     lines.concat(selected.sort_by(&:date).map { |trend| "・#{trend_line(trend)}" })
     lines << OTHERS_LINE if others
     lines << birthday_line if birthday_line
