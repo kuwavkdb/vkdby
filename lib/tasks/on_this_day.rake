@@ -12,7 +12,7 @@ namespace :on_this_day do
       puts '----------'
       puts "文字数（X換算）: #{result.weighted_length} / #{XPostLength::MAX}"
     else
-      puts "#{date.month}/#{date.day}: 載せる内容がないため、その旨のメールになります"
+      puts "#{date.month}/#{date.day}: 載せる内容がないため、その旨を Issue にコメントします"
     end
   end
 end
