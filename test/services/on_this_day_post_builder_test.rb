@@ -15,7 +15,7 @@ class OnThisDayPostBuilderTest < ActiveSupport::TestCase
 
     result = OnThisDayPostBuilder.new(DATE).build
 
-    assert_equal "ヴィジュアル系今日はなんの日？（05/30）\n・1995年 黒夢 ワンマン\nhttps://example.com/date/-/5/30\n#vkdb", result.text
+    assert_equal "ヴィジュアル系今日はなんの日？（5/30）\n・1995年 黒夢 ワンマン\nhttps://example.com/date/-/5/30\n#vkdb", result.text
     assert_equal 'https://example.com/date/-/5/30', result.page_url
     assert_equal "https://x.com/intent/post?text=#{ERB::Util.url_encode(result.text)}", result.intent_url
   end
@@ -137,7 +137,7 @@ class OnThisDayPostBuilderTest < ActiveSupport::TestCase
   test '動向がなく誕生日だけの日も出力する' do
     create_person('甲', 'こう')
 
-    assert_equal "ヴィジュアル系今日はなんの日？（05/30）\n誕生日: 甲\nhttps://example.com/date/-/5/30\n#vkdb",
+    assert_equal "ヴィジュアル系今日はなんの日？（5/30）\n誕生日: 甲\nhttps://example.com/date/-/5/30\n#vkdb",
                  OnThisDayPostBuilder.new(DATE).build.text
   end
 
