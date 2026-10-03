@@ -1,7 +1,7 @@
 name: On This Day Mail
 
 # 「今日はなんの日？」投稿文を管理者へメールする（issue #1742）。
-# アプリ側（POST /internal/on_this_day_mail）が投稿文を作ってadminへ送信し、同じ日に二度は送らない。
+# アプリ側（POST /internal/on_this_day_mail）が投稿文を作ってadminへ送信する（送信記録は残さず、再実行すれば再度届く）。
 # 必要なSecrets: ON_THIS_DAY_MAIL_TOKEN（Renderの環境変数 ON_THIS_DAY_MAIL_TOKEN と同じ値）
 on:
   schedule:

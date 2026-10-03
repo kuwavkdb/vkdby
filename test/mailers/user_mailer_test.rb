@@ -55,4 +55,14 @@ class UserMailerTest < ActionMailer::TestCase
     assert_includes text, "文字数（X換算）: #{result.weighted_length} / 280"
     assert_includes mail.html_part.decoded, 'X の投稿画面を開く'
   end
+
+  test 'on_this_day_no_content_email（issue #1742）' do
+    admin_user = users(:admin)
+
+    mail = UserMailer.on_this_day_no_content_email(admin_user, Date.new(2026, 5, 31), 'https://example.com/date/-/5/31')
+
+    assert_equal '[VKDBY] 5月31日の「今日はなんの日？」投稿文はありません', mail.subject
+    assert_equal [admin_user.email], mail.to
+    assert_includes mail.text_part.decoded, 'https://example.com/date/-/5/31'
+  end
 end

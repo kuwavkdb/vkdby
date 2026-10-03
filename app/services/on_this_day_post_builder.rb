@@ -33,6 +33,14 @@ class OnThisDayPostBuilder
     OnThisDayPost.new(date: @date, text: compose(selected, others, birthday_line), page_url: page_url)
   end
 
+  # 当日の「今日はなんの日？」ページのURL（https）
+  def page_url
+    return @page_url if @page_url
+
+    url_options = (Rails.application.config.action_mailer.default_url_options || {}).merge(protocol: 'https')
+    @page_url = Rails.application.routes.url_helpers.birthday_date_url(month: @date.month, day: @date.day, **url_options)
+  end
+
   private
 
   def trends
@@ -103,12 +111,5 @@ class OnThisDayPostBuilder
       ids = trends.flat_map { |trend| OnThisDayTrendRanker.unit_ids(trend).to_a }.uniq
       Unit.kept.where(id: ids).select(:id, :name).index_by(&:id)
     end
-  end
-
-  def page_url
-    return @page_url if @page_url
-
-    url_options = (Rails.application.config.action_mailer.default_url_options || {}).merge(protocol: 'https')
-    @page_url = Rails.application.routes.url_helpers.birthday_date_url(month: @date.month, day: @date.day, **url_options)
   end
 end

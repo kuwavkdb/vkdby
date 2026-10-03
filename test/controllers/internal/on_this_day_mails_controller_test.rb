@@ -31,24 +31,21 @@ module Internal
       assert_response :success
       assert_equal({ 'status' => 'sent', 'date' => '2026-05-30' }, response.parsed_body)
       assert_includes ActionMailer::Base.deliveries.last.text_part.decoded, '・1999年 黒夢 解散'
-      assert OnThisDayMailDelivery.exists?(date: Date.new(2026, 5, 30))
     end
 
-    test '同じ日に二度は送らない' do
-      post internal_on_this_day_mail_path, params: { date: '2026-05-30' }, headers: auth_header
-
-      assert_no_emails do
-        post internal_on_this_day_mail_path, params: { date: '2026-05-30' }, headers: auth_header
+    test '日付を指定して送れる。再実行すれば再度送る' do
+      assert_emails User.admin.count * 2 do
+        2.times { post internal_on_this_day_mail_path, params: { date: '2026-05-30' }, headers: auth_header }
       end
-      assert_equal 'already_sent', response.parsed_body['status']
+      assert_equal({ 'status' => 'sent', 'date' => '2026-05-30' }, response.parsed_body)
     end
 
-    test '動向も誕生日もない日は送らない' do
-      assert_no_emails do
+    test '動向も誕生日もない日は、送る内容がない旨をメールする' do
+      assert_emails User.admin.count do
         post internal_on_this_day_mail_path, params: { date: '2026-05-31' }, headers: auth_header
       end
-      assert_equal 'skipped', response.parsed_body['status']
-      assert_not OnThisDayMailDelivery.exists?(date: Date.new(2026, 5, 31))
+      assert_equal 'no_content', response.parsed_body['status']
+      assert_equal '[VKDBY] 5月31日の「今日はなんの日？」投稿文はありません', ActionMailer::Base.deliveries.last.subject
     end
 
     test 'トークンが違えば401' do
