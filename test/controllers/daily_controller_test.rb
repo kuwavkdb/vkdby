@@ -68,4 +68,18 @@ class DailyControllerTest < ActionDispatch::IntegrationTest
 
     assert_select '#on-this-day-share-text', text: /ヴィジュアル系今日はなんの日？\n誕生日: シェア対象の誕生日\n/
   end
+
+  test '年指定なしの日付ページは日付入りバナー画像をog:imageにする（issue #1746）' do
+    get birthday_date_path(month: 5, day: 30)
+
+    assert_select 'meta[property="og:image"][content=?]', 'http://www.example.com/date/-/5/30/ogp.png'
+    assert_select 'meta[name="twitter:image"][content=?]', 'http://www.example.com/date/-/5/30/ogp.png'
+  end
+
+  test '年指定ありの日付ページのog:imageはデフォルト画像のまま' do
+    get daily_path(year: 2020, month: 5, day: 30)
+
+    assert_select 'meta[property="og:image"][content=?]',
+                  "http://www.example.com#{Rails.application.config.site_ogp_image_path}"
+  end
 end

@@ -1,0 +1,69 @@
+name: On This Day
+
+# 「今日はなんの日？」投稿文を GitHub の Issue にコメントする（issue #1742）。
+# アプリ側（GET /internal/on_this_day_post）が投稿文をJSONで返し、ラベル on-this-day の付いた open な Issue にコメントする。
+# Issue がなければ作る（Issue を close すれば、次回実行時に新しい Issue が作られる）。再実行すれば再度コメントする。
+# 必要なSecrets: ON_THIS_DAY_MAIL_TOKEN（Renderの環境変数 ON_THIS_DAY_MAIL_TOKEN と同じ値）
+on:
+  schedule:
+    - cron: '0 15 * * *' # 毎日 JST 00:00 (= UTC 15:00)
+  workflow_dispatch:
+    inputs:
+      date:
+        description: '対象日（MM-DD）。空ならJSTの当日'
+        required: false
+        default: ''
+
+permissions:
+  issues: write
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fetch on-this-day post
+        env:
+          TOKEN: ${{ secrets.ON_THIS_DAY_MAIL_TOKEN }}
+          DATE: ${{ inputs.date }}
+        run: |
+          curl --fail-with-body --silent --show-error \
+            --retry 3 --retry-delay 30 --retry-all-errors --max-time 120 \
+            -G \
+            -H "Authorization: Bearer ${TOKEN}" \
+            --data-urlencode "date=${DATE}" \
+            -o post.json \
+            https://www.vkdb.jp/internal/on_this_day_post
+
+      - name: Build comment
+        run: |
+          jq -r '
+            (.date | split("-") | "\(.[0] | tonumber)月\(.[1] | tonumber)日") as $day
+            | if .status == "ok" then
+                "## \($day)の「今日はなんの日？」投稿文\n\n"
+                + "````text\n\(.text)\n````\n\n"
+                + "文字数（X換算）: \(.weighted_length) / \(.max_length)\n\n"
+                + "- [X の投稿画面を開く（投稿文入力済み）](\(.intent_url))\n"
+                + "- [「今日はなんの日？」ページ](\(.page_url))\n"
+              else
+                "## \($day)の「今日はなんの日？」投稿文はありません\n\n"
+                + "「今日はなんの日？」ページに載る動向・誕生日がないため、投稿文を作成しませんでした。\n\n"
+                + "- [「今日はなんの日？」ページ](\(.page_url))\n"
+              end
+          ' post.json > comment.md
+          cat comment.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment on issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          LABEL: on-this-day
+        run: |
+          gh label create "$LABEL" --color FBCA04 --description '「今日はなんの日？」投稿文' 2>/dev/null || true
+          number=$(gh issue list --label "$LABEL" --state open --limit 1 --json number --jq '.[0].number // empty')
+          if [ -z "$number" ]; then
+            url=$(gh issue create --label "$LABEL" --title '「今日はなんの日？」投稿文' \
+              --body '「今日はなんの日？」の投稿文を GitHub Actions（.github/workflows/on_this_day.yml）が毎日 JST 0:00 にコメントします。')
+            number=${url##*/}
+          fi
+          gh issue comment "$number" --body-file comment.md

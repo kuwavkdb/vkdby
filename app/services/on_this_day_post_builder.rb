@@ -113,7 +113,7 @@ class OnThisDayPostBuilder
   end
 
   def compose(selected, others, birthday_line)
-    lines = ["#{HEADER}（#{@date.strftime('%m/%d')}）"]
+    lines = ["#{HEADER}（#{@date.month}/#{@date.day}）"]
     lines.concat(selected.sort_by(&:date).map { |trend| "・#{trend_line(trend)}" })
     lines << OTHERS_LINE if others
     lines << birthday_line if birthday_line

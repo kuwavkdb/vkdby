@@ -207,12 +207,16 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
   get '/date/-/:month/:day', to: 'daily#show', as: :birthday_date,
                              constraints: { month: /\d{1,2}/, day: /\d{1,2}/ }
 
+  # 年指定なしの日付ページのog:image（issue #1746）
+  get '/date/-/:month/:day/ogp.png', to: 'on_this_day_ogp_images#show', as: :birthday_date_ogp_image,
+                                     constraints: { month: /\d{1,2}/, day: /\d{1,2}/ }
+
   # Daily page
   get '/date/:year/:month/:day', to: 'daily#show', as: :daily,
                                  constraints: { year: /\d{4}/, month: /\d{1,2}/, day: /\d{1,2}/ }
 
-  # 「今日はなんの日？」投稿文を管理者へメールする（GitHub Actions のcronから毎日呼ぶ、issue #1742）
-  post '/internal/on_this_day_mail', to: 'internal/on_this_day_mails#create', as: :internal_on_this_day_mail
+  # 「今日はなんの日？」投稿文をJSONで返す（GitHub Actions のcronから毎日呼び、GitHub の Issue にコメントする、issue #1742）
+  get '/internal/on_this_day_post', to: 'internal/on_this_day_posts#show', as: :internal_on_this_day_post
 
   # Custom pages
   get '/pages/:key', to: 'custom_pages#show', as: :custom_page,
