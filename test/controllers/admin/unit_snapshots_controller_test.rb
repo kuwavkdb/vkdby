@@ -27,10 +27,11 @@ module Admin
       assert_match 'RELATED', response.body
     end
 
-    test 'edit links to the snapshot on the public unit page and warns when it is inactive (issue #1761)' do
+    test 'edit links to the unit edit page and the snapshot on the public unit page, and warns when inactive (issue #1761)' do
       get edit_admin_unit_unit_snapshot_path(@unit, @snapshot)
       assert_response :success
       assert_includes response.body, profile_path(@unit.key, anchor: "snapshot-#{@snapshot.id}")
+      assert_select 'h1 a[href=?]', edit_admin_unit_path(@unit)
       assert_not_includes response.body, '非公開のため、公開ページには表示されません'
 
       @snapshot.update!(active: false)
