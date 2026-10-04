@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # 「今日は何の日？」ページ（/date/-/:month/:day）の紹介ポスト文を作る（issue #1742、#1753）。
-# 毎日0時（JST）に GitHub の Issue にコメントする投稿文で、出来事（動向）と誕生日の2件に分ける。
+# 毎日 JST 0:05 に GitHub の Issue にコメントする投稿文で、出来事（動向）と誕生日の2件に分ける。
 # それぞれ X の上限280文字（重み付き、XPostLength）に収める。
 #
 # 出来事の投稿
@@ -22,6 +22,8 @@ class OnThisDayPostBuilder # rubocop:disable Metrics/ClassLength
   MONTH_DAY_YEAR = 2000
   MONTH_DAY_PATTERN = %r{\A(\d{1,2})[-/](\d{1,2})\z}
   HASHTAG = '#vkdb'
+  # 出来事の投稿のリンク先に付けるページ内リンク（日付ページの動向セクション）
+  TRENDS_ANCHOR = 'trends'
   OTHERS_LINE = '・他'
   # 末尾の括弧書き（半角・全角）。会場名等の補足を除く
   TITLE_TRAILING_PARENTHETICAL_PATTERN = /\s*[(（][^()（）]*[)）]\z/
@@ -66,7 +68,7 @@ class OnThisDayPostBuilder # rubocop:disable Metrics/ClassLength
 
     selected = select_trends
     text = compose_trends(selected, trends.size > selected.size)
-    OnThisDayPost.new(kind: :trends, date: @date, text: text, page_url: page_url)
+    OnThisDayPost.new(kind: :trends, date: @date, text: text, page_url: trends_page_url)
   end
 
   def build_birthday_post
@@ -77,6 +79,11 @@ class OnThisDayPostBuilder # rubocop:disable Metrics/ClassLength
 
     text = compose_birthdays(selected, birthdays.size > selected.size)
     OnThisDayPost.new(kind: :birthdays, date: @date, text: text, page_url: page_url)
+  end
+
+  # 出来事の投稿のリンク先。動向セクションへのページ内リンクを付ける
+  def trends_page_url
+    "#{page_url}##{TRENDS_ANCHOR}"
   end
 
   def trends
@@ -122,18 +129,18 @@ class OnThisDayPostBuilder # rubocop:disable Metrics/ClassLength
     lines = ["#{HEADER}（#{month_day}）"]
     lines.concat(selected.sort_by(&:date).map { |trend| "・#{trend_line(trend)}" })
     lines << OTHERS_LINE if others
-    compose(lines)
+    compose(lines, trends_page_url)
   end
 
   def compose_birthdays(selected, others)
     lines = ["今日（#{month_day}）誕生日のヴィジュアル系アーティスト"]
     lines.concat(selected.sort_by(&:last).map(&:first))
     lines << OTHERS_LINE if others
-    compose(lines)
+    compose(lines, page_url)
   end
 
-  def compose(lines)
-    (lines + [page_url, HASHTAG]).join("\n")
+  def compose(lines, url)
+    (lines + [url, HASHTAG]).join("\n")
   end
 
   def month_day
