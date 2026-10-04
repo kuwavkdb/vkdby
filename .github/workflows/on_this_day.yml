@@ -6,7 +6,8 @@ name: On This Day
 # 必要なSecrets: ON_THIS_DAY_MAIL_TOKEN（Renderの環境変数 ON_THIS_DAY_MAIL_TOKEN と同じ値）
 on:
   schedule:
-    - cron: '0 15 * * *' # 毎日 JST 00:00 (= UTC 15:00)
+    # 毎時0分は混雑で遅延・スキップされやすいため5分ずらす（日付は JST の当日で判定するので内容は変わらない）
+    - cron: '5 15 * * *' # 毎日 JST 00:05 (= UTC 15:05)
   workflow_dispatch:
     inputs:
       date:
@@ -66,7 +67,7 @@ jobs:
           number=$(gh issue list --label "$LABEL" --state open --limit 1 --json number --jq '.[0].number // empty')
           if [ -z "$number" ]; then
             url=$(gh issue create --label "$LABEL" --title '「今日は何の日？」投稿文' \
-              --body '「今日は何の日？」の投稿文を GitHub Actions（.github/workflows/on_this_day.yml）が毎日 JST 0:00 にコメントします。')
+              --body '「今日は何の日？」の投稿文を GitHub Actions（.github/workflows/on_this_day.yml）が毎日 JST 0:05 にコメントします。')
             number=${url##*/}
           fi
           gh issue comment "$number" --body-file comment.md
