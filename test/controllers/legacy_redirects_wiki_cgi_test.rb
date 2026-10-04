@@ -40,8 +40,26 @@ class LegacyRedirectsWikiCgiTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
-  test 'date=... without action=DAY should return 404' do
+  test 'date=... without action should redirect to the daily page' do
     get '/wiki.cgi?date=2008%2F10%2F24'
+    assert_response :moved_permanently
+    assert_redirected_to '/date/2008/10/24'
+  end
+
+  test 'date=... with an action other than DAY should return 404' do
+    get '/wiki.cgi?date=2008%2F10%2F24&action=MONTH'
     assert_response :not_found
+  end
+
+  test '/wiki.cgi/wiki.cgi?date=... should redirect to the daily page' do
+    get '/wiki.cgi/wiki.cgi?date=2012%2F04%2F25'
+    assert_response :moved_permanently
+    assert_redirected_to '/date/2012/04/25'
+  end
+
+  test '/wiki.cgi/wiki.cgi?page=... should redirect the same way as /wiki.cgi' do
+    get "/wiki.cgi/wiki.cgi?page=#{@unit.old_key}"
+    assert_response :moved_permanently
+    assert_redirected_to profile_path(@unit.key)
   end
 end

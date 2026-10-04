@@ -15,8 +15,8 @@ class LegacyRedirectsController < ApplicationController
   end
 
   # 旧wiki.cgi宛のリクエストの救済（issue #1482）
-  # ?page=XXX は .html と同様のold_key解決、?date=YYYY/MM/DD&action=DAY は
-  # 日付ページへの転送のみ対応する（無理のない範囲での救済のため）
+  # ?page=XXX は .html と同様のold_key解決、?date=YYYY/MM/DD（action なし、または
+  # action=DAY）は日付ページへの転送のみ対応する（無理のない範囲での救済のため）
   def wiki_cgi
     if params[:page].present?
       redirect_for_old_key(params[:page])
@@ -24,7 +24,8 @@ class LegacyRedirectsController < ApplicationController
     end
 
     date = request.query_parameters['date']
-    if date.present? && request.query_parameters['action'] == 'DAY' && (match = date.match(WIKI_CGI_DATE_PATTERN))
+    action = request.query_parameters['action']
+    if date.present? && (action.blank? || action == 'DAY') && (match = date.match(WIKI_CGI_DATE_PATTERN))
       redirect_to daily_path(year: match[1], month: match[2], day: match[3]), status: :moved_permanently
       return
     end

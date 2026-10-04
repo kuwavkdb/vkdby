@@ -244,6 +244,8 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
 
   # Legacy redirect for old wiki CGI (issue #1482)
   get '/wiki.cgi', to: 'legacy_redirects#wiki_cgi'
+  # 旧サイトには /wiki.cgi/wiki.cgi?date=YYYY/MM/DD 形式のリンクも残っている
+  get '/wiki.cgi/wiki.cgi', to: 'legacy_redirects#wiki_cgi'
 
   # Legacy redirects for .html extensions
   get '/:old_key.html', to: 'legacy_redirects#show', constraints: { old_key: %r{[^/]+} }
