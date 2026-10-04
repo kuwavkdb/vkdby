@@ -3,7 +3,7 @@
 require 'test_helper'
 
 class OnThisDayOgpImagesControllerTest < ActionDispatch::IntegrationTest
-  test '「今日はなんの日？／M月D日」を合成したPNGを長期キャッシュ付きで返す（issue #1746）' do
+  test '「今日は何の日？／M月D日」を合成したPNGを長期キャッシュ付きで返す（issue #1746）' do
     texts = []
     generator = lambda { |text|
       texts << text
@@ -15,7 +15,7 @@ class OnThisDayOgpImagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_equal 'image/png', response.media_type
     assert_equal 'PNGDATA', response.body
-    assert_equal ["今日はなんの日？\n5月30日"], texts
+    assert_equal ["今日は何の日？\n5月30日"], texts
     assert_includes response.headers['Cache-Control'], 'public'
   end
 

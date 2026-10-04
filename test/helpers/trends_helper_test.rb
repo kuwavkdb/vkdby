@@ -55,7 +55,7 @@ class TrendsHelperTest < ActionView::TestCase
 
     lines = on_this_day_share_text(trends, month: 5, day: 30, birthdays: birthdays).split("\n")
 
-    assert_equal 'ヴィジュアル系今日はなんの日？', lines.first
+    assert_equal 'ヴィジュアル系今日は何の日？', lines.first
     candidates = ['・1995年 ユニットA ワンマン', '・2000年 ユニットB 解散発表', '・2005年 結成', '・2010年 ユニットC 再結成']
     lines[1..3].each { |line| assert_includes candidates, line }
     assert_equal ['・他', birthday_date_url(month: 5, day: 30), '#vkdb'], lines[4..]
@@ -67,7 +67,7 @@ class TrendsHelperTest < ActionView::TestCase
 
     text = on_this_day_share_text(trends, month: 5, day: 30, birthdays: birthdays)
 
-    assert_equal "ヴィジュアル系今日はなんの日？\n・2001年 動向1\n・2002年 動向2\n・2003年 動向3\n" \
+    assert_equal "ヴィジュアル系今日は何の日？\n・2001年 動向1\n・2002年 動向2\n・2003年 動向3\n" \
                  "#{birthday_date_url(month: 5, day: 30)}\n#vkdb", text
   end
 
@@ -77,7 +77,7 @@ class TrendsHelperTest < ActionView::TestCase
 
     text = on_this_day_share_text(trends, month: 5, day: 30, birthdays: birthdays)
 
-    assert_equal "ヴィジュアル系今日はなんの日？\n・2005年 結成\n誕生日: 甲、乙\n" \
+    assert_equal "ヴィジュアル系今日は何の日？\n・2005年 結成\n誕生日: 甲、乙\n" \
                  "#{birthday_date_url(month: 5, day: 30)}\n#vkdb", text
   end
 
