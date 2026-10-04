@@ -73,14 +73,14 @@ module TrendsHelper
   # シェア用に優先して選ぶユニットの動向種別（解散・活動休止）
   ON_THIS_DAY_SHARE_PRIORITY_UNIT_PHENOMENA = %w[finish suspend].freeze
 
-  # 年指定なしの日付ページ（/date/-/:month/:day）の「今日はなんの日？」シェア用テキスト（issue #1732）。
+  # 年指定なしの日付ページ（/date/-/:month/:day）の「今日は何の日？」シェア用テキスト（issue #1732）。
   # 表示中の動向から3件選び（解散・活動休止を優先し、足りなければ他からランダムに補う）、
   # ページと同じく「年 ユニット名 タイトル」を1行にする
   # （4件以上あれば「・他」を付ける）。タイトル末尾の括弧書き（会場名等の補足）は除去する。
   # 動向が3件未満の場合は、誕生日の人物を最大3件ランダムに「誕生日: A、B、C、他」として加える
   def on_this_day_share_text(trends, month:, day:, birthdays: [], related_units: {})
     trends = trends.to_a
-    lines = ['ヴィジュアル系今日はなんの日？']
+    lines = ['ヴィジュアル系今日は何の日？']
     on_this_day_share_pick_trends(trends).sort_by(&:date).each do |trend|
       lines << "・#{on_this_day_share_trend_line(trend, related_units)}"
     end

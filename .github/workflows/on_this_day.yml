@@ -1,6 +1,6 @@
 name: On This Day
 
-# 「今日はなんの日？」投稿文を GitHub の Issue にコメントする（issue #1742）。
+# 「今日は何の日？」投稿文を GitHub の Issue にコメントする（issue #1742）。
 # アプリ側（GET /internal/on_this_day_post）が投稿文をJSONで返し、ラベル on-this-day の付いた open な Issue にコメントする。
 # Issue がなければ作る（Issue を close すれば、次回実行時に新しい Issue が作られる）。再実行すれば再度コメントする。
 # 必要なSecrets: ON_THIS_DAY_MAIL_TOKEN（Renderの環境変数 ON_THIS_DAY_MAIL_TOKEN と同じ値）
@@ -40,15 +40,18 @@ jobs:
           jq -r '
             (.date | split("-") | "\(.[0] | tonumber)月\(.[1] | tonumber)日") as $day
             | if .status == "ok" then
-                "## \($day)の「今日はなんの日？」投稿文\n\n"
-                + "````text\n\(.text)\n````\n\n"
-                + "文字数（X換算）: \(.weighted_length) / \(.max_length)\n\n"
-                + "- [X の投稿画面を開く（投稿文入力済み）](\(.intent_url))\n"
-                + "- [「今日はなんの日？」ページ](\(.page_url))\n"
+                "## \($day)の「今日は何の日？」投稿文\n\n"
+                + (.posts | map(
+                    "### " + (if .kind == "birthdays" then "誕生日" else "出来事" end) + "\n\n"
+                    + "````text\n\(.text)\n````\n\n"
+                    + "文字数（X換算）: \(.weighted_length) / \(.max_length)\n\n"
+                    + "- [X の投稿画面を開く（投稿文入力済み）](\(.intent_url))\n"
+                  ) | join("\n"))
+                + "\n- [「今日は何の日？」ページ](\(.page_url))\n"
               else
-                "## \($day)の「今日はなんの日？」投稿文はありません\n\n"
-                + "「今日はなんの日？」ページに載る動向・誕生日がないため、投稿文を作成しませんでした。\n\n"
-                + "- [「今日はなんの日？」ページ](\(.page_url))\n"
+                "## \($day)の「今日は何の日？」投稿文はありません\n\n"
+                + "「今日は何の日？」ページに載る動向・誕生日がないため、投稿文を作成しませんでした。\n\n"
+                + "- [「今日は何の日？」ページ](\(.page_url))\n"
               end
           ' post.json > comment.md
           cat comment.md >> "$GITHUB_STEP_SUMMARY"
@@ -59,11 +62,11 @@ jobs:
           GH_REPO: ${{ github.repository }}
           LABEL: on-this-day
         run: |
-          gh label create "$LABEL" --color FBCA04 --description '「今日はなんの日？」投稿文' 2>/dev/null || true
+          gh label create "$LABEL" --color FBCA04 --description '「今日は何の日？」投稿文' 2>/dev/null || true
           number=$(gh issue list --label "$LABEL" --state open --limit 1 --json number --jq '.[0].number // empty')
           if [ -z "$number" ]; then
-            url=$(gh issue create --label "$LABEL" --title '「今日はなんの日？」投稿文' \
-              --body '「今日はなんの日？」の投稿文を GitHub Actions（.github/workflows/on_this_day.yml）が毎日 JST 0:00 にコメントします。')
+            url=$(gh issue create --label "$LABEL" --title '「今日は何の日？」投稿文' \
+              --body '「今日は何の日？」の投稿文を GitHub Actions（.github/workflows/on_this_day.yml）が毎日 JST 0:00 にコメントします。')
             number=${url##*/}
           fi
           gh issue comment "$number" --body-file comment.md

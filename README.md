@@ -88,9 +88,14 @@ bin/backup-db.sh /path/to/dir
 pg_restore --no-owner --no-acl -d <接続先DB> vkdby_YYYYMMDD_HHMMSS.dump
 ```
 
-## 「今日はなんの日？」投稿文
+## 「今日は何の日？」投稿文
 
-X に投稿する「今日はなんの日？」の紹介文を、GitHub Actions の **On This Day** ワークフロー（`.github/workflows/on_this_day.yml`）が毎日 JST 0:00 に作り、GitHub の Issue にコメントします。
+X に投稿する「今日は何の日？」の紹介文を、GitHub Actions の **On This Day** ワークフロー（`.github/workflows/on_this_day.yml`）が毎日 JST 0:00 に作り、GitHub の Issue にコメントします。
+
+投稿文は「出来事」と「誕生日」の2件に分かれ、それぞれ X の上限280文字に入るだけ載せます（入りきらなければ「・他」）。
+
+- 出来事: 解散・活動休止・メジャーデビュー・結成・初ライブ・活動再開を優先し、その中でメジャー経験バンドを先にする。1バンド1件まで
+- 誕生日: 1人1行で、人物の経歴に最後に書かれたユニット名を括弧書きで付ける。経歴がその後「→」で終わっていれば `（ex-ユニット名）`、経歴が空なら名前だけ
 
 ### 見方
 
