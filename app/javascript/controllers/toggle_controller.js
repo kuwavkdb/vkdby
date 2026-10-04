@@ -11,6 +11,21 @@ export default class extends Controller {
         })
         // Apply initial state without animation
         this.applyState(false)
+
+        // URLのハッシュ（例: #snapshot-123）がこの要素のidと一致する場合は展開する（issue #1761）
+        this.openFromHash = this.openFromHash.bind(this)
+        window.addEventListener("hashchange", this.openFromHash)
+        this.openFromHash()
+    }
+
+    disconnect() {
+        window.removeEventListener("hashchange", this.openFromHash)
+    }
+
+    openFromHash() {
+        if (this.element.id && window.location.hash === `#${this.element.id}`) {
+            this.expand()
+        }
     }
 
     openValueChanged() {

@@ -15,6 +15,9 @@
         <% end %>
       </div>
       <h1 class="text-2xl font-bold dark:text-white"><%= title %></h1>
+      <div class="mt-2">
+        <%= render "admin/unit_snapshots/public_page_link", unit: @unit, unit_snapshot: @unit_snapshot %>
+      </div>
     </div>
     <% if @snapshot_person.person_id.nil? && @snapshot_person.person_name.present? %>
       <div class="mb-6 rounded-md border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-800 dark:bg-indigo-900/30">

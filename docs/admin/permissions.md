@@ -33,6 +33,7 @@
 | Sections — 全操作 | new / create / edit / update / destroy / undiscard / reorder |
 | Sections — サーバーサイドプレビュー（`{{include}}`/`{{snapshot}}`/`{{item}}` 等のプラグイン記法を反映） | preview |
 | Unit Logs / Person Logs | 閲覧 |
+| Unit Snapshots — 公開ページ（ユニットページ）のメンバー行の「編集」リンクからメンバー編集画面へ、個人と紐づいたメンバーは「個人」リンクから個人の編集画面へ移動。スナップショット編集・メンバー編集画面の「公開ページで確認」リンクで、公開ページの該当スナップショット（`#snapshot-{id}`）を開いた状態で表示（非公開のスナップショットは注意を表示） | snapshot_people#edit / people#edit（「編集」「個人」リンクはログイン時のみ表示） |
 
 ### super_operator 以上
 
@@ -101,6 +102,7 @@
 | `admin?` でない | Units / People / Venues 編集画面の「キー変更」ボタン |
 | `admin?` でない | Units / People 一覧のリダイレクト元「物理削除」ボタン |
 | `admin?` でない | Units / People 一覧のチェックボックス・一括Status更新バー |
+| ログインしていない | 公開ページ（ユニットページ）のスナップショット見出し・メンバー行の「編集」「個人」リンク |
 | `admin?` でない | 年指定なしの日付ページ（`/date/-/:month/:day`）下部の「今日は何の日？」Xシェア用テキスト・コピーボタン（動向・誕生日から抽出） |
 
 ---

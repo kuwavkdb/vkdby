@@ -166,6 +166,51 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, 'id="comments"'
   end
 
+  test 'unit page shows member edit links to logged-in users, with a person link for linked members (issue #1761)' do
+    unit = Unit.create!(name: 'Edit Link Unit', key: 'unit-member-edit-link', status: :active)
+    snapshot = unit.unit_snapshots.create!(snapshot_date: Date.current, current: true)
+    linked = snapshot.snapshot_people.create!(person: people(:one), part: :vocal, sort_order: 1)
+    unlinked = snapshot.snapshot_people.create!(person_name: '未紐付けメンバー', part: :bass, sort_order: 2)
+    post login_path, params: { email: users(:one).email, password: 'password' }
+
+    get profile_path(unit.key)
+
+    assert_response :success
+    assert_includes response.body, %(id="snapshot-#{snapshot.id}")
+    assert_includes response.body, edit_admin_unit_unit_snapshot_snapshot_person_path(unit, snapshot, linked)
+    assert_includes response.body, edit_admin_unit_unit_snapshot_snapshot_person_path(unit, snapshot, unlinked)
+    assert_includes response.body, edit_admin_person_path(people(:one))
+  end
+
+  test 'unit page hides member edit links from guests (issue #1761)' do
+    unit = Unit.create!(name: 'Guest Unit', key: 'unit-member-edit-guest', status: :active)
+    snapshot = unit.unit_snapshots.create!(snapshot_date: Date.current, current: true)
+    member = snapshot.snapshot_people.create!(person: people(:one), part: :vocal)
+
+    get profile_path(unit.key)
+
+    assert_response :success
+    assert_includes response.body, %(id="snapshot-#{snapshot.id}")
+    assert_not_includes response.body, edit_admin_unit_unit_snapshot_snapshot_person_path(unit, snapshot, member)
+    assert_not_includes response.body, edit_admin_person_path(people(:one))
+  end
+
+  test 'lazily loaded snapshot members include edit links only for logged-in users (issue #1761)' do
+    unit = Unit.create!(name: 'Lazy Unit', key: 'unit-member-edit-lazy', status: :active)
+    snapshot = unit.unit_snapshots.create!(snapshot_date: Date.current, current: false)
+    member = snapshot.snapshot_people.create!(person_name: '過去メンバー', part: :drums)
+    edit_path = edit_admin_unit_unit_snapshot_snapshot_person_path(unit, snapshot, member)
+
+    get snapshot_members_path(key: unit.key, id: snapshot.id)
+    assert_response :success
+    assert_not_includes response.body, edit_path
+
+    post login_path, params: { email: users(:one).email, password: 'password' }
+    get snapshot_members_path(key: unit.key, id: snapshot.id)
+    assert_response :success
+    assert_includes response.body, edit_path
+  end
+
   test 'unit update log shows the name and part of an added snapshot member (issue #1405)' do
     unit = Unit.create!(name: 'Log Member Unit', key: 'unit-log-member', status: :active)
     snapshot = unit.unit_snapshots.create!(snapshot_date: Date.current, current: true)
