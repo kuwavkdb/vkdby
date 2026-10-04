@@ -1,5 +1,6 @@
 <%# 公開ページ（ユニットページ）の該当スナップショットを開いて表示を確認するためのリンク（issue #1761）。
-    #snapshot-{id} で開くと、toggleコントローラが「現在」以外のスナップショットも展開する %>
+    #snapshot-{id} で開くと、toggleコントローラが「現在」以外のスナップショットも展開する。
+    スナップショット編集画面では見出しのユニット名が同じリンクを兼ねるため使わない %>
 <% if unit.key.present? %>
   <div class="text-sm">
     <%= link_to profile_path(unit.key, anchor: "snapshot-#{unit_snapshot.id}"),

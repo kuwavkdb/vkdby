@@ -5,7 +5,8 @@
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold dark:text-white">
         <% if @unit.key.present? %>
-          <%= link_to @unit.name, profile_path(@unit.key),
+          <%# #snapshot-{id} で開くと、公開ページでこのスナップショットが展開された状態になる（issue #1761） %>
+          <%= link_to @unit.name, profile_path(@unit.key, anchor: "snapshot-#{@unit_snapshot.id}"),
                 class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300",
                 target: "_blank", rel: "noopener" %>
         <% else %>
@@ -15,9 +16,9 @@
       <%= link_to "一覧に戻る", admin_unit_unit_snapshots_path(@unit),
             class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
     </div>
-    <div class="mb-6">
-      <%= render "public_page_link", unit: @unit, unit_snapshot: @unit_snapshot %>
-    </div>
+    <% unless @unit_snapshot.active? %>
+      <p class="-mt-3 mb-6 text-sm text-amber-700 dark:text-amber-400">このスナップショットは非公開のため、公開ページには表示されません。</p>
+    <% end %>
 
     <div class="md:grid md:grid-cols-3 md:gap-8">
       <div class="md:col-span-1">
