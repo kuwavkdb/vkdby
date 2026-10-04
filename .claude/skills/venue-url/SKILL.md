@@ -72,6 +72,10 @@ https://www.vkdb.jp/admin/venues/new?<パラメーター>
    - リンクが途中で途切れないよう、URL 中の `(` `)` は `%28` `%29` にエンコードしておく（`urllib.parse.quote(s, safe="")` ならエンコードされる）
    - 抽出した内容（名前・読み・種別・都道府県・エリア・住所・キャパ・名前の履歴・別名・リンク）を箇条書きで添える
    - `key` を設定した場合は**推測であることを明記**する。判断に迷った点（キャパの内訳、改名時期の粒度など）があれば明記する
+5. **ブラウザを後片付けする**（chrome-devtools MCP を使った場合のみ）
+   - 作業が終わったら、chrome-devtools MCP が起動したブラウザのプロセスを終了する
+   - 対象は `--user-data-dir=.../.cache/chrome-devtools-mcp/chrome-profile` で起動している Chrome だけ。`ps -axo pid,command | grep 'chrome-devtools-mcp/chrome-profile' | grep -v Helper` で PID を確認してから `kill` する
+   - ユーザーが普段使っている既存のブラウザ（上記プロファイル以外で起動している Chrome）は閉じない。`pkill "Google Chrome"` のようにプロセス名でまとめて終了するのは禁止
 
 ## 注意
 
