@@ -32,11 +32,24 @@ module Internal
       body = response.parsed_body
       assert_equal 'ok', body['status']
       assert_equal '05-30', body['date']
-      assert_includes body['text'], '・1999年 黒夢 解散'
-      assert_equal XPostLength.count(body['text']), body['weighted_length']
-      assert_equal XPostLength::MAX, body['max_length']
-      assert body['intent_url'].start_with?('https://x.com/intent/post?text=')
       assert body['page_url'].end_with?('/date/-/5/30')
+      assert_equal 1, body['posts'].size
+      post = body['posts'].first
+      assert_equal 'trends', post['kind']
+      assert_includes post['text'], '・1999年 黒夢 解散'
+      assert_equal XPostLength.count(post['text']), post['weighted_length']
+      assert_equal XPostLength::MAX, post['max_length']
+      assert post['intent_url'].start_with?('https://x.com/intent/post?text=')
+    end
+
+    test '誕生日があれば出来事・誕生日の順に2件返す（issue #1753）' do
+      Person.create!(name: '清春', name_kana: 'きよはる', key: 'on-this-day-post-person', status: :active,
+                     birthday: Date.new(1968, 5, 30))
+
+      get internal_on_this_day_post_path, params: { date: '05-30' }, headers: auth_header
+
+      assert_equal %w[trends birthdays], response.parsed_body['posts'].pluck('kind')
+      assert_includes response.parsed_body['posts'].last['text'], '・清春'
     end
 
     test '日付を指定できる' do
@@ -52,7 +65,7 @@ module Internal
       assert_response :success
       body = response.parsed_body
       assert_equal 'no_content', body['status']
-      assert_nil body['text']
+      assert_empty body['posts']
       assert body['page_url'].end_with?('/date/-/5/31')
     end
 

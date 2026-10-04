@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-# 「今日はなんの日？」の紹介ポスト文（OnThisDayPostBuilder の結果、issue #1742）
-OnThisDayPost = Struct.new(:date, :text, :page_url, keyword_init: true) do
+# 「今日は何の日？」の紹介ポスト文（OnThisDayPostBuilder の結果、issue #1742）。
+# kind は :trends（出来事）か :birthdays（誕生日、issue #1753）
+OnThisDayPost = Struct.new(:kind, :date, :text, :page_url, keyword_init: true) do
   # X の数え方での文字数（XPostLength）
   def weighted_length
     XPostLength.count(text)

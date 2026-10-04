@@ -1,25 +1,28 @@
 # frozen_string_literal: true
 
-# 「今日はなんの日？」ページ（/date/-/:month/:day）の紹介ポスト文を作る（issue #1742）。
-# 毎日0時（JST）に管理者へメールする投稿文で、X の上限280文字（重み付き、XPostLength）に収める。
+# 「今日は何の日？」ページ（/date/-/:month/:day）の紹介ポスト文を作る（issue #1742、#1753）。
+# 毎日0時（JST）に GitHub の Issue にコメントする投稿文で、出来事（動向）と誕生日の2件に分ける。
+# それぞれ X の上限280文字（重み付き、XPostLength）に収める。
 #
-# - 動向は最大5件。OnThisDayTrendRanker の優先順位（解散・活動休止を最優先し、その中でメジャー経験バンドを
-#   先にする。同じ優先度の中はランダム）の高いものから選ぶ。1バンド1件まで
+# 出来事の投稿
+# - OnThisDayTrendRanker の優先順位（解散・活動休止・メジャーデビュー・結成・初ライブ・活動再開を優先し、
+#   その中でメジャー経験バンドを先にする。同じ優先度の中はランダム）の高いものから、入るだけ選ぶ。1バンド1件まで
 # - 入りきらなかった動向があれば「・他」を付ける
-# - 文字数に余裕があれば、誕生日の人物を入るだけ「誕生日: A、B、他」として加える。2人以上入らない場合は
-#   行ごと省く（誕生日の人物が1人だけの日は、その1人が入れば載せる）
+#
+# 誕生日の投稿
+# - ランダムに選んで入るだけ、ヨミガナ順に1人1行で並べる。入りきらなかった人がいれば「・他」を付ける
+# - 人物名の後に、経歴で最後に書かれたユニット名（その後に「→」があれば ex-ユニット名）を括弧書きで付ける（PersonUnitLabel）
 #
 # 管理画面のシェア用テキスト（TrendsHelper#on_this_day_share_text、issue #1732）とは別のルールで、
 # そちらには適用しない
-class OnThisDayPostBuilder
-  HEADER = 'ヴィジュアル系今日はなんの日？'
+class OnThisDayPostBuilder # rubocop:disable Metrics/ClassLength
+  HEADER = 'ヴィジュアル系今日は何の日？'
   TIME_ZONE = 'Asia/Tokyo'
   # 年を問わない日付（MM-DD）を Date にするときの年。2/29 も扱えるよううるう年にする
   MONTH_DAY_YEAR = 2000
   MONTH_DAY_PATTERN = %r{\A(\d{1,2})[-/](\d{1,2})\z}
   HASHTAG = '#vkdb'
   OTHERS_LINE = '・他'
-  MAX_TRENDS = 5
   # 末尾の括弧書き（半角・全角）。会場名等の補足を除く
   TITLE_TRAILING_PARENTHETICAL_PATTERN = /\s*[(（][^()（）]*[)）]\z/
 
@@ -43,17 +46,12 @@ class OnThisDayPostBuilder
     @random = random
   end
 
-  # OnThisDayPost を返す。載せる内容がない日（動向がなく、誕生日の行も載らない日）は nil
+  # OnThisDayPost の配列（出来事、誕生日の順）を返す。載せる内容がない投稿は含めない（両方なければ空配列）
   def build
-    selected = select_trends
-    others = trends.size > selected.size
-    birthday_line = build_birthday_line(selected, others)
-    return nil if trends.empty? && birthday_line.nil?
-
-    OnThisDayPost.new(date: @date, text: compose(selected, others, birthday_line), page_url: page_url)
+    [build_trend_post, build_birthday_post].compact
   end
 
-  # 当日の「今日はなんの日？」ページのURL（https）
+  # 当日の「今日は何の日？」ページのURL（https）
   def page_url
     return @page_url if @page_url
 
@@ -63,27 +61,44 @@ class OnThisDayPostBuilder
 
   private
 
+  def build_trend_post
+    return nil if trends.empty?
+
+    selected = select_trends
+    text = compose_trends(selected, trends.size > selected.size)
+    OnThisDayPost.new(kind: :trends, date: @date, text: text, page_url: page_url)
+  end
+
+  def build_birthday_post
+    return nil if birthdays.empty?
+
+    selected = select_birthdays
+    return nil if selected.empty?
+
+    text = compose_birthdays(selected, birthdays.size > selected.size)
+    OnThisDayPost.new(kind: :birthdays, date: @date, text: text, page_url: page_url)
+  end
+
   def trends
     @trends ||= Trend.published.on_month_day(@date.month, @date.day)
                      .select(:id, :date, :title, :units, :unit_phenomenon).to_a
   end
 
   def birthdays
-    @birthdays ||= Person.kept.published.birthday_on(@date).order(name_kana: :asc).select(:id, :name).to_a
+    @birthdays ||= Person.kept.published.birthday_on(@date).order(name_kana: :asc)
+                         .select(:id, :name, :old_history).to_a
   end
 
-  # 優先順位の高い候補から順に、280文字に収まるものを最大5件選ぶ（1バンド1件まで）
+  # 優先順位の高い候補から順に、280文字に収まるものを選ぶ（1バンド1件まで）
   def select_trends
     selected = []
     used_unit_keys = Set.new
     OnThisDayTrendRanker.new(trends, random: @random).ranked.each do |trend|
-      break if selected.size >= MAX_TRENDS
-
       keys = OnThisDayTrendRanker.unit_keys(trend)
       next if keys.intersect?(used_unit_keys)
 
       candidate = selected + [trend]
-      next unless XPostLength.fits?(compose(candidate, trends.size > candidate.size, nil))
+      next unless XPostLength.fits?(compose_trends(candidate, trends.size > candidate.size))
 
       selected = candidate
       used_unit_keys.merge(keys)
@@ -91,35 +106,38 @@ class OnThisDayPostBuilder
     selected
   end
 
-  # 入るだけ人名を並べる（ランダムに選び、ヨミガナ順に並べる）。
-  # 2人以上入らなければ nil（誕生日の人物が1人だけの日は、その1人が入れば載せる）
-  def build_birthday_line(selected, others)
-    names = []
+  # ランダムな順に、280文字に収まる人を選ぶ。戻り値は [行, ヨミガナ順の位置] の配列
+  def select_birthdays
+    selected = []
     birthdays.each_with_index.to_a.shuffle(random: @random).each do |person, index|
-      candidate = names + [[person.name, index]]
-      line = birthday_line(candidate)
-      names = candidate if XPostLength.fits?(compose(selected, others, line))
+      candidate = selected + [[birthday_line(person), index]]
+      next unless XPostLength.fits?(compose_birthdays(candidate, birthdays.size > candidate.size))
+
+      selected = candidate
     end
-    return nil if names.empty?
-    return nil if names.size < 2 && names.size < birthdays.size
-
-    birthday_line(names)
+    selected
   end
 
-  def birthday_line(names_with_index)
-    names = names_with_index.sort_by(&:last).map(&:first)
-    names << '他' if birthdays.size > names.size
-    "誕生日: #{names.join('、')}"
-  end
-
-  def compose(selected, others, birthday_line)
-    lines = ["#{HEADER}（#{@date.month}/#{@date.day}）"]
+  def compose_trends(selected, others)
+    lines = ["#{HEADER}（#{month_day}）"]
     lines.concat(selected.sort_by(&:date).map { |trend| "・#{trend_line(trend)}" })
     lines << OTHERS_LINE if others
-    lines << birthday_line if birthday_line
-    lines << page_url
-    lines << HASHTAG
-    lines.join("\n")
+    compose(lines)
+  end
+
+  def compose_birthdays(selected, others)
+    lines = ["今日（#{month_day}）誕生日のヴィジュアル系アーティスト"]
+    lines.concat(selected.sort_by(&:last).map(&:first))
+    lines << OTHERS_LINE if others
+    compose(lines)
+  end
+
+  def compose(lines)
+    (lines + [page_url, HASHTAG]).join("\n")
+  end
+
+  def month_day
+    "#{@date.month}/#{@date.day}"
   end
 
   def trend_line(trend)
@@ -128,6 +146,14 @@ class OnThisDayPostBuilder
     end.join('、')
     title = trend.title_as_plain_text.sub(TITLE_TRAILING_PARENTHETICAL_PATTERN, '')
     ["#{trend.date.year}年", unit_names, title].compact_blank.join(' ')
+  end
+
+  def birthday_line(person)
+    @birthday_lines ||= {}
+    @birthday_lines[person.id] ||= begin
+      label = PersonUnitLabel.new(person).call
+      label ? "・#{person.name}（#{label}）" : "・#{person.name}"
+    end
   end
 
   def related_units

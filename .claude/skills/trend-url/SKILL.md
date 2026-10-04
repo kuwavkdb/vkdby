@@ -67,6 +67,10 @@ https://www.vkdb.jp/admin/trends/new?<パラメーター>
    - 生成した URL を 1 つ、クリックで画面を開ける Markdown リンク（`[Trend作成画面を開く](<URL>)`）で提示する。コードブロックには入れない
    - リンクが途中で途切れないよう、URL 中の `(` `)` は `%28` `%29` にエンコードしておく（`urllib.parse.quote(s, safe="")` ならエンコードされる）
    - 抽出した内容（対象・日付・動向種別・title・会場）を箇条書きで添え、日付や種別など判断に迷った点があれば明記する
+5. **ブラウザを後片付けする**（chrome-devtools MCP を使った場合のみ）
+   - 作業が終わったら、chrome-devtools MCP が起動したブラウザのプロセスを終了する
+   - 対象は `--user-data-dir=.../.cache/chrome-devtools-mcp/chrome-profile` で起動している Chrome だけ。`ps -axo pid,command | grep 'chrome-devtools-mcp/chrome-profile' | grep -v Helper` で PID を確認してから `kill` する
+   - ユーザーが普段使っている既存のブラウザ（上記プロファイル以外で起動している Chrome）は閉じない。`pkill "Google Chrome"` のようにプロセス名でまとめて終了するのは禁止
 
 ## title の書式
 

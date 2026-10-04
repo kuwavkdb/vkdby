@@ -129,6 +129,11 @@ https://www.vkdb.jp/admin/units/quick_new?<パラメーター>
    - 抽出した内容（バンド名・メンバー一覧・種別・ステータス・活動時期・リンク・分かればメンバーごとの誕生日・SNS等）を箇条書きで添える
    - `key` を設定した場合は**推測であることを明記**し、管理者に保存前の確認を促す。空にした場合はその旨と理由を書く。判断に迷った点があれば明記する
 
+5. **ブラウザを後片付けする**（chrome-devtools MCP を使った場合のみ）
+   - 作業が終わったら、chrome-devtools MCP が起動したブラウザのプロセスを終了する
+   - 対象は `--user-data-dir=.../.cache/chrome-devtools-mcp/chrome-profile` で起動している Chrome だけ。`ps -axo pid,command | grep 'chrome-devtools-mcp/chrome-profile' | grep -v Helper` で PID を確認してから `kill` する
+   - ユーザーが普段使っている既存のブラウザ（上記プロファイル以外で起動している Chrome）は閉じない。`pkill "Google Chrome"` のようにプロセス名でまとめて終了するのは禁止
+
 ## 注意
 
 - `key` は一度保存すると通常のフローでは変更できない重要な識別子。推測でなるべく設定するが、あくまで**下書き**であり、管理者が画面で確認・修正してから保存する運用を基本とする

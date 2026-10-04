@@ -65,7 +65,7 @@
 | Unit Submissions（ログイン不要の投稿フォームからの投稿一覧・添付画像の確認・却下。却下時に添付画像を削除。変換済み投稿に残った画像を変換先 Unit の「画像」セクションへ追加） | 全アクション（index / reject / add_image_to_unit） |
 | Units — 投稿からの新規作成時に、投稿画像を「画像」セクションへ引き継ぐ（admin 以外が作成した場合は画像を引き継がない） | new / create（画像の選択欄・引き継ぎのみ） |
 | Trend Submissions（ログイン不要の投稿フォームからの投稿一覧・却下） | 全アクション |
-| 「今日はなんの日？」投稿文の確認（毎日 JST 0:00、GitHub の Issue へのコメント） | ― （管理画面ではなく GitHub Actions から `GET /internal/on_this_day_post` を呼び、ラベル `on-this-day` の Issue にコメント。見られるのはリポジトリの閲覧権限がある人） |
+| 「今日は何の日？」投稿文の確認（毎日 JST 0:00、GitHub の Issue へのコメント） | ― （管理画面ではなく GitHub Actions から `GET /internal/on_this_day_post` を呼び、ラベル `on-this-day` の Issue にコメント。見られるのはリポジトリの閲覧権限がある人） |
 
 ---
 
@@ -101,7 +101,7 @@
 | `admin?` でない | Units / People / Venues 編集画面の「キー変更」ボタン |
 | `admin?` でない | Units / People 一覧のリダイレクト元「物理削除」ボタン |
 | `admin?` でない | Units / People 一覧のチェックボックス・一括Status更新バー |
-| `admin?` でない | 年指定なしの日付ページ（`/date/-/:month/:day`）下部の「今日はなんの日？」Xシェア用テキスト・コピーボタン（動向・誕生日から抽出） |
+| `admin?` でない | 年指定なしの日付ページ（`/date/-/:month/:day`）下部の「今日は何の日？」Xシェア用テキスト・コピーボタン（動向・誕生日から抽出） |
 
 ---
 
@@ -115,4 +115,4 @@
 - Unit Submissions（投稿の一覧・添付画像の確認・却下、変換済みで利用了承済みの投稿画像の変換先 Unit への追加、承認時のUnit新規作成フォームへの引き継ぎ）: `app/controllers/admin/unit_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/units_controller.rb#new/#create`
 - 投稿画像の引き継ぎ（選んだ画像を Unit の「画像」セクションへ移し、残りは縮小して投稿に残す）: `app/services/unit_submission_image_transfer.rb`。`Admin::UnitsController#new/#create` では `current_user.admin?` のときだけ行う
 - Trend Submissions（投稿の一覧・却下、承認時のTrend新規作成フォームへの引き継ぎ）: `app/controllers/admin/trend_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/trends_controller.rb#new/#create`
-- 「今日はなんの日？」投稿文（issue #1742）: 投稿文の生成 `app/services/on_this_day_post_builder.rb`、JSONで返す `app/controllers/internal/on_this_day_posts_controller.rb`、起動とコメント `.github/workflows/on_this_day.yml`（ラベル `on-this-day` の open な Issue にコメントし、なければ Issue を作る。動向・誕生日がない日はその旨をコメントする）。メールは送らない。エンドポイントはログインではなく環境変数 `ON_THIS_DAY_MAIL_TOKEN` の Bearer トークンで認証し、未設定なら 404 になる
+- 「今日は何の日？」投稿文（issue #1742、#1753）: 投稿文（出来事・誕生日の2件）の生成 `app/services/on_this_day_post_builder.rb`（誕生日の人物に付けるユニット名は `app/services/person_unit_label.rb`）、JSONで返す `app/controllers/internal/on_this_day_posts_controller.rb`、起動とコメント `.github/workflows/on_this_day.yml`（ラベル `on-this-day` の open な Issue にコメントし、なければ Issue を作る。動向・誕生日がない日はその旨をコメントする）。メールは送らない。エンドポイントはログインではなく環境変数 `ON_THIS_DAY_MAIL_TOKEN` の Bearer トークンで認証し、未設定なら 404 になる

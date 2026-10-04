@@ -215,7 +215,7 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
   get '/date/:year/:month/:day', to: 'daily#show', as: :daily,
                                  constraints: { year: /\d{4}/, month: /\d{1,2}/, day: /\d{1,2}/ }
 
-  # 「今日はなんの日？」投稿文をJSONで返す（GitHub Actions のcronから毎日呼び、GitHub の Issue にコメントする、issue #1742）
+  # 「今日は何の日？」投稿文をJSONで返す（GitHub Actions のcronから毎日呼び、GitHub の Issue にコメントする、issue #1742）
   get '/internal/on_this_day_post', to: 'internal/on_this_day_posts#show', as: :internal_on_this_day_post
 
   # Custom pages

@@ -5,124 +5,134 @@ require 'test_helper'
 class OnThisDayPostBuilderTest < ActiveSupport::TestCase
   DATE = Date.new(2026, 5, 30)
 
-  test '動向も誕生日もない日はnilを返す' do
-    assert_nil OnThisDayPostBuilder.new(DATE).build
+  test '動向も誕生日もない日は空配列を返す' do
+    assert_empty OnThisDayPostBuilder.new(DATE).build
   end
 
-  test 'ヘッダー・動向・ページURL・ハッシュタグの形式で出力し、末尾の括弧書きを除く（issue #1742）' do
+  test '出来事の投稿はヘッダー・動向・ページURL・ハッシュタグの形式で、末尾の括弧書きを除く（issue #1742、#1753）' do
     unit = create_unit('黒夢')
     create_trend(unit, title: 'ワンマン（渋谷公会堂）', year: 1995)
 
-    result = OnThisDayPostBuilder.new(DATE).build
+    posts = OnThisDayPostBuilder.new(DATE).build
 
-    assert_equal "ヴィジュアル系今日はなんの日？（5/30）\n・1995年 黒夢 ワンマン\nhttps://example.com/date/-/5/30\n#vkdb", result.text
-    assert_equal 'https://example.com/date/-/5/30', result.page_url
-    assert_equal "https://x.com/intent/post?text=#{ERB::Util.url_encode(result.text)}", result.intent_url
+    assert_equal [:trends], posts.map(&:kind)
+    post = posts.first
+    assert_equal "ヴィジュアル系今日は何の日？（5/30）\n・1995年 黒夢 ワンマン\nhttps://example.com/date/-/5/30\n#vkdb", post.text
+    assert_equal 'https://example.com/date/-/5/30', post.page_url
+    assert_equal "https://x.com/intent/post?text=#{ERB::Util.url_encode(post.text)}", post.intent_url
   end
 
-  test '動向は最大5件で、それ以上あれば「・他」を付ける' do
-    7.times { |i| create_trend(create_unit("U#{i}"), title: '結成', year: 1990 + i) }
+  test '動向は件数の上限なく、280文字に入るだけ載せる（issue #1753）' do
+    8.times { |i| create_trend(create_unit("U#{i}"), title: '結成', phenomenon: :formation, year: 1990 + i) }
 
-    lines = OnThisDayPostBuilder.new(DATE).build.text.split("\n")
+    post = trend_post
 
-    assert_equal(5, lines.count { |line| line.start_with?('・1') })
-    assert_includes lines, '・他'
+    assert_equal(8, post.text.scan(/^・1/).size)
+    assert_not_includes post.text, '・他'
+  end
+
+  test '280文字に収まらない動向は入れず、「・他」を付けて全体を280以内にする' do
+    8.times { |i| create_trend(create_unit("U#{i}"), title: 'あ' * 40, year: 1990 + i) }
+
+    post = trend_post
+
+    assert_operator post.weighted_length, :<=, XPostLength::MAX
+    assert_operator post.text.scan(/^・1/).size, :<, 8
+    assert_includes post.text.split("\n"), '・他'
   end
 
   test '動向は年の古い順に並べる' do
     [2001, 1995, 1999].each { |year| create_trend(create_unit("U#{year}"), title: '結成', year: year) }
 
-    years = OnThisDayPostBuilder.new(DATE).build.text.scan(/・(\d{4})年/).flatten
+    years = trend_post.text.scan(/・(\d{4})年/).flatten
 
     assert_equal %w[1995 1999 2001], years
   end
 
-  test '解散・活動休止を最優先し、その中でメジャー経験バンドを先にする' do
-    major_units = Array.new(3) { |i| create_unit("M#{i}") }
-    major_units.each { |unit| create_major_debut(unit) }
-    indie_units = Array.new(5) { |i| create_unit("I#{i}") }
-
-    create_trend(major_units[0], title: 'メジャー解散', phenomenon: :finish, year: 2000)
-    create_trend(indie_units[0], title: 'インディ解散', phenomenon: :finish, year: 2001)
-    create_trend(indie_units[1], title: 'インディ休止', phenomenon: :suspend, year: 2002)
-    create_trend(major_units[1], title: 'メジャーライブ1', phenomenon: :live, year: 2003)
-    create_trend(major_units[2], title: 'メジャーライブ2', phenomenon: :live, year: 2004)
-    indie_units[2..].each_with_index do |unit, i|
-      create_trend(unit, title: "インディライブ#{i}", phenomenon: :live, year: 2005 + i)
+  test '解散・活動休止・メジャーデビュー・結成・初ライブ・活動再開を優先し、その中でメジャー経験バンドを先にする（issue #1753）' do
+    major = create_unit('M')
+    create_major_debut(major)
+    create_trend(major, title: 'メジャーライブ', phenomenon: :live, year: 2000)
+    indie_titles = { finish: 'インディ解散', suspend: 'インディ休止', major_debut: 'インディメジャーデビュー',
+                     formation: 'インディ結成', first_live: 'インディ初ライブ', restart: 'インディ再開' }
+    indie_titles.each_with_index do |(phenomenon, title), i|
+      create_trend(create_unit("I#{i}"), title: title, phenomenon: phenomenon, year: 2001 + i)
     end
+    # 優先対象の動向で文字数がほぼ埋まるよう、長いタイトルにする
+    create_trend(create_unit('L'), title: "インディライブ#{'あ' * 60}", phenomenon: :live, year: 2010)
 
-    text = OnThisDayPostBuilder.new(DATE).build.text
+    text = trend_post.text
 
-    %w[メジャー解散 インディ解散 インディ休止 メジャーライブ1 メジャーライブ2].each do |title|
-      assert_includes text, title
-    end
+    indie_titles.each_value { |title| assert_includes text, title }
+    assert_includes text, 'メジャーライブ'
     assert_not_includes text, 'インディライブ'
     assert_includes text, '・他'
   end
 
   test '同じバンドの動向は1件だけ選ぶ' do
     unit = create_unit('黒夢')
-    create_trend(unit, title: '結成', year: 1991)
+    create_trend(unit, title: 'ライブ', year: 1991)
     create_trend(unit, title: '解散', phenomenon: :finish, year: 1999)
 
-    lines = OnThisDayPostBuilder.new(DATE).build.text.split("\n")
+    lines = trend_post.text.split("\n")
 
     assert_includes lines, '・1999年 黒夢 解散'
-    assert_not_includes lines, '・1991年 黒夢 結成'
+    assert_not_includes lines, '・1991年 黒夢 ライブ'
     assert_includes lines, '・他'
   end
 
   test '非公開の動向は含めない' do
     create_trend(create_unit('黒夢'), title: '非公開の動向', year: 1995, active: false)
 
-    assert_nil OnThisDayPostBuilder.new(DATE).build
+    assert_empty OnThisDayPostBuilder.new(DATE).build
   end
 
-  test '280文字に収まらない動向は入れず、全体を280以内にする' do
-    5.times { |i| create_trend(create_unit("U#{i}"), title: 'あ' * 40, year: 1990 + i) }
-
-    result = OnThisDayPostBuilder.new(DATE).build
-
-    assert_operator result.weighted_length, :<=, XPostLength::MAX
-    assert_operator result.text.scan(/^・1/).size, :<, 5
-    assert_includes result.text, '・他'
-  end
-
-  test '文字数に余裕があれば誕生日をヨミガナ順で加える' do
+  test '誕生日は別の投稿にし、誕生日用の見出しで1人1行ヨミガナ順に並べる（issue #1753）' do
     create_trend(create_unit('黒夢'), title: '結成', year: 1991)
     create_person('乙', 'おつ')
     create_person('甲', 'こう')
 
-    lines = OnThisDayPostBuilder.new(DATE).build.text.split("\n")
+    posts = OnThisDayPostBuilder.new(DATE).build
 
-    assert_equal '誕生日: 乙、甲', lines[2]
+    assert_equal %i[trends birthdays], posts.map(&:kind)
+    assert_not_includes posts.first.text, '乙'
+    assert_equal "今日（5/30）誕生日のヴィジュアル系アーティスト\n・乙\n・甲\nhttps://example.com/date/-/5/30\n#vkdb",
+                 posts.last.text
   end
 
-  test '誕生日が入りきらなければ入るだけ並べて「、他」を付ける' do
+  test '誕生日の人物名の後にユニット名を付ける（issue #1753）' do
+    create_person('清春', 'きよはる', old_history: '[[黒夢]]')
+    create_person('人時', 'ひとき', old_history: '[[黒夢]] →')
+
+    lines = birthday_post.text.split("\n")
+
+    assert_includes lines, '・清春（黒夢）'
+    assert_includes lines, '・人時（ex-黒夢）'
+  end
+
+  test '誕生日が入りきらなければ入るだけ並べて「・他」を付ける' do
     60.times { |i| create_person("名前#{format('%02d', i)}", "なまえ#{format('%02d', i)}") }
 
-    result = OnThisDayPostBuilder.new(DATE).build
-    birthday_line = result.text.split("\n").find { |line| line.start_with?('誕生日: ') }
+    post = birthday_post
 
-    assert_match(/、他\z/, birthday_line)
-    assert_operator result.weighted_length, :<=, XPostLength::MAX
+    assert_equal '・他', post.text.split("\n")[-3]
+    assert_operator post.weighted_length, :<=, XPostLength::MAX
   end
 
-  test '誕生日が2人以上入らなければ誕生日の行を省く' do
-    create_trend(create_unit('黒夢'), title: '結成', year: 1991)
-    create_person('あ' * 70, 'あ')
-    create_person('い' * 70, 'い')
+  test '誕生日が1人しか入らなくても載せる（issue #1753）' do
+    create_person('あ' * 80, 'あ')
+    create_person('い' * 80, 'い')
 
-    text = OnThisDayPostBuilder.new(DATE).build.text
+    lines = birthday_post.text.split("\n")
 
-    assert_not_includes text, '誕生日:'
+    assert_equal(1, lines.count { |line| line.start_with?('・') && line != '・他' })
+    assert_includes lines, '・他'
   end
 
-  test '動向がなく、誕生日の行も載らない日はnilを返す' do
-    create_person('あ' * 70, 'あ')
-    create_person('い' * 70, 'い')
+  test '動向がなく誕生日だけの日は誕生日の投稿だけを返す' do
+    create_person('甲', 'こう')
 
-    assert_nil OnThisDayPostBuilder.new(DATE).build
+    assert_equal [:birthdays], OnThisDayPostBuilder.new(DATE).build.map(&:kind)
   end
 
   test 'parse_month_dayはMM-DDとM/Dを受け付け、不正ならnil' do
@@ -134,14 +144,15 @@ class OnThisDayPostBuilderTest < ActiveSupport::TestCase
     assert_nil OnThisDayPostBuilder.parse_month_day('13-40')
   end
 
-  test '動向がなく誕生日だけの日も出力する' do
-    create_person('甲', 'こう')
+  private
 
-    assert_equal "ヴィジュアル系今日はなんの日？（5/30）\n誕生日: 甲\nhttps://example.com/date/-/5/30\n#vkdb",
-                 OnThisDayPostBuilder.new(DATE).build.text
+  def trend_post
+    OnThisDayPostBuilder.new(DATE).build.find { |post| post.kind == :trends }
   end
 
-  private
+  def birthday_post
+    OnThisDayPostBuilder.new(DATE).build.find { |post| post.kind == :birthdays }
+  end
 
   def create_unit(name)
     @unit_seq = @unit_seq.to_i + 1
@@ -159,8 +170,9 @@ class OnThisDayPostBuilderTest < ActiveSupport::TestCase
                   unit_phenomenon: :major_debut, units: [{ 'unit_id' => unit.id, 'name' => unit.name }])
   end
 
-  def create_person(name, name_kana)
-    Person.create!(name: name, name_kana: name_kana, key: "on-this-day-person-#{name_kana}", status: :active,
-                   birthday: Date.new(1970, DATE.month, DATE.day))
+  def create_person(name, name_kana, old_history: nil)
+    @person_seq = @person_seq.to_i + 1
+    Person.create!(name: name, name_kana: name_kana, key: "on-this-day-person-#{@person_seq}", status: :active,
+                   birthday: Date.new(1970, DATE.month, DATE.day), old_history: old_history)
   end
 end

@@ -98,7 +98,7 @@ class Trend < ApplicationRecord
   scope :published, -> { where(active: true).where(publish_start_at: ..Time.current) }
 
   # メジャー経験バンド（メジャーデビューの動向が登録されているユニット）のID一覧。
-  # 年表（TimelineController）と「今日はなんの日？」の投稿文（OnThisDayPostBuilder、issue #1742）で共有する
+  # 年表（TimelineController）と「今日は何の日？」の投稿文（OnThisDayPostBuilder、issue #1742）で共有する
   def self.major_debut_unit_ids
     where(unit_phenomenon: :major_debut, active: true)
       .pluck(:units)

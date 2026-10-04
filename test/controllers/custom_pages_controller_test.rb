@@ -87,7 +87,7 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, birthday_date_path(month: today.month, day: today.day)
-    assert_includes response.body, '今日はなんの日？'
+    assert_includes response.body, '今日は何の日？'
     assert_includes response.body, 'What Happened Today'
   end
 
@@ -97,7 +97,7 @@ class CustomPagesControllerTest < ActionDispatch::IntegrationTest
     get custom_page_path(key: page.key)
 
     assert_response :success
-    assert_not_includes response.body, '今日はなんの日？'
+    assert_not_includes response.body, '今日は何の日？'
     assert_not_includes response.body, 'What Happened Today'
   end
 
