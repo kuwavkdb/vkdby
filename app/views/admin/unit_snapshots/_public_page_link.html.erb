@@ -1,0 +1,18 @@
+<%# 公開ページ（ユニットページ）の該当スナップショットを開いて表示を確認するためのリンク（issue #1761）。
+    #snapshot-{id} で開くと、toggleコントローラが「現在」以外のスナップショットも展開する %>
+<% if unit.key.present? %>
+  <div class="text-sm">
+    <%= link_to profile_path(unit.key, anchor: "snapshot-#{unit_snapshot.id}"),
+          target: "_blank", rel: "noopener",
+          class: "inline-flex items-center gap-1 rounded text-indigo-600 hover:text-indigo-900 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300" do %>
+      公開ページで確認
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+      </svg>
+      <span class="sr-only">（新しいタブで開きます）</span>
+    <% end %>
+    <% unless unit_snapshot.active? %>
+      <p class="mt-1 text-amber-700 dark:text-amber-400">このスナップショットは非公開のため、公開ページには表示されません。</p>
+    <% end %>
+  </div>
+<% end %>

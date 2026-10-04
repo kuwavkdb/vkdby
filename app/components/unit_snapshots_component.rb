@@ -24,4 +24,9 @@ class UnitSnapshotsComponent < ViewComponent::Base
   def render?
     @snapshots.present?
   end
+
+  # 管理者には、メンバー行ごとにスナップショットメンバー編集画面への直リンクを出す（issue #1761）
+  def admin_unit_id
+    @unit&.id if @admin
+  end
 end

@@ -1,6 +1,10 @@
 <div class="flex flex-col gap-12 mb-12">
   <% @snapshots.each do |snapshot| %>
-    <section data-controller="toggle" data-toggle-open-value="<%= snapshot.current? && @summary_preview %>">
+    <%# ユニットページ本体では、管理画面などから #snapshot-{id} で特定のスナップショットを
+        開けるようにidを付ける（toggleコントローラがハッシュと一致したら展開する、issue #1761）。
+        {{snapshot}}プラグイン（summary_preview: false）は同じスナップショットを複数埋め込める
+        ため、id重複を避けて付けない %>
+    <section <%= tag.attributes(id: (@summary_preview ? "snapshot-#{snapshot.id}" : nil)) %> data-controller="toggle" data-toggle-open-value="<%= snapshot.current? && @summary_preview %>">
       <div class="flex items-center justify-between mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
         <button type="button" data-action="click->toggle#toggle"
                 class="flex items-center justify-between gap-2 flex-1 min-w-0 -mx-1 px-1 py-0.5 rounded text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-amber-400">
@@ -29,7 +33,7 @@
       </div>
       <% if snapshot.current? || !@summary_preview %>
         <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm" data-toggle-target="area" data-action="click->toggle#expand">
-          <%= render MemberRowComponent.with_collection(snapshot.snapshot_people.sort_by(&:sort_order), hide_active: true, hide_status: snapshot.past?) %>
+          <%= render MemberRowComponent.with_collection(snapshot.snapshot_people.sort_by(&:sort_order), hide_active: true, hide_status: snapshot.past?, admin_unit_id: admin_unit_id) %>
         </div>
       <% else %>
         <div class="border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-3 shadow-sm"
@@ -42,7 +46,9 @@
         <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm mt-3"
              data-toggle-target="content"
              hx-get="<%= snapshot_members_path(key: @unit.key, id: snapshot.id) %>"
-             hx-trigger="toggle:opened from:closest section once"
+             <%# load[...]: htmxの初期化より先にURLハッシュで展開された場合（issue #1761）は
+                 toggle:openedを取りこぼすため、初期化時点で展開済みならその場で読み込む %>
+             hx-trigger="toggle:opened from:closest section once, load[this.closest('section').dataset.toggleOpenValue === 'true']"
              hx-swap="innerHTML"></div>
       <% end %>
     </section>

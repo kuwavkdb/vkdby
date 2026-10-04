@@ -5,11 +5,14 @@ class MemberRowComponent < ViewComponent::Base
   include SnsIconHelper
   with_collection_parameter :member
 
-  def initialize(member:, hide_active: false, hide_left: false, hide_status: false)
+  # admin_unit_id: スナップショットメンバー（SnapshotPerson）の行で管理者に編集リンクを出す
+  # ときに、そのスナップショットが属するユニットのidを渡す（issue #1761）。nilなら出さない
+  def initialize(member:, hide_active: false, hide_left: false, hide_status: false, admin_unit_id: nil)
     @member = member
     @hide_active = hide_active
     @hide_left = hide_left
     @hide_status = hide_status
+    @admin_unit_id = admin_unit_id
   end
 
   # @member.sns の1要素（"@handle"形式、またはURL）からアイコン種別を判定する。
@@ -27,6 +30,12 @@ class MemberRowComponent < ViewComponent::Base
   end
 
   private
+
+  def edit_path
+    return if @admin_unit_id.blank? || !@member.is_a?(SnapshotPerson)
+
+    edit_admin_unit_unit_snapshot_snapshot_person_path(@admin_unit_id, @member.unit_snapshot_id, @member)
+  end
 
   def status_classes
     base_classes = 'text-[0.65rem] font-black uppercase px-2 py-0.5 rounded-md'
