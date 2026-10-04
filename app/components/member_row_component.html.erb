@@ -33,10 +33,12 @@
           </span>
         <% end %>
         <% if (path = edit_path) %>
-          <%= link_to "編集", path,
-                class: "text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-amber-400 rounded transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-amber-400",
-                aria: { label: "#{@member.name}を編集" },
-                onclick: "event.stopPropagation()" %>
+          <%= link_to "編集", path, class: admin_link_classes,
+                aria: { label: "#{@member.name}をメンバー編集" }, onclick: "event.stopPropagation()" %>
+        <% end %>
+        <% if (path = person_edit_path) %>
+          <%= link_to "個人", path, class: admin_link_classes,
+                aria: { label: "#{@member.name}の個人情報を編集" }, onclick: "event.stopPropagation()" %>
         <% end %>
       </div>
     </div>

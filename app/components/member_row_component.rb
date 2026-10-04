@@ -6,7 +6,9 @@ class MemberRowComponent < ViewComponent::Base
   with_collection_parameter :member
 
   # admin_unit_id: スナップショットメンバー（SnapshotPerson）の行で管理者に編集リンクを出す
-  # ときに、そのスナップショットが属するユニットのidを渡す（issue #1761）。nilなら出さない
+  # ときに、そのスナップショットが属するユニットのidを渡す（issue #1761）。nilなら出さない。
+  # 個人（Person）と紐づいたメンバーは経歴・プロフィールを個人側で編集する（スナップショット
+  # メンバー編集画面では編集できない、issue #1619）ため、個人の編集画面へのリンクも並べて出す
   def initialize(member:, hide_active: false, hide_left: false, hide_status: false, admin_unit_id: nil)
     @member = member
     @hide_active = hide_active
@@ -32,9 +34,25 @@ class MemberRowComponent < ViewComponent::Base
   private
 
   def edit_path
-    return if @admin_unit_id.blank? || !@member.is_a?(SnapshotPerson)
+    return unless admin_links?
 
     edit_admin_unit_unit_snapshot_snapshot_person_path(@admin_unit_id, @member.unit_snapshot_id, @member)
+  end
+
+  def person_edit_path
+    return unless admin_links? && @member.person
+
+    edit_admin_person_path(@member.person)
+  end
+
+  def admin_links?
+    @admin_unit_id.present? && @member.is_a?(SnapshotPerson)
+  end
+
+  def admin_link_classes
+    'text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-amber-400 ' \
+      'rounded transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 ' \
+      'focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-amber-400'
   end
 
   def status_classes
