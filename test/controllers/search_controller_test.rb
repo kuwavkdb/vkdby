@@ -121,4 +121,59 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_not_includes response.body, 'InactiveSectionUnit'
   end
+
+  test 'index finds a unit via a snapshot member name without a person page' do
+    unit = Unit.create!(name: 'MemberNameMatchUnit', key: 'member-name-match-unit-test', status: :active)
+    snapshot = unit.unit_snapshots.create!(active: true)
+    snapshot.snapshot_people.create!(person_name: 'UniqueSnapshotMemberNameTest', status: :left)
+
+    get search_path(q: 'UniqueSnapshotMemberNameTest')
+
+    assert_response :success
+    assert_includes response.body, 'MemberNameMatchUnit'
+  end
+
+  test 'index finds a unit via a snapshot member name alias' do
+    unit = Unit.create!(name: 'MemberAliasMatchUnit', key: 'member-alias-match-unit-test', status: :active)
+    snapshot = unit.unit_snapshots.create!(active: true)
+    snapshot.snapshot_people.create!(person_name: 'SomeMember', name_alias: 'UniqueSnapshotNameAliasTest')
+
+    get search_path(q: 'UniqueSnapshotNameAliasTest')
+
+    assert_response :success
+    assert_includes response.body, 'MemberAliasMatchUnit'
+  end
+
+  test 'index does not find a unit via a discarded snapshot member name' do
+    unit = Unit.create!(name: 'DiscardedMemberUnit', key: 'discarded-member-unit-test', status: :active)
+    snapshot = unit.unit_snapshots.create!(active: true)
+    snapshot.snapshot_people.create!(person_name: 'UniqueDiscardedMemberNameTest').discard!
+
+    get search_path(q: 'UniqueDiscardedMemberNameTest')
+
+    assert_response :success
+    assert_not_includes response.body, 'DiscardedMemberUnit'
+  end
+
+  test 'index does not find a unit via a member of an inactive snapshot' do
+    unit = Unit.create!(name: 'InactiveSnapshotUnit', key: 'inactive-snapshot-unit-test', status: :active)
+    snapshot = unit.unit_snapshots.create!(active: false)
+    snapshot.snapshot_people.create!(person_name: 'UniqueInactiveSnapshotMemberTest')
+
+    get search_path(q: 'UniqueInactiveSnapshotMemberTest')
+
+    assert_response :success
+    assert_not_includes response.body, 'InactiveSnapshotUnit'
+  end
+
+  test 'index does not find a provisional unit via a snapshot member name' do
+    unit = Unit.create!(name: 'ProvisionalMemberUnit', key: 'provisional-member-unit-test', status: :active, provisional: true)
+    snapshot = unit.unit_snapshots.create!(active: true)
+    snapshot.snapshot_people.create!(person_name: 'UniqueProvisionalMemberNameTest')
+
+    get search_path(q: 'UniqueProvisionalMemberNameTest')
+
+    assert_response :success
+    assert_not_includes response.body, 'ProvisionalMemberUnit'
+  end
 end
