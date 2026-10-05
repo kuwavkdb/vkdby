@@ -166,7 +166,7 @@ class OnThisDayPostBuilder # rubocop:disable Metrics/ClassLength
   def related_units
     @related_units ||= begin
       ids = trends.flat_map { |trend| OnThisDayTrendRanker.unit_ids(trend).to_a }.uniq
-      Unit.kept.where(id: ids).select(:id, :name).index_by(&:id)
+      Unit.publicly_visible.where(id: ids).select(:id, :name).index_by(&:id)
     end
   end
 end

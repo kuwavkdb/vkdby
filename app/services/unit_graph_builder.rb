@@ -189,7 +189,8 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
   def build_graph(unit_ids_by_person, current_edge_pairs, relevant_unit_ids, hop1_unit_ids_set = Set.new, base_unit_ids = nil)
     # ノード描画には id/name/key のみ必要なため、Unit を AR オブジェクトとして
     # 全件ロードせず必要な列のみ取得する
-    related_units = Unit.kept.where(id: relevant_unit_ids)
+    # 仮登録のユニット（issue #1764）は、グラフの起点（admin が閲覧している場合のみ到達する）を除いて表示しない
+    related_units = Unit.publicly_visible.or(Unit.kept.where(id: @unit.id)).where(id: relevant_unit_ids)
                         .pluck(:id, :name, :key)
                         .to_h { |id, name, key| [id, GraphUnit.new(id:, name:, key:)] }
 
@@ -216,17 +217,23 @@ class UnitGraphBuilder # rubocop:disable Metrics/ClassLength
           # hop1 = 紫、hop2 = グレー（hopのみで色分け）
           nodes["unit_#{uid}"] = unit_node(u, uid == @unit.id, hop_level == 1, hop_level, past_only: past_only)
         end
+        # 表示しないユニット（削除済み・仮登録）につながるエッジは出さない
+        next unless nodes["unit_#{uid_a}"] && nodes["unit_#{uid_b}"]
 
-        if edges[edge_key]
-          edges[edge_key][:data][:current] = 1 if edge_current
-        else
-          edges[edge_key] = { data: { id: edge_key, source: "unit_#{uid_a}", target: "unit_#{uid_b}",
-                                      current: edge_current ? 1 : 0 } }
-        end
+        add_edge(edges, edge_key, uid_a, uid_b, edge_current)
       end
     end
 
     { nodes: nodes.values, edges: edges.values }
+  end
+
+  def add_edge(edges, edge_key, uid_a, uid_b, edge_current)
+    if edges[edge_key]
+      edges[edge_key][:data][:current] = 1 if edge_current
+    else
+      edges[edge_key] = { data: { id: edge_key, source: "unit_#{uid_a}", target: "unit_#{uid_b}",
+                                  current: edge_current ? 1 : 0 } }
+    end
   end
 
   def center_node

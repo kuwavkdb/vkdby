@@ -31,6 +31,9 @@ unit_type: band
 status: active
 snapshot_date: "2024/04/01"
 snapshot_label: 結成時
+note: |
+  情報源: https://example.com/
+  メンバーの生年は公式サイトに記載なし
 activity_periods:
   - from: "2010/01/**"
     to: ""
@@ -57,6 +60,7 @@ members:
 - `name_kana` はメンバー名のヨミガナ（省略可）。`SnapshotPerson#extra_profile` の `name_kana` に保存され、後で Person として独立させたときに `Person#name_kana` へ引き継がれる
 - `extra_profile` の各項目も省略可。`birthday` は `Unit#activity_period` と同じマスク形式ではなく、月日のみの文字列（例: `7/12`）を想定（`SnapshotPerson#extra_profile_person_attributes` がこの形式をパースする。issue #1619）
 - `sns` はメンバー個人の SNS アカウントの配列（省略可）。`SnapshotPerson#sns` に保存され、後で Person として独立・紐付けしたときに Person のリンクへ引き継がれる。X（Twitter）は `"@handle"`、それ以外のサービスは URL で書く。**`@` で始まる値は YAML の予約文字のため必ずダブルクォートで囲む**（囲まないと「フォームに反映」でエラーになる）
+- `note` はユニット全体についての管理用メモ（省略可。`Unit#note` に保存され、公開ページには出ない）。情報源の URL や、読み取れなかった・判断に迷った点を書いておく。簡単登録で作ったユニットは仮登録（一般非公開）になり、admin が確認して本登録にするため、確認のための材料を残す目的で使う（issue #1764）
 - `activity_periods` の `from` / `to` は `Unit#activity_period`（`****/**/**` のようなマスク形式を許容するテキスト）に入る値
 
 ## URL の形式（手順4B）
@@ -75,6 +79,7 @@ https://www.vkdb.jp/admin/units/quick_new?<パラメーター>
 | `unit[status]` | `pre`（活動前）/ `active`（活動中）/ `freeze`（活動休止）/ `disbanded`（解散）/ `unknown`。公式サイトの最新情報で明確に読み取れた場合のみ指定し、不明なら省略（デフォルトは `active`） |
 | `unit[snapshot_date]` | 現在のラインナップの基準日（任意）。結成日ではなく「このラインナップが確認できた日」の意味。通常の date 型で `Unit#activity_period`（`****/**/**` のようなマスク形式を許容）とは別物であり、年月日が完全に分かる日付しか入れられない。日・月が不明な場合は仮埋めせず空にする |
 | `unit[snapshot_label]` | ラインナップのラベル（任意）。例: `結成時`, `現体制` |
+| `unit[note]` | ユニット全体についての管理用メモ（任意。`Unit#note`。公開ページには出ない）。情報源のURLや、読み取れなかった・判断に迷った点を書く |
 | `unit[members][<index>][person_name]` | メンバー名。`<index>` は `0` 始まりの連番 |
 | `unit[members][<index>][name_kana]` | メンバー名のヨミガナ（任意） |
 | `unit[members][<index>][part]` | パート。`vocal` / `guitar` / `bass` / `drums` / `keyboard` / `dj` / `unknown` |

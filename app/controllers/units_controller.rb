@@ -8,7 +8,7 @@ class UnitsController < ApplicationController
                                    .group(:tag_index_id)
                                    .count
 
-    scope = Unit.kept.where.not(name: [nil, '']).where.not(key: [nil, '']).order(updated_at: :desc)
+    scope = Unit.publicly_visible.where.not(name: [nil, '']).where.not(key: [nil, '']).order(updated_at: :desc)
     if params[:q].present?
       scope = scope.where(
         'units.name ILIKE :q OR units.name_kana ILIKE :q OR units.name_log::text ILIKE :q OR units.aliases::text ILIKE :q',
@@ -36,7 +36,7 @@ class UnitsController < ApplicationController
     conn = ActiveRecord::Base.connection
     quoted_exact = conn.quote(q)
     quoted_prefix = conn.quote("#{q}%")
-    units = Unit.kept.where('name ILIKE :q OR name_kana ILIKE :q', q: "%#{q}%")
+    units = Unit.publicly_visible.where('name ILIKE :q OR name_kana ILIKE :q', q: "%#{q}%")
                 .order(Arel.sql(<<~SQL.squish))
                   CASE
                     WHEN name = #{quoted_exact} OR name_kana = #{quoted_exact} THEN 0
@@ -52,7 +52,7 @@ class UnitsController < ApplicationController
   end
 
   def show
-    @unit = Unit.kept.find_by!(key: params[:key])
+    @unit = Unit.publicly_visible.find_by!(key: params[:key])
     render json: @unit
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Unit not found' }, status: :not_found

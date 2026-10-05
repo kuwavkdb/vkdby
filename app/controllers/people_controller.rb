@@ -45,7 +45,7 @@ class PeopleController < ApplicationController
     person = Person.kept.find_by!(key: params[:key])
     unit_keys = person.snapshot_people
                       .joins(unit_snapshot: :unit)
-                      .merge(Unit.kept)
+                      .merge(Unit.publicly_visible)
                       .distinct
                       .pluck('units.key')
     render json: { unit_keys:, person_name: person.name }

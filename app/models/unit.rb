@@ -12,6 +12,7 @@
 #  note          :text
 #  old_key       :string
 #  old_wiki_text :text
+#  provisional   :boolean          default(FALSE), not null
 #  status        :integer          default("active"), not null
 #  unit_type     :integer
 #  created_at    :datetime         not null
@@ -47,6 +48,10 @@ class Unit < ApplicationRecord
   has_many :temporary_snapshot_people, foreign_key: :hint_unit_id, inverse_of: :hint_unit, dependent: :nullify
   enum :unit_type, { band: 0, unit: 1, session: 2, solo: 3, limited: 4, moved: 5, other: 99 }
   enum :status, { pre: 0, active: 1, freeze: 2, disbanded: 3, unknown: 99 }
+
+  # 仮登録（provisional: true）のユニットは admin 以外には表示しない（issue #1764）。
+  # 公開側でユニットを取得するときは kept ではなくこのスコープを使う。
+  scope :publicly_visible, -> { kept.where(provisional: false) }
 
   validates :status, presence: true
   # keyが空だと一覧ページのprofile_path(key)がUrlGenerationErrorで落ちるため必須（issue #1277）

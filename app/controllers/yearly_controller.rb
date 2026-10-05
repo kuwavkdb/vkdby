@@ -46,6 +46,6 @@ class YearlyController < ApplicationController
 
   def load_related_units(trends)
     all_unit_ids = trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
-    Unit.kept.where(id: all_unit_ids).index_by(&:id)
+    Unit.publicly_visible.where(id: all_unit_ids).index_by(&:id)
   end
 end

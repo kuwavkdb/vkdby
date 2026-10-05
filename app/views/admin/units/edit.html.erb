@@ -6,6 +6,21 @@
       <h1 class="text-2xl font-bold dark:text-white"><%= title %></h1>
       <%= link_to "公開ページを見る", profile_path(@unit.key), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
     </div>
+    <% if @unit.provisional? %>
+      <%# 仮登録（issue #1764）。本登録にできるのは admin のみ %>
+      <div class="mb-6 px-4 py-3 rounded-lg border border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3" role="status">
+        <p class="text-sm text-amber-900 dark:text-amber-100">
+          <span class="inline-block px-2 py-0.5 mr-2 rounded bg-amber-200 dark:bg-amber-800 text-xs font-semibold">仮登録</span>
+          このユニットは仮登録のため、一般には公開されていません。公開ページは admin のみ閲覧できます。
+        </p>
+        <% if current_user.admin? %>
+          <%= button_to "本登録にする", confirm_provisional_admin_unit_path(@unit), method: :patch,
+              form_class: "shrink-0",
+              onclick: "return confirm('#{j @unit.name} を本登録にして一般公開しますか？')",
+              class: "px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+        <% end %>
+      </div>
+    <% end %>
     <div class="md:grid md:grid-cols-5 md:gap-8">
       <div class="md:col-span-2">
         <div class="bg-white shadow rounded-lg p-6 mb-6 dark:bg-gray-800">
