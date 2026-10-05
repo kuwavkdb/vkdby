@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-class SearchControllerTest < ActionDispatch::IntegrationTest
+class SearchControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
   test 'index finds a unit whose name is half-width when queried with full-width alphanumerics' do
     Unit.create!(name: 'ABC123', key: 'zenkaku-search-unit-test', status: :active)
 
