@@ -19,6 +19,12 @@ module Admin
       assert_redirected_to edit_admin_unit_unit_snapshot_path(@unit, @snapshot)
     end
 
+    test 'edit links to the snapshot on the public unit page (issue #1761)' do
+      get edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @snapshot, snapshot_people(:one))
+      assert_response :success
+      assert_includes response.body, profile_path(@unit.key, anchor: "snapshot-#{@snapshot.id}")
+    end
+
     test 'should create snapshot_person with person_name' do
       assert_difference('SnapshotPerson.count') do
         post admin_unit_unit_snapshot_snapshot_people_path(@unit, @snapshot), params: {

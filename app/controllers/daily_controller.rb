@@ -28,7 +28,7 @@ class DailyController < ApplicationController
 
     # Load related units for trends
     all_unit_ids = @trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
-    @related_units = Unit.kept.where(id: all_unit_ids).index_by(&:id)
+    @related_units = Unit.publicly_visible.where(id: all_unit_ids).index_by(&:id)
   end
 
   private

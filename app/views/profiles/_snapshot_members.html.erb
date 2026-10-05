@@ -1,1 +1,2 @@
-<%= render MemberRowComponent.with_collection(snapshot_people, hide_active: true, hide_status: snapshot.past?) %>
+<%= render MemberRowComponent.with_collection(snapshot_people, hide_active: true, hide_status: snapshot.past?,
+                                              admin_unit_id: (snapshot.unit_id if logged_in?)) %>

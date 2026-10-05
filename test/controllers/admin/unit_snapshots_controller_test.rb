@@ -3,7 +3,7 @@
 require 'test_helper'
 
 module Admin
-  class UnitSnapshotsControllerTest < ActionDispatch::IntegrationTest
+  class UnitSnapshotsControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
     setup do
       post login_path, params: { email: users(:one).email, password: 'password' }
       @unit = units(:one)
@@ -25,6 +25,18 @@ module Admin
       assert_operator response.body.index(other_snapshot.display_label),
                       :<, response.body.index(@snapshot.display_label)
       assert_match 'RELATED', response.body
+    end
+
+    test 'edit links to the unit edit page and the snapshot on the public unit page, and warns when inactive (issue #1761)' do
+      get edit_admin_unit_unit_snapshot_path(@unit, @snapshot)
+      assert_response :success
+      assert_includes response.body, profile_path(@unit.key, anchor: "snapshot-#{@snapshot.id}")
+      assert_select 'h1 a[href=?]', edit_admin_unit_path(@unit)
+      assert_not_includes response.body, '非公開のため、公開ページには表示されません'
+
+      @snapshot.update!(active: false)
+      get edit_admin_unit_unit_snapshot_path(@unit, @snapshot)
+      assert_includes response.body, '非公開のため、公開ページには表示されません'
     end
 
     test 'should get new' do

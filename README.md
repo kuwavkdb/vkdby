@@ -90,7 +90,7 @@ pg_restore --no-owner --no-acl -d <接続先DB> vkdby_YYYYMMDD_HHMMSS.dump
 
 ## 「今日は何の日？」投稿文
 
-X に投稿する「今日は何の日？」の紹介文を、GitHub Actions の **On This Day** ワークフロー（`.github/workflows/on_this_day.yml`）が毎日 JST 0:05 に作り、GitHub の Issue にコメントします。
+X に投稿する「今日は何の日？」の紹介文を、GitHub Actions の **On This Day** ワークフロー（`.github/workflows/on_this_day.yml`）が毎日 JST 20:05 に翌日分を作り、GitHub の Issue にコメントします（GitHub のスケジュール実行は数時間遅れることがあるため、前日の夜に実行する）。
 
 投稿文は「出来事」と「誕生日」の2件に分かれ、それぞれ X の上限280文字に入るだけ載せます（入りきらなければ「・他」）。
 

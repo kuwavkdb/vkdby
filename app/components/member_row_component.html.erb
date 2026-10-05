@@ -32,6 +32,14 @@
             <%= @member.status %>
           </span>
         <% end %>
+        <% if (path = edit_path) %>
+          <%= link_to "編集", path, class: admin_link_classes,
+                aria: { label: "#{@member.name}をメンバー編集" }, onclick: "event.stopPropagation()" %>
+        <% end %>
+        <% if (path = person_edit_path) %>
+          <%= link_to "個人", path, class: admin_link_classes,
+                aria: { label: "#{@member.name}の個人情報を編集" }, onclick: "event.stopPropagation()" %>
+        <% end %>
       </div>
     </div>
     <% if (p_items = person_history_items).present? %>

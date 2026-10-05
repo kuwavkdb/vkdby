@@ -74,6 +74,6 @@ class TrendsController < ApplicationController
 
   def related_units_for(trends)
     unit_ids = trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
-    Unit.kept.where(id: unit_ids).index_by(&:id)
+    Unit.publicly_visible.where(id: unit_ids).index_by(&:id)
   end
 end

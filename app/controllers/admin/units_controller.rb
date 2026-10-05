@@ -4,9 +4,9 @@ module Admin
   class UnitsController < Admin::BaseController # rubocop:disable Metrics/ClassLength
     include LoggableLinkChanges
 
-    before_action :set_unit, only: %i[show edit update destroy undiscard change_key purge]
+    before_action :set_unit, only: %i[show edit update destroy undiscard change_key confirm_provisional purge]
     before_action :require_super_operator, only: %i[destroy]
-    before_action :require_admin, only: %i[change_key purge bulk_update_status]
+    before_action :require_admin, only: %i[change_key confirm_provisional purge bulk_update_status]
 
     QUICK_CREATE_MEMBER_ROWS = 5
     QUICK_CREATE_DEFAULT_PARTS = %w[vocal guitar guitar bass drums].freeze
@@ -23,6 +23,7 @@ module Admin
       @unit_type_filter = params[:unit_type]
       @redirect_source = params[:redirect_source]
       @status_filter = params[:status]
+      @provisional_filter = params[:provisional]
       scope = case @show_discarded
               when 'only' then Unit.discarded
               when 'all'  then Unit.with_discarded
@@ -46,7 +47,10 @@ module Admin
         scope = scope.joins(:tag_index_items).where(tag_index_items: { tag_index_id: @tag_index_id })
       end
       scope = scope.where(status: @status_filter) if @status_filter.present?
+      scope = scope.where(provisional: true) if @provisional_filter == 'only'
       @pagy, @units = pagy(scope.order(updated_at: :desc))
+      # 「仮登録のみ」で表示される件数と合わせるため、通常一覧と同じく moved（と unit_type が NULL のもの）は数えない
+      @provisional_count = Unit.kept.where(provisional: true).where.not(unit_type: :moved).count
       @tag_filter_groups = IndexGroup.tag_filter_options_for_units
     end
 
@@ -66,6 +70,8 @@ module Admin
     # データ構造・既存フローには手を加えず、入り口を追加するのみ。
     def quick_new
       @unit = Unit.new(quick_unit_params_for_new)
+      # 仮登録（issue #1764）は初期値オン。admin 以外は常に仮登録になる（quick_unit_params）
+      @unit.provisional = true
       @snapshot_date_prefill = params.dig(:unit, :snapshot_date).presence
       @snapshot_label_prefill = params.dig(:unit, :snapshot_label).presence
       @member_rows = quick_member_rows_for_new
@@ -156,6 +162,21 @@ module Admin
       @unit.undiscard
       record_update_log(@unit, action: 'undiscard')
       redirect_to admin_units_path, notice: 'Unit restored successfully.'
+    end
+
+    # 仮登録のユニットを本登録にして一般公開する（issue #1764）。admin のみ。
+    def confirm_provisional
+      unless @unit.provisional?
+        redirect_to edit_admin_unit_path(@unit), alert: 'このユニットは仮登録ではありません。'
+        return
+      end
+
+      @unit.update!(provisional: false)
+      record_update_log(@unit, action: 'update')
+      # 関係グラフ（UnitGraphBuilder）のキャッシュキーは UnitSnapshot の最終更新日時で決まるため、
+      # スナップショットを touch して、ほかのユニットのグラフにもすぐ反映させる
+      @unit.unit_snapshots.touch_all
+      redirect_to edit_admin_unit_path(@unit), notice: '本登録にしました。一般に公開されます。'
     end
 
     def change_key
@@ -267,18 +288,22 @@ module Admin
       unit_params.except(:key)
     end
 
+    # provisional（仮登録。issue #1764）を外して公開状態で作成できるのは admin のみ。
+    # admin 以外は送られてきた値にかかわらず常に仮登録にする。
     def quick_unit_params
       quick_rename_nested_attributes_keys!
-      params.require(:unit).permit(:name, :key, :unit_type, :status,
-                                   activity_periods_attributes: %i[from to label],
-                                   links_attributes: %i[text url])
+      permitted = params.require(:unit).permit(:name, :key, :unit_type, :status, :note, :provisional,
+                                               activity_periods_attributes: %i[from to label],
+                                               links_attributes: %i[text url])
+      permitted[:provisional] = true unless current_user.admin? && permitted.key?(:provisional)
+      permitted
     end
 
     # quick_new（GET）用。URL経由の事前入力に対応する（issue #1611, #1616）。quick_unit_params と異なり
     # params[:unit] が無い初期表示でも動くよう require ではなく緩く読み、enum に無い値は無視する。
     def quick_unit_params_for_new
       quick_rename_nested_attributes_keys!
-      permitted = params[:unit]&.permit(:name, :key, :unit_type, :status,
+      permitted = params[:unit]&.permit(:name, :key, :unit_type, :status, :note,
                                         activity_periods_attributes: %i[from to label],
                                         links_attributes: %i[text url]) || {}
       permitted.delete(:unit_type) unless Unit.unit_types.key?(permitted[:unit_type])

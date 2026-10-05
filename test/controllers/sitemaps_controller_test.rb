@@ -112,4 +112,14 @@ class SitemapsControllerTest < ActionDispatch::IntegrationTest
     assert_includes locs, daily_url(year: target_date.year, month: target_date.month, day: target_date.day)
     assert_not_includes locs, daily_url(year: old_date.year, month: old_date.month, day: old_date.day)
   end
+
+  # issue #1764
+  test 'excludes provisional units' do
+    Unit.create!(name: 'Sitemap Provisional Unit', key: 'sitemap-provisional-unit', provisional: true)
+
+    get '/sitemap.xml'
+
+    locs = Nokogiri::XML(response.body).css('url > loc').map(&:text)
+    assert_not_includes locs, profile_url('sitemap-provisional-unit')
+  end
 end

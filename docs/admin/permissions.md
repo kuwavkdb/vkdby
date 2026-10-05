@@ -23,6 +23,7 @@
 | 機能 | アクション |
 |---|---|
 | Units — 閲覧・作成・編集 | index / new / create / edit / update / show / search / quick_new / quick_create |
+| Units — 簡単登録でのメモ入力・仮登録（一般非公開）での作成。admin 以外が簡単登録したユニットは常に仮登録になる。一覧の「仮登録のみ」で仮登録ユニットを絞り込める（issue #1764） | quick_new / quick_create / index |
 | People — 閲覧・作成・編集 | index / new / create / edit / update / search |
 | Index Groups / タグ（Tag Indices）— 閲覧・作成・編集・削除・並べ替え・グループ移動 | 全アクション |
 | Trends — 閲覧・作成・編集（会場の紐付け・会場の表示名の上書きを含む） | index / new / create / edit / update |
@@ -33,6 +34,7 @@
 | Sections — 全操作 | new / create / edit / update / destroy / undiscard / reorder |
 | Sections — サーバーサイドプレビュー（`{{include}}`/`{{snapshot}}`/`{{item}}` 等のプラグイン記法を反映） | preview |
 | Unit Logs / Person Logs | 閲覧 |
+| Unit Snapshots — 公開ページ（ユニットページ）のメンバー行の「編集」リンクからメンバー編集画面へ、個人と紐づいたメンバーは「個人」リンクから個人の編集画面へ移動。スナップショット編集・メンバー編集画面の「公開ページで確認」リンクで、公開ページの該当スナップショット（`#snapshot-{id}`）を開いた状態で表示（非公開のスナップショットは注意を表示） | snapshot_people#edit / people#edit（「編集」「個人」リンクはログイン時のみ表示） |
 
 ### super_operator 以上
 
@@ -62,10 +64,13 @@
 | Units / People / Venues — キー変更（旧キーは転送用スタブとして残り、新キーへ転送される） | change_key |
 | Units / People — リダイレクト元の物理削除 | purge |
 | Units / People — 一覧からのStatus一括更新 | bulk_update_status |
+| Units — 仮登録のユニットを本登録にして一般公開する（issue #1764） | confirm_provisional |
+| Units — 簡単登録で「仮登録として保存する」を外し、公開状態で作成する（issue #1764） | quick_create（`provisional` の指定のみ） |
+| 仮登録ユニットの公開ページ（`/キー`）の閲覧。admin 以外とログインしていない人には 404 になり、一覧・検索・サイトマップ等にも出ない（issue #1764） | ― （公開側 `ProfilesController#show` ほか） |
 | Unit Submissions（ログイン不要の投稿フォームからの投稿一覧・添付画像の確認・却下。却下時に添付画像を削除。変換済み投稿に残った画像を変換先 Unit の「画像」セクションへ追加） | 全アクション（index / reject / add_image_to_unit） |
 | Units — 投稿からの新規作成時に、投稿画像を「画像」セクションへ引き継ぐ（admin 以外が作成した場合は画像を引き継がない） | new / create（画像の選択欄・引き継ぎのみ） |
 | Trend Submissions（ログイン不要の投稿フォームからの投稿一覧・却下） | 全アクション |
-| 「今日は何の日？」投稿文の確認（毎日 JST 0:05、GitHub の Issue へのコメント） | ― （管理画面ではなく GitHub Actions から `GET /internal/on_this_day_post` を呼び、ラベル `on-this-day` の Issue にコメント。見られるのはリポジトリの閲覧権限がある人） |
+| 「今日は何の日？」投稿文の確認（毎日 JST 20:05 に翌日分、GitHub の Issue へのコメント） | ― （管理画面ではなく GitHub Actions から `GET /internal/on_this_day_post` を呼び、ラベル `on-this-day` の Issue にコメント。見られるのはリポジトリの閲覧権限がある人） |
 
 ---
 
@@ -101,6 +106,9 @@
 | `admin?` でない | Units / People / Venues 編集画面の「キー変更」ボタン |
 | `admin?` でない | Units / People 一覧のリダイレクト元「物理削除」ボタン |
 | `admin?` でない | Units / People 一覧のチェックボックス・一括Status更新バー |
+| `admin?` でない | Unit 編集画面の「本登録にする」ボタン |
+| `admin?` でない | Unit 簡単登録フォームの「仮登録として保存する」チェックボックス（代わりに「仮登録になる」旨の案内を表示） |
+| ログインしていない | 公開ページ（ユニットページ）のスナップショット見出し・メンバー行の「編集」「個人」リンク |
 | `admin?` でない | 年指定なしの日付ページ（`/date/-/:month/:day`）下部の「今日は何の日？」Xシェア用テキスト・コピーボタン（動向・誕生日から抽出） |
 
 ---
@@ -113,6 +121,7 @@
 - ログイン履歴（`OperationLog`）の記録: `app/controllers/sessions_controller.rb`（ログイン成功時）
 - ログイン履歴の参照: `app/controllers/admin/operation_logs_controller.rb`（`require_admin`）
 - Unit Submissions（投稿の一覧・添付画像の確認・却下、変換済みで利用了承済みの投稿画像の変換先 Unit への追加、承認時のUnit新規作成フォームへの引き継ぎ）: `app/controllers/admin/unit_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/units_controller.rb#new/#create`
+- 仮登録ユニット（issue #1764）: カラム `units.provisional`、公開側で使うスコープ `Unit.publicly_visible`（`app/models/unit.rb`）。簡単登録での強制・本登録への切り替えは `app/controllers/admin/units_controller.rb#quick_unit_params/#confirm_provisional`（`require_admin`）、公開ページでの 404 判定は `app/controllers/profiles_controller.rb#show`
 - 投稿画像の引き継ぎ（選んだ画像を Unit の「画像」セクションへ移し、残りは縮小して投稿に残す）: `app/services/unit_submission_image_transfer.rb`。`Admin::UnitsController#new/#create` では `current_user.admin?` のときだけ行う
 - Trend Submissions（投稿の一覧・却下、承認時のTrend新規作成フォームへの引き継ぎ）: `app/controllers/admin/trend_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/trends_controller.rb#new/#create`
 - 「今日は何の日？」投稿文（issue #1742、#1753）: 投稿文（出来事・誕生日の2件）の生成 `app/services/on_this_day_post_builder.rb`（誕生日の人物に付けるユニット名は `app/services/person_unit_label.rb`）、JSONで返す `app/controllers/internal/on_this_day_posts_controller.rb`、起動とコメント `.github/workflows/on_this_day.yml`（ラベル `on-this-day` の open な Issue にコメントし、なければ Issue を作る。動向・誕生日がない日はその旨をコメントする）。メールは送らない。エンドポイントはログインではなく環境変数 `ON_THIS_DAY_MAIL_TOKEN` の Bearer トークンで認証し、未設定なら 404 になる

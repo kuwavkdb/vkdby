@@ -22,6 +22,7 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
       member do
         patch :undiscard
         patch :change_key
+        patch :confirm_provisional
         delete :purge
       end
       resources :unit_logs
