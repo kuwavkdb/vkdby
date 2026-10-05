@@ -291,4 +291,16 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, '仮登録のため、一般には公開されていません'
     assert_select 'meta[name=robots][content*=noindex]'
   end
+
+  test 'does not suggest a provisional unit as a same-kana resource' do
+    Unit.create!(name: 'Public Kana Unit', name_kana: 'オナジヨミ', key: 'public-kana-unit')
+    Unit.create!(name: 'Provisional Kana Unit', name_kana: 'オナジヨミ', key: 'provisional-kana-unit', provisional: true)
+    Unit.create!(name: 'Other Public Kana Unit', name_kana: 'オナジヨミ', key: 'other-public-kana-unit')
+
+    get profile_path('public-kana-unit')
+
+    assert_response :success
+    assert_includes response.body, 'Other Public Kana Unit'
+    assert_not_includes response.body, 'Provisional Kana Unit'
+  end
 end

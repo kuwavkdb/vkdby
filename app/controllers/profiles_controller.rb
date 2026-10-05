@@ -120,7 +120,8 @@ class ProfilesController < ApplicationController
   def load_same_kana_resources
     return if @resource.name_kana.blank?
 
-    scope = @resource.class.kept.where(name_kana: @resource.name_kana).where.not(id: @resource.id)
+    # 仮登録のユニット（issue #1764）は同じよみがなの候補にも出さない
+    scope = (@resource.is_a?(Unit) ? Unit.publicly_visible : @resource.class.kept).where(name_kana: @resource.name_kana).where.not(id: @resource.id)
     @same_kana_total = scope.count
     @same_kana_resources = scope.order(updated_at: :desc).limit(6) if @same_kana_total.positive?
   end

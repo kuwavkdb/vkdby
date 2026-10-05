@@ -884,6 +884,8 @@ module Admin
 
     test 'confirm_provisional makes the unit public and records an update log' do
       @unit.update!(provisional: true)
+      snapshot = @unit.unit_snapshots.create!(current: true, active: true)
+      snapshot.update_columns(updated_at: 1.day.ago)
       login_as_admin
 
       patch confirm_provisional_admin_unit_path(@unit)
@@ -891,6 +893,7 @@ module Admin
       assert_redirected_to edit_admin_unit_path(@unit)
       assert_not @unit.reload.provisional?
       assert UpdateLog.exists?(loggable: @unit, action: 'update')
+      assert_operator snapshot.reload.updated_at, :>, 1.minute.ago
     end
 
     test 'index can be filtered to provisional units only' do

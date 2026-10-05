@@ -29,4 +29,17 @@ class IndicesControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, 'Discarded Unit'
     assert_not_includes response.body, 'Discarded Person'
   end
+
+  # issue #1764
+  test 'show excludes provisional units' do
+    tag_index = TagIndex.create!(name: "Provisional Test Index #{SecureRandom.hex(4)}")
+    provisional_unit = Unit.create!(name: 'Provisional Tagged Unit', key: "provisional-tagged-#{SecureRandom.hex(4)}",
+                                    provisional: true)
+    TagIndexItem.create!(tag_index:, indexable: provisional_unit)
+
+    get index_show_path(tag_index)
+
+    assert_response :success
+    assert_not_includes response.body, 'Provisional Tagged Unit'
+  end
 end

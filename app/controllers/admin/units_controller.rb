@@ -49,7 +49,8 @@ module Admin
       scope = scope.where(status: @status_filter) if @status_filter.present?
       scope = scope.where(provisional: true) if @provisional_filter == 'only'
       @pagy, @units = pagy(scope.order(updated_at: :desc))
-      @provisional_count = Unit.kept.where(provisional: true).count
+      # 「仮登録のみ」で表示される件数と合わせるため、通常一覧と同じく moved（と unit_type が NULL のもの）は数えない
+      @provisional_count = Unit.kept.where(provisional: true).where.not(unit_type: :moved).count
       @tag_filter_groups = IndexGroup.tag_filter_options_for_units
     end
 
@@ -172,6 +173,9 @@ module Admin
 
       @unit.update!(provisional: false)
       record_update_log(@unit, action: 'update')
+      # 関係グラフ（UnitGraphBuilder）のキャッシュキーは UnitSnapshot の最終更新日時で決まるため、
+      # スナップショットを touch して、ほかのユニットのグラフにもすぐ反映させる
+      @unit.unit_snapshots.touch_all
       redirect_to edit_admin_unit_path(@unit), notice: '本登録にしました。一般に公開されます。'
     end
 
