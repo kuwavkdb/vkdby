@@ -8,6 +8,7 @@
 
 ## データ操作の禁止事項
 - `wikipages` テーブルは読み取り専用として扱う。明示的な指示がない限り、更新・削除・挿入を行ってはいけない
+- `unit_people` テーブル（`UnitPerson`）はレガシーで廃止予定。新機能・改修では使わず、メンバー情報は `unit_snapshots` → `snapshot_people`（`UnitSnapshot` / `SnapshotPerson`）を使う
 
 ## コマンド実行
 - Rails コマンドは必ず `bundle exec` をつける（例: `bundle exec rails db:migrate`）
