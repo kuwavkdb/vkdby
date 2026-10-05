@@ -6,12 +6,13 @@ name: On This Day
 # 必要なSecrets: ON_THIS_DAY_MAIL_TOKEN（Renderの環境変数 ON_THIS_DAY_MAIL_TOKEN と同じ値）
 on:
   schedule:
-    # 毎時0分は混雑で遅延・スキップされやすいため5分ずらす（日付は JST の当日で判定するので内容は変わらない）
-    - cron: '5 15 * * *' # 毎日 JST 00:05 (= UTC 15:05)
+    # スケジュール実行は混雑で数時間遅れることがあるため、前日の夜に翌日分を作る。
+    # 毎時0分は特に混みやすいため5分ずらす
+    - cron: '5 11 * * *' # 毎日 JST 20:05 (= UTC 11:05)。JST の翌日分をコメントする
   workflow_dispatch:
     inputs:
       date:
-        description: '対象日（MM-DD）。空ならJSTの当日'
+        description: '対象日（MM-DD）。空ならJSTの当日（スケジュール実行ではJSTの翌日）'
         required: false
         default: ''
 
@@ -27,7 +28,18 @@ jobs:
         env:
           TOKEN: ${{ secrets.ON_THIS_DAY_MAIL_TOKEN }}
           DATE: ${{ inputs.date }}
+          EVENT: ${{ github.event_name }}
         run: |
+          # スケジュール実行は前日の夜に動くため、JST の翌日を対象にする。
+          # 大幅に遅れて0時を過ぎた場合（JST の正午より前に動いた場合）は当日を対象にする
+          if [ "$EVENT" = "schedule" ]; then
+            if [ "$(TZ=Asia/Tokyo date +%-H)" -ge 12 ]; then
+              DATE=$(TZ=Asia/Tokyo date -d tomorrow +%m-%d)
+            else
+              DATE=$(TZ=Asia/Tokyo date +%m-%d)
+            fi
+          fi
+          echo "対象日: ${DATE:-JSTの当日}"
           curl --fail-with-body --silent --show-error \
             --retry 3 --retry-delay 30 --retry-all-errors --max-time 120 \
             -G \
@@ -67,7 +79,7 @@ jobs:
           number=$(gh issue list --label "$LABEL" --state open --limit 1 --json number --jq '.[0].number // empty')
           if [ -z "$number" ]; then
             url=$(gh issue create --label "$LABEL" --title '「今日は何の日？」投稿文' \
-              --body '「今日は何の日？」の投稿文を GitHub Actions（.github/workflows/on_this_day.yml）が毎日 JST 0:05 にコメントします。')
+              --body '「今日は何の日？」の投稿文を GitHub Actions（.github/workflows/on_this_day.yml）が毎日 JST 20:05 に翌日分をコメントします。')
             number=${url##*/}
           fi
           gh issue comment "$number" --body-file comment.md
