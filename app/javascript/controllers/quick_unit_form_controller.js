@@ -8,7 +8,7 @@ export default class extends Controller {
     "name", "key", "unitType", "status",
     "activityPeriodContainer", "activityPeriodRow", "activityPeriodTemplate",
     "linkContainer", "linkRow", "linkTemplate",
-    "snapshotDate", "snapshotLabel",
+    "snapshotDate", "snapshotLabel", "note",
     "memberContainer", "memberRow", "memberTemplate"
   ]
   static values = { partOptions: Array }
@@ -16,7 +16,7 @@ export default class extends Controller {
   // data: unit-url スキル等が出力するYAMLをパースした結果のプレーンオブジェクト
   // {name, key, unit_type, status, activity_periods: [...], links: [...],
   //  members: [{person_name, name_kana, part, extra_profile: {...}, sns: [...]}],
-  //  snapshot_date, snapshot_label}
+  //  snapshot_date, snapshot_label, note}
   applyData(data) {
     if (data.name != null) this.nameTarget.value = data.name
     if (data.key != null) this.keyTarget.value = data.key
@@ -24,6 +24,7 @@ export default class extends Controller {
     if (data.status != null) this.setRadio(this.statusTarget, data.status)
     if (data.snapshot_date != null && this.hasSnapshotDateTarget) this.snapshotDateTarget.value = data.snapshot_date
     if (data.snapshot_label != null && this.hasSnapshotLabelTarget) this.snapshotLabelTarget.value = data.snapshot_label
+    if (data.note != null && this.hasNoteTarget) this.noteTarget.value = data.note
 
     if (Array.isArray(data.activity_periods)) {
       this.applyRows(

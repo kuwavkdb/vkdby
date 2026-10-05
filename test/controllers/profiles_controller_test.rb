@@ -266,4 +266,29 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
   ensure
     ENV['DISQUS_SHORTNAME'] = original
   end
+
+  # issue #1764: 仮登録のユニットは admin のみ閲覧できる
+  test 'returns 404 for a provisional unit to a guest and a non-admin user' do
+    Unit.create!(name: 'Provisional Profile Unit', key: 'provisional-profile-unit', provisional: true)
+
+    get profile_path('provisional-profile-unit')
+    assert_response :not_found
+
+    post login_path, params: { email: users(:one).email, password: 'password' }
+    get profile_path('provisional-profile-unit')
+    assert_response :not_found
+  end
+
+  test 'shows a provisional unit with a badge and noindex to an admin' do
+    Unit.create!(name: 'Provisional Profile Unit', key: 'provisional-profile-unit', provisional: true)
+    admin = User.create!(email: 'admin-provisional-profile@example.com', name: 'Admin', password: 'password', role: :admin)
+    post login_path, params: { email: admin.email, password: 'password' }
+
+    get profile_path('provisional-profile-unit')
+
+    assert_response :success
+    assert_includes response.body, 'Provisional Profile Unit'
+    assert_includes response.body, '仮登録のため、一般には公開されていません'
+    assert_select 'meta[name=robots][content*=noindex]'
+  end
 end

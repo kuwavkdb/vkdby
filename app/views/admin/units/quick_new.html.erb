@@ -245,6 +245,27 @@
           <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">※名前が空欄の行は無視されます。Personとの紐付けや経歴などの詳細は保存後に編集画面から設定できます。</p>
         </div>
 
+        <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+          <%= form.label :note, "メモ（任意）", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+          <p id="unit_note_help" class="text-xs text-gray-500 dark:text-gray-400 mt-1">ユニット全体についての管理用メモです（公開ページには表示されません）。情報の取得元や、確認できなかった点などを書いておけます。</p>
+          <%= form.text_area :note, rows: 4, "aria-describedby": "unit_note_help", data: { "quick-unit-form-target": "note" }, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+        </div>
+
+        <div class="rounded-md border border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/30 p-4">
+          <% if current_user.admin? %>
+            <label class="inline-flex items-start gap-2">
+              <%= form.check_box :provisional, class: "mt-0.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600" %>
+              <span class="text-sm font-semibold text-amber-900 dark:text-amber-100">仮登録として保存する</span>
+            </label>
+            <p class="mt-1 text-xs text-amber-900 dark:text-amber-100">仮登録のユニットは一般には公開されず、公開ページは admin のみ閲覧できます。編集画面の「本登録にする」で公開できます。</p>
+          <% else %>
+            <p class="text-sm text-amber-900 dark:text-amber-100">
+              <span class="inline-block px-2 py-0.5 mr-1 rounded bg-amber-200 dark:bg-amber-800 text-xs font-semibold">仮登録</span>
+              簡単登録したユニットは仮登録になり、一般には公開されません。admin が内容を確認して本登録にすると公開されます。
+            </p>
+          <% end %>
+        </div>
+
         <div class="flex justify-end gap-x-4">
           <%= link_to "キャンセル", admin_units_path, class: "px-4 py-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" %>
           <%= form.submit "作成", class: "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer" %>

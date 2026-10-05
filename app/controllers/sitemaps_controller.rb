@@ -49,7 +49,7 @@ class SitemapsController < ApplicationController
   # discard済み・destination_keyありのリダイレクトスタブ（KeyChangeable#redirect_source?）は
   # 常にdiscarded状態なので kept スコープの時点で除外される。
   def profile_urls
-    Unit.kept.published.pluck(:key, :updated_at).map { |key, updated_at| { loc: profile_url(key), lastmod: updated_at } } +
+    Unit.publicly_visible.published.pluck(:key, :updated_at).map { |key, updated_at| { loc: profile_url(key), lastmod: updated_at } } +
       Person.kept.published.pluck(:key, :updated_at).map { |key, updated_at| { loc: profile_url(key), lastmod: updated_at } }
   end
 

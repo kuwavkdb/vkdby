@@ -18,7 +18,7 @@ class SearchController < ApplicationController
       # 紐づくSection（discard済み・非公開を除く）の名前もマッチ対象にする。
       # sections テーブルは (sectionable_type, sectionable_id) の複合indexを持つため、
       # このEXISTS句は新規indexなしでも低コストに評価できる。
-      @units = Unit.kept.where(<<~SQL.squish, q: search_pattern, section_type: 'Unit')
+      @units = Unit.publicly_visible.where(<<~SQL.squish, q: search_pattern, section_type: 'Unit')
         name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q
         OR EXISTS (
           SELECT 1 FROM sections

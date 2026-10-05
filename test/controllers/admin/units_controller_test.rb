@@ -819,6 +819,91 @@ module Admin
       assert_operator response.body.index(members.label), :<, response.body.index(related.label)
     end
 
+    # issue #1764: 簡単登録のメモ・仮登録
+    test 'quick_create saves the note and always creates a provisional unit for a non-admin user' do
+      post quick_create_admin_units_path, params: {
+        unit: { name: 'Provisional Band', key: 'provisional-band-non-admin', note: '情報源: https://example.com/',
+                provisional: '0', members: { '0' => { person_name: 'Vo', part: 'vocal' } } }
+      }
+
+      unit = Unit.find_by(key: 'provisional-band-non-admin')
+      assert_redirected_to edit_admin_unit_path(unit)
+      assert_equal '情報源: https://example.com/', unit.note
+      assert unit.provisional?
+    end
+
+    test 'quick_create lets an admin create a public unit by unchecking provisional' do
+      login_as_admin
+
+      post quick_create_admin_units_path, params: {
+        unit: { name: 'Public Band', key: 'public-band-by-admin', provisional: '0' }
+      }
+
+      assert_not Unit.find_by(key: 'public-band-by-admin').provisional?
+    end
+
+    test 'quick_create keeps an admin unit provisional when the checkbox stays checked' do
+      login_as_admin
+
+      post quick_create_admin_units_path, params: {
+        unit: { name: 'Admin Provisional Band', key: 'provisional-band-by-admin', provisional: '1' }
+      }
+
+      assert Unit.find_by(key: 'provisional-band-by-admin').provisional?
+    end
+
+    test 'quick_new shows the provisional checkbox checked only for an admin' do
+      get quick_new_admin_units_path
+
+      assert_response :success
+      assert_select 'input[type=checkbox][name="unit[provisional]"]', count: 0
+      assert_select 'textarea[name="unit[note]"]'
+
+      login_as_admin
+      get quick_new_admin_units_path(unit: { note: '事前入力メモ' })
+
+      assert_select 'input[type=checkbox][name="unit[provisional]"][checked]'
+      assert_select 'textarea[name="unit[note]"]', text: /事前入力メモ/
+    end
+
+    test 'update does not change provisional' do
+      @unit.update!(provisional: true)
+
+      patch admin_unit_path(@unit), params: { unit: { name: 'Still Provisional', provisional: '0' } }
+
+      assert @unit.reload.provisional?
+    end
+
+    test 'confirm_provisional requires admin role' do
+      @unit.update!(provisional: true)
+
+      patch confirm_provisional_admin_unit_path(@unit)
+
+      assert @unit.reload.provisional?
+    end
+
+    test 'confirm_provisional makes the unit public and records an update log' do
+      @unit.update!(provisional: true)
+      login_as_admin
+
+      patch confirm_provisional_admin_unit_path(@unit)
+
+      assert_redirected_to edit_admin_unit_path(@unit)
+      assert_not @unit.reload.provisional?
+      assert UpdateLog.exists?(loggable: @unit, action: 'update')
+    end
+
+    test 'index can be filtered to provisional units only' do
+      Unit.create!(name: 'Listed Provisional Unit', key: 'listed-provisional-unit', unit_type: :band, provisional: true)
+
+      get admin_units_path(provisional: 'only')
+
+      assert_response :success
+      assert_includes response.body, 'Listed Provisional Unit'
+      assert_not_includes response.body, 'Existing Unit'
+      assert_includes response.body, '仮登録のみ（1件）'
+    end
+
     private
 
     def login_as_admin

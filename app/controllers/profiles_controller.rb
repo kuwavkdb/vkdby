@@ -19,6 +19,8 @@ class ProfilesController < ApplicationController
     end
 
     raise ActiveRecord::RecordNotFound if @resource.discarded?
+    # 仮登録のユニットは admin 以外には存在しないものとして扱う（issue #1764）
+    raise ActiveRecord::RecordNotFound if @resource.is_a?(Unit) && @resource.provisional? && !current_user&.admin?
 
     @unpublished = @resource.unpublished?
 
@@ -45,7 +47,7 @@ class ProfilesController < ApplicationController
   end
 
   def update_logs
-    @resource = Unit.kept.find_by(key: params[:key]) ||
+    @resource = viewable_units.find_by(key: params[:key]) ||
                 Person.kept.find_by!(key: params[:key])
 
     update_logs = if @resource.is_a?(Unit)
@@ -63,7 +65,7 @@ class ProfilesController < ApplicationController
   end
 
   def relationship_graph
-    unit = Unit.kept.find_by!(key: params[:key])
+    unit = viewable_units.find_by!(key: params[:key])
     track_past = params[:track_past] == '1'
     render json: UnitGraphBuilder.new(unit, track_past:).call
   rescue ActiveRecord::RecordNotFound
@@ -71,7 +73,7 @@ class ProfilesController < ApplicationController
   end
 
   def snapshot_members
-    unit = Unit.kept.find_by!(key: params[:key])
+    unit = viewable_units.find_by!(key: params[:key])
     snapshot = unit.unit_snapshots.find(params[:id])
     render partial: 'snapshot_members',
            locals: { snapshot_people: snapshot.snapshot_people.includes(:person).sort_by(&:sort_order),
@@ -81,6 +83,9 @@ class ProfilesController < ApplicationController
   end
 
   private
+
+  # 仮登録のユニット（issue #1764）は admin のみ閲覧できる
+  def viewable_units = current_user&.admin? ? Unit.kept : Unit.publicly_visible
 
   def load_person_data
     @old_history_items = @resource.parse_old_history if @resource.old_history.present?
@@ -98,7 +103,7 @@ class ProfilesController < ApplicationController
                    .limit(10)
 
     trend_unit_ids = @trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
-    @trend_related_units = Unit.kept.where(id: trend_unit_ids).index_by(&:id)
+    @trend_related_units = viewable_units.where(id: trend_unit_ids).index_by(&:id)
 
     @snapshots = @resource.unit_snapshots
                           .active

@@ -30,4 +30,18 @@ class UnitsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
   end
+
+  # issue #1764
+  test 'index, search and show exclude provisional units' do
+    Unit.create!(name: 'Hidden Provisional Band', name_kana: 'ヒドゥン', key: 'hidden-provisional-band', provisional: true)
+
+    get units_path(q: 'Hidden Provisional')
+    assert_not_includes response.body, 'Hidden Provisional Band'
+
+    get search_units_path(q: 'Hidden Provisional')
+    assert_empty response.parsed_body
+
+    get unit_path('hidden-provisional-band', format: :json)
+    assert_response :not_found
+  end
 end

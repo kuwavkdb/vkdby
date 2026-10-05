@@ -415,7 +415,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     owner = if identifier.nil? || identifier.empty?
               sectionable
             elsif identifier.start_with?('unit:')
-              Unit.find_by(id: identifier.delete_prefix('unit:'))
+              Unit.where(provisional: false).find_by(id: identifier.delete_prefix('unit:'))
             elsif identifier.start_with?('person:')
               Person.find_by(id: identifier.delete_prefix('person:'))
             else
@@ -432,7 +432,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     unit_key, snapshot_id = args.split(',', 2).map(&:strip)
     return '' if unit_key.blank?
 
-    unit = Unit.kept.find_by(key: unit_key)
+    unit = Unit.publicly_visible.find_by(key: unit_key)
     snapshot = if snapshot_id.present?
                  unit&.unit_snapshots&.active&.find_by(id: snapshot_id)
                else

@@ -12,6 +12,7 @@
         <%= f.hidden_field :discarded, value: params[:discarded] %>
         <%= f.hidden_field :unit_type, value: params[:unit_type] %>
         <%= f.hidden_field :tag_index_id, value: params[:tag_index_id] %>
+        <%= f.hidden_field :provisional, value: params[:provisional] %>
         <%= f.select :status, options_for_select(Unit::STATUS_TRANSLATIONS.map { |key, label| [label, key] }, params[:status]),
               { include_blank: "すべてのStatus" },
               { onchange: "this.form.requestSubmit()", "aria-label": "Statusで絞り込み", class: "border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 mr-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" } %>
@@ -34,7 +35,9 @@
 
   <div class="flex space-x-2 mb-4">
     <%= link_to "通常", admin_units_path(q: params[:q]),
-        class: "px-3 py-1 rounded text-sm #{params[:discarded].blank? && params[:unit_type].blank? && params[:redirect_source].blank? ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}" %>
+        class: "px-3 py-1 rounded text-sm #{params[:discarded].blank? && params[:unit_type].blank? && params[:redirect_source].blank? && params[:provisional].blank? ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}" %>
+    <%= link_to "仮登録のみ（#{@provisional_count}件）", admin_units_path(q: params[:q], provisional: "only"),
+        class: "px-3 py-1 rounded text-sm #{params[:provisional] == 'only' ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}" %>
     <%= link_to "moved のみ", admin_units_path(q: params[:q], unit_type: "moved"),
         class: "px-3 py-1 rounded text-sm #{params[:unit_type] == 'moved' ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}" %>
     <%= link_to "削除済みのみ", admin_units_path(q: params[:q], discarded: "only"),
@@ -77,6 +80,9 @@
               <%= unit.name %>
               <% if unit.discarded? %>
                 <span class="ml-1 text-xs text-red-500 dark:text-red-400">削除済み</span>
+              <% end %>
+              <% if unit.provisional? %>
+                <span class="ml-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-900 dark:bg-amber-900/50 dark:text-amber-100">仮登録</span>
               <% end %>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">

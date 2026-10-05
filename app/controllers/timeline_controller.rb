@@ -24,7 +24,7 @@ class TimelineController < ApplicationController
     @timeline_data = Rails.cache.fetch(CACHE_KEY, expires_in: CACHE_TTL) do
       major_debut_unit_ids = Trend.major_debut_unit_ids
 
-      units = Unit.kept
+      units = Unit.publicly_visible
                   .where(id: major_debut_unit_ids)
                   .where.not(activity_period: nil)
                   .distinct
@@ -100,7 +100,7 @@ class TimelineController < ApplicationController
     year_min = params[:ym].to_i.positive? ? params[:ym].to_i : (cached&.dig(:year_min) || Time.current.year)
     year_max = cached&.dig(:year_max) || Time.current.year
 
-    unit = Unit.kept.find_by(key: params[:key])
+    unit = Unit.publicly_visible.find_by(key: params[:key])
     return head :not_found unless unit
 
     markers = []
@@ -133,7 +133,7 @@ class TimelineController < ApplicationController
     year_min = params[:ym].to_i.positive? ? params[:ym].to_i : (cached&.dig(:year_min) || Time.current.year)
     year_max = cached&.dig(:year_max) || Time.current.year
 
-    units = Unit.kept.where(key: keys)
+    units = Unit.publicly_visible.where(key: keys)
     return render json: {} if units.empty?
 
     trend_markers = fetch_trend_markers(units.map(&:id))
