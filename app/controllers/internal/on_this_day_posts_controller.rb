@@ -2,7 +2,7 @@
 
 module Internal
   # 「今日は何の日？」投稿文をJSONで返す（issue #1742）。
-  # GitHub Actions（.github/workflows/on_this_day.yml）から毎日 JST 0:05 に呼び、結果を GitHub の Issue にコメントする。
+  # GitHub Actions（.github/workflows/on_this_day.yml）から毎日 JST 20:05 に翌日の日付を指定して呼び、結果を GitHub の Issue にコメントする。
   # ブラウザ向けの ApplicationController は allow_browser でcurl等を弾くため、ActionController::API を使う。
   # 認証は環境変数 ON_THIS_DAY_MAIL_TOKEN との Bearer トークン照合で、未設定ならエンドポイントごと無効（404）。
   # 環境変数名はメール送信時代のもの（Render と GitHub Secrets の設定をそのまま使うため据え置き）
