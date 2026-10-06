@@ -24,9 +24,9 @@ class PeopleController < ApplicationController
 
     conn = ActiveRecord::Base.connection
     quoted_exact = conn.quote(q)
-    quoted_prefix = conn.quote("#{q}%")
+    quoted_prefix = conn.quote(like_pattern(q, match: :prefix))
     people = Person.kept
-                   .where('name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q', q: "%#{q}%")
+                   .where('name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q', q: like_pattern(q))
                    .order(Arel.sql(<<~SQL.squish))
                      CASE
                        WHEN name = #{quoted_exact} OR name_kana = #{quoted_exact} THEN 0
@@ -89,7 +89,7 @@ class PeopleController < ApplicationController
     if params[:q].present?
       scope = scope.where(
         'people.name ILIKE :q OR people.name_kana ILIKE :q OR people.name_log::text ILIKE :q OR people.aliases::text ILIKE :q OR people.old_history ILIKE :q',
-        q: "%#{normalize_search_query(params[:q])}%"
+        q: like_pattern(normalize_search_query(params[:q]))
       )
     end
 

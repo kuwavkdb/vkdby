@@ -22,7 +22,7 @@ module Admin
       end
 
       # テキスト検索（title, content）
-      scope = scope.where('title ILIKE :q OR content ILIKE :q', q: "%#{@q}%") if @q.present?
+      scope = scope.where('title ILIKE :q OR content ILIKE :q', q: like_pattern(@q)) if @q.present?
 
       @pagy, @trends = pagy(scope, limit: 20)
 

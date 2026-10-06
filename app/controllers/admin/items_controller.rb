@@ -23,7 +23,7 @@ module Admin
       if @q.present?
         scope = scope.where(
           'title ILIKE :q OR asin ILIKE :q OR artists::text ILIKE :q',
-          q: "%#{normalize_search_query(@q)}%"
+          q: like_pattern(normalize_search_query(@q))
         )
       end
       scope = scope.public_send(:"by_artist_#{@match_type}", @match_value) if @match_type.present? && @match_value.present?

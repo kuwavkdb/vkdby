@@ -12,6 +12,27 @@ class SearchControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
     assert_includes response.body, 'ABC123'
   end
 
+  # issue #1770: 検索語の _ はワイルドカードではなく文字どおりに扱う
+  test 'index treats an underscore in the query literally' do
+    Unit.create!(name: 'Wild_Card Unit', key: 'like-escape-search-underscore', status: :active)
+    Unit.create!(name: 'WildxCard Unit', key: 'like-escape-search-other', status: :active)
+
+    get search_path(q: 'Wild_Card')
+
+    assert_response :success
+    assert_includes response.body, 'Wild_Card Unit'
+    assert_not_includes response.body, 'WildxCard Unit'
+  end
+
+  test 'index does not match every record when queried with a percent sign' do
+    Unit.create!(name: 'Percent Free Unit', key: 'like-escape-search-percent', status: :active)
+
+    get search_path(q: '%')
+
+    assert_response :success
+    assert_not_includes response.body, 'Percent Free Unit'
+  end
+
   test 'index finds a person whose name is half-width when queried with full-width alphanumerics' do
     Person.create!(name: 'XYZ789', key: 'zenkaku-search-person-test', status: :active)
 

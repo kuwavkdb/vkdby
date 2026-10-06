@@ -17,7 +17,7 @@ module Admin
               else             CustomPage.kept
               end
 
-      scope = scope.where('key ILIKE :q OR title ILIKE :q', q: "%#{@q}%") if @q.present?
+      scope = scope.where('key ILIKE :q OR title ILIKE :q', q: like_pattern(@q)) if @q.present?
 
       scope = case params[:system]
               when 'only'    then scope.system_pages
