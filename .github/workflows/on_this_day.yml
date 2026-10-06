@@ -2,44 +2,96 @@ name: On This Day
 
 # 「今日は何の日？」投稿文を GitHub の Issue にコメントする（issue #1742）。
 # アプリ側（GET /internal/on_this_day_post）が投稿文をJSONで返し、ラベル on-this-day の付いた open な Issue にコメントする。
-# Issue がなければ作る（Issue を close すれば、次回実行時に新しい Issue が作られる）。再実行すれば再度コメントする。
+# Issue がなければ作る（Issue を close すれば、次回実行時に新しい Issue が作られる）。
+#
+# GitHub のスケジュール実行は混雑で数時間〜半日遅れることがあるため、毎時起動し、対象日の投稿文がまだ
+# コメントされていなければコメントする（コメント済みなら何もしない）。
+# - JST 18時以降に動いた場合は翌日分、それより前に動いた場合は当日分（前日の夜にコメントできなかった分の取り戻し）
+# - 手動実行はコメント済みでも必ずコメントする（日付を空にすると JST の当日分）
 # 必要なSecrets: ON_THIS_DAY_MAIL_TOKEN（Renderの環境変数 ON_THIS_DAY_MAIL_TOKEN と同じ値）
 on:
   schedule:
-    # スケジュール実行は混雑で数時間遅れることがあるため、前日の夜に翌日分を作る。
-    # 毎時0分は特に混みやすいため5分ずらす
-    - cron: '5 11 * * *' # 毎日 JST 20:05 (= UTC 11:05)。JST の翌日分をコメントする
+    # 毎時0分は特に混みやすいため17分にずらす
+    - cron: '17 * * * *'
   workflow_dispatch:
     inputs:
       date:
-        description: '対象日（MM-DD）。空ならJSTの当日（スケジュール実行ではJSTの翌日）'
+        description: '対象日（MM-DD）。空ならJSTの当日'
         required: false
         default: ''
 
 permissions:
   issues: write
 
+# 遅れていたスケジュール実行がまとめて動いても、同時に動かず二重にコメントしないようにする
+concurrency:
+  group: on-this-day
+  cancel-in-progress: false
+
 jobs:
   comment:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      LABEL: on-this-day
+      # この時刻（JST）以降のスケジュール実行は翌日分を対象にする
+      NEXT_DAY_FROM_HOUR: 18
 
     steps:
-      - name: Fetch on-this-day post
+      - name: Decide target date
+        id: target
         env:
-          TOKEN: ${{ secrets.ON_THIS_DAY_MAIL_TOKEN }}
-          DATE: ${{ inputs.date }}
+          INPUT_DATE: ${{ inputs.date }}
           EVENT: ${{ github.event_name }}
         run: |
-          # スケジュール実行は前日の夜に動くため、JST の翌日を対象にする。
-          # 大幅に遅れて0時を過ぎた場合（JST の正午より前に動いた場合）は当日を対象にする
           if [ "$EVENT" = "schedule" ]; then
-            if [ "$(TZ=Asia/Tokyo date +%-H)" -ge 12 ]; then
-              DATE=$(TZ=Asia/Tokyo date -d tomorrow +%m-%d)
+            if [ "$(TZ=Asia/Tokyo date +%-H)" -ge "$NEXT_DAY_FROM_HOUR" ]; then
+              day=tomorrow
             else
-              DATE=$(TZ=Asia/Tokyo date +%m-%d)
+              day=today
             fi
+            date=$(TZ=Asia/Tokyo date -d "$day" +%m-%d)
+          else
+            date=$INPUT_DATE
           fi
-          echo "対象日: ${DATE:-JSTの当日}"
+          echo "対象日: ${date:-JSTの当日}"
+          echo "date=$date" >> "$GITHUB_OUTPUT"
+
+      - name: Find issue
+        id: issue
+        run: |
+          gh label create "$LABEL" --color FBCA04 --description '「今日は何の日？」投稿文' 2>/dev/null || true
+          number=$(gh issue list --label "$LABEL" --state open --limit 1 --json number --jq '.[0].number // empty')
+          if [ -z "$number" ]; then
+            url=$(gh issue create --label "$LABEL" --title '「今日は何の日？」投稿文' \
+              --body '「今日は何の日？」の投稿文を GitHub Actions（.github/workflows/on_this_day.yml）が毎日コメントします（JST 18時以降に翌日分）。')
+            number=${url##*/}
+          fi
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+
+      # スケジュール実行のみ。直近3日のコメントに対象日の見出しがあればコメント済みとして、以降の処理を飛ばす
+      - name: Check already commented
+        id: check
+        if: github.event_name == 'schedule'
+        env:
+          DATE: ${{ steps.target.outputs.date }}
+          NUMBER: ${{ steps.issue.outputs.number }}
+        run: |
+          heading="## $((10#${DATE%-*}))月$((10#${DATE#*-}))日の「今日は何の日？」投稿文"
+          since=$(date -u -d '3 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          if gh api --paginate "repos/$GH_REPO/issues/$NUMBER/comments?since=$since&per_page=100" --jq '.[].body' \
+               | grep -qF "$heading"; then
+            echo "コメント済みのためスキップ: $heading"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fetch on-this-day post
+        if: steps.check.outputs.skip != 'true'
+        env:
+          TOKEN: ${{ secrets.ON_THIS_DAY_MAIL_TOKEN }}
+          DATE: ${{ steps.target.outputs.date }}
+        run: |
           curl --fail-with-body --silent --show-error \
             --retry 3 --retry-delay 30 --retry-all-errors --max-time 120 \
             -G \
@@ -49,6 +101,7 @@ jobs:
             https://www.vkdb.jp/internal/on_this_day_post
 
       - name: Build comment
+        if: steps.check.outputs.skip != 'true'
         run: |
           jq -r '
             (.date | split("-") | "\(.[0] | tonumber)月\(.[1] | tonumber)日") as $day
@@ -70,16 +123,7 @@ jobs:
           cat comment.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Comment on issue
+        if: steps.check.outputs.skip != 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          LABEL: on-this-day
-        run: |
-          gh label create "$LABEL" --color FBCA04 --description '「今日は何の日？」投稿文' 2>/dev/null || true
-          number=$(gh issue list --label "$LABEL" --state open --limit 1 --json number --jq '.[0].number // empty')
-          if [ -z "$number" ]; then
-            url=$(gh issue create --label "$LABEL" --title '「今日は何の日？」投稿文' \
-              --body '「今日は何の日？」の投稿文を GitHub Actions（.github/workflows/on_this_day.yml）が毎日 JST 20:05 に翌日分をコメントします。')
-            number=${url##*/}
-          fi
-          gh issue comment "$number" --body-file comment.md
+          NUMBER: ${{ steps.issue.outputs.number }}
+        run: gh issue comment "$NUMBER" --body-file comment.md

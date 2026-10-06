@@ -70,7 +70,7 @@
 | Unit Submissions（ログイン不要の投稿フォームからの投稿一覧・添付画像の確認・却下。却下時に添付画像を削除。変換済み投稿に残った画像を変換先 Unit の「画像」セクションへ追加） | 全アクション（index / reject / add_image_to_unit） |
 | Units — 投稿からの新規作成時に、投稿画像を「画像」セクションへ引き継ぐ（admin 以外が作成した場合は画像を引き継がない） | new / create（画像の選択欄・引き継ぎのみ） |
 | Trend Submissions（ログイン不要の投稿フォームからの投稿一覧・却下） | 全アクション |
-| 「今日は何の日？」投稿文の確認（毎日 JST 20:05 に翌日分、GitHub の Issue へのコメント） | ― （管理画面ではなく GitHub Actions から `GET /internal/on_this_day_post` を呼び、ラベル `on-this-day` の Issue にコメント。見られるのはリポジトリの閲覧権限がある人） |
+| 「今日は何の日？」投稿文の確認（毎時起動し、未コメントなら JST 18時以降は翌日分・それより前は当日分を GitHub の Issue にコメント） | ― （管理画面ではなく GitHub Actions から `GET /internal/on_this_day_post` を呼び、ラベル `on-this-day` の Issue にコメント。見られるのはリポジトリの閲覧権限がある人） |
 
 ---
 
