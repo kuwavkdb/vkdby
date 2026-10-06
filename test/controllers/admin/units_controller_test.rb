@@ -32,8 +32,10 @@ module Admin
     end
 
     test 'index treats an underscore in the query literally' do
-      Unit.create!(name: 'Wild_Card Unit', key: 'like-escape-admin-units-index-underscore', status: :active)
-      Unit.create!(name: 'WildxCard Unit', key: 'like-escape-admin-units-index-other', status: :active)
+      Unit.create!(name: 'Wild_Card Unit', key: 'like-escape-admin-units-index-underscore', status: :active,
+                   unit_type: :band)
+      Unit.create!(name: 'WildxCard Unit', key: 'like-escape-admin-units-index-other', status: :active,
+                   unit_type: :band)
 
       get admin_units_path(q: 'Wild_Card')
 
