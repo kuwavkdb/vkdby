@@ -39,7 +39,7 @@ module Admin
       if @q.present?
         scope = scope.where(
           'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
-          q: "%#{@q}%"
+          q: like_pattern(@q)
         )
       end
       if @tag_index_id.present?
@@ -259,7 +259,7 @@ module Admin
       if q.present?
         scope = scope.where(
           'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
-          q: "%#{normalize_search_query(q)}%"
+          q: like_pattern(normalize_search_query(q))
         )
       end
 

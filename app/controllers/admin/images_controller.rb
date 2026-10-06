@@ -13,7 +13,7 @@ module Admin
               .order(created_at: :desc)
 
       if params[:q].present?
-        blob_ids = ActiveStorage::Blob.where('filename ILIKE ?', "%#{params[:q]}%").pluck(:id)
+        blob_ids = ActiveStorage::Blob.where('filename ILIKE ?', like_pattern(params[:q])).pluck(:id)
         scope = scope.where(blob_id: blob_ids)
       end
 
@@ -29,8 +29,8 @@ module Admin
 
       # ファイル名でMarkdownコンテンツを検索し、参照している可能性のある箇所を探す
       filename = @attachment.blob.filename.to_s
-      @referencing_sections = Section.includes(:sectionable).where('markdown ILIKE :q OR wiki_text ILIKE :q', q: "%#{filename}%")
-      @referencing_custom_pages = CustomPage.with_discarded.where('body ILIKE ?', "%#{filename}%")
+      @referencing_sections = Section.includes(:sectionable).where('markdown ILIKE :q OR wiki_text ILIKE :q', q: like_pattern(filename))
+      @referencing_custom_pages = CustomPage.with_discarded.where('body ILIKE ?', like_pattern(filename))
     end
 
     def destroy

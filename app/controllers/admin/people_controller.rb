@@ -24,7 +24,7 @@ module Admin
       if @q.present?
         scope = scope.where(
           'name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q OR old_history ILIKE :q',
-          q: "%#{@q}%"
+          q: like_pattern(@q)
         )
       end
       if @tag_index_id.present?
@@ -168,7 +168,7 @@ module Admin
       scope = Person.kept
 
       if q.present?
-        like_q = "%#{normalize_search_query(q)}%"
+        like_q = like_pattern(normalize_search_query(q))
         # バンド（ユニット）名からもメンバーを検索できるようにする(issue #1325)
         # ユニットとの紐付けは UnitSnapshot 経由の SnapshotPerson が現行の実データ(UnitPersonは更新が止まっている)
         unit_member_ids = SnapshotPerson.joins(unit_snapshot: :unit)
