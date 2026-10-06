@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-class PeopleControllerTest < ActionDispatch::IntegrationTest
+class PeopleControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
   test 'index finds a person whose name is half-width when queried with full-width alphanumerics' do
     Person.create!(name: 'ABC123', key: 'zenkaku-search-people-index-test', status: :active)
 
@@ -19,6 +19,30 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.parsed_body.pluck('name'), 'ABC123'
+  end
+
+  # issue #1770: 検索語の _ はワイルドカードではなく文字どおりに扱う
+  test 'index treats an underscore in the query literally' do
+    Person.create!(name: 'Wild_Card Person', key: 'like-escape-people-index-underscore', status: :active)
+    Person.create!(name: 'WildxCard Person', key: 'like-escape-people-index-other', status: :active)
+
+    get people_path(q: 'Wild_Card')
+
+    assert_response :success
+    assert_includes response.body, 'Wild_Card Person'
+    assert_not_includes response.body, 'WildxCard Person'
+  end
+
+  test 'search treats an underscore in the query literally' do
+    Person.create!(name: 'Wild_Card Person', key: 'like-escape-people-search-underscore', status: :active)
+    Person.create!(name: 'WildxCard Person', key: 'like-escape-people-search-other', status: :active)
+
+    get search_people_path(q: 'Wild_Card')
+
+    assert_response :success
+    names = response.parsed_body.pluck('name')
+    assert_includes names, 'Wild_Card Person'
+    assert_not_includes names, 'WildxCard Person'
   end
 
   test 'index filters by part using person data' do

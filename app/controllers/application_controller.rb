@@ -70,6 +70,15 @@ class ApplicationController < ActionController::Base
     query.to_s.unicode_normalize(:nfkc)
   end
 
+  # LIKE / ILIKE 用のパターンを返す。検索語に含まれる % と _ （と \\）を
+  # エスケープし、ワイルドカードではなく文字どおりに一致させる（issue #1770）。
+  # match: :partial は部分一致、:prefix は前方一致。
+  # 正規化はしないので、必要なら呼び出し側で normalize_search_query を通す。
+  def like_pattern(query, match: :partial)
+    escaped = ActiveRecord::Base.sanitize_sql_like(query.to_s)
+    match == :prefix ? "#{escaped}%" : "%#{escaped}%"
+  end
+
   def valid_year?(year)
     year >= 1970 && year <= Date.today.year + 10
   end

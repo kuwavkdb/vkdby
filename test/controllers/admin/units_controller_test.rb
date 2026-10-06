@@ -18,6 +18,32 @@ module Admin
       assert_includes response.parsed_body.pluck('name'), 'ABC123'
     end
 
+    # issue #1770: 検索語の _ はワイルドカードではなく文字どおりに扱う
+    test 'search treats an underscore in the query literally' do
+      Unit.create!(name: 'Wild_Card Unit', key: 'like-escape-admin-units-search-underscore', status: :active)
+      Unit.create!(name: 'WildxCard Unit', key: 'like-escape-admin-units-search-other', status: :active)
+
+      get search_admin_units_path(q: 'Wild_Card')
+
+      assert_response :success
+      names = response.parsed_body.pluck('name')
+      assert_includes names, 'Wild_Card Unit'
+      assert_not_includes names, 'WildxCard Unit'
+    end
+
+    test 'index treats an underscore in the query literally' do
+      Unit.create!(name: 'Wild_Card Unit', key: 'like-escape-admin-units-index-underscore', status: :active,
+                   unit_type: :band)
+      Unit.create!(name: 'WildxCard Unit', key: 'like-escape-admin-units-index-other', status: :active,
+                   unit_type: :band)
+
+      get admin_units_path(q: 'Wild_Card')
+
+      assert_response :success
+      assert_includes response.body, 'Wild_Card Unit'
+      assert_not_includes response.body, 'WildxCard Unit'
+    end
+
     test 'update does not change key even when key param is submitted' do
       patch admin_unit_path(@unit), params: {
         unit: { name: 'Renamed Unit', key: 'attempted-new-key' }

@@ -12,7 +12,7 @@ class UnitsController < ApplicationController
     if params[:q].present?
       scope = scope.where(
         'units.name ILIKE :q OR units.name_kana ILIKE :q OR units.name_log::text ILIKE :q OR units.aliases::text ILIKE :q',
-        q: "%#{normalize_search_query(params[:q])}%"
+        q: like_pattern(normalize_search_query(params[:q]))
       )
     end
     @selected_tag_ids = params[:tag_ids]&.to_unsafe_h&.transform_values(&:presence)&.compact || {}
@@ -35,8 +35,8 @@ class UnitsController < ApplicationController
 
     conn = ActiveRecord::Base.connection
     quoted_exact = conn.quote(q)
-    quoted_prefix = conn.quote("#{q}%")
-    units = Unit.publicly_visible.where('name ILIKE :q OR name_kana ILIKE :q', q: "%#{q}%")
+    quoted_prefix = conn.quote(like_pattern(q, match: :prefix))
+    units = Unit.publicly_visible.where('name ILIKE :q OR name_kana ILIKE :q', q: like_pattern(q))
                 .order(Arel.sql(<<~SQL.squish))
                   CASE
                     WHEN name = #{quoted_exact} OR name_kana = #{quoted_exact} THEN 0

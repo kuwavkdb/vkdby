@@ -86,7 +86,7 @@ class ItemsController < ApplicationController
   def filter_by_query(scope)
     return scope if params[:q].blank?
 
-    scope.where('title ILIKE :q OR artists::text ILIKE :q', q: "%#{normalize_search_query(params[:q])}%")
+    scope.where('title ILIKE :q OR artists::text ILIKE :q', q: like_pattern(normalize_search_query(params[:q])))
   end
 
   def filter_by_decade(scope)

@@ -18,6 +18,30 @@ module Admin
       assert_includes response.parsed_body.pluck('name'), 'ABC123'
     end
 
+    # issue #1770: 検索語の _ はワイルドカードではなく文字どおりに扱う
+    test 'search treats an underscore in the query literally' do
+      Person.create!(name: 'Wild_Card Person', key: 'like-escape-admin-people-search-underscore', status: :active)
+      Person.create!(name: 'WildxCard Person', key: 'like-escape-admin-people-search-other', status: :active)
+
+      get search_admin_people_path(q: 'Wild_Card')
+
+      assert_response :success
+      names = response.parsed_body.pluck('name')
+      assert_includes names, 'Wild_Card Person'
+      assert_not_includes names, 'WildxCard Person'
+    end
+
+    test 'index treats an underscore in the query literally' do
+      Person.create!(name: 'Wild_Card Person', key: 'like-escape-admin-people-index-underscore', status: :active)
+      Person.create!(name: 'WildxCard Person', key: 'like-escape-admin-people-index-other', status: :active)
+
+      get admin_people_path(q: 'Wild_Card')
+
+      assert_response :success
+      assert_includes response.body, 'Wild_Card Person'
+      assert_not_includes response.body, 'WildxCard Person'
+    end
+
     test 'search includes a history summary to distinguish same-named people' do
       Person.create!(
         name: '同名太郎', key: 'history-summary-search-test', status: :active,
