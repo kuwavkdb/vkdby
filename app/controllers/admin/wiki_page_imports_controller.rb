@@ -135,13 +135,13 @@ module Admin
 
     def imported_scope
       scope = WikiPageImport.imported.where.not(note: 'ignored').order(updated_at: :desc)
-      scope = scope.joins(:wikipage).where('wikipages.name LIKE ?', "#{@q}%") if @q
+      scope = scope.joins(:wikipage).where('wikipages.name LIKE ?', like_pattern(@q, match: :prefix)) if @q
       scope.includes(:wikipage).preload(:import_target)
     end
 
     def skipped_scope
       base = WikiPageImport.skipped.where(manually_set: false).where.not(note: 'ignored')
-      base = base.joins(:wikipage).where('wikipages.name LIKE ?', "#{@q}%") if @q
+      base = base.joins(:wikipage).where('wikipages.name LIKE ?', like_pattern(@q, match: :prefix)) if @q
       base.includes(:wikipage).order(updated_at: :desc)
     end
   end
