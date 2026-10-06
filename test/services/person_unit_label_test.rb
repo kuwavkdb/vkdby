@@ -40,6 +40,10 @@ class PersonUnitLabelTest < ActiveSupport::TestCase
     assert_equal 'バンドA', label('[[バンドB]](サポート)、[[バンドA]]')
     # サポートしかなければ付けない
     assert_nil label('[[バンドB]](サポート)')
+    # 外部リンク形式のサポート（実データ）
+    assert_equal 'ex-Crazy★shampoo',
+                 label('→ (ぷっちビジュ) → ([[Crazy★shampoo]]){{fn 2010/08加入}}→[[Crazy★shampoo]]{{fn 2012/09/04脱退}} → ' \
+                       '[パンプキンストア|http://artist.aremond.net/pumpkinstore/](サポート){{fn 2014/08/28~}}')
   end
 
   test '//で始まるコメント行は末尾の「→」の判定に使わない' do
