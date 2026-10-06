@@ -6,7 +6,7 @@ name: On This Day
 #
 # GitHub のスケジュール実行は混雑で数時間〜半日遅れることがあるため、毎時起動し、対象日の投稿文がまだ
 # コメントされていなければコメントする（コメント済みなら何もしない）。
-# - JST 18時以降に動いた場合は翌日分、それより前に動いた場合は当日分（前日の夜にコメントできなかった分の取り戻し）
+# - JST 16時以降に動いた場合は翌日分、それより前に動いた場合は当日分（前日の夜にコメントできなかった分の取り戻し）
 # - 手動実行はコメント済みでも必ずコメントする（日付を空にすると JST の当日分）
 # 必要なSecrets: ON_THIS_DAY_MAIL_TOKEN（Renderの環境変数 ON_THIS_DAY_MAIL_TOKEN と同じ値）
 on:
@@ -36,7 +36,7 @@ jobs:
       GH_REPO: ${{ github.repository }}
       LABEL: on-this-day
       # この時刻（JST）以降のスケジュール実行は翌日分を対象にする
-      NEXT_DAY_FROM_HOUR: 18
+      NEXT_DAY_FROM_HOUR: 16
 
     steps:
       - name: Decide target date
@@ -65,7 +65,7 @@ jobs:
           number=$(gh issue list --label "$LABEL" --state open --limit 1 --json number --jq '.[0].number // empty')
           if [ -z "$number" ]; then
             url=$(gh issue create --label "$LABEL" --title '「今日は何の日？」投稿文' \
-              --body '「今日は何の日？」の投稿文を GitHub Actions（.github/workflows/on_this_day.yml）が毎日コメントします（JST 18時以降に翌日分）。')
+              --body '「今日は何の日？」の投稿文を GitHub Actions（.github/workflows/on_this_day.yml）が毎日コメントします（JST 16時以降に翌日分）。')
             number=${url##*/}
           fi
           echo "number=$number" >> "$GITHUB_OUTPUT"
