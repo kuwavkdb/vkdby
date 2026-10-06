@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # 「今日は何の日？」ページ（/date/-/:month/:day）の紹介ポスト文を作る（issue #1742、#1753）。
-# 毎日 JST 20:05 に翌日分を GitHub の Issue にコメントする投稿文で、出来事（動向）と誕生日の2件に分ける。
+# GitHub の Issue にコメントする投稿文（通常は前日の夜に翌日分、.github/workflows/on_this_day.yml）で、出来事（動向）と誕生日の2件に分ける。
 # それぞれ X の上限280文字（重み付き、XPostLength）に収める。
 #
 # 出来事の投稿
