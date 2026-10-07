@@ -16,6 +16,7 @@ class VenueMapTest < ActionDispatch::IntegrationTest
     end
     assert_select "a[href='https://www.google.com/maps/search/?api=1&query=#{query}'][target='_blank']",
                   text: /Googleマップで開く/
+    assert_operator response.body.index('<iframe'), :<, response.body.index('>住所</dt>'), '地図は住所の上に表示する'
   end
 
   test 'show does not render a map for a venue without an address' do
