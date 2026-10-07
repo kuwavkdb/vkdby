@@ -107,8 +107,11 @@
                 <th scope="col" class="py-2 pl-5 md:pl-2 pr-3">会場名</th>
                 <th scope="col" class="py-2 px-3">種別</th>
                 <th scope="col" class="py-2 px-3">所在地</th>
-                <th scope="col" class="py-2 px-3 text-right">キャパ</th>
-                <th scope="col" class="py-2 pl-3 pr-5 md:pr-2 text-right">動向</th>
+                <th scope="col" class="py-2 px-3 <%= 'pr-5 md:pr-2' unless @trend_counts %> text-right">キャパ</th>
+                <%# 動向件数はログイン時のみ表示する %>
+                <% if @trend_counts %>
+                  <th scope="col" class="py-2 pl-3 pr-5 md:pr-2 text-right">動向</th>
+                <% end %>
               </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -123,8 +126,10 @@
                   </th>
                   <td class="py-2.5 px-3 whitespace-nowrap text-zinc-700 dark:text-zinc-300"><%= venue.venue_type_text %></td>
                   <td class="py-2.5 px-3 whitespace-nowrap text-zinc-700 dark:text-zinc-300"><%= [venue.prefecture, venue.area].compact_blank.join(' ') %></td>
-                  <td class="py-2.5 px-3 whitespace-nowrap text-right tabular-nums text-zinc-700 dark:text-zinc-300"><%= number_with_delimiter(venue.capacity) if venue.capacity %></td>
-                  <td class="py-2.5 pl-3 pr-5 md:pr-2 whitespace-nowrap text-right tabular-nums text-zinc-700 dark:text-zinc-300"><%= @trend_counts[venue.id] %></td>
+                  <td class="py-2.5 px-3 <%= 'pr-5 md:pr-2' unless @trend_counts %> whitespace-nowrap text-right tabular-nums text-zinc-700 dark:text-zinc-300"><%= number_with_delimiter(venue.capacity) if venue.capacity %></td>
+                  <% if @trend_counts %>
+                    <td class="py-2.5 pl-3 pr-5 md:pr-2 whitespace-nowrap text-right tabular-nums text-zinc-700 dark:text-zinc-300"><%= @trend_counts[venue.id] %></td>
+                  <% end %>
                 </tr>
               <% end %>
             </tbody>
