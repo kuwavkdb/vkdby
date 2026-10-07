@@ -4,8 +4,10 @@
   # name_logは現在の名前も含む名前の履歴。旧名として表示するのは現在の名前以外
   former_names = @venue.name_logs.reject { |log| log.name.blank? || log.name == @venue.name }
 %>
+<%# サイドバーはユニット・個人のページと共通 %>
+<%= render layout: 'shared/with_sidebar' do %>
 <div class="flex justify-center">
-  <div class="bg-white dark:bg-zinc-900 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
+  <div class="bg-white dark:bg-zinc-900 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full min-w-0 max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
     <%# ヘッダーはユニット・個人のプロフィールページと共通（会場は専用の色、issue #1691） %>
     <%= render ProfileHeaderComponent.new(resource: @venue) %>
 
@@ -103,3 +105,4 @@
     </div>
   </div>
 </div>
+<% end %>

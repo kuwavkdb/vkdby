@@ -3,6 +3,11 @@
 # 会場の公開ページ（issue #1691）。一覧は会場名での検索と、都道府県・エリア・種別での絞り込みができる。
 # 詳細ページではその会場に紐付いた動向を日付降順で表示する
 class VenuesController < ApplicationController
+  include SidebarLoadable
+
+  # 詳細ページはユニット・個人のページと同じくサイドバーを表示する
+  before_action :load_sidebar_data, only: :show
+
   def index
     base_scope = Venue.kept
     @q = params[:q].to_s.strip.presence

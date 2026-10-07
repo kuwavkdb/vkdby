@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-# 会場ページの動向一覧のユニットラベル（issue #1782）
+# 会場ページの動向一覧のユニットラベル（issue #1782）とサイドバー
 class VenueTrendUnitLinksTest < ActionDispatch::IntegrationTest
   test 'show links unit labels of trends to unit pages only for publicly visible units' do
     venue = Venue.create!(key: 'shinjuku-loft', name: '新宿LOFT')
@@ -17,5 +17,14 @@ class VenueTrendUnitLinksTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#{profile_path(unit.key)}']", text: '公開ユニット'
     assert_select 'span', text: '未登録ユニット'
     assert_select 'a', text: '未登録ユニット', count: 0
+  end
+
+  test 'show renders the shared sidebar like unit and person pages' do
+    venue = Venue.create!(key: 'shinjuku-loft', name: '新宿LOFT')
+
+    get venue_path(venue.key)
+
+    assert_response :success
+    assert_select 'h2', text: '最近の更新', minimum: 1
   end
 end
