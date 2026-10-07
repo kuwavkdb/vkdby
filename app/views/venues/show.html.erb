@@ -1,6 +1,6 @@
 <% content_for :title, name_with_kana(@venue.name, @venue.name_kana) %>
 <%
-  location = [@venue.prefecture, @venue.area].compact_blank.join(' ')
+  link_class = "text-indigo-700 dark:text-amber-400 underline decoration-indigo-600/25 dark:decoration-amber-400/40 underline-offset-2 hover:decoration-indigo-600 dark:hover:decoration-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 rounded-sm"
   # name_logは現在の名前も含む名前の履歴。旧名として表示するのは現在の名前以外
   former_names = @venue.name_logs.reject { |log| log.name.blank? || log.name == @venue.name }
   dt_class = "text-xs font-semibold text-zinc-500 dark:text-zinc-400"
@@ -11,32 +11,33 @@
     <%# ヘッダーはユニット・個人のプロフィールページと共通（会場は専用の色、issue #1691） %>
     <%= render ProfileHeaderComponent.new(resource: @venue) %>
 
-    <nav class="px-5 md:px-8 py-3 border-b border-zinc-200 dark:border-zinc-700 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm" aria-label="パンくずリスト">
-      <%= link_to "VENUES", venues_path, class: "font-bold text-indigo-700 dark:text-amber-400 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 rounded-sm" %>
-      <% if @venue.prefecture.present? %>
-        <span class="text-zinc-400" aria-hidden="true">/</span>
-        <%= link_to @venue.prefecture, venues_path(prefecture: @venue.prefecture), class: "text-indigo-700 dark:text-amber-400 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 rounded-sm" %>
-        <% if @venue.area.present? %>
-          <span class="text-zinc-400" aria-hidden="true">/</span>
-          <%= link_to @venue.area, venues_path(prefecture: @venue.prefecture, area: @venue.area), class: "text-indigo-700 dark:text-amber-400 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 rounded-sm" %>
-        <% end %>
-      <% end %>
-      <span class="ml-auto flex flex-wrap gap-1.5">
-        <span class="text-xs font-bold px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"><%= @venue.venue_type_text %></span>
-        <% unless @venue.active? %>
-          <span class="text-xs font-bold px-2 py-0.5 rounded bg-zinc-700 text-white dark:bg-zinc-200 dark:text-zinc-900"><%= @venue.status_text %></span>
-        <% end %>
-      </span>
-    </nav>
-
     <div class="p-5 md:p-8 grid gap-8 grid-cols-1 md:grid-cols-[minmax(220px,320px)_1fr] items-start">
       <div>
         <dl class="space-y-3">
-          <% if location.present? || @venue.address.present? %>
+          <%# 種別・地域は一覧の絞り込みへのリンクにする %>
+          <div>
+            <dt class="<%= dt_class %>">種別</dt>
+            <dd class="<%= dd_class %> flex flex-wrap items-center gap-1.5">
+              <%= link_to @venue.venue_type_text, venues_path(venue_type: @venue.venue_type), class: link_class %>
+              <% unless @venue.active? %>
+                <span class="text-xs font-bold px-2 py-0.5 rounded bg-zinc-700 text-white dark:bg-zinc-200 dark:text-zinc-900"><%= @venue.status_text %></span>
+              <% end %>
+            </dd>
+          </div>
+          <% if @venue.prefecture.present? || @venue.address.present? %>
             <div>
               <dt class="<%= dt_class %>">所在地</dt>
               <dd class="<%= dd_class %>">
-                <% if location.present? %><div><%= location %></div><% end %>
+                <% if @venue.prefecture.present? %>
+                  <div class="flex flex-wrap items-center gap-x-1.5">
+                    <%= link_to @venue.prefecture, venues_path(prefecture: @venue.prefecture), class: link_class %>
+                    <% if @venue.area.present? %>
+                      <%= link_to @venue.area, venues_path(prefecture: @venue.prefecture, area: @venue.area), class: link_class %>
+                    <% end %>
+                  </div>
+                <% elsif @venue.area.present? %>
+                  <div><%= @venue.area %></div>
+                <% end %>
                 <% if @venue.address.present? %><div><%= @venue.address %></div><% end %>
               </dd>
             </div>
@@ -72,6 +73,7 @@
           <% end %>
         </dl>
         <%= render LinksComponent.new(links: @links) %>
+        <p class="mt-6 text-sm"><%= link_to "← 会場一覧へ", venues_path, class: link_class %></p>
       </div>
 
       <section aria-labelledby="venue-trends-heading">
