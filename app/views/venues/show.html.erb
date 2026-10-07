@@ -122,6 +122,12 @@
         <% end %>
       </section>
     </div>
+
+    <%# コメント欄（issue #1789）。ユニット・個人のページと同じDISQUSのパーシャル。
+        old_keyがあれば旧サイトのURLを渡して過去コメントのスレッドを引き継ぐ %>
+    <div class="px-5 md:px-8 pb-8">
+      <%= render 'layouts/disqus', resource: @venue %>
+    </div>
   </div>
 </div>
 <% end %>
