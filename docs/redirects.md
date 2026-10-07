@@ -35,6 +35,7 @@
 5. `Unit.aliases` 配列内の `old_key` フィールドが一致
 6. `Unit.aliases` 配列内の `old_key` フィールドがURLエンコード済み old_key と一致
 7. 上記4〜6パターンを Person でも同様に確認
+   - Unit / Person は論理削除済みのものを対象外とする（転送先のプロフィールが 404 になるため）。ただしキー変更・統合の転送元（`destination_key` あり）は対象に含め、プロフィール側の転送に任せる
 8. `Venue.old_key` または `Venue.aliases` 配列内の `old_key` が一致（それぞれURLエンコード済み old_key も確認。[issue #1691](https://github.com/kuwavkdb/vkdby/issues/1691)）。旧サイトの Trend 本文の `[[会場名]]` リンクを会場ページへ転送するため。論理削除済みの会場でも `destination_key`（統合・キー変更）を辿った先が公開中なら転送先の会場ページへ転送し、辿れない場合は対象外
 
 CustomPage は `Unit`/`Person` と異なり `aliases` を持たない（[issue #1085](https://github.com/kuwavkdb/vkdby/issues/1085)、初回実装のため単一の `old_key` のみ。複数の旧名を持つページが出てきたら `aliases` の追加を検討）。

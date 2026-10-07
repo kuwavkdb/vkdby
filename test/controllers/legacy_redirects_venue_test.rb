@@ -51,4 +51,33 @@ class LegacyRedirectsVenueTest < ActionDispatch::IntegrationTest
     assert_response :moved_permanently
     assert_redirected_to profile_path(unit.key)
   end
+
+  test 'should redirect to venue page when a unit with the same old_key is discarded' do
+    unit = Unit.create!(key: '日本武道館', name: '日本武道館', old_key: 'budokan_old', status: :active)
+    unit.discard
+    venue = Venue.create!(key: 'nippon-budokan', name: '日本武道館', old_key: 'budokan_old')
+    get '/budokan_old.html'
+    assert_response :moved_permanently
+    assert_redirected_to venue_path(venue.key)
+  end
+
+  test 'should redirect to venue page when a person with the same alias old_key is discarded' do
+    person = Person.create!(key: 'budokan-person', name: '武道館', status: :active,
+                            aliases: [{ 'name' => '武道館', 'old_key' => 'budokan_alias' }])
+    person.discard
+    venue = Venue.create!(key: 'nippon-budokan', name: '日本武道館', aliases: [{ 'name' => '武道館', 'old_key' => 'budokan_alias' }])
+    get '/budokan_alias.html'
+    assert_response :moved_permanently
+    assert_redirected_to venue_path(venue.key)
+  end
+
+  test 'should still redirect a merged (discarded with destination_key) unit to its profile' do
+    Venue.create!(key: 'nippon-budokan', name: '日本武道館', old_key: 'merged_old')
+    merged = Unit.create!(key: 'merged-unit', name: '統合元', old_key: 'merged_old', status: :active,
+                          destination_key: 'dest-unit')
+    merged.discard
+    get '/merged_old.html'
+    assert_response :moved_permanently
+    assert_redirected_to profile_path('merged-unit')
+  end
 end

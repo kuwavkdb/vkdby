@@ -76,9 +76,7 @@ class LegacyRedirectsController < ApplicationController
     end
 
     # Try to find Unit by old_key
-    if (unit = Unit.find_by(old_key: old_key) || Unit.find_by(old_key: encoded_old_key) ||
-               Unit.where('aliases @> ?', [{ old_key: old_key }].to_json).first ||
-               Unit.where('aliases @> ?', [{ old_key: encoded_old_key }].to_json).first)
+    if (unit = find_profile_by_old_key(Unit, old_key, encoded_old_key))
       new_url = profile_url(unit.key)
       response.headers['Link'] = "<#{new_url}>; rel=\"canonical\""
       redirect_to new_url, status: :moved_permanently
@@ -86,9 +84,7 @@ class LegacyRedirectsController < ApplicationController
     end
 
     # Fallback: Try to find Person by old_key
-    if (person = Person.find_by(old_key: old_key) || Person.find_by(old_key: encoded_old_key) ||
-                 Person.where('aliases @> ?', [{ old_key: old_key }].to_json).first ||
-                 Person.where('aliases @> ?', [{ old_key: encoded_old_key }].to_json).first)
+    if (person = find_profile_by_old_key(Person, old_key, encoded_old_key))
       new_url = profile_url(person.key)
       response.headers['Link'] = "<#{new_url}>; rel=\"canonical\""
       redirect_to new_url, status: :moved_permanently
@@ -109,6 +105,16 @@ class LegacyRedirectsController < ApplicationController
     @not_found_query = decoded_name.presence || old_key
 
     render 'not_found', status: :not_found
+  end
+
+  # old_key（old_key本体 → 別名のold_keyの順）が一致するUnit/Personを探す。
+  # 論理削除済みのものは転送先がない（profiles#showで404になる）ため対象外とし、後続の検索
+  # （Person・Venue）に回す。キー変更・統合の転送元（destination_keyあり）は転送されるので対象に含める
+  def find_profile_by_old_key(model, *old_keys)
+    scope = model.where('discarded_at IS NULL OR destination_key IS NOT NULL')
+    lookups = old_keys.map { |key| -> { scope.find_by(old_key: key) } } +
+              old_keys.map { |key| -> { scope.where('aliases @> ?', [{ old_key: key }].to_json).first } }
+    lookups.lazy.filter_map(&:call).first
   end
 
   # Try to decode old_key (EUC-JP) to UTF-8
