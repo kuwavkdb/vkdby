@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
-# 会場の公開ページ（issue #1691）。一覧は都道府県・エリア・種別で絞り込める。
+# 会場の公開ページ（issue #1691）。一覧は会場名での検索と、都道府県・エリア・種別での絞り込みができる。
 # 詳細ページではその会場に紐付いた動向を日付降順で表示する
 class VenuesController < ApplicationController
   def index
     base_scope = Venue.kept
+    @q = params[:q].to_s.strip.presence
     @prefecture = params[:prefecture].presence_in(Venue::PREFECTURES)
     @area = params[:area].presence
     @venue_type = params[:venue_type].presence_in(Venue.venue_types.keys)
@@ -16,6 +17,7 @@ class VenuesController < ApplicationController
     @venue_type_counts = base_scope.group(:venue_type).count
 
     scope = base_scope
+    scope = scope.matching(normalize_search_query(@q)) if @q
     scope = scope.where(prefecture: @prefecture) if @prefecture
     scope = scope.where(area: @area) if @prefecture && @area
     scope = scope.where(venue_type: @venue_type) if @venue_type

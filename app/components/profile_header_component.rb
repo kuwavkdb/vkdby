@@ -8,8 +8,12 @@ class ProfileHeaderComponent < ViewComponent::Base
   private
 
   def bg_class
-    if @resource.is_a?(Unit)
+    case @resource
+    when Unit
       'bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800'
+    when Venue
+      # 会場（issue #1691）。unit（青）・person（赤）のトークンと区別できる色にする
+      'bg-gradient-to-br from-teal-950 via-teal-900 to-teal-800'
     else
       'bg-gradient-to-br from-rose-950 via-rose-900 to-rose-800'
     end
@@ -32,10 +36,10 @@ class ProfileHeaderComponent < ViewComponent::Base
   end
 
   def edit_url
-    if @resource.is_a?(Person)
-      helpers.edit_admin_person_path(@resource)
-    elsif @resource.is_a?(Unit)
-      helpers.edit_admin_unit_path(@resource)
+    case @resource
+    when Person then helpers.edit_admin_person_path(@resource)
+    when Unit then helpers.edit_admin_unit_path(@resource)
+    when Venue then helpers.edit_admin_venue_path(@resource)
     end
   end
 end

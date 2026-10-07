@@ -51,6 +51,14 @@ class VenuesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#{venue_path(@loft.key)}']", count: 0
   end
 
+  test 'index searches venues by name' do
+    get venues_path(q: '武道館')
+
+    assert_response :success
+    assert_select "a[href='#{venue_path(@hall.key)}']"
+    assert_select "a[href='#{venue_path(@loft.key)}']", count: 0
+  end
+
   test 'index ignores unknown filter values' do
     get venues_path(prefecture: '存在しない県', venue_type: 'unknown')
 
@@ -71,7 +79,8 @@ class VenuesControllerTest < ActionDispatch::IntegrationTest
     get venue_path(@loft.key)
 
     assert_response :success
-    assert_select 'h1', text: '新宿LOFT'
+    assert_select 'header h1', text: /新宿LOFT/
+    assert_select 'header', text: %r{/\s*LOFT}
     assert_includes response.body, '東京都新宿区歌舞伎町1-12-9'
     assert_includes response.body, '550'
     assert_includes response.body, '旧LOFT'

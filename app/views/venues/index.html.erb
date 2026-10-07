@@ -3,19 +3,35 @@
   chip_base = "inline-block px-3 py-1.5 rounded-full text-sm font-bold transition-colors whitespace-nowrap border focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
   chip_active = "bg-indigo-600 text-white border-indigo-600 dark:bg-amber-400 dark:text-zinc-900 dark:border-amber-400"
   chip_inactive = "bg-white text-zinc-600 border-zinc-300 hover:bg-zinc-50 hover:text-indigo-700 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-amber-400"
-  filter_params = { prefecture: @prefecture, area: @area, venue_type: @venue_type }
+  filter_params = { q: @q, prefecture: @prefecture, area: @area, venue_type: @venue_type }
 %>
 <div class="flex justify-center">
   <div class="bg-white dark:bg-zinc-900 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
-    <div class="bg-amber-400 px-5 py-6 md:px-8 text-center relative">
-      <%= render HeaderActionLinkComponent.new(label: "+ 会場を追加", url: new_admin_venue_path,
-            visible: defined?(logged_in?) && logged_in?) %>
-      <h1 class="text-3xl font-black text-zinc-900 flex items-center justify-center gap-3">
-        <span>VENUES</span>
-        <span class="text-amber-900 text-lg font-bold"><%= @pagy.count %> records</span>
-      </h1>
-    </div>
-    <div class="p-5 md:p-8">
+    <div class="p-5 md:p-8 relative">
+      <%# ヘッダーはユニット・個人の一覧（UNITS / PEOPLE）と揃える。色はProfileHeaderComponentの会場の色（teal）に合わせる %>
+      <header class="mb-8 text-center flex flex-col items-center">
+        <h1 class="text-3xl font-black text-zinc-800 dark:text-zinc-100 flex items-center justify-center gap-3">
+          <span class="text-teal-700 dark:text-teal-400">VENUES</span>
+          <span class="text-zinc-500 dark:text-zinc-400 text-lg font-bold"><%= @pagy.count %> records</span>
+        </h1>
+      </header>
+
+      <div class="mb-6">
+        <%= form_with url: venues_path, method: :get, local: true, class: "flex gap-2", role: "search" do |f| %>
+          <%= hidden_field_tag :prefecture, @prefecture if @prefecture %>
+          <%= hidden_field_tag :area, @area if @prefecture && @area %>
+          <%= hidden_field_tag :venue_type, @venue_type if @venue_type %>
+          <%= f.label :q, "会場名で検索", class: "sr-only" %>
+          <%= f.search_field :q, value: @q, placeholder: "Search venues...",
+                class: "w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-amber-400 transition-all placeholder:text-zinc-500" %>
+          <%= f.button type: "submit", aria: { label: "検索" }, class: "bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl transition-colors shadow-sm hover:shadow-md flex items-center justify-center min-w-[3rem] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+          <% end %>
+        <% end %>
+      </div>
+
       <div class="space-y-4 mb-8">
         <nav aria-label="都道府県で絞り込み">
           <h2 class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5">都道府県</h2>

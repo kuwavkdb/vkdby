@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # 詳細・一覧ページのヘッダー右上に表示する管理者向けアクションリンク（Edit / Add など）。
-# items/trends の show・index や ProfileHeaderComponent（Unit/Person）で共通利用する。
+# items/trends の show・index や ProfileHeaderComponent（Unit/Person/Venue）で共通利用する。
 class HeaderActionLinkComponent < ViewComponent::Base
   THEMES = {
     # amber系ヘッダー（items/trends の show・index）向け
