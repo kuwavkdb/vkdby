@@ -203,4 +203,18 @@ class VenueTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
 
     assert_nil Venue.resolve_by_key('x')
   end
+
+  test 'display_address strips the legacy MAP: prefix' do
+    assert_equal '東京都新宿区1-1', Venue.new(address: 'MAP:東京都新宿区1-1').display_address
+    assert_equal '東京都新宿区1-1', Venue.new(address: 'MAP： 東京都新宿区1-1').display_address
+    assert_equal '東京都新宿区1-1', Venue.new(address: 'map:東京都新宿区1-1').display_address
+    assert_equal '東京都新宿区 MAP:1-1', Venue.new(address: '東京都新宿区 MAP:1-1').display_address
+    assert_nil Venue.new(address: 'MAP:').display_address
+    assert_nil Venue.new(address: nil).display_address
+  end
+
+  test 'map_query uses the display address and skips streaming venues' do
+    assert_equal '東京都新宿区1-1', Venue.new(address: 'MAP:東京都新宿区1-1').map_query
+    assert_nil Venue.new(address: '東京都新宿区1-1', venue_type: :streaming).map_query
+  end
 end

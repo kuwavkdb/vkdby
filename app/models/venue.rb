@@ -120,6 +120,35 @@ class Venue < ApplicationRecord # rubocop:disable Metrics/ClassLength
     nil
   end
 
+  # 旧サイトのページ名（old_key、または別名のold_key）が一致する会場を探し、統合・キー変更による
+  # 転送（destination_key）を辿った先の公開中の会場を返す。転送先がない・論理削除済みの場合はnil。
+  # 旧URL（/{old_key}.html）の転送（issue #1691）で使う。
+  def self.find_kept_by_old_key(*old_keys)
+    keys = old_keys.compact_blank.uniq
+    venue = with_discarded.find_by(old_key: keys) ||
+            keys.lazy.filter_map { |k| with_discarded.where('aliases @> ?', [{ old_key: k }].to_json).first }.first
+    return nil unless venue
+
+    resolved = resolve_by_key(venue.key)
+    resolved if resolved&.kept?
+  end
+
+  # 旧サイトでは住所の先頭に「MAP:」を付ける書き方があり、取り込んだ住所に残っている。
+  # 表示・地図の検索では取り除く（データ自体は書き換えない）
+  ADDRESS_LEGACY_PREFIX_PATTERN = /\AMAP\s*[:：]\s*/i
+
+  def display_address
+    address.to_s.strip.sub(ADDRESS_LEGACY_PREFIX_PATTERN, '').presence
+  end
+
+  # 地図表示に使う検索語（issue #1781）。住所が入っている会場のみ対象とし、配信など物理的な
+  # 所在地がない種別は対象外。都道府県・エリアだけでは位置が定まらないため使わない
+  def map_query
+    return nil if streaming?
+
+    display_address
+  end
+
   def venue_type_text
     VENUE_TYPE_TRANSLATIONS[venue_type] || venue_type.to_s.humanize
   end
