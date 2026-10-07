@@ -63,6 +63,10 @@ module Admin
 
     def edit
       @venue.links.build
+      # 右上の「公開ページを見る」リンク先（issue #1787）。転送元は転送先の会場、
+      # 論理削除済み・転送先がない会場は公開ページが404になるためnil
+      @public_venue = Venue.resolve_by_key(@venue.key)
+      @public_venue = nil unless @public_venue&.kept?
       @wiki_page_imports = @venue.wiki_page_imports.includes(:wikipage).order(updated_at: :desc)
       @update_logs = UpdateLog.for_venue(@venue).includes(:user).order(created_at: :desc).limit(50)
     end
