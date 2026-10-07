@@ -133,6 +133,14 @@ class Venue < ApplicationRecord # rubocop:disable Metrics/ClassLength
     resolved if resolved&.kept?
   end
 
+  # 地図表示に使う検索語（issue #1781）。住所が入っている会場のみ対象とし、配信など物理的な
+  # 所在地がない種別は対象外。都道府県・エリアだけでは位置が定まらないため使わない
+  def map_query
+    return nil if streaming?
+
+    address.to_s.strip.presence
+  end
+
   def venue_type_text
     VENUE_TYPE_TRANSLATIONS[venue_type] || venue_type.to_s.humanize
   end
