@@ -49,5 +49,8 @@ class VenuesController < ApplicationController
     @pagy, @trends = pagy(Trend.published.where(venue_id: venue_ids).order(date: :desc, id: :desc), limit: 50)
     unit_ids = @trends.flat_map { |t| (t.units || []).map { |u| u['unit_id'] } }.compact.uniq
     @related_units = Unit.publicly_visible.where(id: unit_ids).index_by(&:id)
+    # 個人名を件名の前に出す動向の個人（Trend詳細と同じくPerson.kept、issue #1796）
+    person_ids = @trends.flat_map { |t| (t.people || []).map { |p| p['person_id'] } }.compact.uniq
+    @related_people = Person.kept.where(id: person_ids).index_by(&:id)
   end
 end
