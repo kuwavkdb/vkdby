@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # 全ページ共通のサイドバー（New Releases / Recent Trends / Recent Updates / Birthdays）用データを
-# 読み込む。CustomPagesController・ProfilesController から include して使う（issue #1570）。
+# 読み込む。CustomPagesController・ProfilesController・VenuesController から include して使う（issue #1570）。
 module SidebarLoadable
   extend ActiveSupport::Concern
 

@@ -120,6 +120,19 @@ class Venue < ApplicationRecord # rubocop:disable Metrics/ClassLength
     nil
   end
 
+  # 旧サイトのページ名（old_key、または別名のold_key）が一致する会場を探し、統合・キー変更による
+  # 転送（destination_key）を辿った先の公開中の会場を返す。転送先がない・論理削除済みの場合はnil。
+  # 旧URL（/{old_key}.html）の転送（issue #1691）で使う。
+  def self.find_kept_by_old_key(*old_keys)
+    keys = old_keys.compact_blank.uniq
+    venue = with_discarded.find_by(old_key: keys) ||
+            keys.lazy.filter_map { |k| with_discarded.where('aliases @> ?', [{ old_key: k }].to_json).first }.first
+    return nil unless venue
+
+    resolved = resolve_by_key(venue.key)
+    resolved if resolved&.kept?
+  end
+
   def venue_type_text
     VENUE_TYPE_TRANSLATIONS[venue_type] || venue_type.to_s.humanize
   end

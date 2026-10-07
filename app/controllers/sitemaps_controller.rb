@@ -21,7 +21,7 @@ class SitemapsController < ApplicationController
   private
 
   def build_urls
-    urls = static_urls + index_group_urls + profile_urls + trend_urls + item_urls + custom_page_urls +
+    urls = static_urls + index_group_urls + profile_urls + trend_urls + item_urls + custom_page_urls + venue_urls +
            yearly_urls + monthly_urls + daily_urls
     # Unit/Personのkeyがまれに重複しており(profiles#showはUnit優先で解決する)、
     # 同一URLが2件出力されることがあるため重複除去する。profile_urlsはUnitを
@@ -36,6 +36,7 @@ class SitemapsController < ApplicationController
       { loc: units_url },
       { loc: trends_url },
       { loc: items_url },
+      { loc: venues_url },
       { loc: timeline_url },
       { loc: indices_groups_url }
     ]
@@ -68,6 +69,11 @@ class SitemapsController < ApplicationController
     CustomPage.published.non_system_pages.pluck(:key, :updated_at).map do |key, updated_at|
       { loc: custom_page_url(key), lastmod: updated_at }
     end
+  end
+
+  # 会場（issue #1691）。キー変更・統合の転送用スタブは論理削除済みなのでkeptで除外される
+  def venue_urls
+    Venue.kept.pluck(:key, :updated_at).map { |key, updated_at| { loc: venue_url(key), lastmod: updated_at } }
   end
 
   def yearly_urls
