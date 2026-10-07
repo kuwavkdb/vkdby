@@ -95,6 +95,14 @@ class LegacyRedirectsController < ApplicationController
       return
     end
 
+    # 会場（issue #1691）。既存Trend本文の[[会場名]]リンク（/{old_key}.html）を会場ページへ転送する
+    if (venue = Venue.find_kept_by_old_key(old_key, encoded_old_key))
+      new_url = venue_url(venue.key)
+      response.headers['Link'] = "<#{new_url}>; rel=\"canonical\""
+      redirect_to new_url, status: :moved_permanently
+      return
+    end
+
     # If neither found, prepare data for 404 page with creation link
     @old_key = old_key
     @unit_name = decoded_name

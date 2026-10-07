@@ -192,6 +192,8 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
   resources :trend_submissions, only: %i[new create]
   resources :trends, only: %i[index show]
   resources :items, only: %i[index show]
+  # 会場の公開ページ（issue #1691）
+  resources :venues, param: :key, only: %i[index show], constraints: { key: %r{[^/]+} }
 
   # Date index page (MUST be before other date routes!)
   get '/date', to: 'yearly#index', as: :date_index

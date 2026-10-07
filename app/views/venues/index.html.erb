@@ -1,0 +1,116 @@
+<% content_for :title, ["会場一覧", @prefecture, (@area if @prefecture), (Venue::VENUE_TYPE_TRANSLATIONS[@venue_type] if @venue_type)].compact.join(' ') %>
+<%
+  chip_base = "inline-block px-3 py-1.5 rounded-full text-sm font-bold transition-colors whitespace-nowrap border focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+  chip_active = "bg-indigo-600 text-white border-indigo-600 dark:bg-amber-400 dark:text-zinc-900 dark:border-amber-400"
+  chip_inactive = "bg-white text-zinc-600 border-zinc-300 hover:bg-zinc-50 hover:text-indigo-700 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-amber-400"
+  filter_params = { prefecture: @prefecture, area: @area, venue_type: @venue_type }
+%>
+<div class="flex justify-center">
+  <div class="bg-white dark:bg-zinc-900 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
+    <div class="bg-amber-400 px-5 py-6 md:px-8 text-center relative">
+      <%= render HeaderActionLinkComponent.new(label: "+ 会場を追加", url: new_admin_venue_path,
+            visible: defined?(logged_in?) && logged_in?) %>
+      <h1 class="text-3xl font-black text-zinc-900 flex items-center justify-center gap-3">
+        <span>VENUES</span>
+        <span class="text-amber-900 text-lg font-bold"><%= @pagy.count %> records</span>
+      </h1>
+    </div>
+    <div class="p-5 md:p-8">
+      <div class="space-y-4 mb-8">
+        <nav aria-label="都道府県で絞り込み">
+          <h2 class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5">都道府県</h2>
+          <ul class="flex flex-wrap gap-1.5">
+            <li>
+              <%= link_to "すべて", venues_path(filter_params.merge(prefecture: nil, area: nil).compact),
+                    class: "#{chip_base} #{@prefecture ? chip_inactive : chip_active}",
+                    aria: { current: (@prefecture ? nil : "page") } %>
+            </li>
+            <% @prefecture_counts.each do |prefecture, count| %>
+              <li>
+                <%= link_to venues_path(filter_params.merge(prefecture: prefecture, area: nil).compact),
+                      class: "#{chip_base} #{@prefecture == prefecture ? chip_active : chip_inactive}",
+                      aria: { current: (@prefecture == prefecture ? "page" : nil) } do %>
+                  <%= prefecture %><span class="ml-1 text-xs font-normal opacity-80">(<%= count %>)</span>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        </nav>
+
+        <% if @area_counts.present? %>
+          <nav aria-label="エリアで絞り込み">
+            <h2 class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5">エリア（<%= @prefecture %>）</h2>
+            <ul class="flex flex-wrap gap-1.5">
+              <li>
+                <%= link_to "すべて", venues_path(filter_params.merge(area: nil).compact),
+                      class: "#{chip_base} #{@area ? chip_inactive : chip_active}",
+                      aria: { current: (@area ? nil : "page") } %>
+              </li>
+              <% @area_counts.each do |area, count| %>
+                <li>
+                  <%= link_to venues_path(filter_params.merge(area: area).compact),
+                        class: "#{chip_base} #{@area == area ? chip_active : chip_inactive}",
+                        aria: { current: (@area == area ? "page" : nil) } do %>
+                    <%= area %><span class="ml-1 text-xs font-normal opacity-80">(<%= count %>)</span>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          </nav>
+        <% end %>
+
+        <nav aria-label="種別で絞り込み">
+          <h2 class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5">種別</h2>
+          <ul class="flex flex-wrap gap-1.5">
+            <li>
+              <%= link_to "すべて", venues_path(filter_params.merge(venue_type: nil).compact),
+                    class: "#{chip_base} #{@venue_type ? chip_inactive : chip_active}",
+                    aria: { current: (@venue_type ? nil : "page") } %>
+            </li>
+            <% Venue::VENUE_TYPE_TRANSLATIONS.each do |type, label| %>
+              <% next unless @venue_type_counts[type] %>
+              <li>
+                <%= link_to venues_path(filter_params.merge(venue_type: type).compact),
+                      class: "#{chip_base} #{@venue_type == type ? chip_active : chip_inactive}",
+                      aria: { current: (@venue_type == type ? "page" : nil) } do %>
+                  <%= label %><span class="ml-1 text-xs font-normal opacity-80">(<%= @venue_type_counts[type] %>)</span>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        </nav>
+      </div>
+
+      <% if @venues.any? %>
+        <ul class="divide-y divide-zinc-200 dark:divide-zinc-700 border-y border-zinc-200 dark:border-zinc-700">
+          <% @venues.each do |venue| %>
+            <li class="py-3 px-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <%= link_to venue.name, venue_path(venue.key),
+                    class: "font-bold text-indigo-700 dark:text-amber-400 underline decoration-indigo-600/25 dark:decoration-amber-400/40 underline-offset-2 hover:decoration-indigo-600 dark:hover:decoration-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 rounded-sm transition-colors" %>
+              <% if venue.name_kana.present? %>
+                <span class="text-xs text-zinc-500 dark:text-zinc-400"><%= venue.name_kana %></span>
+              <% end %>
+              <span class="text-xs px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"><%= venue.venue_type_text %></span>
+              <% if venue.closed? %>
+                <span class="text-xs px-1.5 py-0.5 rounded bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200"><%= venue.status_text %></span>
+              <% end %>
+              <span class="text-sm text-zinc-600 dark:text-zinc-400"><%= [venue.prefecture, venue.area].compact_blank.join(' ') %></span>
+              <% if venue.capacity %>
+                <span class="text-sm text-zinc-600 dark:text-zinc-400">キャパ <%= number_with_delimiter(venue.capacity) %></span>
+              <% end %>
+              <% if (count = @trend_counts[venue.id]) %>
+                <span class="ml-auto text-xs text-zinc-500 dark:text-zinc-400">動向 <%= count %> 件</span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="py-20 text-center text-zinc-500 dark:text-zinc-400 font-bold">該当する会場が見つかりませんでした。</p>
+      <% end %>
+
+      <div class="mt-8 flex justify-center">
+        <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
+      </div>
+    </div>
+  </div>
+</div>
