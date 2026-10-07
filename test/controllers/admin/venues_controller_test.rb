@@ -197,6 +197,125 @@ module Admin
       assert_equal 'shinjuku-loft', @venue.reload.key
     end
 
+    test 'operator cannot bulk update venues' do
+      operator = User.create!(email: 'operator@example.com', name: 'Operator', password: 'password', role: :operator)
+      login_as(operator)
+
+      patch bulk_update_admin_venues_path, params: { ids: [@venue.id], venue: { prefecture: '大阪府' } }
+
+      assert_redirected_to admin_root_path
+      assert_equal '東京都', @venue.reload.prefecture
+    end
+
+    test 'bulk_update updates only the given attributes of the selected venues and logs each change' do
+      login_as(users(:one))
+      other = Venue.create!(key: 'other-hall', name: '別のホール', prefecture: '大阪府', area: '難波')
+      untouched = Venue.create!(key: 'untouched', name: '対象外の会場', prefecture: '大阪府')
+
+      assert_difference(-> { UpdateLog.where(action: 'update', loggable_type: 'Venue').count } => 2) do
+        patch bulk_update_admin_venues_path,
+              params: { ids: [@venue.id, other.id], venue: { prefecture: '神奈川県', area: '', venue_type: 'hall' },
+                        q: 'ホール', prefecture: '大阪府', page: '2' }
+      end
+
+      assert_redirected_to admin_venues_path(q: 'ホール', prefecture: '大阪府', page: '2')
+      assert_equal '2件の会場を更新しました', flash[:notice]
+      @venue.reload
+      other.reload
+      assert_equal ['神奈川県', '新宿', 'hall'], [@venue.prefecture, @venue.area, @venue.venue_type]
+      assert_equal ['神奈川県', '難波', 'hall'], [other.prefecture, other.area, other.venue_type]
+      assert_equal '大阪府', untouched.reload.prefecture
+      log = UpdateLog.where(loggable: @venue, action: 'update').last
+      assert_equal %w[prefecture venue_type], log.diff.keys.sort
+    end
+
+    test 'bulk_update can clear prefecture and area' do
+      login_as(users(:one))
+
+      patch bulk_update_admin_venues_path,
+            params: { ids: [@venue.id], venue: { prefecture: Admin::VenuesController::BULK_CLEAR_VALUE,
+                                                 area: Admin::VenuesController::BULK_CLEAR_VALUE } }
+
+      @venue.reload
+      assert_nil @venue.prefecture
+      assert_nil @venue.area
+    end
+
+    test 'bulk_update skips venues whose values do not change' do
+      login_as(users(:one))
+
+      assert_no_difference(-> { UpdateLog.count }) do
+        patch bulk_update_admin_venues_path, params: { ids: [@venue.id], venue: { prefecture: '東京都', area: '新宿' } }
+      end
+
+      assert_equal '0件の会場を更新しました', flash[:notice]
+    end
+
+    test 'bulk_update reports venues that fail validation' do
+      login_as(users(:one))
+      broken = Venue.create!(key: 'broken', name: '壊れた会場')
+      broken.update_column(:capacity, -1)
+
+      patch bulk_update_admin_venues_path, params: { ids: [@venue.id, broken.id], venue: { area: '歌舞伎町' } }
+
+      assert_equal '1件の会場を更新しました', flash[:notice]
+      assert_includes flash[:alert], '1件の会場は更新できませんでした'
+      assert_includes flash[:alert], '壊れた会場'
+      assert_equal '歌舞伎町', @venue.reload.area
+      assert_nil broken.reload.area
+    end
+
+    test 'bulk_update rejects an invalid prefecture or venue_type' do
+      login_as(users(:one))
+
+      patch bulk_update_admin_venues_path, params: { ids: [@venue.id], venue: { prefecture: '架空県' } }
+      assert_equal '都道府県が正しくありません', flash[:alert]
+
+      patch bulk_update_admin_venues_path, params: { ids: [@venue.id], venue: { venue_type: 'castle' } }
+      assert_equal '種別が正しくありません', flash[:alert]
+
+      patch bulk_update_admin_venues_path,
+            params: { ids: [@venue.id], venue: { venue_type: Admin::VenuesController::BULK_CLEAR_VALUE } }
+      assert_equal '種別は空にできません', flash[:alert]
+
+      @venue.reload
+      assert_equal %w[東京都 live_house], [@venue.prefecture, @venue.venue_type]
+    end
+
+    test 'bulk_update ignores attributes other than prefecture, area and venue_type' do
+      login_as(users(:one))
+
+      patch bulk_update_admin_venues_path, params: { ids: [@venue.id], venue: { name: '書き換え', status: 'closed' } }
+
+      assert_equal '更新する項目を選択してください', flash[:alert]
+      assert_equal '新宿LOFT', @venue.reload.name
+      assert_equal 'active', @venue.status
+    end
+
+    test 'bulk_update requires selected venues' do
+      login_as(users(:one))
+
+      patch bulk_update_admin_venues_path, params: { ids: [], venue: { prefecture: '大阪府' } }
+
+      assert_redirected_to admin_venues_path
+      assert_equal '会場が選択されていません', flash[:alert]
+    end
+
+    test 'index shows bulk update controls to super_operator or above' do
+      login_as(users(:one))
+      get admin_venues_path
+      assert_includes response.body, 'bulk-update-form'
+      assert_includes response.body, '新宿LOFT を選択'
+    end
+
+    test 'index hides bulk update controls from operators' do
+      operator = User.create!(email: 'operator@example.com', name: 'Operator', password: 'password', role: :operator)
+      login_as(operator)
+      get admin_venues_path
+      assert_response :success
+      assert_not_includes response.body, 'bulk-update-form'
+    end
+
     test 'index can list redirect sources' do
       login_as(users(:one))
       @venue.change_key!('loft-shinjuku')

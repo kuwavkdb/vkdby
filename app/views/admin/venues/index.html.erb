@@ -1,5 +1,6 @@
 <% title = "会場管理" %>
 <% content_for :title, title %>
+<% can_bulk_update = current_user.super_operator_or_above? %>
 <% filter_class = "rounded-md border border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
 <div class="container mx-auto px-4 py-8">
   <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
@@ -45,6 +46,11 @@
     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
       <thead class="bg-gray-50 dark:bg-gray-700">
         <tr>
+          <% if can_bulk_update %>
+            <th class="px-4 py-3">
+              <input type="checkbox" id="venue-check-all" class="rounded border-gray-300 focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700" aria-label="すべて選択">
+            </th>
+          <% end %>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">名前</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">種別</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">所在地</th>
@@ -57,6 +63,13 @@
       <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
         <% @venues.each do |venue| %>
           <tr class="<%= venue.discarded? ? 'bg-red-50 dark:bg-red-900/20' : '' %>">
+            <% if can_bulk_update %>
+              <td class="px-4 py-4">
+                <input type="checkbox" name="ids[]" value="<%= venue.id %>" form="bulk-update-form"
+                       class="venue-row-check rounded border-gray-300 focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700"
+                       aria-label="<%= venue.name %> を選択">
+              </td>
+            <% end %>
             <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
               <%= venue.name %>
               <% if venue.discarded? %>
@@ -94,12 +107,101 @@
         <% end %>
         <% if @venues.empty? %>
           <tr>
-            <td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">会場はまだ登録されていません。</td>
+            <td colspan="<%= can_bulk_update ? 8 : 7 %>" class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">会場はまだ登録されていません。</td>
           </tr>
         <% end %>
       </tbody>
     </table>
   </div>
+
+  <% if can_bulk_update %>
+    <% bulk_select_class = "text-sm rounded-md border-gray-300 py-1.5 pr-8 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <%# 都道府県・エリア・種別の一括更新（issue #1793）。空欄の項目は変更しない %>
+    <%= form_with url: bulk_update_admin_venues_path, method: :patch, id: "bulk-update-form",
+          class: "sticky bottom-0 z-10 flex flex-wrap items-center gap-2 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 shadow-md mb-4" do %>
+      <% params.permit(*Admin::VenuesController::INDEX_FILTER_PARAMS).to_h.compact_blank.each do |name, value| %>
+        <%= hidden_field_tag name, value, id: nil %>
+      <% end %>
+      <span class="text-sm text-gray-700 dark:text-gray-300">
+        一括更新（選択中: <span id="bulk-selected-count" aria-live="polite">0</span>件）:
+      </span>
+      <%= select_tag "venue[prefecture]",
+            options_for_select([["都道府県を変更しない", ""], ["都道府県を空にする", Admin::VenuesController::BULK_CLEAR_VALUE]] + Venue::PREFECTURES.map { |pref| [pref, pref] }),
+            id: "bulk-prefecture", "aria-label": "一括更新する都道府県", class: bulk_select_class %>
+      <%= text_field_tag "venue[area]", nil, id: "bulk-area", list: "bulk-area-options", placeholder: "エリア（空欄は変更しない）",
+            "aria-label": "一括更新するエリア",
+            class: "w-56 text-sm rounded-md border border-gray-300 py-1.5 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:disabled:bg-gray-600" %>
+      <datalist id="bulk-area-options">
+        <% @bulk_area_options.each do |area| %>
+          <option value="<%= area %>"></option>
+        <% end %>
+      </datalist>
+      <%= hidden_field_tag "venue[area]", Admin::VenuesController::BULK_CLEAR_VALUE, id: "bulk-area-clear-value", disabled: true %>
+      <label class="inline-flex items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
+        <input type="checkbox" id="bulk-area-clear" class="rounded border-gray-300 focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700">
+        エリアを空にする
+      </label>
+      <%= select_tag "venue[venue_type]",
+            options_for_select([["種別を変更しない", ""]] + Venue::VENUE_TYPE_TRANSLATIONS.map { |key, label| [label, key] }),
+            id: "bulk-venue-type", "aria-label": "一括更新する種別", class: bulk_select_class %>
+      <button type="submit"
+              class="px-4 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer">
+        選択した会場を更新
+      </button>
+    <% end %>
+
+    <script>
+      (function() {
+        var form = document.getElementById('bulk-update-form');
+        var checkAll = document.getElementById('venue-check-all');
+        var count = document.getElementById('bulk-selected-count');
+        var areaInput = document.getElementById('bulk-area');
+        var areaClear = document.getElementById('bulk-area-clear');
+        var areaClearValue = document.getElementById('bulk-area-clear-value');
+        var rowChecks = function() { return document.querySelectorAll('.venue-row-check'); };
+        var checkedRows = function() { return document.querySelectorAll('.venue-row-check:checked'); };
+        var updateCount = function() { count.textContent = checkedRows().length; };
+
+        checkAll.addEventListener('change', function() {
+          rowChecks().forEach(function(c) { c.checked = checkAll.checked; });
+          updateCount();
+        });
+        rowChecks().forEach(function(c) { c.addEventListener('change', updateCount); });
+        areaClear.addEventListener('change', function() {
+          areaInput.disabled = areaClear.checked;
+          areaClearValue.disabled = !areaClear.checked;
+        });
+
+        form.addEventListener('submit', function(event) {
+          var checked = checkedRows().length;
+          if (checked === 0) {
+            event.preventDefault();
+            alert('会場が選択されていません');
+            return;
+          }
+          var changes = [];
+          var pref = document.getElementById('bulk-prefecture');
+          if (pref.value) changes.push('都道府県: ' + pref.options[pref.selectedIndex].text);
+          if (areaClear.checked) {
+            changes.push('エリア: 空にする');
+          } else if (areaInput.value.trim()) {
+            changes.push('エリア: ' + areaInput.value.trim());
+          }
+          var type = document.getElementById('bulk-venue-type');
+          if (type.value) changes.push('種別: ' + type.options[type.selectedIndex].text);
+          if (changes.length === 0) {
+            event.preventDefault();
+            alert('更新する項目を選択してください');
+            return;
+          }
+          if (!confirm('選択した ' + checked + ' 件の会場を更新します。よろしいですか？\n' + changes.join('\n'))) {
+            event.preventDefault();
+          }
+        });
+        updateCount();
+      })();
+    </script>
+  <% end %>
 
   <div class="mt-4">
     <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>

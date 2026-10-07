@@ -44,6 +44,7 @@
 | People — 削除 | destroy |
 | Trends — 削除 | destroy |
 | Venues（会場）— 削除・復元 | destroy / undiscard |
+| Venues（会場）— 一覧でチェックした会場の都道府県・エリア・種別の一括更新（項目ごとに「変更しない」、都道府県・エリアは「空にする」も選べる。値が変わる会場だけを更新し、1件ずつ更新履歴を残す。issue #1793） | bulk_update |
 | Items — 閲覧・作成・編集 | index / new / create / edit / update |
 | Items — アーティスト一括変更（index にアーティスト検索条件がある場合のみUI表示） | bulk_artist_update |
 | Custom Pages — 削除・復元 | destroy / undiscard |
@@ -99,6 +100,7 @@
 |---|---|
 | `super_operator_or_above?` でない | Units / People / Trends / Custom Pages / Venues の削除・復元ボタン |
 | `super_operator_or_above?` でない | Items の新規作成・編集ボタン |
+| `super_operator_or_above?` でない | Venues 一覧のチェックボックス・一括更新バー（都道府県・エリア・種別） |
 | `super_operator_or_above?` でない | 画像管理の削除ボタン |
 | `admin?` でない | Section / Custom Page 編集画面のアップロードボタン |
 | `admin?` でない | Unit 新規作成フォーム（投稿からの承認）の投稿画像の選択欄 |

@@ -80,6 +80,7 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
     resources :venues do
       collection do
         get :search
+        patch :bulk_update
       end
       member do
         patch :undiscard

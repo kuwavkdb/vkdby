@@ -6,7 +6,7 @@ module Admin
     include LoggableLinkChanges
 
     before_action :set_venue, only: %i[show edit update destroy undiscard change_key]
-    before_action :require_super_operator, only: %i[destroy undiscard]
+    before_action :require_super_operator, only: %i[destroy undiscard bulk_update]
     before_action :require_admin, only: %i[change_key]
 
     # new の URL パラメーターで事前入力できる項目（venue-url スキル、issue #1705）
@@ -16,6 +16,14 @@ module Admin
       aliases: %i[name kana],
       name_logs: %i[name name_kana date]
     }.freeze
+
+    # 一覧の一括更新（bulk_update、issue #1793）で更新できる項目と、「空にする」を表す値。
+    # 種別は必須のため空にはできない
+    BULK_UPDATE_ATTRIBUTES = %w[prefecture area venue_type].freeze
+    BULK_CLEARABLE_ATTRIBUTES = %w[prefecture area].freeze
+    BULK_CLEAR_VALUE = '__clear__'
+    # 一括更新のあと、一覧の絞り込み・ページを保ったまま戻るためのパラメーター
+    INDEX_FILTER_PARAMS = %i[q venue_type prefecture status discarded redirect_source page].freeze
 
     def index
       @q = params[:q]
@@ -32,6 +40,26 @@ module Admin
       scope = scope.where(prefecture: params[:prefecture]) if Venue::PREFECTURES.include?(params[:prefecture])
       scope = scope.where(status: params[:status]) if Venue.statuses.key?(params[:status])
       @pagy, @venues = pagy(scope.order(updated_at: :desc))
+      @bulk_area_options = Venue.kept.where.not(area: [nil, '']).distinct.order(:area).pluck(:area)
+    end
+
+    # 一覧でチェックした会場の都道府県・エリア・種別を一括更新する（issue #1793）。
+    # 値が変わる会場だけを更新し、1件ずつ更新履歴を残す
+    def bulk_update
+      ids = Array(params[:ids]).map(&:to_i).reject(&:zero?)
+      return redirect_to bulk_update_return_path, alert: '会場が選択されていません' if ids.empty?
+
+      attributes, error = bulk_update_attributes
+      return redirect_to bulk_update_return_path, alert: error if error
+      return redirect_to bulk_update_return_path, alert: '更新する項目を選択してください' if attributes.empty?
+
+      updated, failed = apply_bulk_update(Venue.with_discarded.where(id: ids).order(:id), attributes)
+      flash[:notice] = "#{updated.size}件の会場を更新しました"
+      if failed.any?
+        flash[:alert] = "#{failed.size}件の会場は更新できませんでした: " \
+                        "#{failed.map { |venue| "#{venue.name}（#{venue.errors.full_messages.join('、')}）" }.join(' / ')}"
+      end
+      redirect_to bulk_update_return_path
     end
 
     def show
@@ -125,6 +153,54 @@ module Admin
     end
 
     private
+
+    # 一括更新する項目を { 'prefecture' => '東京都', 'area' => nil, ... } の形で返す。
+    # 未指定（空）の項目は「変更しない」として含めない。不正な値があれば2つ目の戻り値にエラーメッセージを返す
+    def bulk_update_attributes
+      raw = params[:venue]
+      return [{}, nil] unless raw.is_a?(ActionController::Parameters)
+
+      raw = raw.permit(*BULK_UPDATE_ATTRIBUTES)
+      attributes = {}
+      BULK_UPDATE_ATTRIBUTES.each do |name|
+        value = raw[name].to_s.strip
+        next if value.blank?
+
+        if value == BULK_CLEAR_VALUE
+          return [{}, '種別は空にできません'] unless BULK_CLEARABLE_ATTRIBUTES.include?(name)
+
+          attributes[name] = nil
+        else
+          attributes[name] = value
+        end
+      end
+
+      return [{}, '都道府県が正しくありません'] if attributes['prefecture'] && Venue::PREFECTURES.exclude?(attributes['prefecture'])
+      return [{}, '種別が正しくありません'] if attributes.key?('venue_type') && !Venue.venue_types.key?(attributes['venue_type'])
+
+      [attributes, nil]
+    end
+
+    def apply_bulk_update(venues, attributes)
+      updated = []
+      failed = []
+      venues.each do |venue|
+        venue.assign_attributes(attributes)
+        next unless venue.changed?
+
+        if venue.save
+          record_update_log(venue, action: 'update')
+          updated << venue
+        else
+          failed << venue
+        end
+      end
+      [updated, failed]
+    end
+
+    def bulk_update_return_path
+      admin_venues_path(params.permit(*INDEX_FILTER_PARAMS).to_h.compact_blank)
+    end
 
     def set_venue
       @venue = Venue.with_discarded.find(params[:id])
