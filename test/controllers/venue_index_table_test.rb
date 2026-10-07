@@ -16,7 +16,8 @@ class VenueIndexTableTest < ActionDispatch::IntegrationTest
       assert_select "th[scope='row'] a[href='#{venue_path(venue.key)}']", text: '新宿LOFT'
       assert_select 'th', text: /閉店/
       assert_select 'td', text: 'ライブハウス'
-      assert_select 'td', text: '東京都 新宿'
+      assert_select 'td', text: '東京都'
+      assert_select 'td', text: '新宿'
       assert_select 'td', text: '550'
     end
     assert_not_includes response.body, 'しんじゅくろふと'
@@ -29,8 +30,11 @@ class VenueIndexTableTest < ActionDispatch::IntegrationTest
 
     get venues_path
 
+    assert_select 'table thead th', text: '会場名'
+    assert_select 'table thead th', text: '都道府県'
+    assert_select 'table thead th', text: 'エリア'
     assert_select 'table thead th', text: '動向', count: 0
-    assert_select 'table tbody td', count: 3
+    assert_select 'table tbody td', count: 4
 
     post login_path, params: { email: users(:one).email, password: 'password' }
     get venues_path
