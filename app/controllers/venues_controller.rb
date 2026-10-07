@@ -28,7 +28,8 @@ class VenuesController < ApplicationController
     scope = scope.where(venue_type: @venue_type) if @venue_type
 
     @pagy, @venues = pagy(scope.order(Arel.sql('COALESCE(NULLIF(name_kana, \'\'), name)'), :name), limit: 50)
-    @trend_counts = Trend.published.where(venue_id: @venues.map(&:id)).group(:venue_id).count
+    # 動向件数の列はログイン時のみ表示する（issue #1783）
+    @trend_counts = Trend.published.where(venue_id: @venues.map(&:id)).group(:venue_id).count if logged_in?
   end
 
   def show
