@@ -78,10 +78,8 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
     resources :trends
 
     resources :venues do
-      collection do
-        get :search
-        patch :bulk_update
-      end
+      get :search, on: :collection
+      patch :bulk_update, on: :collection
       member do
         patch :undiscard
         patch :change_key

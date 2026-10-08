@@ -24,6 +24,8 @@ module Admin
     BULK_CLEAR_VALUE = '__clear__'
     # 一括更新のあと、一覧の絞り込み・ページを保ったまま戻るためのパラメーター
     INDEX_FILTER_PARAMS = %i[q venue_type prefecture status discarded redirect_source page].freeze
+    # 失敗した会場の名前をflashに出す上限（セッションのクッキー4KBを超えないように）
+    BULK_FAILED_NAMES_LIMIT = 10
 
     def index
       @q = params[:q]
@@ -40,6 +42,8 @@ module Admin
       scope = scope.where(prefecture: params[:prefecture]) if Venue::PREFECTURES.include?(params[:prefecture])
       scope = scope.where(status: params[:status]) if Venue.statuses.key?(params[:status])
       @pagy, @venues = pagy(scope.order(updated_at: :desc))
+      return unless current_user.super_operator_or_above?
+
       @bulk_area_options = Venue.kept.where.not(area: [nil, '']).distinct.order(:area).pluck(:area)
     end
 
@@ -55,10 +59,7 @@ module Admin
 
       updated, failed = apply_bulk_update(Venue.with_discarded.where(id: ids).order(:id), attributes)
       flash[:notice] = "#{updated.size}件の会場を更新しました"
-      if failed.any?
-        flash[:alert] = "#{failed.size}件の会場は更新できませんでした: " \
-                        "#{failed.map { |venue| "#{venue.name}（#{venue.errors.full_messages.join('、')}）" }.join(' / ')}"
-      end
+      flash[:alert] = bulk_update_failure_message(failed) if failed.any?
       redirect_to bulk_update_return_path
     end
 
@@ -196,6 +197,16 @@ module Admin
         end
       end
       [updated, failed]
+    end
+
+    # 失敗した会場は先頭の数件だけ「会場名（エラー内容）」を出し、残りは「ほか◯件」とまとめる
+    def bulk_update_failure_message(failed)
+      details = failed.first(BULK_FAILED_NAMES_LIMIT).map do |venue|
+        "#{venue.name}（#{venue.errors.full_messages.join('、')}）"
+      end
+      rest = failed.size - details.size
+      details << "ほか#{rest}件" if rest.positive?
+      "#{failed.size}件の会場は更新できませんでした: #{details.join(' / ')}"
     end
 
     def bulk_update_return_path

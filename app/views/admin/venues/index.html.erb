@@ -167,10 +167,13 @@
           updateCount();
         });
         rowChecks().forEach(function(c) { c.addEventListener('change', updateCount); });
-        areaClear.addEventListener('change', function() {
+        // 再読み込みでチェックボックスの状態だけ復元された場合も、入力欄・送信値をそろえる
+        var syncAreaClear = function() {
           areaInput.disabled = areaClear.checked;
           areaClearValue.disabled = !areaClear.checked;
-        });
+        };
+        areaClear.addEventListener('change', syncAreaClear);
+        syncAreaClear();
 
         form.addEventListener('submit', function(event) {
           var checked = checkedRows().length;

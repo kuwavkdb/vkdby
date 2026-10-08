@@ -222,8 +222,8 @@ module Admin
       assert_equal '2件の会場を更新しました', flash[:notice]
       @venue.reload
       other.reload
-      assert_equal ['神奈川県', '新宿', 'hall'], [@venue.prefecture, @venue.area, @venue.venue_type]
-      assert_equal ['神奈川県', '難波', 'hall'], [other.prefecture, other.area, other.venue_type]
+      assert_equal %w[神奈川県 新宿 hall], [@venue.prefecture, @venue.area, @venue.venue_type]
+      assert_equal %w[神奈川県 難波 hall], [other.prefecture, other.area, other.venue_type]
       assert_equal '大阪府', untouched.reload.prefecture
       log = UpdateLog.where(loggable: @venue, action: 'update').last
       assert_equal %w[prefecture venue_type], log.diff.keys.sort
@@ -263,6 +263,21 @@ module Admin
       assert_includes flash[:alert], '壊れた会場'
       assert_equal '歌舞伎町', @venue.reload.area
       assert_nil broken.reload.area
+    end
+
+    test 'bulk_update lists only the first failed venues to keep the flash small' do
+      login_as(users(:one))
+      limit = Admin::VenuesController::BULK_FAILED_NAMES_LIMIT
+      broken = Array.new(limit + 2) do |i|
+        Venue.create!(key: "broken-#{i}", name: "壊れた会場#{i}").tap { |venue| venue.update_column(:capacity, -1) }
+      end
+
+      patch bulk_update_admin_venues_path, params: { ids: broken.map(&:id), venue: { area: '歌舞伎町' } }
+
+      assert_includes flash[:alert], "#{limit + 2}件の会場は更新できませんでした"
+      assert_includes flash[:alert], '壊れた会場0'
+      assert_not_includes flash[:alert], "壊れた会場#{limit}"
+      assert_includes flash[:alert], 'ほか2件'
     end
 
     test 'bulk_update rejects an invalid prefecture or venue_type' do
