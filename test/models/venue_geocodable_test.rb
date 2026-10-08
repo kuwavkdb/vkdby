@@ -143,6 +143,21 @@ class VenueGeocodableTest < ActiveSupport::TestCase # rubocop:disable Metrics/Cl
     assert manual.reload.coordinates_manual?
   end
 
+  test 'geocode_all can be limited to prefectures' do
+    tokyo = create_venue(prefecture: '東京都', address: '新宿区歌舞伎町1-12-9')
+    kanagawa = create_venue(prefecture: '神奈川県', address: '横浜市中区')
+    osaka = create_venue(prefecture: '大阪府', address: '大阪市中央区')
+
+    stub_class_method(GsiGeocoder, :call, [35.0, 139.0]) do
+      assert_equal({ geocoded: 2, not_found: 0, failed: 0 },
+                   Venue.geocode_all(prefectures: %w[東京都 神奈川県], interval: 0))
+    end
+
+    assert tokyo.reload.coordinates_geocoded?
+    assert kanagawa.reload.coordinates_geocoded?
+    assert_nil osaka.reload.latitude
+  end
+
   test 'geocode_all counts API failures and continues' do
     create_venue(address: '東京都新宿区歌舞伎町1-12-9')
 

@@ -37,10 +37,11 @@ module VenueGeocodable
 
   class_methods do
     # 座標のない会場（force: trueなら手入力以外のすべての会場）の座標をまとめて取得する（rake venues:geocode）。
-    # 結果の件数を { geocoded:, not_found:, failed: } で返す
-    def geocode_all(force: false, interval: GEOCODE_ALL_INTERVAL, logger: Rails.logger)
+    # prefecturesを渡すとその都道府県の会場だけを対象にする。結果の件数を { geocoded:, not_found:, failed: } で返す
+    def geocode_all(force: false, prefectures: nil, interval: GEOCODE_ALL_INTERVAL, logger: Rails.logger)
       scope = kept.where(coordinates_source: [nil, :geocoded])
       scope = scope.where(latitude: nil) unless force
+      scope = scope.where(prefecture: prefectures) if prefectures.present?
       counts = { geocoded: 0, not_found: 0, failed: 0 }
       scope.find_each do |venue|
         next unless venue.geocode_query

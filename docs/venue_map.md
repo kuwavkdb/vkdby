@@ -9,7 +9,7 @@ issue #1801。`/venues/area/:prefecture`（都道府県ページ）と `/venues/
 - `venues.latitude` / `venues.longitude`（世界測地系の10進数の度）と、取得元の `coordinates_source`（`geocoded` = 住所から自動取得 / `manual` = 管理画面で手入力）を持つ
 - 自動取得は国土地理院の住所検索 API（`GsiGeocoder`、API キー不要）
   - 会場の作成・住所／都道府県／種別の変更時に `GeocodeVenueJob` で取得する（`VenueGeocodable`）
-  - 既存の会場は `bundle exec rails venues:geocode`（座標のない会場だけ）。`FORCE=1` で手入力以外を取り直す
+  - 既存の会場は `bundle exec rails venues:geocode`（座標のない会場だけ）。`FORCE=1` で手入力以外を取り直す。`PREFECTURE=東京都,神奈川県` で都道府県を絞る
   - 配信の会場・都道府県が「海外」の会場・住所のない会場は取得しない
 - 管理画面で緯度・経度を入力すると手入力になり、以後は自動取得で上書きしない。両方を空にして保存すると自動取得に戻る
 - 地図にプロットするのは `Venue.kept.mappable`（座標あり・閉店と配信以外）。一覧には範囲内のすべての会場を出す
