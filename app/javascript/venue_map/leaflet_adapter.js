@@ -10,19 +10,9 @@ import { loadScript, loadStylesheet } from "venue_map/asset_loader"
 import { buildPopupContent } from "venue_map/popup"
 
 const LEAFLET_URL = "https://unpkg.com/leaflet@1.9.4/dist"
-const MARKERCLUSTER_URL = "https://unpkg.com/leaflet.markercluster@1.5.3/dist"
 
-const STYLESHEETS = [
-  { href: `${LEAFLET_URL}/leaflet.css`, integrity: "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" },
-  { href: `${MARKERCLUSTER_URL}/MarkerCluster.css`, integrity: "sha256-YU3qCpj/P06tdPBJGPax0bm6Q1wltfwjsho5TR4+TYc=" },
-  { href: `${MARKERCLUSTER_URL}/MarkerCluster.Default.css`, integrity: "sha256-YSWCMtmNZNwqex4CEw1nQhvFub2lmU7vcCKP+XVwwXA=" }
-]
-
-// markercluster は Leaflet（window.L）を前提にするため、この順に読み込む
-const SCRIPTS = [
-  { src: `${LEAFLET_URL}/leaflet.js`, integrity: "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" },
-  { src: `${MARKERCLUSTER_URL}/leaflet.markercluster.js`, integrity: "sha256-Hk4dIpcqOSb0hZjgyvFOP+cEmDXUKKNE/tT542ZbNQg=" }
-]
+const STYLESHEET = { href: `${LEAFLET_URL}/leaflet.css`, integrity: "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" }
+const SCRIPT = { src: `${LEAFLET_URL}/leaflet.js`, integrity: "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" }
 
 // 地理院タイル（標準地図）。利用規約により出典を表示する
 const TILE_LAYER = {
@@ -33,8 +23,7 @@ const TILE_LAYER = {
 }
 
 async function loadLeaflet() {
-  await Promise.all(STYLESHEETS.map(loadStylesheet))
-  for (const script of SCRIPTS) await loadScript(script)
+  await Promise.all([loadStylesheet(STYLESHEET), loadScript(SCRIPT)])
   const L = window.L
   // CDN の CSS から画像のパスを推測させず、明示する
   L.Icon.Default.imagePath = `${LEAFLET_URL}/images/`
@@ -56,14 +45,14 @@ export async function createMap(element, venues, options = {}) {
     maxZoom: TILE_LAYER.maxZoom
   }).addTo(map)
 
-  // 会場の多い都道府県ページのため、ズームアウト時はマーカーをまとめる
-  const markers = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 40 })
+  // マーカーはまとめず（クラスタリングせず）、会場ごとに1本ずつ立てる
+  const markers = L.featureGroup()
   venues.forEach((venue) => {
     const marker = L.marker([venue.lat, venue.lng], { title: venue.name, alt: venue.name, keyboard: true })
     marker.bindPopup(() => buildPopupContent(venue))
     markers.addLayer(marker)
   })
-  map.addLayer(markers)
+  markers.addTo(map)
   map.fitBounds(markers.getBounds(), { padding: [24, 24], maxZoom: options.maxZoom || TILE_LAYER.maxZoom })
 
   return {

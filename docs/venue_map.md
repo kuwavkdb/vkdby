@@ -25,21 +25,21 @@ issue #1801。`/venues/area/:prefecture`（都道府県ページ）と `/venues/
 | Stimulus コントローラー | `app/javascript/controllers/venue_map_controller.js`（アダプターを選んで呼ぶ） | なし |
 | ポップアップの中身 | `app/javascript/venue_map/popup.js` | なし |
 | 外部ファイルの読み込み | `app/javascript/venue_map/asset_loader.js` | なし |
-| アダプター | `app/javascript/venue_map/leaflet_adapter.js` | **Leaflet・地理院タイル・markercluster** |
+| アダプター | `app/javascript/venue_map/leaflet_adapter.js` | **Leaflet・地理院タイル** |
 | テスト | `test/controllers/venue_areas_controller_test.rb` など（data 属性の会場データを検証する） | なし |
 
 アダプターは `createMap(element, venues, options)` を export し、`{ destroy() }` を返す（Promise 可）。
 
 - `venues`: `[{ name, url, type, lat, lng }]`
 - `options`: `{ maxZoom }`（`VenueMapHelper#venue_map_options`）
-- 地図の表示範囲はプロットした会場がすべて収まるように合わせ、会場が多いときはマーカーをまとめる（クラスタリング）
+- 地図の表示範囲はプロットした会場がすべて収まるように合わせる。マーカーはまとめず（クラスタリングしない）、会場ごとに1本ずつ立てる
 - マーカーをクリックすると `buildPopupContent(venue)`（会場名のリンクと種別）を表示する
 
 ### 今のアダプター（Leaflet）が読み込む外部ファイル
 
 | 用途 | ホスト |
 |---|---|
-| Leaflet 1.9.4・Leaflet.markercluster 1.5.3 のスクリプト・CSS・マーカー画像 | `unpkg.com`（SRI 付き） |
+| Leaflet 1.9.4 のスクリプト・CSS・マーカー画像 | `unpkg.com`（SRI 付き） |
 | 地図タイル（地理院タイル 標準地図） | `cyberjapandata.gsi.go.jp` |
 
 地理院タイルは利用規約により出典（「地理院タイル」）を表示する（地図の右下）。
@@ -47,7 +47,7 @@ issue #1801。`/venues/area/:prefecture`（都道府県ページ）と `/venues/
 ## Google マップに切り替える場合
 
 1. `app/javascript/venue_map/google_adapter.js` を作り、同じ `createMap(element, venues, options)` を実装する
-   - Maps JavaScript API の読み込み（API キーが必要）、マーカー、`InfoWindow` に `buildPopupContent(venue)` を渡す、`fitBounds`（`maxZoom` を守る）、`@googlemaps/markerclusterer` でクラスタリング
+   - Maps JavaScript API の読み込み（API キーが必要）、マーカー、`InfoWindow` に `buildPopupContent(venue)` を渡す、`fitBounds`（`maxZoom` を守る）。マーカーはまとめない
 2. `venue_map_controller.js` の `ADAPTERS` に `google: () => import("venue_map/google_adapter")` を足す
 3. `VenueMapHelper::VENUE_MAP_PROVIDER` を `'google'` にする
 4. API キーを用意する
