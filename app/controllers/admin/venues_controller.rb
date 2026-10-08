@@ -24,8 +24,11 @@ module Admin
     BULK_CLEAR_VALUE = '__clear__'
     # 一括更新のあと、一覧の絞り込み・ページを保ったまま戻るためのパラメーター
     INDEX_FILTER_PARAMS = %i[q venue_type prefecture status discarded redirect_source page].freeze
-    # 失敗した会場の名前をflashに出す上限（セッションのクッキー4KBを超えないように）
-    BULK_FAILED_NAMES_LIMIT = 10
+    # 失敗した会場の名前・エラー内容をflashに出す上限。セッションはクッキー（4KB）に保存され、
+    # 日本語はエスケープ・暗号化で1文字あたり20バイト近くに膨らむため、件数と文字数の両方を絞る
+    BULK_FAILED_NAMES_LIMIT = 3
+    BULK_FAILED_ERRORS_LIMIT = 2
+    BULK_FAILED_TEXT_LENGTH = 15
 
     def index
       @q = params[:q]
@@ -199,14 +202,14 @@ module Admin
       [updated, failed]
     end
 
-    # 失敗した会場は先頭の数件だけ「会場名（エラー内容）」を出し、残りは「ほか◯件」とまとめる
+    # 失敗した会場は、エラー内容の種類と先頭の数件の会場名だけを出し、残りは「ほか◯件」とまとめる
     def bulk_update_failure_message(failed)
-      details = failed.first(BULK_FAILED_NAMES_LIMIT).map do |venue|
-        "#{venue.name}（#{venue.errors.full_messages.join('、')}）"
-      end
-      rest = failed.size - details.size
-      details << "ほか#{rest}件" if rest.positive?
-      "#{failed.size}件の会場は更新できませんでした: #{details.join(' / ')}"
+      errors = failed.flat_map { |venue| venue.errors.full_messages }.uniq
+      reasons = errors.first(BULK_FAILED_ERRORS_LIMIT).map { |error| error.truncate(BULK_FAILED_TEXT_LENGTH) }
+      reasons << 'ほか' if errors.size > reasons.size
+      names = failed.first(BULK_FAILED_NAMES_LIMIT).map { |venue| venue.name.truncate(BULK_FAILED_TEXT_LENGTH) }
+      names << "ほか#{failed.size - names.size}件" if failed.size > names.size
+      "#{failed.size}件の会場は更新できませんでした（#{reasons.join('、')}）: #{names.join(' / ')}"
     end
 
     def bulk_update_return_path

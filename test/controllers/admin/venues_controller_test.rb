@@ -278,6 +278,7 @@ module Admin
       assert_includes flash[:alert], '壊れた会場0'
       assert_not_includes flash[:alert], "壊れた会場#{limit}"
       assert_includes flash[:alert], 'ほか2件'
+      assert_equal 1, flash[:alert].scan(Venue.human_attribute_name(:capacity)).size
     end
 
     test 'bulk_update rejects an invalid prefecture or venue_type' do
