@@ -222,6 +222,7 @@ module Admin
 
     def venue_params
       params.require(:venue).permit(:key, :name, :name_kana, :venue_type, :prefecture, :area, :address,
+                                    :latitude, :longitude,
                                     :capacity, :status, :note, :old_key, :destination_key,
                                     links_attributes: %i[id text url active sort_order _destroy],
                                     name_logs_attributes: %i[name name_kana date],

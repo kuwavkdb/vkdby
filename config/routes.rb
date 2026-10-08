@@ -191,6 +191,12 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
   resources :trend_submissions, only: %i[new create]
   resources :trends, only: %i[index show]
   resources :items, only: %i[index show]
+  # 都道府県・エリアごとの会場の地図と一覧（issue #1801）。URLには都道府県・エリアの値（日本語）をそのまま使う。
+  # /venues/:key と段数が違うので衝突しないが、念のため先に置く。エリア名の「.」を拡張子と解釈しないようformat: false
+  get '/venues/area/:prefecture', to: 'venue_areas#show', as: :venue_prefecture,
+                                  constraints: { prefecture: %r{[^/]+} }, format: false
+  get '/venues/area/:prefecture/:area', to: 'venue_areas#show', as: :venue_area,
+                                        constraints: { prefecture: %r{[^/]+}, area: %r{[^/]+} }, format: false
   # 会場の公開ページ（issue #1691）
   resources :venues, param: :key, only: %i[index show], constraints: { key: %r{[^/]+} }
 

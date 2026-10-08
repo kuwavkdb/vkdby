@@ -122,4 +122,19 @@ class SitemapsControllerTest < ActionDispatch::IntegrationTest
     locs = Nokogiri::XML(response.body).css('url > loc').map(&:text)
     assert_not_includes locs, profile_url('sitemap-provisional-unit')
   end
+
+  test 'includes prefecture and area pages of venues but not empty ranges (issue #1801)' do
+    Venue.create!(key: 'sitemap-loft', name: 'Sitemap LOFT', prefecture: '東京都', area: '新宿')
+    Venue.create!(key: 'sitemap-no-area', name: 'Sitemap No Area', prefecture: '大阪府')
+    Venue.create!(key: 'sitemap-discarded', name: 'Sitemap Discarded', prefecture: '北海道', area: '札幌').discard
+
+    get '/sitemap.xml'
+
+    locs = Nokogiri::XML(response.body).css('url > loc').map(&:text)
+    assert_includes locs, venue_prefecture_url('東京都')
+    assert_includes locs, venue_area_url('東京都', '新宿')
+    assert_includes locs, venue_prefecture_url('大阪府')
+    assert_not_includes locs, venue_prefecture_url('北海道')
+    assert_not_includes locs, venue_area_url('北海道', '札幌')
+  end
 end
