@@ -22,6 +22,7 @@ class SitemapsController < ApplicationController
 
   def build_urls
     urls = static_urls + index_group_urls + profile_urls + trend_urls + item_urls + custom_page_urls + venue_urls +
+           venue_area_urls +
            yearly_urls + monthly_urls + daily_urls
     # Unit/Personのkeyがまれに重複しており(profiles#showはUnit優先で解決する)、
     # 同一URLが2件出力されることがあるため重複除去する。profile_urlsはUnitを
@@ -74,6 +75,19 @@ class SitemapsController < ApplicationController
   # 会場（issue #1691）。キー変更・統合の転送用スタブは論理削除済みなのでkeptで除外される
   def venue_urls
     Venue.kept.pluck(:key, :updated_at).map { |key, updated_at| { loc: venue_url(key), lastmod: updated_at } }
+  end
+
+  # 都道府県ページ・エリアページ（issue #1801）。会場が1件以上ある範囲のみ（会場のない範囲は404になるため）。
+  # lastmodはその範囲の会場の最終更新日時
+  def venue_area_urls
+    scope = Venue.kept.where(prefecture: Venue::PREFECTURES)
+    prefecture_urls = scope.group(:prefecture).maximum(:updated_at).map do |prefecture, updated_at|
+      { loc: venue_prefecture_url(prefecture), lastmod: updated_at }
+    end
+    area_urls = scope.where.not(area: [nil, '']).group(:prefecture, :area).maximum(:updated_at).filter_map do |(prefecture, area), updated_at|
+      { loc: venue_area_url(prefecture, area), lastmod: updated_at } if Venue.area_page_segment?(area)
+    end
+    prefecture_urls + area_urls
   end
 
   def yearly_urls

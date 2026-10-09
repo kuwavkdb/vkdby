@@ -97,46 +97,23 @@
         </nav>
       </div>
 
+      <%# 都道府県（・エリア）を選んでいるときは、その範囲の地図と一覧のページ（issue #1801）へ案内する %>
+      <% map_area = @area if @area_counts&.key?(@area) %>
+      <% if @prefecture_counts.key?(@prefecture) && (area_page_path = venue_area_page_path(@prefecture, map_area)) %>
+        <p class="mb-4">
+          <%= link_to area_page_path,
+                class: "inline-flex items-center gap-1.5 text-sm font-bold text-indigo-700 dark:text-amber-400 underline decoration-indigo-600/25 dark:decoration-amber-400/40 underline-offset-2 hover:decoration-indigo-600 dark:hover:decoration-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 rounded-sm" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+            </svg>
+            <%= [@prefecture, map_area].compact.join(" ") %>の会場を地図で見る
+          <% end %>
+        </p>
+      <% end %>
+
       <% if @venues.any? %>
-        <%# 一覧はテーブル形式（issue #1783）。スマホでは横スクロールさせる %>
-        <div class="overflow-x-auto -mx-5 md:mx-0">
-          <table class="w-full min-w-[40rem] text-sm">
-            <caption class="sr-only">会場一覧</caption>
-            <thead>
-              <tr class="border-b-2 border-zinc-200 dark:border-zinc-700 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                <th scope="col" class="py-2 pl-5 md:pl-2 pr-3">会場名</th>
-                <th scope="col" class="py-2 px-3">種別</th>
-                <th scope="col" class="py-2 px-3">都道府県</th>
-                <th scope="col" class="py-2 px-3">エリア</th>
-                <th scope="col" class="py-2 px-3 <%= 'pr-5 md:pr-2' unless @trend_counts %> text-right">キャパ</th>
-                <%# 動向件数はログイン時のみ表示する %>
-                <% if @trend_counts %>
-                  <th scope="col" class="py-2 pl-3 pr-5 md:pr-2 text-right">動向</th>
-                <% end %>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-              <% @venues.each do |venue| %>
-                <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
-                  <th scope="row" class="py-2.5 pl-5 md:pl-2 pr-3 text-left font-normal">
-                    <%= link_to venue.name, venue_path(venue.key),
-                          class: "font-bold text-indigo-700 dark:text-amber-400 underline decoration-indigo-600/25 dark:decoration-amber-400/40 underline-offset-2 hover:decoration-indigo-600 dark:hover:decoration-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 rounded-sm transition-colors" %>
-                    <% if venue.closed? %>
-                      <span class="ml-1 text-xs px-1.5 py-0.5 rounded bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200 whitespace-nowrap"><%= venue.status_text %></span>
-                    <% end %>
-                  </th>
-                  <td class="py-2.5 px-3 whitespace-nowrap text-zinc-700 dark:text-zinc-300"><%= venue.venue_type_text %></td>
-                  <td class="py-2.5 px-3 whitespace-nowrap text-zinc-700 dark:text-zinc-300"><%= venue.prefecture %></td>
-                  <td class="py-2.5 px-3 whitespace-nowrap text-zinc-700 dark:text-zinc-300"><%= venue.area %></td>
-                  <td class="py-2.5 px-3 <%= 'pr-5 md:pr-2' unless @trend_counts %> whitespace-nowrap text-right tabular-nums text-zinc-700 dark:text-zinc-300"><%= number_with_delimiter(venue.capacity) if venue.capacity %></td>
-                  <% if @trend_counts %>
-                    <td class="py-2.5 pl-3 pr-5 md:pr-2 whitespace-nowrap text-right tabular-nums text-zinc-700 dark:text-zinc-300"><%= @trend_counts[venue.id] %></td>
-                  <% end %>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
+        <%= render "venues/table", venues: @venues, trend_counts: @trend_counts %>
       <% else %>
         <p class="py-20 text-center text-zinc-500 dark:text-zinc-400 font-bold">該当する会場が見つかりませんでした。</p>
       <% end %>

@@ -4,6 +4,8 @@ require 'test_helper'
 
 module Admin
   class VenuesControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
+    include ActiveJob::TestHelper
+
     setup do
       @venue = Venue.create!(key: 'shinjuku-loft', name: '新宿LOFT', prefecture: '東京都', area: '新宿',
                              aliases: [{ 'name' => 'ロフト' }])
@@ -106,6 +108,33 @@ module Admin
       assert_equal 550, @venue.capacity
       assert @venue.closed?
       assert UpdateLog.exists?(loggable: @venue, action: 'update')
+    end
+
+    test 'update saves manually entered coordinates and clearing them returns to geocoding' do
+      login_as(users(:one))
+
+      patch admin_venue_path(@venue), params: { venue: { latitude: '35.693840', longitude: '139.703549' } }
+
+      assert_redirected_to edit_admin_venue_path(@venue)
+      @venue.reload
+      assert_in_delta 35.69384, @venue.latitude.to_f, 0.000001
+      assert @venue.coordinates_manual?
+
+      assert_enqueued_with(job: GeocodeVenueJob, args: [@venue.id]) do
+        patch admin_venue_path(@venue), params: { venue: { latitude: '', longitude: '' } }
+      end
+      @venue.reload
+      assert_nil @venue.latitude
+      assert_nil @venue.coordinates_source
+    end
+
+    test 'update rejects only one of latitude and longitude' do
+      login_as(users(:one))
+
+      patch admin_venue_path(@venue), params: { venue: { latitude: '35.693840', longitude: '' } }
+
+      assert_response :unprocessable_entity
+      assert_nil @venue.reload.latitude
     end
 
     test 'update rejects an invalid name_log date' do

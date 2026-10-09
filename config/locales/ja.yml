@@ -11,6 +11,9 @@ ja:
     attributes:
       link:
         url: "URL"
+      venue:
+        latitude: "緯度"
+        longitude: "経度"
       trend:
         unit_phenomenon:
           announcement: お知らせ

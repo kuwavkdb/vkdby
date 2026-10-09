@@ -9,8 +9,11 @@
 #  aliases       :jsonb            not null
 #  area          :string
 #  capacity      :integer
+#  coordinates_source :integer
 #  discarded_at  :datetime
 #  key           :string           not null
+#  latitude      :decimal(9, 6)
+#  longitude     :decimal(9, 6)
 #  name          :string           not null
 #  name_kana     :string
 #  name_log      :jsonb            not null
@@ -47,6 +50,7 @@ require 'ostruct'
 class Venue < ApplicationRecord # rubocop:disable Metrics/ClassLength
   include Discard::Model
   include KeyChangeable
+  include VenueGeocodable
 
   has_many :links, as: :linkable, dependent: :destroy
   accepts_nested_attributes_for :links, allow_destroy: true, reject_if: proc { |attrs| attrs['url'].blank? }
@@ -131,6 +135,11 @@ class Venue < ApplicationRecord # rubocop:disable Metrics/ClassLength
 
     resolved = resolve_by_key(venue.key)
     resolved if resolved&.kept?
+  end
+
+  # 都道府県・エリアページ（issue #1801）のURLの1段に使える値か。「/」を含む値はURLの段が崩れるため対象外
+  def self.area_page_segment?(value)
+    value.present? && value.exclude?('/')
   end
 
   # 旧サイトでは住所の先頭に「MAP:」を付ける書き方があり、取り込んだ住所に残っている。

@@ -1,0 +1,40 @@
+<%# 会場の一覧のテーブル（issue #1783）。会場一覧と都道府県・エリアページ（issue #1801）で共通。スマホでは横スクロールさせる。
+    trend_counts（動向件数）はログイン時のみ渡す %>
+<div class="overflow-x-auto -mx-5 md:mx-0">
+  <table class="w-full min-w-[40rem] text-sm">
+    <caption class="sr-only">会場一覧</caption>
+    <thead>
+      <tr class="border-b-2 border-zinc-200 dark:border-zinc-700 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+        <th scope="col" class="py-2 pl-5 md:pl-2 pr-3">会場名</th>
+        <th scope="col" class="py-2 px-3">種別</th>
+        <th scope="col" class="py-2 px-3">都道府県</th>
+        <th scope="col" class="py-2 px-3">エリア</th>
+        <th scope="col" class="py-2 px-3 <%= 'pr-5 md:pr-2' unless trend_counts %> text-right">キャパ</th>
+        <%# 動向件数はログイン時のみ表示する %>
+        <% if trend_counts %>
+          <th scope="col" class="py-2 pl-3 pr-5 md:pr-2 text-right">動向</th>
+        <% end %>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+      <% venues.each do |venue| %>
+        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+          <th scope="row" class="py-2.5 pl-5 md:pl-2 pr-3 text-left font-normal">
+            <%= link_to venue.name, venue_path(venue.key),
+                  class: "font-bold text-indigo-700 dark:text-amber-400 underline decoration-indigo-600/25 dark:decoration-amber-400/40 underline-offset-2 hover:decoration-indigo-600 dark:hover:decoration-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 rounded-sm transition-colors" %>
+            <% if venue.closed? %>
+              <span class="ml-1 text-xs px-1.5 py-0.5 rounded bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200 whitespace-nowrap"><%= venue.status_text %></span>
+            <% end %>
+          </th>
+          <td class="py-2.5 px-3 whitespace-nowrap text-zinc-700 dark:text-zinc-300"><%= venue.venue_type_text %></td>
+          <td class="py-2.5 px-3 whitespace-nowrap text-zinc-700 dark:text-zinc-300"><%= venue.prefecture %></td>
+          <td class="py-2.5 px-3 whitespace-nowrap text-zinc-700 dark:text-zinc-300"><%= venue.area %></td>
+          <td class="py-2.5 px-3 <%= 'pr-5 md:pr-2' unless trend_counts %> whitespace-nowrap text-right tabular-nums text-zinc-700 dark:text-zinc-300"><%= number_with_delimiter(venue.capacity) if venue.capacity %></td>
+          <% if trend_counts %>
+            <td class="py-2.5 pl-3 pr-5 md:pr-2 whitespace-nowrap text-right tabular-nums text-zinc-700 dark:text-zinc-300"><%= trend_counts[venue.id] %></td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
