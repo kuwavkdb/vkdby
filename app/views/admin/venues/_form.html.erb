@@ -83,14 +83,25 @@
     </div>
   </fieldset>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <%# エリアは、選んだ都道府県の既存のエリアを候補に出す（表記をそろえるため、issue #1814） %>
+  <% area_options = Venue.area_options %>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"
+       data-controller="area-suggest" data-area-suggest-areas-value="<%= area_options.to_json %>">
     <div>
       <%= form.label :prefecture, "都道府県", class: label_class %>
-      <%= form.select :prefecture, Venue::PREFECTURES, { include_blank: "（未設定）" }, class: input_class %>
+      <%= form.select :prefecture, Venue::PREFECTURES, { include_blank: "（未設定）" }, class: input_class,
+            data: { area_suggest_target: "prefecture", action: "change->area-suggest#update" } %>
     </div>
     <div>
       <%= form.label :area, "エリア", class: label_class %>
-      <%= form.text_field :area, placeholder: "例: 新宿", class: input_class %>
+      <%= form.text_field :area, placeholder: "例: 新宿", list: "venue_area_options", autocomplete: "off", class: input_class,
+            aria: { describedby: "venue_area_help" } %>
+      <datalist id="venue_area_options" data-area-suggest-target="options">
+        <% area_options.fetch(venue.prefecture, []).each do |area| %>
+          <option value="<%= area %>"></option>
+        <% end %>
+      </datalist>
+      <p id="venue_area_help" class="<%= help_class %>">都道府県を選ぶと、登録済みのエリアが候補に出ます。</p>
     </div>
   </div>
 

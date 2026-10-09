@@ -155,6 +155,14 @@ class Venue < ApplicationRecord # rubocop:disable Metrics/ClassLength
     resolved if resolved&.kept?
   end
 
+  # エリアの入力の候補（都道府県 => 既存のエリアの配列、issue #1814）。投稿フォーム・管理画面の会場フォームで使う。
+  # 表記をそろえるため、会場の多いエリアを先に並べる
+  def self.area_options
+    kept.where.not(prefecture: nil).where.not(area: [nil, '']).group(:prefecture, :area).count
+        .sort_by { |(prefecture, area), count| [prefecture, -count, area] }
+        .each_with_object({}) { |((prefecture, area), _), options| (options[prefecture] ||= []) << area }
+  end
+
   # 都道府県・エリアページ（issue #1801）のURLの1段に使える値か。「/」を含む値はURLの段が崩れるため対象外
   def self.area_page_segment?(value)
     value.present? && value.exclude?('/')

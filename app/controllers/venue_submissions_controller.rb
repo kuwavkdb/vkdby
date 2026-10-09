@@ -9,7 +9,7 @@ class VenueSubmissionsController < ApplicationController
 
   def new
     @venue_submission = build_submission
-    @area_options = area_options if @venue_submission.new_venue?
+    @area_options = Venue.area_options if @venue_submission.new_venue?
   end
 
   def create
@@ -22,7 +22,7 @@ class VenueSubmissionsController < ApplicationController
       notify_admins(@venue_submission)
       redirect_to after_submit_path, notice: '投稿ありがとうございました。内容を確認のうえ、掲載を検討させていただきます。'
     else
-      @area_options = area_options if @venue_submission.new_venue?
+      @area_options = Venue.area_options if @venue_submission.new_venue?
       render :new, status: :unprocessable_entity
     end
   end
@@ -51,13 +51,6 @@ class VenueSubmissionsController < ApplicationController
     @similar_venues = Venue.kept.where(destination_key: nil)
                            .matching(normalize_search_query(@venue_submission.name)).order(:name).limit(10).to_a
     @similar_venues.empty?
-  end
-
-  # エリアの入力の候補（都道府県 => 既存のエリア）。表記をそろえるため、会場の多いエリアを先に並べる
-  def area_options
-    Venue.kept.where.not(prefecture: nil).where.not(area: [nil, '']).group(:prefecture, :area).count
-         .sort_by { |(prefecture, area), count| [prefecture, -count, area] }
-         .each_with_object({}) { |((prefecture, area), _), options| (options[prefecture] ||= []) << area }
   end
 
   def after_submit_path
