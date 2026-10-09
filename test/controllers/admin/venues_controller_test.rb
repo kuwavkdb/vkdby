@@ -43,6 +43,18 @@ module Admin
       assert_not_includes response.body, '新宿LOFT'
     end
 
+    test 'index links venue names to their public pages except discarded ones' do
+      login_as(users(:one))
+      discarded = Venue.create!(key: 'gone-hall', name: '削除済みホール')
+      discarded.discard
+
+      get admin_venues_path, params: { discarded: 'all' }
+
+      assert_select "a[href='#{venue_path('shinjuku-loft')}'][target='_blank']", text: /新宿LOFT/
+      assert_select "a[href='#{venue_path('gone-hall')}']", count: 0
+      assert_includes response.body, '削除済みホール'
+    end
+
     test 'index filters venues without a prefecture' do
       login_as(users(:one))
       Venue.create!(key: 'nowhere', name: '都道府県のない会場')
