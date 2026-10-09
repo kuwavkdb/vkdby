@@ -4,6 +4,8 @@ issue #1801。`/venues/area/:prefecture`（都道府県ページ）と `/venues/
 
 会場ページ（`/venues/:key`）の地図は、これとは別の Google マップの埋め込み（住所で検索、issue #1781）のまま。
 
+会場一覧（`/venues`）は都道府県を選ぶ画面（issue #1810）。地方ごとに都道府県と会場数を並べ、都道府県ページへ案内する。都道府県が未設定の会場は `/venues/area/未設定` に一覧する（サイトマップには載せない）。都道府県ページ・エリアページは `?venue_type=` で種別を絞り込める（`canonical` は絞り込みなしのページ）。旧一覧のクエリ（`?prefecture=`・`?area=`・`?venue_type=`・`?q=`・`?page=`）は新しいページへ 301 で転送する。
+
 ## 座標
 
 - `venues.latitude` / `venues.longitude`（世界測地系の10進数の度）と、取得元の `coordinates_source`（`geocoded` = 住所から自動取得 / `manual` = 管理画面で手入力）を持つ

@@ -20,14 +20,16 @@
           <%
             badge_class = "inline-block whitespace-nowrap bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-200 px-2 py-0.5 rounded text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/70 transition-colors border border-indigo-200 dark:border-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
             compact_items = []
-            # 種別は一覧の絞り込み、都道府県・エリアは都道府県ページ・エリアページ（issue #1801）へのリンクにする
-            compact_items << { label: "種別", value: link_to(@venue.venue_type_text, venues_path(venue_type: @venue.venue_type), class: badge_class) }
+            # 種別は都道府県ページ（都道府県未設定なら未設定の一覧）の種別の絞り込み（issue #1810）、
+            # 都道府県・エリアは都道府県ページ・エリアページ（issue #1801）へのリンクにする。URLを作れない値はリンクなし
+            compact_items << { label: "種別", value: link_to(@venue.venue_type_text, venue_type_page_path(@venue), class: badge_class) }
             compact_items << { label: "ステータス", value: tag.span(@venue.status_text, class: "whitespace-nowrap bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded text-xs font-bold text-zinc-600 dark:text-zinc-300") }
             if @venue.prefecture.present?
-              compact_items << { label: "都道府県", value: link_to(@venue.prefecture, venue_area_page_path(@venue.prefecture) || venues_path(prefecture: @venue.prefecture), class: badge_class) }
+              prefecture_path = venue_area_page_path(@venue.prefecture)
+              compact_items << { label: "都道府県", value: prefecture_path ? link_to(@venue.prefecture, prefecture_path, class: badge_class) : @venue.prefecture }
               if @venue.area.present?
-                area_path = venue_area_page_path(@venue.prefecture, @venue.area) || venues_path(prefecture: @venue.prefecture, area: @venue.area)
-                compact_items << { label: "エリア", value: link_to(@venue.area, area_path, class: badge_class) }
+                area_path = venue_area_page_path(@venue.prefecture, @venue.area)
+                compact_items << { label: "エリア", value: area_path ? link_to(@venue.area, area_path, class: badge_class) : @venue.area }
               end
             elsif @venue.area.present?
               compact_items << { label: "エリア", value: @venue.area }

@@ -42,7 +42,7 @@ module Admin
       scope = Venue.with_discarded.where.not(destination_key: nil) if params[:redirect_source] == 'only'
       scope = scope.matching(normalize_search_query(@q)) if @q.present?
       scope = scope.where(venue_type: params[:venue_type]) if Venue.venue_types.key?(params[:venue_type])
-      scope = scope.where(prefecture: params[:prefecture]) if Venue::PREFECTURES.include?(params[:prefecture])
+      scope = filter_by_prefecture(scope, params[:prefecture])
       scope = scope.where(status: params[:status]) if Venue.statuses.key?(params[:status])
       @pagy, @venues = pagy(scope.order(updated_at: :desc))
       return unless current_user.super_operator_or_above?
@@ -157,6 +157,14 @@ module Admin
     end
 
     private
+
+    # 都道府県での絞り込み。「未設定」（Venue::UNASSIGNED_PREFECTURE）は都道府県が空の会場
+    def filter_by_prefecture(scope, prefecture)
+      return scope.where(prefecture: nil) if prefecture == Venue::UNASSIGNED_PREFECTURE
+      return scope.where(prefecture: prefecture) if Venue::PREFECTURES.include?(prefecture)
+
+      scope
+    end
 
     # 一括更新する項目を { 'prefecture' => '東京都', 'area' => nil, ... } の形で返す。
     # 未指定（空）の項目は「変更しない」として含めない。不正な値があれば2つ目の戻り値にエラーメッセージを返す

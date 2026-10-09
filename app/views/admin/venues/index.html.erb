@@ -13,7 +13,7 @@
     <%= f.select :venue_type, options_for_select(Venue::VENUE_TYPE_TRANSLATIONS.map { |key, label| [label, key] }, params[:venue_type]),
           { include_blank: "すべての種別" },
           { onchange: "this.form.requestSubmit()", "aria-label": "種別で絞り込み", class: filter_class } %>
-    <%= f.select :prefecture, options_for_select(Venue::PREFECTURES, params[:prefecture]),
+    <%= f.select :prefecture, options_for_select([["都道府県未設定", Venue::UNASSIGNED_PREFECTURE]] + Venue::PREFECTURES, params[:prefecture]),
           { include_blank: "すべての都道府県" },
           { onchange: "this.form.requestSubmit()", "aria-label": "都道府県で絞り込み", class: filter_class } %>
     <%= f.select :status, options_for_select(Venue::STATUS_TRANSLATIONS.map { |key, label| [label, key] }, params[:status]),
@@ -71,7 +71,15 @@
               </td>
             <% end %>
             <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-              <%= venue.name %>
+              <%# 会場名は公開ページ（/venues/キー）へのリンク。論理削除済み・転送元など公開ページがない会場はリンクにしない %>
+              <% if venue.kept? && venue.destination_key.blank? %>
+                <%= link_to venue_path(venue.key), target: "_blank", rel: "noopener",
+                      class: "text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-sm" do %>
+                  <%= venue.name %><span class="sr-only">（公開ページを新しいタブで開く）</span>
+                <% end %>
+              <% else %>
+                <%= venue.name %>
+              <% end %>
               <% if venue.discarded? %>
                 <span class="ml-1 text-xs text-red-600 dark:text-red-400">削除済み</span>
               <% end %>
