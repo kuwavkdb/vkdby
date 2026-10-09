@@ -3,7 +3,7 @@
 require 'test_helper'
 
 # 会場の投稿フォーム（issue #1814）
-class VenueSubmissionsControllerTest < ActionDispatch::IntegrationTest
+class VenueSubmissionsControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
   include ActiveJob::TestHelper
 
   setup do
@@ -63,6 +63,25 @@ class VenueSubmissionsControllerTest < ActionDispatch::IntegrationTest
     assert_difference -> { VenueSubmission.count }, 1 do
       post venue_submissions_path, params: new_venue_params(name: '新宿LOFT').merge(confirmed: '1')
     end
+  end
+
+  test 'new suggests existing areas by prefecture' do
+    Venue.create!(key: 'shinjuku-marz', name: '新宿MARZ', prefecture: '東京都', area: '新宿')
+    Venue.create!(key: 'shibuya-quattro', name: '渋谷クアトロ', prefecture: '東京都', area: '渋谷')
+    Venue.create!(key: 'osaka-muse', name: '心斎橋MUSE', prefecture: '大阪府', area: '心斎橋')
+    Venue.create!(key: 'gone', name: '削除済み', prefecture: '東京都', area: '削除済みエリア').discard
+
+    get new_venue_submission_path
+
+    areas = JSON.parse(css_select("[data-controller='area-suggest']").first['data-area-suggest-areas-value'])
+    assert_equal({ '東京都' => %w[新宿 渋谷], '大阪府' => %w[心斎橋] }, areas)
+    assert_select "input[name='venue_submission[area]'][list='venue_submission_area_options']"
+  end
+
+  test 'the area suggestions follow the selected prefecture when the form is re-rendered' do
+    post venue_submissions_path, params: new_venue_params(name: '', prefecture: '東京都')
+
+    assert_select '#venue_submission_area_options option[value=?]', '新宿'
   end
 
   test 'new renders the correction form for a venue' do
