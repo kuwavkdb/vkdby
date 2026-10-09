@@ -1,0 +1,134 @@
+<% status_labels = { 'pending' => '未処理', 'rejected' => '却下済み', 'converted' => '登録・対応済み' } %>
+<% kind_labels = { nil => 'すべて', 'new_venue' => '新しい会場', 'correction' => '訂正' } %>
+<% title = "会場投稿一覧（#{status_labels[@status_filter]}）" %>
+<% content_for :title, title %>
+<%
+  # 会場の投稿（issue #1814）。ユニット・動向の投稿一覧と同じ作り
+  tab_active = "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
+  tab_inactive = "bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+  link_class = "text-indigo-600 dark:text-indigo-400 hover:underline"
+%>
+<div class="container mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100"><%= title %></h1>
+    <span class="text-sm text-gray-500 dark:text-gray-400"><%= @pagy.count %> 件</span>
+  </div>
+
+  <nav aria-label="状態" class="flex gap-1 mb-3 border-b border-gray-200 dark:border-gray-700">
+    <% status_labels.each do |status, label| %>
+      <%= link_to label, admin_venue_submissions_path(status: status, kind: @kind_filter),
+            aria: { current: (@status_filter == status ? "page" : nil) },
+            class: "px-4 py-2 text-sm font-medium rounded-t-md border border-b-0 #{@status_filter == status ? tab_active : tab_inactive}" %>
+    <% end %>
+  </nav>
+
+  <nav aria-label="種類" class="flex flex-wrap gap-2 mb-6 text-sm">
+    <% kind_labels.each do |kind, label| %>
+      <%= link_to label, admin_venue_submissions_path(status: @status_filter, kind: kind),
+            aria: { current: (@kind_filter == kind ? "page" : nil) },
+            class: "px-3 py-1 rounded #{@kind_filter == kind ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}" %>
+    <% end %>
+  </nav>
+
+  <div class="mb-4 flex justify-center">
+    <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
+  </div>
+
+  <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg mb-4">
+    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+      <thead class="bg-gray-50 dark:bg-gray-700">
+        <tr>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">受付日時</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">種類/会場</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">内容</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">情報源/連絡先</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">アクション</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+        <% @venue_submissions.each do |submission| %>
+          <tr>
+            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+              <%= submission.created_at.strftime('%Y-%m-%d %H:%M') %>
+              <% if submission.submitter_ip.present? %>
+                <span class="block text-xs text-gray-500">IP: <%= submission.submitter_ip %></span>
+              <% end %>
+            </td>
+            <td class="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">
+              <% if submission.correction? %>
+                <span class="inline-block mb-1 px-1.5 py-0.5 text-xs font-medium rounded bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">訂正</span>
+                <% if submission.venue %>
+                  <span class="block"><%= link_to submission.venue.name, edit_admin_venue_path(submission.venue), class: link_class %></span>
+                <% end %>
+              <% else %>
+                <span class="inline-block mb-1 px-1.5 py-0.5 text-xs font-medium rounded bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">新しい会場</span>
+                <span class="block font-medium"><%= submission.name %></span>
+                <% if submission.name_kana.present? %>
+                  <span class="block text-xs text-gray-500 dark:text-gray-400"><%= submission.name_kana %></span>
+                <% end %>
+              <% end %>
+            </td>
+            <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-300 max-w-sm">
+              <% if submission.correction? %>
+                <p class="whitespace-pre-wrap break-words"><%= submission.correction %></p>
+              <% else %>
+                <p><%= [submission.prefecture, submission.area].compact_blank.join(" ") %></p>
+                <% if submission.address.present? %><p><%= submission.address %></p><% end %>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  <%= [submission.venue_type_text, ("キャパ #{submission.capacity}" if submission.capacity)].compact.join(" / ") %>
+                </p>
+              <% end %>
+              <% if submission.note.present? %>
+                <p class="mt-1 text-xs whitespace-pre-wrap break-words">補足: <%= submission.note %></p>
+              <% end %>
+            </td>
+            <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+              <% if submission.source_url.present? %>
+                <%= link_to submission.source_url, submission.source_url, target: "_blank", rel: "noopener", class: "#{link_class} break-all" %>
+              <% end %>
+              <% if submission.email.present? %>
+                <p class="mt-1 text-xs">連絡先: <%= submission.email %></p>
+              <% end %>
+            </td>
+            <td class="px-4 py-4 whitespace-nowrap text-sm">
+              <% if submission.pending? %>
+                <div class="flex flex-col gap-2 items-start">
+                  <% if submission.correction? %>
+                    <% if submission.venue %>
+                      <%= link_to "会場を編集", edit_admin_venue_path(submission.venue),
+                            class: "px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded hover:bg-indigo-700" %>
+                    <% end %>
+                    <%= button_to "対応済みにする", resolve_admin_venue_submission_path(submission), method: :patch,
+                          form_class: "inline",
+                          class: "px-3 py-1.5 text-xs font-medium bg-white dark:bg-gray-800 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700 rounded hover:bg-indigo-50 dark:hover:bg-gray-700 cursor-pointer" %>
+                  <% else %>
+                    <%= link_to "登録する", new_admin_venue_path(venue_submission_id: submission.id),
+                          class: "px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded hover:bg-indigo-700" %>
+                  <% end %>
+                  <%= button_to "却下", reject_admin_venue_submission_path(submission), method: :patch,
+                        form_class: "inline",
+                        onclick: "return confirm('この投稿を却下しますか？')",
+                        class: "px-3 py-1.5 text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer border-0" %>
+                </div>
+              <% elsif submission.converted? %>
+                <% venue = submission.converted_venue || submission.venue %>
+                <% if venue %>
+                  <%= link_to "#{venue.name} を見る", edit_admin_venue_path(venue), class: link_class %>
+                <% else %>
+                  <span class="text-gray-500">会場が見つかりません</span>
+                <% end %>
+              <% else %>
+                <span class="text-gray-500">却下済み</span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @venue_submissions.none? %>
+          <tr>
+            <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">該当する投稿はありません</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

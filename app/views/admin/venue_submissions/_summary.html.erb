@@ -1,0 +1,25 @@
+<%# 会場の投稿（issue #1814）の内容。会場の新規作成・編集画面で、引き継いだ投稿・未処理の訂正を表示する %>
+<div class="mb-4 px-4 py-3 rounded-md bg-indigo-50 border border-indigo-200 text-sm text-indigo-950 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-100" role="status">
+  <p class="font-semibold"><%= heading %></p>
+  <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+    <dt class="text-gray-600 dark:text-gray-300">受付日時</dt>
+    <dd><%= venue_submission.created_at.strftime('%Y-%m-%d %H:%M') %></dd>
+    <% if venue_submission.correction? %>
+      <dt class="text-gray-600 dark:text-gray-300">訂正内容</dt>
+      <dd class="whitespace-pre-wrap break-words"><%= venue_submission.correction %></dd>
+    <% end %>
+    <% if venue_submission.source_url.present? %>
+      <dt class="text-gray-600 dark:text-gray-300">情報源</dt>
+      <dd><%= link_to venue_submission.source_url, venue_submission.source_url, target: "_blank", rel: "noopener", class: "text-indigo-700 dark:text-indigo-300 underline break-all" %></dd>
+    <% end %>
+    <% if venue_submission.note.present? %>
+      <dt class="text-gray-600 dark:text-gray-300">補足</dt>
+      <dd class="whitespace-pre-wrap break-words"><%= venue_submission.note %></dd>
+    <% end %>
+    <% if venue_submission.email.present? %>
+      <dt class="text-gray-600 dark:text-gray-300">連絡先</dt>
+      <dd><%= venue_submission.email %></dd>
+    <% end %>
+  </dl>
+  <%= local_assigns[:actions] %>
+</div>

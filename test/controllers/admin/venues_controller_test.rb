@@ -67,6 +67,21 @@ module Admin
       assert_select "select[name='prefecture'] option[value='#{Venue::UNASSIGNED_PREFECTURE}'][selected]", text: '都道府県未設定'
     end
 
+    test 'edit form suggests existing areas of the venue prefecture' do
+      login_as(users(:one))
+      Venue.create!(key: 'shinjuku-marz', name: '新宿MARZ', prefecture: '東京都', area: '新宿')
+      Venue.create!(key: 'shibuya-quattro', name: '渋谷クアトロ', prefecture: '東京都', area: '渋谷')
+      Venue.create!(key: 'osaka-muse', name: '心斎橋MUSE', prefecture: '大阪府', area: '心斎橋')
+
+      get edit_admin_venue_path(@venue)
+
+      areas = JSON.parse(css_select("[data-controller='area-suggest']").first['data-area-suggest-areas-value'])
+      assert_equal({ '東京都' => %w[新宿 渋谷], '大阪府' => %w[心斎橋] }, areas)
+      assert_select "input[name='venue[area]'][list='venue_area_options']"
+      assert_select '#venue_area_options option', count: 2
+      assert_select '#venue_area_options option[value=?]', '新宿'
+    end
+
     test 'new renders the form' do
       login_as(users(:one))
 

@@ -43,6 +43,12 @@
           </section>
         <% end %>
       </nav>
+
+      <%# 会場の投稿フォーム（issue #1814）への導線 %>
+      <p class="mt-8 text-center text-sm text-zinc-600 dark:text-zinc-300">
+        お探しの会場が見つかりませんか？
+        <%= link_to "会場の情報を投稿する", new_venue_submission_path, class: "font-bold text-indigo-700 dark:text-amber-400 underline decoration-indigo-600/25 dark:decoration-amber-400/40 underline-offset-2 hover:decoration-indigo-600 dark:hover:decoration-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 rounded-sm" %>
+      </p>
     </div>
   </div>
 </div>

@@ -189,6 +189,14 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
   end
   resources :unit_submissions, only: %i[new create]
   resources :trend_submissions, only: %i[new create]
+  resources :venue_submissions, only: %i[new create]
+  # 会場の投稿の管理（issue #1814）。上の admin 名前空間のブロックが長くなりすぎないよう分けて書く
+  namespace :admin do
+    resources :venue_submissions, only: %i[index] do
+      patch :reject, on: :member
+      patch :resolve, on: :member
+    end
+  end
   resources :trends, only: %i[index show]
   resources :items, only: %i[index show]
   # 都道府県・エリアごとの会場の地図と一覧（issue #1801）。URLには都道府県・エリアの値（日本語）をそのまま使う。

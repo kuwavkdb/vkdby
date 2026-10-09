@@ -88,7 +88,9 @@ module Admin
     # URLパラメーター（venue[...]）での事前入力に対応する（venue-urlスキル、issue #1705）。
     # 事前入力された名前と一致しそうな既存の会場を表示して、重複登録を防ぐ
     def new
-      @venue = Venue.new(venue_params_for_new)
+      # 会場の投稿（issue #1814）からの「登録する」では、投稿の内容を初期値にする
+      @venue_submission = pending_new_venue_submission
+      @venue = Venue.new(@venue_submission ? @venue_submission.venue_attributes : venue_params_for_new)
       @venue.links.build
       @similar_venues = similar_venues_for(@venue)
     end
@@ -99,18 +101,16 @@ module Admin
       # 論理削除済み・転送先がない会場は公開ページが404になるためnil
       @public_venue = Venue.resolve_by_key(@venue.key)
       @public_venue = nil unless @public_venue&.kept?
-      @wiki_page_imports = @venue.wiki_page_imports.includes(:wikipage).order(updated_at: :desc)
-      @update_logs = UpdateLog.for_venue(@venue).includes(:user).order(created_at: :desc).limit(50)
+      load_edit_sidebar
     end
 
     def create
       @venue = Venue.new(venue_params)
 
-      if @venue.save
-        record_update_log(@venue, action: 'create')
-        @venue.links.each { |link| record_update_log(link, action: 'create', subject: @venue) }
+      if save_new_venue
         redirect_to edit_admin_venue_path(@venue), notice: '会場を作成しました。'
       else
+        @venue_submission = pending_new_venue_submission
         @venue.links.build if @venue.links.none?(&:new_record?)
         render :new, status: :unprocessable_entity
       end
@@ -125,8 +125,7 @@ module Admin
         redirect_to edit_admin_venue_path(@venue), notice: '会場を更新しました。'
       else
         @venue.links.build if @venue.links.none?(&:new_record?)
-        @wiki_page_imports = @venue.wiki_page_imports.includes(:wikipage).order(updated_at: :desc)
-        @update_logs = UpdateLog.for_venue(@venue).includes(:user).order(created_at: :desc).limit(50)
+        load_edit_sidebar
         render :edit, status: :unprocessable_entity
       end
     end
@@ -157,6 +156,38 @@ module Admin
     end
 
     private
+
+    # 会場の作成と、投稿からの登録なら投稿の「取り込み済み」への更新をまとめて行う（issue #1814）。
+    # 投稿の更新に失敗したときに会場だけが残り、再登録で重複するのを防ぐ。
+    # 失敗したら会場の作成も取り消し、500にせずフォームを描き直す
+    def save_new_venue
+      Venue.transaction do
+        next false unless @venue.save
+
+        record_update_log(@venue, action: 'create')
+        @venue.links.each { |link| record_update_log(link, action: 'create', subject: @venue) }
+        pending_new_venue_submission&.update!(submission_status: :converted, converted_venue: @venue)
+        true
+      end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved
+      flash.now[:alert] = '投稿の取り込みに失敗したため、会場を作成しませんでした。もう一度お試しください。'
+      false
+    end
+
+    # 編集画面の取り込み元・更新履歴・未処理の訂正。保存に失敗して描き直すときにも使う
+    def load_edit_sidebar
+      @wiki_page_imports = @venue.wiki_page_imports.includes(:wikipage).order(updated_at: :desc)
+      @update_logs = UpdateLog.for_venue(@venue).includes(:user).order(created_at: :desc).limit(50)
+      # 未処理の訂正の投稿（issue #1814）。投稿の管理は admin のみのため admin にだけ表示する
+      @venue_corrections = @venue.venue_submissions.pending.correction.recent if current_user.admin?
+    end
+
+    # 会場の投稿からの登録（issue #1814）。投稿の管理は admin のみのため、admin 以外は投稿を引き継がない
+    def pending_new_venue_submission
+      return nil if params[:venue_submission_id].blank? || !current_user.admin?
+
+      VenueSubmission.pending.new_venue.find_by(id: params[:venue_submission_id])
+    end
 
     # 都道府県での絞り込み。「未設定」（Venue::UNASSIGNED_PREFECTURE）は都道府県が空の会場
     def filter_by_prefecture(scope, prefecture)

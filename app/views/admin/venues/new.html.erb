@@ -3,6 +3,10 @@
 <div class="container mx-auto px-4 py-8">
   <div class="max-w-2xl mx-auto">
     <h1 class="text-2xl font-bold mb-6"><%= title %></h1>
+    <% if @venue_submission %>
+      <%= render "admin/venue_submissions/summary", venue_submission: @venue_submission,
+            heading: "投稿フォームから送られた会場の情報を引き継いでいます。保存すると、この投稿は登録済みになります。" %>
+    <% end %>
     <% if @similar_venues.present? %>
       <div class="mb-4 px-4 py-3 rounded-md bg-amber-50 border border-amber-200 text-sm text-amber-900 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-100" role="status">
         <p class="font-semibold">名前・別名・旧名が一致しそうな会場がすでにあります。重複して登録しないよう確認してください。</p>
