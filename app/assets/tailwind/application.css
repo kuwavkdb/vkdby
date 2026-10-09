@@ -165,3 +165,22 @@
     }
   }
 }
+/* 都道府県・エリアページの地図のポップアップ（issue #1801、app/javascript/venue_map/popup.js）。
+   地図ライブラリのCSS（レイヤー外）より優先させるため @layer に入れない。
+   ポップアップの背景はダークモードでも白のため、文字はライトモードの配色にする */
+.venue-map-popup .venue-map-popup__name {
+  font-weight: 700;
+  color: #4338ca; /* indigo-700 */
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.venue-map-popup .venue-map-popup__name:focus-visible {
+  outline: 2px solid #6366f1; /* indigo-500 */
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.venue-map-popup .venue-map-popup__type {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #52525b; /* zinc-600 */
+}

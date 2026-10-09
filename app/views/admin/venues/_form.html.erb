@@ -97,6 +97,31 @@
     <%= form.text_field :address, class: input_class %>
   </div>
 
+  <%# 座標（issue #1801）。都道府県・エリアページの地図に使う。住所から自動取得し、ずれ・取得失敗は手入力で直す %>
+  <fieldset>
+    <legend class="<%= label_class %>">
+      座標
+      <span class="ml-1 text-xs font-normal text-gray-600 dark:text-gray-300">
+        （<%= if venue.coordinates_manual? then "手入力" elsif venue.coordinates_geocoded? then "住所から自動取得" else "未取得" end %>）
+      </span>
+    </legend>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <%= form.label :latitude, "緯度", class: small_label_class %>
+        <%= form.text_field :latitude, inputmode: "decimal", placeholder: "例: 35.693840", class: small_input_class %>
+      </div>
+      <div>
+        <%= form.label :longitude, "経度", class: small_label_class %>
+        <%= form.text_field :longitude, inputmode: "decimal", placeholder: "例: 139.703549", class: small_input_class %>
+      </div>
+    </div>
+    <p class="<%= help_class %>">
+      住所を保存すると国土地理院の住所検索で自動取得します（反映まで少し時間がかかります）。
+      位置がずれている・取得できない場合は緯度・経度を入力してください。入力した座標は住所を変えても上書きされません。
+      両方を空にして保存すると、住所からの自動取得に戻ります。
+    </p>
+  </fieldset>
+
   <div>
     <%= form.label :capacity, "キャパシティ", class: label_class %>
     <%= form.number_field :capacity, min: 1, step: 1, class: input_class %>
