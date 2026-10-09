@@ -87,7 +87,9 @@
         </section>
 
         <%= render LinksComponent.new(links: @links) %>
-        <p class="mt-6 text-sm"><%= link_to "← 会場一覧へ", venues_path, class: link_class %></p>
+        <%# 会場の情報の訂正の投稿（issue #1814） %>
+        <p class="mt-6 text-sm"><%= link_to "この会場の情報の訂正を送る", new_venue_submission_path(venue_id: @venue.id), class: link_class %></p>
+        <p class="mt-3 text-sm"><%= link_to "← 会場一覧へ", venues_path, class: link_class %></p>
       </div>
 
       <section aria-labelledby="venue-trends-heading">

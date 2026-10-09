@@ -88,7 +88,9 @@ module Admin
     # URLパラメーター（venue[...]）での事前入力に対応する（venue-urlスキル、issue #1705）。
     # 事前入力された名前と一致しそうな既存の会場を表示して、重複登録を防ぐ
     def new
-      @venue = Venue.new(venue_params_for_new)
+      # 会場の投稿（issue #1814）からの「登録する」では、投稿の内容を初期値にする
+      @venue_submission = pending_new_venue_submission
+      @venue = Venue.new(@venue_submission ? @venue_submission.venue_attributes : venue_params_for_new)
       @venue.links.build
       @similar_venues = similar_venues_for(@venue)
     end
@@ -101,6 +103,8 @@ module Admin
       @public_venue = nil unless @public_venue&.kept?
       @wiki_page_imports = @venue.wiki_page_imports.includes(:wikipage).order(updated_at: :desc)
       @update_logs = UpdateLog.for_venue(@venue).includes(:user).order(created_at: :desc).limit(50)
+      # 未処理の訂正の投稿（issue #1814）。投稿の管理は admin のみのため admin にだけ表示する
+      @venue_corrections = @venue.venue_submissions.pending.correction.recent if current_user.admin?
     end
 
     def create
@@ -109,8 +113,10 @@ module Admin
       if @venue.save
         record_update_log(@venue, action: 'create')
         @venue.links.each { |link| record_update_log(link, action: 'create', subject: @venue) }
+        pending_new_venue_submission&.update!(submission_status: :converted, converted_venue: @venue)
         redirect_to edit_admin_venue_path(@venue), notice: '会場を作成しました。'
       else
+        @venue_submission = pending_new_venue_submission
         @venue.links.build if @venue.links.none?(&:new_record?)
         render :new, status: :unprocessable_entity
       end
@@ -157,6 +163,13 @@ module Admin
     end
 
     private
+
+    # 会場の投稿からの登録（issue #1814）。投稿の管理は admin のみのため、admin 以外は投稿を引き継がない
+    def pending_new_venue_submission
+      return nil if params[:venue_submission_id].blank? || !current_user.admin?
+
+      VenueSubmission.pending.new_venue.find_by(id: params[:venue_submission_id])
+    end
 
     # 都道府県での絞り込み。「未設定」（Venue::UNASSIGNED_PREFECTURE）は都道府県が空の会場
     def filter_by_prefecture(scope, prefecture)

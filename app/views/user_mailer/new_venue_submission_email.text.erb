@@ -1,0 +1,18 @@
+<%= @venue_submission.correction? ? "会場の訂正の投稿があります" : "新しい会場の投稿があります" %>
+
+<%= @admin_user.name %> さん、
+ログイン不要の投稿フォームから<%= @venue_submission.correction? ? "会場の訂正" : "新しい会場の情報" %>の投稿がありました。
+
+会場: <%= @venue_submission.display_name %>
+<% if @venue_submission.correction? -%>
+訂正内容: <%= @venue_submission.correction %>
+<% else -%>
+都道府県: <%= @venue_submission.prefecture %>
+<% end -%>
+
+内容を確認のうえ、対応をお願いします。
+
+投稿一覧: <%= @url %>
+
+Thanks,
+VKDBY Team

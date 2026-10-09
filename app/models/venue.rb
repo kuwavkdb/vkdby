@@ -56,6 +56,8 @@ class Venue < ApplicationRecord # rubocop:disable Metrics/ClassLength
   accepts_nested_attributes_for :links, allow_destroy: true, reject_if: proc { |attrs| attrs['url'].blank? }
   has_many :wiki_page_imports, as: :import_target
   has_many :trends, dependent: :nullify
+  # 投稿フォームからの訂正（issue #1814）
+  has_many :venue_submissions, dependent: :nullify
 
   enum :venue_type, { live_house: 0, hall: 1, studio: 2, outdoor: 3, streaming: 4, other: 99 }
   enum :status, { active: 1, closed: 2, unknown: 99 }

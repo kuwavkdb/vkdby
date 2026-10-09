@@ -6,6 +6,8 @@
   help_class = "mt-1 text-xs text-gray-500 dark:text-gray-400"
 %>
 <%= form_with(model: [:admin, venue], class: "space-y-6") do |form| %>
+  <%# 会場の投稿（issue #1814）から登録する場合は、作成時に投稿を converted にするため投稿のIDを引き継ぐ %>
+  <%= hidden_field_tag :venue_submission_id, @venue_submission.id if @venue_submission %>
   <% if venue.errors.any? %>
     <div class="bg-red-50 dark:bg-red-900/50 p-4 rounded text-red-700 dark:text-red-100" role="alert">
       <h2><%= venue.errors.count %>件のエラーがあるため保存できませんでした:</h2>

@@ -18,6 +18,24 @@
         この会場は <code class="font-mono"><%= @venue.destination_key %></code> へ転送されます。
       </p>
     <% end %>
+    <% if @venue_corrections.present? %>
+      <%# 未処理の訂正の投稿（issue #1814）。内容を反映したら「対応済みにする」 %>
+      <% @venue_corrections.each do |venue_submission| %>
+        <% actions = capture do %>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <%= button_to "対応済みにする", resolve_admin_venue_submission_path(venue_submission), method: :patch,
+                  form_class: "inline",
+                  class: "px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded hover:bg-indigo-700 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500" %>
+            <%= button_to "却下", reject_admin_venue_submission_path(venue_submission), method: :patch,
+                  form_class: "inline",
+                  onclick: "return confirm('この投稿を却下しますか？')",
+                  class: "px-3 py-1.5 text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500" %>
+          </div>
+        <% end %>
+        <%= render "admin/venue_submissions/summary", venue_submission: venue_submission, actions: actions,
+              heading: "この会場への訂正の投稿があります。内容を反映したら「対応済みにする」を押してください。" %>
+      <% end %>
+    <% end %>
     <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
       <%= render "form", venue: @venue %>
     </div>
