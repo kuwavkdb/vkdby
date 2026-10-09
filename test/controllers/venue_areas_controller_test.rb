@@ -3,7 +3,7 @@
 require 'test_helper'
 
 # 都道府県ページ・エリアページ（issue #1801）
-class VenueAreasControllerTest < ActionDispatch::IntegrationTest
+class VenueAreasControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
   setup do
     @loft = Venue.create!(key: 'shinjuku-loft', name: '新宿LOFT', prefecture: '東京都', area: '新宿',
                           latitude: 35.69384, longitude: 139.703549)
@@ -112,11 +112,56 @@ class VenueAreasControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#{venue_area_path('東京都', '新宿')}']", text: '新宿'
   end
 
-  test 'venue index links to the area page of the selected prefecture and area' do
-    get venues_path(prefecture: '東京都')
-    assert_select "a[href='#{venue_prefecture_path('東京都')}']", text: /東京都の会場を地図で見る/
+  test 'filters the list and the map by venue type' do
+    get venue_prefecture_path('東京都', venue_type: 'hall')
 
-    get venues_path(prefecture: '東京都', area: '新宿')
-    assert_select "a[href='#{venue_area_path('東京都', '新宿')}']", text: /東京都 新宿の会場を地図で見る/
+    assert_response :success
+    assert_select 'table tbody tr', count: 1
+    assert_select 'table tbody th a', text: '日本武道館'
+    assert_equal ['日本武道館'], map_venues.pluck('name')
+    assert_select "nav[aria-label='種別で絞り込み'] a[aria-current='page']", text: /ホール\s*\(1\)/
+    assert_select "nav[aria-label='種別で絞り込み'] a[href='#{venue_prefecture_path('東京都')}']", text: 'すべて'
+    assert_select "link[rel='canonical'][href='#{venue_prefecture_url('東京都')}']"
+  end
+
+  test 'type chips show only the types present in the range' do
+    get venue_area_path('東京都', '新宿')
+
+    assert_select "nav[aria-label='種別で絞り込み'] a", text: /ライブハウス\s*\(3\)/
+    assert_select "nav[aria-label='種別で絞り込み'] a", text: /ホール/, count: 0
+    assert_select "link[rel='canonical'][href='#{venue_area_url('東京都', '新宿')}']"
+  end
+
+  test 'ignores an unknown venue type and shows a message when the type has no venues' do
+    get venue_prefecture_path('東京都', venue_type: 'castle')
+    assert_response :success
+    assert_select 'table tbody tr', count: 5
+
+    get venue_area_path('東京都', '九段下', venue_type: 'live_house')
+    assert_response :success
+    assert_select 'table', count: 0
+    assert_includes response.body, 'この種別の会場はありません。'
+  end
+
+  test 'unassigned page lists venues without a prefecture' do
+    Venue.create!(key: 'somewhere', name: '都道府県のない会場', latitude: 35.0, longitude: 139.0)
+
+    get venue_prefecture_path(Venue::UNASSIGNED_PREFECTURE)
+
+    assert_response :success
+    assert_select 'h1', text: /都道府県未設定/
+    assert_select 'table tbody tr', count: 1
+    assert_select 'table tbody th a', text: '都道府県のない会場'
+    assert_equal ['都道府県のない会場'], map_venues.pluck('name')
+    assert_select "nav[aria-label='エリア']", count: 0
+  end
+
+  test 'unassigned page is 404 without venues and has no area pages' do
+    get venue_prefecture_path(Venue::UNASSIGNED_PREFECTURE)
+    assert_response :not_found
+
+    Venue.create!(key: 'somewhere', name: '都道府県のない会場', area: '新宿')
+    get venue_area_path(Venue::UNASSIGNED_PREFECTURE, '新宿')
+    assert_response :not_found
   end
 end
