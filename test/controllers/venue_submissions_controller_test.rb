@@ -126,8 +126,14 @@ class VenueSubmissionsControllerTest < ActionDispatch::IntegrationTest # rubocop
   end
 
   test 'venue pages and lists link to the submission form' do
+    original_shortname = ENV.fetch('DISQUS_SHORTNAME', nil)
+    ENV['DISQUS_SHORTNAME'] = 'vkdbjp'
     get venue_path(@venue.key)
-    assert_select "a[href='#{new_venue_submission_path(venue_id: @venue.id)}']", text: 'この会場の情報の訂正を送る'
+    ENV['DISQUS_SHORTNAME'] = original_shortname
+    assert_select "a[href='#{new_venue_submission_path(venue_id: @venue.id)}']", text: /この会場の情報の訂正を送る/
+    assert_operator response.body.index('この会場の情報の訂正を送る'), :<, response.body.index('id="comments"'),
+                    '訂正の導線はコメント欄の上に置く'
+    assert_select "a[href='#{venues_path}']", text: /会場一覧へ/, count: 0
 
     get venues_path
     assert_select "a[href='#{new_venue_submission_path}']", text: '会場の情報を投稿する'
