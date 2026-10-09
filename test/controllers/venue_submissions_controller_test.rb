@@ -58,11 +58,28 @@ class VenueSubmissionsControllerTest < ActionDispatch::IntegrationTest # rubocop
     assert_response :unprocessable_entity
     assert_select "a[href='#{venue_path(@venue.key)}']", text: '新宿LOFT'
     assert_select "a[href='#{new_venue_submission_path(venue_id: @venue.id)}']", text: 'この会場の訂正を送る'
-    assert_select "input[name='confirmed'][value='1']"
+    assert_select "input[name='confirmed_name'][value='新宿LOFT']"
 
     assert_difference -> { VenueSubmission.count }, 1 do
-      post venue_submissions_path, params: new_venue_params(name: '新宿LOFT').merge(confirmed: '1')
+      post venue_submissions_path, params: new_venue_params(name: '新宿LOFT').merge(confirmed_name: '新宿LOFT')
     end
+  end
+
+  test 'create asks for confirmation again when the name changes after confirming' do
+    assert_no_difference -> { VenueSubmission.count } do
+      post venue_submissions_path, params: new_venue_params(name: '新宿LOFT').merge(confirmed_name: 'LOFT')
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "input[name='confirmed_name'][value='新宿LOFT']"
+  end
+
+  test 'create does not fail with a server error when the submission is not a hash' do
+    assert_no_difference -> { VenueSubmission.count } do
+      post venue_submissions_path, params: { venue_submission: 'x' }
+    end
+
+    assert_response :unprocessable_entity
   end
 
   test 'new suggests existing areas by prefecture' do

@@ -41,12 +41,16 @@ class VenueSubmissionsController < ApplicationController
 
   def submission_params
     attributes = @venue_submission.correction? ? [:correction, *COMMON_ATTRIBUTES] : [*NEW_VENUE_ATTRIBUTES, *COMMON_ATTRIBUTES]
-    params.fetch(:venue_submission, {}).permit(*attributes)
+    submitted = params[:venue_submission]
+    # ログイン不要のフォームなので、ハッシュ以外が送られても500にしない
+    submitted.is_a?(ActionController::Parameters) ? submitted.permit(*attributes) : {}
   end
 
-  # 新しい会場の投稿で、似た会場があるのにまだ確認していなければ、候補を表示してもう一度送ってもらう
+  # 新しい会場の投稿で、似た会場があるのにまだ確認していなければ、候補を表示してもう一度送ってもらう。
+  # 確認済みとみなすのは、確認した時点の会場名（confirmed_name）から名前を変えずに送り直したときだけ
   def duplicate_candidates_confirmed?
-    return true if @venue_submission.correction? || params[:confirmed].present?
+    return true if @venue_submission.correction?
+    return true if params[:confirmed_name].present? && params[:confirmed_name].to_s.strip == @venue_submission.name
 
     @similar_venues = Venue.kept.where(destination_key: nil)
                            .matching(normalize_search_query(@venue_submission.name)).order(:name).limit(10).to_a

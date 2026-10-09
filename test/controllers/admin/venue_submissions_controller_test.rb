@@ -86,6 +86,20 @@ module Admin
       assert_equal venue, @new_venue.converted_venue
     end
 
+    test 'creating a venue is rolled back when converting the submission fails' do
+      login_as(users(:admin))
+
+      stub_instance_method(VenueSubmission, :update!, ->(*) { raise ActiveRecord::RecordNotSaved, 'failed' }) do
+        post admin_venues_path, params: { venue_submission_id: @new_venue.id,
+                                          venue: { key: 'submitted-venue', name: '投稿された会場' } }
+      rescue ActiveRecord::RecordNotSaved
+        nil
+      end
+
+      assert_nil Venue.find_by(key: 'submitted-venue')
+      assert @new_venue.reload.pending?
+    end
+
     test 'operators do not take over submissions in the venue form' do
       operator = User.create!(email: 'operator@example.com', name: 'Operator', password: 'password', role: :operator)
       login_as(operator)
@@ -108,6 +122,15 @@ module Admin
       login_as(users(:one))
       get edit_admin_venue_path(@venue)
       assert_not_includes response.body, '閉店しました'
+    end
+
+    test 'venue edit page keeps showing pending corrections when the update fails' do
+      login_as(users(:admin))
+      patch admin_venue_path(@venue), params: { venue: { name: '' } }
+
+      assert_response :unprocessable_entity
+      assert_includes response.body, '閉店しました'
+      assert_select "form[action='#{resolve_admin_venue_submission_path(@correction)}']"
     end
   end
 end

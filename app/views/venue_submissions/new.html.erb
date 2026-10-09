@@ -77,7 +77,8 @@
           <%= field_errors.call(:correction) %>
         </div>
       <% else %>
-        <%= hidden_field_tag :confirmed, "1" if @similar_venues.present? %>
+        <%# 候補を確認した時点の会場名。名前を変えて送り直したら確認をやり直す %>
+        <%= hidden_field_tag :confirmed_name, @venue_submission.name if @similar_venues.present? %>
         <div>
           <%= form.label :name, class: label_class do %>会場名<%= required_badge %><% end %>
           <%= form.text_field :name, required: true, placeholder: "例: 新宿LOFT", class: input_class,
