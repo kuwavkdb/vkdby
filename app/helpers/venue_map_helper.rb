@@ -33,4 +33,11 @@ module VenueMapHelper
 
     venue_area_path(prefecture, area) if Venue.area_page_segment?(area)
   end
+
+  # 会場ページの種別のバッジのリンク先（issue #1810）。その会場の都道府県ページ（都道府県が未設定なら
+  # 都道府県未設定の一覧）を同じ種別で絞り込んだページ
+  def venue_type_page_path(venue)
+    prefecture = venue.prefecture.presence || Venue::UNASSIGNED_PREFECTURE
+    venue_prefecture_path(prefecture, venue_type: venue.venue_type)
+  end
 end

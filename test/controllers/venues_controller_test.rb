@@ -3,7 +3,7 @@
 require 'test_helper'
 
 # 会場の公開ページ（issue #1691）
-class VenuesControllerTest < ActionDispatch::IntegrationTest
+class VenuesControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
   setup do
     @loft = Venue.create!(key: 'shinjuku-loft', name: '新宿LOFT', name_kana: 'しんじゅくろふと',
                           prefecture: '東京都', area: '新宿', venue_type: :live_house, capacity: 550,
@@ -16,54 +16,79 @@ class VenuesControllerTest < ActionDispatch::IntegrationTest
                            venue_type: :live_house)
   end
 
-  test 'index lists kept venues' do
-    discarded = Venue.create!(key: 'gone', name: '削除済み会場')
-    discarded.discard
+  test 'index lists prefectures by region with venue counts' do
+    Venue.create!(key: 'gone', name: '削除済み会場', prefecture: '北海道').discard
 
     get venues_path
 
     assert_response :success
-    assert_select "a[href='#{venue_path(@loft.key)}']", text: '新宿LOFT'
-    assert_select "a[href='#{venue_path(@hall.key)}']"
-    assert_select "a[href='#{venue_path(@osaka.key)}']"
+    assert_select 'h1', text: /3 records/
+    assert_select "nav[aria-label='都道府県から会場を探す'] h2", text: '関東'
+    assert_select "nav[aria-label='都道府県から会場を探す'] h2", text: '近畿'
+    assert_select "a[href='#{venue_prefecture_path('東京都')}']", text: /東京都\s*2/
+    assert_select "a[href='#{venue_prefecture_path('大阪府')}']", text: /大阪府\s*1/
     assert_not_includes response.body, '削除済み会場'
+    assert_select 'input[type=search]', count: 0
+    assert_select 'table', count: 0
   end
 
-  test 'index filters by prefecture and area' do
-    get venues_path(prefecture: '東京都')
+  test 'index shows prefectures without venues as text, not links' do
+    get venues_path
 
-    assert_response :success
-    assert_select "a[href='#{venue_path(@loft.key)}']"
-    assert_select "a[href='#{venue_path(@hall.key)}']"
-    assert_select "a[href='#{venue_path(@osaka.key)}']", count: 0
+    assert_select "a[href='#{venue_prefecture_path('北海道')}']", count: 0
+    assert_select 'li span', text: /北海道\s*0/
+  end
+
+  test 'index links to the list of venues without a prefecture' do
+    Venue.create!(key: 'somewhere', name: '都道府県のない会場')
+
+    get venues_path
+
+    assert_select "a[href='#{venue_prefecture_path(Venue::UNASSIGNED_PREFECTURE)}']", text: /都道府県未設定\s*1/
+  end
+
+  test 'index redirects legacy prefecture and area filters to the area pages' do
+    get venues_path(prefecture: '東京都')
+    assert_redirected_to venue_prefecture_path('東京都')
+    assert_response :moved_permanently
 
     get venues_path(prefecture: '東京都', area: '新宿')
+    assert_redirected_to venue_area_path('東京都', '新宿')
 
-    assert_select "a[href='#{venue_path(@loft.key)}']"
-    assert_select "a[href='#{venue_path(@hall.key)}']", count: 0
+    get venues_path(prefecture: '東京都', area: '存在しないエリア')
+    assert_redirected_to venue_prefecture_path('東京都')
+
+    get venues_path(prefecture: '東京都', venue_type: 'hall', page: '2')
+    assert_redirected_to venue_prefecture_path('東京都', venue_type: 'hall')
   end
 
-  test 'index filters by venue type' do
-    get venues_path(venue_type: 'hall')
-
-    assert_response :success
-    assert_select "a[href='#{venue_path(@hall.key)}']"
-    assert_select "a[href='#{venue_path(@loft.key)}']", count: 0
-  end
-
-  test 'index searches venues by name' do
+  test 'index redirects other legacy queries to the prefecture list' do
     get venues_path(q: '武道館')
+    assert_redirected_to venues_path
+    assert_response :moved_permanently
 
-    assert_response :success
-    assert_select "a[href='#{venue_path(@hall.key)}']"
-    assert_select "a[href='#{venue_path(@loft.key)}']", count: 0
+    get venues_path(venue_type: 'hall')
+    assert_redirected_to venues_path
+
+    get venues_path(prefecture: '存在しない県')
+    assert_redirected_to venues_path
+
+    get venues_path(prefecture: '北海道')
+    assert_redirected_to venues_path
   end
 
-  test 'index ignores unknown filter values' do
-    get venues_path(prefecture: '存在しない県', venue_type: 'unknown')
+  test 'show links the venue type to the prefecture page filtered by the type' do
+    get venue_path(@hall.key)
 
-    assert_response :success
-    assert_select "a[href='#{venue_path(@osaka.key)}']"
+    assert_select "a[href='#{venue_prefecture_path('東京都', venue_type: 'hall')}']", text: 'ホール'
+  end
+
+  test 'show links the venue type of a venue without a prefecture to the unassigned list' do
+    venue = Venue.create!(key: 'somewhere', name: '都道府県のない会場', venue_type: :hall)
+
+    get venue_path(venue.key)
+
+    assert_select "a[href='#{venue_prefecture_path(Venue::UNASSIGNED_PREFECTURE, venue_type: 'hall')}']", text: 'ホール'
   end
 
   test 'show displays venue details and published trends in date descending order' do
