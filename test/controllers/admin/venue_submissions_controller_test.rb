@@ -92,10 +92,11 @@ module Admin
       stub_instance_method(VenueSubmission, :update!, ->(*) { raise ActiveRecord::RecordNotSaved, 'failed' }) do
         post admin_venues_path, params: { venue_submission_id: @new_venue.id,
                                           venue: { key: 'submitted-venue', name: '投稿された会場' } }
-      rescue ActiveRecord::RecordNotSaved
-        nil
       end
 
+      assert_response :unprocessable_entity
+      assert_includes response.body, '投稿の取り込みに失敗したため、会場を作成しませんでした。'
+      assert_select "input[name='venue_submission_id'][value='#{@new_venue.id}']"
       assert_nil Venue.find_by(key: 'submitted-venue')
       assert @new_venue.reload.pending?
     end

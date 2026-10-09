@@ -158,7 +158,8 @@ module Admin
     private
 
     # 会場の作成と、投稿からの登録なら投稿の「取り込み済み」への更新をまとめて行う（issue #1814）。
-    # 投稿の更新に失敗したときに会場だけが残り、再登録で重複するのを防ぐ
+    # 投稿の更新に失敗したときに会場だけが残り、再登録で重複するのを防ぐ。
+    # 失敗したら会場の作成も取り消し、500にせずフォームを描き直す
     def save_new_venue
       Venue.transaction do
         next false unless @venue.save
@@ -168,6 +169,9 @@ module Admin
         pending_new_venue_submission&.update!(submission_status: :converted, converted_venue: @venue)
         true
       end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved
+      flash.now[:alert] = '投稿の取り込みに失敗したため、会場を作成しませんでした。もう一度お試しください。'
+      false
     end
 
     # 編集画面の取り込み元・更新履歴・未処理の訂正。保存に失敗して描き直すときにも使う
