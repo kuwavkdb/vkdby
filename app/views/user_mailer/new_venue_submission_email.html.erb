@@ -1,0 +1,20 @@
+<h1><%= @venue_submission.correction? ? "会場の訂正の投稿があります" : "新しい会場の投稿があります" %></h1>
+<p>
+  <%= @admin_user.name %> さん、<br>
+  ログイン不要の投稿フォームから<%= @venue_submission.correction? ? "会場の訂正" : "新しい会場の情報" %>の投稿がありました。
+</p>
+<p>
+  会場: <%= @venue_submission.display_name %><br>
+  <% if @venue_submission.correction? %>
+    訂正内容: <%= simple_format(@venue_submission.correction, {}, wrapper_tag: "span") %>
+  <% else %>
+    都道府県: <%= @venue_submission.prefecture %>
+  <% end %>
+</p>
+<p>
+  内容を確認のうえ、対応をお願いします。
+</p>
+<p>
+  <%= link_to '投稿一覧を確認する', @url %>
+</p>
+<p>Thanks, <br>VKDBY Team</p>

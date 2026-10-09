@@ -1,0 +1,169 @@
+<% correction = @venue_submission.correction? %>
+<% title = correction ? "会場の情報の訂正を送る" : "会場の情報を投稿する" %>
+<% content_for :title, title %>
+<%
+  # 会場の投稿フォーム（issue #1814）。見た目・文言はユニット・動向の投稿フォームにそろえる
+  label_class = "block text-sm font-bold text-zinc-700 dark:text-zinc-200"
+  input_class = "mt-1 block w-full rounded-xl border border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-amber-400"
+  help_class = "mt-1 text-xs text-zinc-500 dark:text-zinc-400"
+  link_class = "font-bold text-indigo-700 dark:text-amber-400 underline decoration-indigo-600/25 dark:decoration-amber-400/40 underline-offset-2 hover:decoration-indigo-600 dark:hover:decoration-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 rounded-sm"
+  required_badge = tag.span("必須", class: "ml-1 text-xs font-bold text-red-600 dark:text-red-400")
+  field_errors = ->(attribute) {
+    messages = @venue_submission.errors.full_messages_for(attribute)
+    tag.p(messages.join("、"), id: "venue_submission_#{attribute}_error", class: "mt-1 text-xs font-bold text-red-600 dark:text-red-400") if messages.any?
+  }
+  described_by = ->(attribute, help_id = nil) {
+    [help_id, ("venue_submission_#{attribute}_error" if @venue_submission.errors[attribute].any?)].compact.join(" ").presence
+  }
+%>
+<div class="flex justify-center">
+  <div class="bg-white dark:bg-zinc-900 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-3xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
+    <header class="mb-8 text-center flex flex-col items-center">
+      <h1 class="text-3xl font-black text-zinc-800 dark:text-zinc-100"><%= title %></h1>
+      <p class="mt-3 text-sm text-zinc-600 dark:text-zinc-300 max-w-xl">
+        <% if correction %>
+          <strong><%= @venue_submission.venue.name %></strong> の情報の誤り・変更（閉店・移転・名前の変更など）をお知らせください。ログインは不要です。<br>
+        <% else %>
+          このサイトに載っていないライブハウス・ホールなどの会場の情報をお寄せください。ログインは不要です。<br>
+        <% end %>
+        いただいた内容は管理者が確認したうえで掲載を検討します。
+      </p>
+    </header>
+
+    <% if @venue_submission.errors.any? %>
+      <div class="mb-6 p-4 text-sm text-red-700 bg-red-50 dark:bg-red-900/40 dark:text-red-200 rounded-xl" role="alert">
+        <p class="font-bold mb-1"><%= @venue_submission.errors.count %>件の入力エラーがあります：</p>
+        <ul class="list-disc list-inside">
+          <% @venue_submission.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%# 名前・別名・旧名が一致しそうな会場がすでにある場合は、確認してから送ってもらう %>
+    <% if @similar_venues.present? %>
+      <div class="mb-6 p-4 text-sm rounded-xl bg-amber-50 border border-amber-200 text-amber-900 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-100" role="alert">
+        <p class="font-bold">名前の似た会場がすでに登録されています。同じ会場ではないか確認してください。</p>
+        <ul class="mt-2 space-y-1">
+          <% @similar_venues.each do |venue| %>
+            <li>
+              <%= link_to venue.name, venue_path(venue.key), class: link_class %>
+              <span>（<%= [venue.prefecture, venue.area].compact_blank.join(" ").presence || "所在地未設定" %>）</span>
+              <%= link_to "この会場の訂正を送る", new_venue_submission_path(venue_id: venue.id), class: "ml-1 #{link_class}" %>
+            </li>
+          <% end %>
+        </ul>
+        <p class="mt-2">別の会場の場合は、下の「投稿する」をもう一度押してください。</p>
+      </div>
+    <% end %>
+
+    <%= form_with model: @venue_submission, url: venue_submissions_path, local: true, class: "space-y-6" do |form| %>
+      <% if correction %>
+        <%= hidden_field_tag :venue_id, @venue_submission.venue_id %>
+        <div>
+          <span class="<%= label_class %>">訂正する会場</span>
+          <p class="mt-1 text-sm text-zinc-700 dark:text-zinc-200">
+            <%= link_to @venue_submission.venue.name, venue_path(@venue_submission.venue.key), class: link_class %>
+            <span class="text-zinc-500 dark:text-zinc-400">（<%= [@venue_submission.venue.prefecture, @venue_submission.venue.area].compact_blank.join(" ").presence || "所在地未設定" %>）</span>
+          </p>
+        </div>
+
+        <div>
+          <%= form.label :correction, class: label_class do %>訂正内容<%= required_badge %><% end %>
+          <%= form.text_area :correction, rows: 5, required: true, class: input_class,
+                placeholder: "例: 2025年3月に閉店しました／〇〇に移転しました（新しい住所: …）／名前が「〇〇」に変わりました",
+                aria: { describedby: described_by.call(:correction) } %>
+          <%= field_errors.call(:correction) %>
+        </div>
+      <% else %>
+        <%# 候補を確認した時点の会場名。名前を変えて送り直したら確認をやり直す %>
+        <%= hidden_field_tag :confirmed_name, @venue_submission.name if @similar_venues.present? %>
+        <div>
+          <%= form.label :name, class: label_class do %>会場名<%= required_badge %><% end %>
+          <%= form.text_field :name, required: true, placeholder: "例: 新宿LOFT", class: input_class,
+                aria: { describedby: described_by.call(:name) } %>
+          <%= field_errors.call(:name) %>
+        </div>
+
+        <div>
+          <%= form.label :name_kana, "ヨミ（カタカナ・任意）", class: label_class %>
+          <%= form.text_field :name_kana, placeholder: "例: シンジュクロフト", class: input_class %>
+        </div>
+
+        <%# エリアは、選んだ都道府県の既存のエリアを候補に出す（表記をそろえるため） %>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"
+             data-controller="area-suggest" data-area-suggest-areas-value="<%= @area_options.to_json %>">
+          <div>
+            <%= form.label :prefecture, class: label_class do %>都道府県<%= required_badge %><% end %>
+            <%= form.select :prefecture, Venue::PREFECTURES, { include_blank: "選択してください" }, required: true, class: input_class,
+                  data: { area_suggest_target: "prefecture", action: "change->area-suggest#update" },
+                  aria: { describedby: described_by.call(:prefecture) } %>
+            <%= field_errors.call(:prefecture) %>
+          </div>
+          <div>
+            <%= form.label :area, "エリア（任意）", class: label_class %>
+            <%= form.text_field :area, placeholder: "例: 新宿", list: "venue_submission_area_options", autocomplete: "off", class: input_class,
+                  aria: { describedby: "venue_submission_area_help" } %>
+            <datalist id="venue_submission_area_options" data-area-suggest-target="options">
+              <% @area_options.fetch(@venue_submission.prefecture, []).each do |area| %>
+                <option value="<%= area %>"></option>
+              <% end %>
+            </datalist>
+            <p id="venue_submission_area_help" class="<%= help_class %>">都道府県を選ぶと、登録済みのエリアが候補に出ます。</p>
+          </div>
+        </div>
+
+        <div>
+          <%= form.label :address, "住所（任意）", class: label_class %>
+          <%= form.text_field :address, placeholder: "例: 東京都新宿区歌舞伎町1-12-9", class: input_class %>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <%= form.label :venue_type, "種別（任意）", class: label_class %>
+            <%= form.select :venue_type, Venue::VENUE_TYPE_TRANSLATIONS.map { |key, label| [label, key] }, { include_blank: "わからない" },
+                  class: input_class, aria: { describedby: described_by.call(:venue_type) } %>
+            <%= field_errors.call(:venue_type) %>
+          </div>
+          <div>
+            <%= form.label :capacity, "キャパシティ（任意）", class: label_class %>
+            <%= form.number_field :capacity, min: 1, step: 1, class: input_class,
+                  aria: { describedby: described_by.call(:capacity) } %>
+            <%= field_errors.call(:capacity) %>
+          </div>
+        </div>
+      <% end %>
+
+      <div>
+        <%= form.label :source_url, "情報源のURL（任意）", class: label_class %>
+        <%= form.url_field :source_url, placeholder: "https://...", class: input_class,
+              aria: { describedby: described_by.call(:source_url, "venue_submission_source_url_help") } %>
+        <p id="venue_submission_source_url_help" class="<%= help_class %>">公式サイト・SNSなど、内容を確認できるURLがあれば入力してください。</p>
+        <%= field_errors.call(:source_url) %>
+      </div>
+
+      <div>
+        <%= form.label :note, "補足（任意）", class: label_class %>
+        <%= form.text_area :note, rows: 3, class: input_class %>
+      </div>
+
+      <div>
+        <%= form.label :email, "メールアドレス（任意）", class: label_class %>
+        <%= form.email_field :email, placeholder: "内容確認のためご連絡する場合があります", class: input_class,
+              aria: { describedby: described_by.call(:email, "venue_submission_email_help") } %>
+        <p id="venue_submission_email_help" class="<%= help_class %>">返信を目的とするものではなく、内容確認のご連絡用です。</p>
+        <%= field_errors.call(:email) %>
+      </div>
+
+      <p class="text-center text-sm font-bold text-zinc-700 dark:text-zinc-200">
+        ※ 内容がそのまま公開されるわけではありません。<br>
+        ※ 掲載をお約束するものではありません。
+      </p>
+
+      <div class="flex justify-center pt-2">
+        <%= form.submit "投稿する", class: "px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl transition-colors shadow-sm hover:shadow-md cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 dark:focus-visible:ring-offset-zinc-900" %>
+      </div>
+    <% end %>
+  </div>
+</div>

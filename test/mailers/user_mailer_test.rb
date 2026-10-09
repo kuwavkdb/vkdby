@@ -38,4 +38,20 @@ class UserMailerTest < ActionMailer::TestCase
     assert_equal ['from@example.com'], mail.from
     assert_match 'Submitted Unit', mail.text_part.decoded
   end
+
+  test 'new_venue_submission_email' do
+    admin_user = users(:admin)
+    venue = Venue.create!(key: 'shinjuku-loft', name: '新宿LOFT')
+    new_venue = VenueSubmission.create!(submission_kind: :new_venue, name: '新しい会場', prefecture: '東京都')
+    correction = VenueSubmission.create!(submission_kind: :correction, venue: venue, correction: '閉店しました')
+
+    mail = UserMailer.new_venue_submission_email(new_venue, admin_user)
+    assert_equal '[VKDBY] 新しい会場の投稿があります: 新しい会場', mail.subject
+    assert_equal [admin_user.email], mail.to
+    assert_match '東京都', mail.text_part.decoded
+
+    mail = UserMailer.new_venue_submission_email(correction, admin_user)
+    assert_equal '[VKDBY] 会場の訂正の投稿があります: 新宿LOFT', mail.subject
+    assert_match '閉店しました', mail.text_part.decoded
+  end
 end

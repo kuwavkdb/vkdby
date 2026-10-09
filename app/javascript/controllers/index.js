@@ -4,6 +4,9 @@
 
 import { application } from "controllers/application"
 
+import AreaSuggestController from "controllers/area_suggest_controller"
+application.register("area-suggest", AreaSuggestController)
+
 import ArtistRowsController from "controllers/artist_rows_controller"
 application.register("artist-rows", ArtistRowsController)
 

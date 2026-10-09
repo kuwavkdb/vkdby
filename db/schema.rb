@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_08_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_09_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -469,6 +469,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_000000) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  create_table "venue_submissions", force: :cascade do |t|
+    t.integer "submission_kind", default: 0, null: false
+    t.bigint "venue_id"
+    t.string "name"
+    t.string "name_kana"
+    t.string "venue_type"
+    t.string "prefecture"
+    t.string "area"
+    t.string "address"
+    t.integer "capacity"
+    t.text "correction"
+    t.string "source_url"
+    t.text "note"
+    t.string "email"
+    t.string "submitter_ip"
+    t.integer "submission_status", default: 0, null: false
+    t.bigint "converted_venue_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["converted_venue_id"], name: "index_venue_submissions_on_converted_venue_id"
+    t.index ["submission_status"], name: "index_venue_submissions_on_submission_status"
+    t.index ["venue_id"], name: "index_venue_submissions_on_venue_id"
+  end
+
   create_table "venues", force: :cascade do |t|
     t.string "address"
     t.jsonb "aliases", default: [], null: false
@@ -554,5 +578,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_000000) do
   add_foreign_key "unit_snapshots", "units"
   add_foreign_key "unit_submissions", "units", column: "converted_unit_id"
   add_foreign_key "update_logs", "users"
+  add_foreign_key "venue_submissions", "venues"
+  add_foreign_key "venue_submissions", "venues", column: "converted_venue_id"
   add_foreign_key "wiki_page_imports", "wikipages"
 end

@@ -56,6 +56,8 @@ class Venue < ApplicationRecord # rubocop:disable Metrics/ClassLength
   accepts_nested_attributes_for :links, allow_destroy: true, reject_if: proc { |attrs| attrs['url'].blank? }
   has_many :wiki_page_imports, as: :import_target
   has_many :trends, dependent: :nullify
+  # 投稿フォームからの訂正（issue #1814）
+  has_many :venue_submissions, dependent: :nullify
 
   enum :venue_type, { live_house: 0, hall: 1, studio: 2, outdoor: 3, streaming: 4, other: 99 }
   enum :status, { active: 1, closed: 2, unknown: 99 }
@@ -151,6 +153,14 @@ class Venue < ApplicationRecord # rubocop:disable Metrics/ClassLength
 
     resolved = resolve_by_key(venue.key)
     resolved if resolved&.kept?
+  end
+
+  # エリアの入力の候補（都道府県 => 既存のエリアの配列、issue #1814）。投稿フォーム・管理画面の会場フォームで使う。
+  # 表記をそろえるため、会場の多いエリアを先に並べる
+  def self.area_options
+    kept.where.not(prefecture: nil).where.not(area: [nil, '']).group(:prefecture, :area).count
+        .sort_by { |(prefecture, area), count| [prefecture, -count, area] }
+        .each_with_object({}) { |((prefecture, area), _), options| (options[prefecture] ||= []) << area }
   end
 
   # 都道府県・エリアページ（issue #1801）のURLの1段に使える値か。「/」を含む値はURLの段が崩れるため対象外

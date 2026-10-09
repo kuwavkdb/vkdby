@@ -71,6 +71,7 @@
 | Unit Submissions（ログイン不要の投稿フォームからの投稿一覧・添付画像の確認・却下。却下時に添付画像を削除。変換済み投稿に残った画像を変換先 Unit の「画像」セクションへ追加） | 全アクション（index / reject / add_image_to_unit） |
 | Units — 投稿からの新規作成時に、投稿画像を「画像」セクションへ引き継ぐ（admin 以外が作成した場合は画像を引き継がない） | new / create（画像の選択欄・引き継ぎのみ） |
 | Trend Submissions（ログイン不要の投稿フォームからの投稿一覧・却下） | 全アクション |
+| Venue Submissions（ログイン不要の投稿フォームから送られた新しい会場・既存の会場の訂正の一覧・却下・対応済みにする。新しい会場は「登録する」から会場の新規作成画面に内容を引き継ぎ、作成すると登録済みになる。会場の編集画面に未処理の訂正を表示する、issue #1814） | 全アクション（index / reject / resolve）、Venues の new / create（投稿の引き継ぎのみ）、edit（訂正の表示のみ） |
 | 「今日は何の日？」投稿文の確認（毎時起動し、未コメントなら JST 16時以降は翌日分・それより前は当日分を GitHub の Issue にコメント） | ― （管理画面ではなく GitHub Actions から `GET /internal/on_this_day_post` を呼び、ラベル `on-this-day` の Issue にコメント。見られるのはリポジトリの閲覧権限がある人） |
 
 ---
@@ -126,4 +127,5 @@
 - 仮登録ユニット（issue #1764）: カラム `units.provisional`、公開側で使うスコープ `Unit.publicly_visible`（`app/models/unit.rb`）。簡単登録での強制・本登録への切り替えは `app/controllers/admin/units_controller.rb#quick_unit_params/#confirm_provisional`（`require_admin`）、公開ページでの 404 判定は `app/controllers/profiles_controller.rb#show`
 - 投稿画像の引き継ぎ（選んだ画像を Unit の「画像」セクションへ移し、残りは縮小して投稿に残す）: `app/services/unit_submission_image_transfer.rb`。`Admin::UnitsController#new/#create` では `current_user.admin?` のときだけ行う
 - Trend Submissions（投稿の一覧・却下、承認時のTrend新規作成フォームへの引き継ぎ）: `app/controllers/admin/trend_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/trends_controller.rb#new/#create`
+- Venue Submissions（投稿の一覧・却下・対応済み、登録時の会場新規作成フォームへの引き継ぎ、編集画面での訂正の表示）: `app/controllers/admin/venue_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/venues_controller.rb#new/#create/#edit`（`current_user.admin?` のときのみ）
 - 「今日は何の日？」投稿文（issue #1742、#1753）: 投稿文（出来事・誕生日の2件）の生成 `app/services/on_this_day_post_builder.rb`（誕生日の人物に付けるユニット名は `app/services/person_unit_label.rb`）、JSONで返す `app/controllers/internal/on_this_day_posts_controller.rb`、起動とコメント `.github/workflows/on_this_day.yml`（ラベル `on-this-day` の open な Issue にコメントし、なければ Issue を作る。動向・誕生日がない日はその旨をコメントする）。メールは送らない。エンドポイントはログインではなく環境変数 `ON_THIS_DAY_MAIL_TOKEN` の Bearer トークンで認証し、未設定なら 404 になる
