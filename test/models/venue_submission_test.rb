@@ -45,14 +45,21 @@ class VenueSubmissionTest < ActiveSupport::TestCase
     assert_nil submission.source_url
   end
 
+  test 'converts a hiragana reading to katakana' do
+    submission = VenueSubmission.create!(submission_kind: :new_venue, name: '新宿LOFT', prefecture: '東京都',
+                                         name_kana: 'しんじゅくろふと')
+
+    assert_equal 'シンジュクロフト', submission.name_kana
+  end
+
   test 'venue_attributes carries the submission into a new venue' do
-    submission = VenueSubmission.new(name: '新しい会場', name_kana: 'あたらしいかいじょう', venue_type: 'hall',
+    submission = VenueSubmission.new(name: '新しい会場', name_kana: 'アタラシイカイジョウ', venue_type: 'hall',
                                      prefecture: '東京都', area: '新宿', address: '東京都新宿区1-1', capacity: 300,
                                      source_url: 'https://example.com')
 
     venue = Venue.new(submission.venue_attributes)
 
-    assert_equal ['新しい会場', 'あたらしいかいじょう', 'hall', '東京都', '新宿', '東京都新宿区1-1', 300],
+    assert_equal ['新しい会場', 'アタラシイカイジョウ', 'hall', '東京都', '新宿', '東京都新宿区1-1', 300],
                  [venue.name, venue.name_kana, venue.venue_type, venue.prefecture, venue.area, venue.address, venue.capacity]
     assert_equal([%w[公式サイト https://example.com]], venue.links.map { |link| [link.text, link.url] })
   end

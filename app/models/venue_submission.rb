@@ -50,6 +50,8 @@ class VenueSubmission < ApplicationRecord
   STRIPPED_ATTRIBUTES = %w[name name_kana venue_type prefecture area address correction source_url note email].freeze
 
   before_validation :strip_attributes
+  # ヨミはカタカナ。ひらがなで入力されたらカタカナに直す
+  before_validation { self.name_kana = name_kana&.tr('ぁ-ゖ', 'ァ-ヶ') }
 
   with_options if: :new_venue? do
     validates :name, presence: true

@@ -11,7 +11,7 @@ class VenueSubmissionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   def new_venue_params(overrides = {})
-    { venue_submission: { name: '下北沢の新しい会場', name_kana: 'しもきたざわのあたらしいかいじょう', prefecture: '東京都',
+    { venue_submission: { name: '下北沢の新しい会場', name_kana: 'シモキタザワノアタラシイカイジョウ', prefecture: '東京都',
                           area: '下北沢', address: '東京都世田谷区北沢1-1', venue_type: 'live_house', capacity: '200',
                           source_url: 'https://example.com/venue', note: '2026年オープン', email: 'fan@example.com' }.merge(overrides) }
   end
