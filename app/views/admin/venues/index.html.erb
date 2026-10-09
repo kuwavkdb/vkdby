@@ -13,7 +13,7 @@
     <%= f.select :venue_type, options_for_select(Venue::VENUE_TYPE_TRANSLATIONS.map { |key, label| [label, key] }, params[:venue_type]),
           { include_blank: "すべての種別" },
           { onchange: "this.form.requestSubmit()", "aria-label": "種別で絞り込み", class: filter_class } %>
-    <%= f.select :prefecture, options_for_select(Venue::PREFECTURES, params[:prefecture]),
+    <%= f.select :prefecture, options_for_select([["都道府県未設定", Venue::UNASSIGNED_PREFECTURE]] + Venue::PREFECTURES, params[:prefecture]),
           { include_blank: "すべての都道府県" },
           { onchange: "this.form.requestSubmit()", "aria-label": "都道府県で絞り込み", class: filter_class } %>
     <%= f.select :status, options_for_select(Venue::STATUS_TRANSLATIONS.map { |key, label| [label, key] }, params[:status]),

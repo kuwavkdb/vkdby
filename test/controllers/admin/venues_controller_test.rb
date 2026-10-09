@@ -43,6 +43,18 @@ module Admin
       assert_not_includes response.body, '新宿LOFT'
     end
 
+    test 'index filters venues without a prefecture' do
+      login_as(users(:one))
+      Venue.create!(key: 'nowhere', name: '都道府県のない会場')
+
+      get admin_venues_path, params: { prefecture: Venue::UNASSIGNED_PREFECTURE }
+
+      assert_response :success
+      assert_includes response.body, '都道府県のない会場'
+      assert_not_includes response.body, '新宿LOFT'
+      assert_select "select[name='prefecture'] option[value='#{Venue::UNASSIGNED_PREFECTURE}'][selected]", text: '都道府県未設定'
+    end
+
     test 'new renders the form' do
       login_as(users(:one))
 
