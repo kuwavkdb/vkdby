@@ -1,3 +1,4 @@
+<% purchase_href = item_purchase_href(@item) %>
 <div class="group flex bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors">
   <!-- 画像（左側） -->
   <% if @item.image_url.present? %>
@@ -10,13 +11,13 @@
             [@item.image_url, nil]
           end
       %>
-      <% if @item.display_link_url.present? %>
-        <%= link_to @item.display_link_url, target: "_blank", rel: "noopener noreferrer" do %>
+      <% if purchase_href %>
+        <%= link_to purchase_href, target: "_blank", rel: "noopener noreferrer" do %>
           <img src="<%= img_src %>" srcset="<%= img_srcset %>" sizes="160px"
                width="160" height="160"
                alt="<%= @item.title %>" class="w-40 h-40 object-scale-down hover:opacity-90 transition-opacity">
         <% end %>
-        <%= link_to @item.display_link_url, target: "_blank", rel: "noopener noreferrer",
+        <%= link_to purchase_href, target: "_blank", rel: "noopener noreferrer",
             style: "position:absolute; bottom:8px; left:50%; transform:translateX(-50%);",
             class: "inline-flex items-center gap-1.5 px-3 py-1.5 #{item_purchase_color_class(@item)} hover:opacity-50! font-bold rounded-lg transition text-xs whitespace-nowrap z-10 sm:opacity-0 sm:group-hover:opacity-100" do %>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 shrink-0">
@@ -32,13 +33,13 @@
     </div>
   <% else %>
     <div class="relative shrink-0 w-40 h-40 bg-zinc-100 dark:bg-zinc-800">
-      <% if @item.display_link_url.present? %>
-        <%= link_to @item.display_link_url, target: "_blank", rel: "noopener noreferrer",
+      <% if purchase_href %>
+        <%= link_to purchase_href, target: "_blank", rel: "noopener noreferrer",
             "aria-label": "#{@item.title} を#{item_purchase_label(@item)}",
             class: "absolute inset-0 flex items-center justify-center hover:opacity-90 transition-opacity" do %>
           <span class="text-zinc-500 text-sm">画像なし</span>
         <% end %>
-        <%= link_to @item.display_link_url, target: "_blank", rel: "noopener noreferrer",
+        <%= link_to purchase_href, target: "_blank", rel: "noopener noreferrer",
             style: "position:absolute; bottom:8px; left:50%; transform:translateX(-50%);",
             class: "inline-flex items-center gap-1.5 px-3 py-1.5 #{item_purchase_color_class(@item)} font-bold rounded-lg transition text-xs whitespace-nowrap z-10 sm:opacity-0 sm:group-hover:opacity-100" do %>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 shrink-0">

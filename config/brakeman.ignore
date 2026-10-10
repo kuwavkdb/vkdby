@@ -22,6 +22,28 @@
         915
       ],
       "note": "Admin allowed to assign roles"
+    },
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 4,
+      "fingerprint": "6c01e96fb0f9bd12ab702d7e0ce061ddeb8aa9de8fe516d237c5107da5cd8114",
+      "check_name": "LinkToHref",
+      "message": "Potentially unsafe model attribute in `link_to` href",
+      "file": "app/views/outbound_links/show.html.erb",
+      "line": 39,
+      "link": "https://brakemanscanner.org/docs/warning_types/link_to_href",
+      "code": "link_to(ExternalUrl.sanitize(Item.kept.find(params[:id]).display_link_url), ...)",
+      "render_path": null,
+      "location": {
+        "type": "template",
+        "template": "outbound_links/show"
+      },
+      "user_input": "Item.kept.find(params[:id]).display_link_url",
+      "confidence": "Weak",
+      "cwe_id": [
+        79
+      ],
+      "note": "クッションページの遷移先（issue #1823）。ExternalUrl.sanitize で http / https の絶対URLのみに検証済みで、javascript: 等のスキームは通らない"
     }
   ],
   "updated": "2026-01-18 21:34:41 +0900",
