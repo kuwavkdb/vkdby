@@ -1,16 +1,12 @@
 <%# 公開ページ（ユニットページ）の該当スナップショットを開いて表示を確認するためのリンク（issue #1761）。
+    同じタブで開く（issue #1818）。
     #snapshot-{id} で開くと、toggleコントローラが「現在」以外のスナップショットも展開する。
     warning: false のときは非公開の注意を出さない（呼び出し側で別の場所に出す場合） %>
 <% if unit.key.present? %>
   <div>
     <%= link_to profile_path(unit.key, anchor: "snapshot-#{unit_snapshot.id}"),
-          target: "_blank", rel: "noopener",
           class: "inline-flex items-center gap-1 rounded text-indigo-600 hover:text-indigo-900 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300" do %>
       公開ページで確認
-      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-      </svg>
-      <span class="sr-only">（新しいタブで開きます）</span>
     <% end %>
     <% if local_assigns.fetch(:warning, true) && !unit_snapshot.active? %>
       <p class="mt-1 text-sm text-amber-700 dark:text-amber-400">このスナップショットは非公開のため、公開ページには表示されません。</p>

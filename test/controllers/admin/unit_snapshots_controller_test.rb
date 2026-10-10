@@ -31,6 +31,10 @@ module Admin
       get edit_admin_unit_unit_snapshot_path(@unit, @snapshot)
       assert_response :success
       assert_includes response.body, profile_path(@unit.key, anchor: "snapshot-#{@snapshot.id}")
+      # 同じタブで開く（issue #1818）
+      assert_select 'a[href=?]', profile_path(@unit.key, anchor: "snapshot-#{@snapshot.id}"), text: /公開ページで確認/ do |links|
+        assert_nil links.first['target']
+      end
       assert_select 'h1 a[href=?]', edit_admin_unit_path(@unit)
       assert_not_includes response.body, '非公開のため、公開ページには表示されません'
 
