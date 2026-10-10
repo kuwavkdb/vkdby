@@ -73,25 +73,22 @@ module Admin
       updated = []
       failed = nil
 
-      # 保存のたびに unit_snapshots を touch しないよう、最後に1回だけ touch する
+      # belongs_to :unit_snapshot, touch: true の touch はトランザクション内で遅延され、コミット時に1回にまとまる
       SnapshotPerson.transaction do
-        SnapshotPerson.no_touching do
-          bulk_update_params.each do |id, attrs|
-            sp = snapshot_people[id]
-            next if sp.nil?
+        bulk_update_params.each do |id, attrs|
+          sp = snapshot_people[id]
+          next if sp.nil?
 
-            sp.assign_bulk_edit_attributes(attrs)
-            next unless sp.changed?
+          sp.assign_bulk_edit_attributes(attrs)
+          next unless sp.changed?
 
-            unless sp.save
-              failed = sp
-              raise ActiveRecord::Rollback
-            end
-            record_update_log(sp, action: 'update', subject: @unit)
-            updated << sp
+          unless sp.save
+            failed = sp
+            raise ActiveRecord::Rollback
           end
+          record_update_log(sp, action: 'update', subject: @unit)
+          updated << sp
         end
-        @unit_snapshot.touch if updated.any?
       end
 
       if failed
