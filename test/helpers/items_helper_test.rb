@@ -51,6 +51,12 @@ class ItemsHelperTest < ActionView::TestCase
     assert_equal 'bg-teal-700 hover:bg-teal-800 text-white', item_purchase_color_class(Item.new(asin: nil))
   end
 
+  test 'ASINが無くリンク先がtower.jpなら購入リンクはTOWER RECORDSの配色で販売ページのラベルにする' do
+    item = Item.new(asin: nil, link_url: 'https://tower.jp/item/123')
+    assert_equal 'bg-yellow-400 hover:bg-yellow-500 text-red-700', item_purchase_color_class(item)
+    assert_equal '販売ページ（tower.jp）で購入', item_purchase_label(item, with_domain: true)
+  end
+
   test 'key があればkeyベースのパスを返す' do
     assert_equal '/some-key', artist_profile_path({ 'key' => 'some-key', 'old_key' => 'legacy', 'name' => '名前' })
   end

@@ -22,9 +22,16 @@ module ItemsHelper
     domain ? "販売ページ（#{domain}）で購入" : '販売サイト で購入'
   end
 
-  # 購入リンクの配色。Amazon・TOWER RECORDS・Yahoo!のボタンと見分けられるよう、販売サイトはtealにする
+  # 購入リンクの配色。Amazonはamber、リンク先がTOWER RECORDS（tower.jp）ならTOWER RECORDSの配色、
+  # それ以外の販売サイトはAmazon・TOWER RECORDS・Yahoo!のボタンと見分けられるようtealにする
   def item_purchase_color_class(item)
-    item.asin.present? ? 'bg-amber-500 hover:bg-amber-600 text-black' : 'bg-teal-700 hover:bg-teal-800 text-white'
+    if item.asin.present?
+      'bg-amber-500 hover:bg-amber-600 text-black'
+    elsif tower_records_url?(item.display_link_url)
+      'bg-yellow-400 hover:bg-yellow-500 text-red-700'
+    else
+      'bg-teal-700 hover:bg-teal-800 text-white'
+    end
   end
 
   # TOWER RECORDS ONLINE の検索導線を無効にするか。ASINが無い（Amazon以外で販売している）アイテムと、
@@ -32,8 +39,7 @@ module ItemsHelper
   def tower_records_search_disabled?(item)
     return true if item.asin.blank?
 
-    domain = purchase_link_domain(item.link_url)
-    domain.present? && (domain == 'tower.jp' || domain.end_with?('.tower.jp'))
+    tower_records_url?(item.link_url)
   end
 
   # アーティストのプロフィールページへのパスを生成
@@ -97,5 +103,11 @@ module ItemsHelper
     host.presence&.delete_prefix('www.')
   rescue URI::InvalidURIError
     nil
+  end
+
+  # TOWER RECORDS（tower.jp とそのサブドメイン）のURLか
+  def tower_records_url?(url)
+    domain = purchase_link_domain(url)
+    domain.present? && (domain == 'tower.jp' || domain.end_with?('.tower.jp'))
   end
 end
