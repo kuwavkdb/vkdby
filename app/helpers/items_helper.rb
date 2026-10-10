@@ -13,6 +13,11 @@ module ItemsHelper
     url.sub(/(\._[A-Z][A-Z0-9_]*_)?(\.(jpe?g|png|gif|webp))$/i) { "._SL#{size}_#{::Regexp.last_match(2)}" }
   end
 
+  # 購入リンクのラベル。ASINが無いアイテムはAmazon以外での販売なので汎用のラベルにする（issue #1820）
+  def item_purchase_label(item, amazon_label: 'Amazonで購入')
+    item.asin.present? ? amazon_label : '販売サイト で購入'
+  end
+
   # アーティストのプロフィールページへのパスを生成
   # 優先順位: key > old_key。どちらも無い(名前のみの)アーティストはページが存在しないためリンクにしない
   def artist_profile_path(artist_data)
