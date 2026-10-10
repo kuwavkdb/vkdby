@@ -3,6 +3,8 @@
 <% content_for :head do %>
   <meta name="robots" content="noindex, nofollow">
 <% end %>
+<%# 遷移のためのページにはAdSenseを掲載できない（ポリシー）ため、AdSenseは読み込まずMicroAdの広告を出す %>
+<% content_for :disable_adsense, true %>
 <% focus_ring = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:focus-visible:outline-amber-400" %>
 
 <div class="max-w-2xl mx-auto px-4 sm:px-0">
@@ -51,7 +53,6 @@
   </div>
 
   <div class="mt-6">
-    <%# クッションページ専用の広告ユニット %>
-    <%= render "layouts/google_adsense_responsive", slot: "9403210629" %>
+    <%= render "layouts/microad", spot: "08155cebd82410cd2a9bfdbf244982d5" %>
   </div>
 </div>

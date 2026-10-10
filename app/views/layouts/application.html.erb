@@ -71,7 +71,8 @@
       }
     </style>
     <%= render 'layouts/google_analytics' %>
-    <%= render 'layouts/google_adsense' %>
+    <%# content_for(:disable_adsense) があるページ（外部サイトへのクッションページ等）では、自動広告を含めてAdSenseを読み込まない %>
+    <%= render 'layouts/google_adsense' unless content_for?(:disable_adsense) %>
   </head>
 
   <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 min-w-[375px]">
@@ -556,7 +557,7 @@
         </div>
       </div>
     <% end %>
-    <%= render 'layouts/google_adsense_horizontal' %>
+    <%= render 'layouts/google_adsense_horizontal' unless content_for?(:disable_adsense) %>
     <main class="<%= content_for?(:main_max_w) ? content_for(:main_max_w) : 'max-w-7xl' %> mx-auto py-6 <%= content_for?(:main_px) ? content_for(:main_px) : 'sm:px-6 lg:px-8' %>">
       <% if notice %>
         <div class="mb-4 p-4 rounded bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" role="alert">
