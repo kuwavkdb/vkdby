@@ -35,7 +35,7 @@
 #  fk_rails_...  (person_id => people.id)
 #  fk_rails_...  (unit_snapshot_id => unit_snapshots.id)
 #
-class SnapshotPerson < ApplicationRecord
+class SnapshotPerson < ApplicationRecord # rubocop:disable Metrics/ClassLength
   include Discard::Model
   include WikiParser
 
@@ -103,6 +103,48 @@ class SnapshotPerson < ApplicationRecord
     attrs
   end
 
+  # 管理画面で表示するパート表記（別名があれば別名）
+  def part_label
+    part_alias.presence || part.humanize
+  end
+
+  # SNSアカウントを1行1件のテキストで受け取る（メンバー編集・一括編集の両フォームで使う）。空なら nil にする。
+  def sns_text=(text)
+    self.sns = text.to_s.split("\n").map(&:strip).compact_blank.presence
+  end
+
+  # スナップショット編集画面の一括編集フォーム（issue #1833）の入力値を割り当てる。
+  # name は person_name に入れる。表示名から変わっていなければ触らない（意図的な上書きを消さないため）。
+  # 紐付け済みで Person の名前と同じ場合は表示名の上書きをしない。
+  # sns は1行1アカウント。誕生日（extra_profile['birthday']）と経歴は Person 未紐付けのときだけ変更する。
+  def assign_bulk_edit_attributes(attrs)
+    attrs = attrs.to_h.with_indifferent_access
+    if attrs.key?(:person_name)
+      name = attrs[:person_name].to_s.strip.presence
+      self.person_name = (person && name == person.name ? nil : name) unless name == self.name
+    end
+    self.sns_text = attrs[:sns] if attrs.key?(:sns)
+    return if person_id.present?
+
+    self.inline_history = attrs[:inline_history].to_s.strip.presence if attrs.key?(:inline_history)
+    self.extra_profile_birthday = attrs[:birthday] if attrs.key?(:birthday)
+  end
+
+  # extra_profile の誕生日（下書き）を管理画面の一覧向けに整形する（issue #1833）。
+  # パースできれば "7/12"、生年があれば "1990/7/12" の形式にし、できなければ入力値をそのまま返す。
+  def extra_profile_birthday_display
+    profile = extra_profile || {}
+    raw = profile['birthday'].to_s.strip
+    return nil if raw.blank?
+
+    date = parse_extra_profile_birthday(raw)
+    return raw unless date
+
+    month_day = "#{date.month}/#{date.day}"
+    birth_year = profile['birth_year'].to_i
+    birth_year.positive? ? "#{birth_year}/#{month_day}" : month_day
+  end
+
   # sns（"@handle"形式、またはURLの配列）から、Person#links に作成する Link の属性へ変換する（issue #1653）。
   # "@handle" は X(Twitter) のURLへ変換し、URLはそのまま使う。どちらでもない値（"@"のみ、
   # スキーム無しの文字列等）はリンク先を特定できないためスキップする。空要素・重複URLは除く。
@@ -157,6 +199,14 @@ class SnapshotPerson < ApplicationRecord
   end
 
   private
+
+  # extra_profile の birthday だけを更新し、他のキーには触れない
+  def extra_profile_birthday=(value)
+    profile = (extra_profile || {}).dup
+    birthday = value.to_s.strip
+    birthday.present? ? profile['birthday'] = birthday : profile.delete('birthday')
+    self.extra_profile = profile.presence
+  end
 
   def parse_extra_profile_birthday(value)
     month, day = value.to_s.split(%r{[/.\-月]}).map(&:to_i)

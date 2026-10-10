@@ -71,6 +71,35 @@ module Admin
       assert_response :success
     end
 
+    # issue #1833: SNSはスナップショットメンバー側を常に表示し、誕生日・経歴はPerson未紐付けのときだけ表示する
+    test 'edit lists member sns, and birthday and history only for unlinked members' do
+      @snapshot.snapshot_people.create!(person_name: '未紐付けメンバー', part: :vocal,
+                                        sns: ['@unlinked_handle'],
+                                        extra_profile: { 'birthday' => '7/12' },
+                                        inline_history: '2020/01 加入')
+      @snapshot.snapshot_people.create!(person: people(:one), part: :guitar,
+                                        sns: ['https://www.instagram.com/linked_member'],
+                                        extra_profile: { 'birthday' => '3/4' },
+                                        inline_history: '紐付け済みの経歴')
+
+      get edit_admin_unit_unit_snapshot_path(@unit, @snapshot)
+
+      assert_response :success
+      assert_select 'table[data-controller=sortable]' do
+        assert_select 'a[href=?]', 'https://x.com/unlinked_handle'
+        assert_select 'a[href=?]', 'https://www.instagram.com/linked_member'
+        assert_select 'th', text: '誕生日', count: 0
+        assert_select 'th', text: 'ステータス', count: 0
+        assert_select 'span', text: '7/12'
+        assert_select 'p', text: '2020/01 加入'
+        assert_select 'span', text: '3/4', count: 0
+        assert_select 'p', text: '紐付け済みの経歴', count: 0
+        assert_select 'span', text: '紐付け済み', count: @snapshot.snapshot_people.where.not(person_id: nil).count
+      end
+      assert_select 'form[action=?]', bulk_update_admin_unit_unit_snapshot_snapshot_people_path(@unit, @snapshot)
+      assert_select 'textarea[disabled]', minimum: 1
+    end
+
     test 'should update unit_snapshot' do
       patch admin_unit_unit_snapshot_path(@unit, @snapshot), params: {
         unit_snapshot: { label: 'Updated Label', past: true }

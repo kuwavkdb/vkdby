@@ -1,0 +1,72 @@
+<%# スナップショット全メンバーの名前・SNS・誕生日・経歴の一括編集（issue #1833）。誕生日・経歴はPerson未紐付けのメンバーのみ編集できる %>
+<% input_class = "block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+<div class="mt-6 bg-white shadow rounded-lg dark:bg-gray-900">
+  <details class="group">
+    <summary class="flex justify-between items-center font-medium cursor-pointer list-none p-6 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+      <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">メンバー情報を一括編集</h3>
+      <span class="transition group-open:rotate-180 text-gray-500 dark:text-gray-400">
+        <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+      </span>
+    </summary>
+    <div class="px-6 pb-6">
+      <% if snapshot_people.any? %>
+        <%= form_with url: bulk_update_admin_unit_unit_snapshot_snapshot_people_path(unit, unit_snapshot), method: :patch do %>
+          <p class="mb-4 text-xs text-gray-500 dark:text-gray-400">
+            SNSは1行につき1アカウント、誕生日は「7/12」のように月日で入力します。Personに紐付いているメンバーの誕生日・経歴はPerson側の編集画面で変更してください。
+          </p>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
+              <thead>
+                <tr>
+                  <th scope="col" class="w-24 px-2 py-2 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">パート</th>
+                  <th scope="col" class="w-1/5 px-2 py-2 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">名前</th>
+                  <th scope="col" class="w-1/4 px-2 py-2 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">SNS</th>
+                  <th scope="col" class="w-24 px-2 py-2 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">誕生日</th>
+                  <th scope="col" class="px-2 py-2 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">経歴</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                <% snapshot_people.each do |sp| %>
+                  <% field = "members[#{sp.id}]" %>
+                  <% linked = sp.person.present? %>
+                  <tr class="align-top">
+                    <td class="px-2 py-2 text-sm text-gray-500 dark:text-gray-400 break-all">
+                      <%= sp.part_label %>
+                    </td>
+                    <td class="px-2 py-2">
+                      <%= text_field_tag "#{field}[person_name]", sp.name,
+                            id: "members_#{sp.id}_person_name", class: input_class %>
+                      <% if linked %>
+                        <span class="mt-1 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">紐付け済み</span>
+                      <% end %>
+                    </td>
+                    <td class="px-2 py-2">
+                      <%= text_area_tag "#{field}[sns]", Array(sp.sns).join("\n"),
+                            id: "members_#{sp.id}_sns", rows: 2, class: "#{input_class} font-mono text-xs",
+                            placeholder: "@username" %>
+                    </td>
+                    <td class="px-2 py-2">
+                      <%= text_field_tag "#{field}[birthday]", linked ? nil : sp.extra_profile&.dig("birthday"),
+                            id: "members_#{sp.id}_birthday", disabled: linked, placeholder: linked ? nil : "7/12",
+                            class: "#{input_class} disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed" %>
+                    </td>
+                    <td class="px-2 py-2">
+                      <%= text_area_tag "#{field}[inline_history]", linked ? nil : sp.inline_history,
+                            id: "members_#{sp.id}_inline_history", rows: 2, disabled: linked,
+                            class: "#{input_class} text-xs disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed" %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex justify-end pt-4">
+            <%= submit_tag "一括更新", class: "inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer" %>
+          </div>
+        <% end %>
+      <% else %>
+        <p class="text-sm text-gray-500 dark:text-gray-400">まだメンバーが登録されていません。</p>
+      <% end %>
+    </div>
+  </details>
+</div>
