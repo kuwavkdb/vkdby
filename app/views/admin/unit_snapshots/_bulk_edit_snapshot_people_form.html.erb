@@ -31,7 +31,7 @@
                   <% linked = sp.person.present? %>
                   <tr class="align-top">
                     <td class="px-2 py-2 text-sm text-gray-500 dark:text-gray-400 break-all">
-                      <%= sp.part_alias.presence || sp.part.humanize %>
+                      <%= sp.part_label %>
                     </td>
                     <td class="px-2 py-2">
                       <%= text_field_tag "#{field}[person_name]", sp.name,

@@ -435,6 +435,32 @@ module Admin
       assert_equal '元の経歴', sp.inline_history
     end
 
+    test 'bulk_update keeps an intentional name override equal to the person name when unchanged' do
+      person = people(:one)
+      sp = @snapshot.snapshot_people.create!(person: person, person_name: person.name, part: :guitar)
+
+      assert_no_difference('UpdateLog.count') do
+        patch bulk_update_admin_unit_unit_snapshot_snapshot_people_path(@unit, @snapshot), params: {
+          members: { sp.id => { person_name: person.name, sns: '' } }
+        }
+      end
+
+      assert_equal person.name, sp.reload.person_name
+    end
+
+    test 'bulk_update does not save a member whose submitted values are unchanged' do
+      sp = @snapshot.snapshot_people.create!(person_name: 'A', part: :vocal,
+                                             extra_profile: { 'birthday' => '7/12', 'blood' => '' })
+
+      assert_no_difference('UpdateLog.count') do
+        patch bulk_update_admin_unit_unit_snapshot_snapshot_people_path(@unit, @snapshot), params: {
+          members: { sp.id => { person_name: 'A', sns: '', birthday: '7/12', inline_history: '' } }
+        }
+      end
+
+      assert_equal({ 'birthday' => '7/12', 'blood' => '' }, sp.reload.extra_profile)
+    end
+
     test 'bulk_update rolls back all members when one is invalid' do
       first = @snapshot.snapshot_people.create!(person_name: 'A', part: :vocal)
       second = @snapshot.snapshot_people.create!(person_name: 'B', part: :bass)

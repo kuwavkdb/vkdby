@@ -103,22 +103,31 @@ class SnapshotPerson < ApplicationRecord # rubocop:disable Metrics/ClassLength
     attrs
   end
 
+  # 管理画面で表示するパート表記（別名があれば別名）
+  def part_label
+    part_alias.presence || part.humanize
+  end
+
+  # SNSアカウントを1行1件のテキストで受け取る（メンバー編集・一括編集の両フォームで使う）。空なら nil にする。
+  def sns_text=(text)
+    self.sns = text.to_s.split("\n").map(&:strip).compact_blank.presence
+  end
+
   # スナップショット編集画面の一括編集フォーム（issue #1833）の入力値を割り当てる。
-  # name は person_name に入れる。紐付け済みで Person の名前と同じ場合は表示名の上書きをしない。
+  # name は person_name に入れる。表示名から変わっていなければ触らない（意図的な上書きを消さないため）。
+  # 紐付け済みで Person の名前と同じ場合は表示名の上書きをしない。
   # sns は1行1アカウント。誕生日（extra_profile['birthday']）と経歴は Person 未紐付けのときだけ変更する。
   def assign_bulk_edit_attributes(attrs)
     attrs = attrs.to_h.with_indifferent_access
     if attrs.key?(:person_name)
       name = attrs[:person_name].to_s.strip.presence
-      self.person_name = person && name == person.name ? nil : name
+      self.person_name = (person && name == person.name ? nil : name) unless name == self.name
     end
-    self.sns = attrs[:sns].to_s.split("\n").map(&:strip).compact_blank.presence if attrs.key?(:sns)
+    self.sns_text = attrs[:sns] if attrs.key?(:sns)
     return if person_id.present?
 
     self.inline_history = attrs[:inline_history].to_s.strip.presence if attrs.key?(:inline_history)
-    return unless attrs.key?(:birthday)
-
-    self.extra_profile = (extra_profile || {}).merge('birthday' => attrs[:birthday].to_s.strip).compact_blank.presence
+    self.extra_profile_birthday = attrs[:birthday] if attrs.key?(:birthday)
   end
 
   # extra_profile の誕生日（下書き）を管理画面の一覧向けに整形する（issue #1833）。
@@ -190,6 +199,14 @@ class SnapshotPerson < ApplicationRecord # rubocop:disable Metrics/ClassLength
   end
 
   private
+
+  # extra_profile の birthday だけを更新し、他のキーには触れない
+  def extra_profile_birthday=(value)
+    profile = (extra_profile || {}).dup
+    birthday = value.to_s.strip
+    birthday.present? ? profile['birthday'] = birthday : profile.delete('birthday')
+    self.extra_profile = profile.presence
+  end
 
   def parse_extra_profile_birthday(value)
     month, day = value.to_s.split(%r{[/.\-月]}).map(&:to_i)

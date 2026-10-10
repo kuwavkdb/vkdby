@@ -73,21 +73,25 @@ module Admin
       updated = []
       failed = nil
 
+      # 保存のたびに unit_snapshots を touch しないよう、最後に1回だけ touch する
       SnapshotPerson.transaction do
-        bulk_update_params.each do |id, attrs|
-          sp = snapshot_people[id]
-          next if sp.nil?
+        SnapshotPerson.no_touching do
+          bulk_update_params.each do |id, attrs|
+            sp = snapshot_people[id]
+            next if sp.nil?
 
-          sp.assign_bulk_edit_attributes(attrs)
-          next unless sp.changed?
+            sp.assign_bulk_edit_attributes(attrs)
+            next unless sp.changed?
 
-          unless sp.save
-            failed = sp
-            raise ActiveRecord::Rollback
+            unless sp.save
+              failed = sp
+              raise ActiveRecord::Rollback
+            end
+            record_update_log(sp, action: 'update', subject: @unit)
+            updated << sp
           end
-          record_update_log(sp, action: 'update', subject: @unit)
-          updated << sp
         end
+        @unit_snapshot.touch if updated.any?
       end
 
       if failed
@@ -149,10 +153,7 @@ module Admin
       # 紐付け済みの場合は編集させない（issue #1619）
       %i[inline_history extra_profile].each { |key| p.delete(key) } if p[:person_id].present?
 
-      if p[:sns].is_a?(String)
-        p[:sns] = p[:sns].split("\n").map(&:strip).reject(&:blank?)
-        p[:sns] = nil if p[:sns].empty?
-      end
+      p[:sns_text] = p.delete(:sns) if p[:sns].is_a?(String)
 
       p[:extra_profile] = p[:extra_profile].to_h.compact_blank.presence if p[:extra_profile].is_a?(ActionController::Parameters)
 
