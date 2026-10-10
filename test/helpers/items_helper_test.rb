@@ -46,6 +46,26 @@ class ItemsHelperTest < ActionView::TestCase
     assert_not tower_records_search_disabled?(Item.new(asin: 'B000000000', link_url: 'https://notower.jp/item/123'))
   end
 
+  test 'ASINがあるアイテムの購入リンクはAmazonへ直接遷移する' do
+    item = Item.create!(title: 'Amazon Item', release_date: '2026-03-01', asin: 'B0CUSHION1',
+                        link_url: 'https://www.amazon.co.jp/dp/B0CUSHION1')
+    assert_match %r{\Ahttps://www\.amazon\.co\.jp/}, item_purchase_href(item)
+  end
+
+  test 'ASINが無いアイテムの購入リンクはクッションページを挟む' do
+    item = Item.create!(title: 'Shop Item', release_date: '2026-03-01', link_url: 'https://www.example-shop.jp/items/1')
+    assert_equal item_outbound_path(item), item_purchase_href(item)
+  end
+
+  test 'ASINが無くてもリンク先がtower.jpならクッションページを挟まず直接遷移する' do
+    item = Item.create!(title: 'Tower Item', release_date: '2026-03-01', link_url: 'https://tower.jp/item/1234')
+    assert_equal 'https://tower.jp/item/1234', item_purchase_href(item)
+  end
+
+  test '外部サイトへ遷移させられないURLの購入リンクは nil' do
+    assert_nil item_purchase_href(Item.new(asin: nil, link_url: 'javascript:alert(1)'))
+  end
+
   test 'ASINの有無で購入リンクの配色を切り替える' do
     assert_equal 'bg-amber-500 hover:bg-amber-600 text-black', item_purchase_color_class(Item.new(asin: 'B000000000'))
     assert_equal 'bg-teal-700 hover:bg-teal-800 text-white', item_purchase_color_class(Item.new(asin: nil))

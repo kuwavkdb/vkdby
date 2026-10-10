@@ -199,6 +199,8 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
   end
   resources :trends, only: %i[index show]
   resources :items, only: %i[index show]
+  # 販売サイトへ遷移する前のクッションページ（issue #1823）。遷移先はアイテムからサーバー側で引く
+  get '/out/items/:id', to: 'outbound_links#item', as: :item_outbound, constraints: { id: /\d+/ }
   # 都道府県・エリアごとの会場の地図と一覧（issue #1801）。URLには都道府県・エリアの値（日本語）をそのまま使う。
   # /venues/:key と段数が違うので衝突しないが、念のため先に置く。エリア名の「.」を拡張子と解釈しないようformat: false
   get '/venues/area/:prefecture', to: 'venue_areas#show', as: :venue_prefecture,
