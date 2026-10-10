@@ -32,7 +32,7 @@ class ExternalUrlTest < ActiveSupport::TestCase
 
   test '空白・制御文字を含むURLは拒否する' do
     assert_nil ExternalUrl.sanitize("https://shop.example.com/\nSet-Cookie: a=b")
-    assert_nil ExternalUrl.sanitize(" javascript:alert(1)")
+    assert_nil ExternalUrl.sanitize(' javascript:alert(1)')
     assert_nil ExternalUrl.sanitize("java\tscript:alert(1)")
     assert_nil ExternalUrl.sanitize('https://shop.example.com/a b')
   end

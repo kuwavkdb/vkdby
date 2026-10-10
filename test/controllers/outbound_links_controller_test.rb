@@ -37,7 +37,9 @@ class OutboundLinksControllerTest < ActionDispatch::IntegrationTest
     get item_outbound_path(item, url: 'https://evil.example/')
 
     assert_response :success
-    assert_not_includes response.body, 'evil.example'
+    # og:url やログインリンクの return_to にはリクエストURLがエスケープされて入るので、リンク先だけを確かめる
+    assert_select 'a[href^="https://evil.example"]', count: 0
+    assert_select 'a[href=?]', 'https://www.example-shop.jp/items/123'
   end
 
   test '遷移先が http / https 以外なら404' do
