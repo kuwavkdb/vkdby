@@ -1,4 +1,4 @@
-<%# MicroAd COMPASS の広告枠（issue #1823）。spot: 広告枠のID。本番かつ未ログイン時のみ表示する %>
+<%# MicroAd COMPASS の広告枠（issue #1823）。spot: 広告枠のID、width / height: 広告枠のサイズ（px）。本番かつ未ログイン時のみ表示する %>
 <% if Rails.env.production? && !(defined?(logged_in?) && logged_in?) %>
   <% content_for :head do %>
     <script type="text/javascript">
@@ -7,9 +7,10 @@
     </script>
     <script type="text/javascript" charset="UTF-8" src="https://j.microad.net/js/compass.js" onload="new microadCompass.AdInitializer().initialize();" async></script>
   <% end %>
-  <div class="flex flex-col items-center gap-1">
+  <%# 広告枠が画面幅より広いスマートフォンでも、ページが横にスクロールしないようにはみ出しを隠す %>
+  <div class="flex flex-col items-center gap-1 max-w-full overflow-hidden">
     <span class="text-xs text-zinc-500 dark:text-zinc-400">広告</span>
-    <div id="<%= spot %>" style="width:300px; height:250px;">
+    <div id="<%= spot %>" style="width:<%= width.to_i %>px; height:<%= height.to_i %>px;">
       <script type="text/javascript">
         microadCompass.queue.push({ "spot": "<%= j spot %>" });
       </script>
