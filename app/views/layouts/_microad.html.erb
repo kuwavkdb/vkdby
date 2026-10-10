@@ -1,5 +1,7 @@
 <%# MicroAd COMPASS の広告枠（issue #1823）。spot: 広告枠のID、width / height: 広告枠のサイズ（px。サイズ指定の無い枠は省略し、横幅いっぱいに置く）。
-    本番かつ未ログイン時のみ表示する %>
+    本番かつ未ログイン時のみ表示する。
+    「広告」の表記と囲みは、広告が実際に入ったときだけ出す（issue #1837。microad_controller が data-filled を付ける）。
+    未配信のまま「広告」の文字だけが残ると、近くの販売サイトへの導線が広告の中身のように見えてしまうため %>
 <% if Rails.env.production? && !(defined?(logged_in?) && logged_in?) %>
   <% content_for :head do %>
     <script type="text/javascript">
@@ -11,16 +13,19 @@
   <% width = local_assigns[:width]&.to_i %>
   <% height = local_assigns[:height]&.to_i %>
   <%# 広告枠が画面幅より広いスマートフォンでも、ページが横にスクロールしないようにはみ出しを隠す %>
-  <div class="flex flex-col items-center gap-1 max-w-full overflow-hidden">
-    <span class="text-xs text-zinc-500 dark:text-zinc-400">広告</span>
-    <% if width && height %>
-      <div id="<%= spot %>" style="width:<%= width %>px; height:<%= height %>px;">
-    <% else %>
-      <div id="<%= spot %>" class="w-full">
-    <% end %>
-      <script type="text/javascript">
-        microadCompass.queue.push({ "spot": "<%= j spot %>" });
-      </script>
+  <div data-controller="microad"
+       class="group max-w-full overflow-hidden rounded-lg data-filled:border data-filled:border-zinc-200 data-filled:bg-zinc-50 data-filled:p-3 dark:data-filled:border-zinc-700 dark:data-filled:bg-zinc-950">
+    <p class="hidden group-data-filled:block mb-2 text-xs text-zinc-500 dark:text-zinc-400">広告</p>
+    <div class="flex justify-center">
+      <% if width && height %>
+        <div id="<%= spot %>" data-microad-target="slot" style="width:<%= width %>px; height:<%= height %>px;">
+      <% else %>
+        <div id="<%= spot %>" data-microad-target="slot" class="w-full">
+      <% end %>
+        <script type="text/javascript">
+          microadCompass.queue.push({ "spot": "<%= j spot %>" });
+        </script>
+      </div>
     </div>
   </div>
 <% end %>

@@ -31,6 +31,9 @@ application.register("link-title-suggest", LinkTitleSuggestController)
 import MarkdownPreviewController from "controllers/markdown_preview_controller"
 application.register("markdown-preview", MarkdownPreviewController)
 
+import MicroadController from "controllers/microad_controller"
+application.register("microad", MicroadController)
+
 import MobileMenuController from "controllers/mobile_menu_controller"
 application.register("mobile-menu", MobileMenuController)
 
