@@ -35,7 +35,7 @@
 #  fk_rails_...  (person_id => people.id)
 #  fk_rails_...  (unit_snapshot_id => unit_snapshots.id)
 #
-class SnapshotPerson < ApplicationRecord
+class SnapshotPerson < ApplicationRecord # rubocop:disable Metrics/ClassLength
   include Discard::Model
   include WikiParser
 
@@ -101,6 +101,24 @@ class SnapshotPerson < ApplicationRecord
     attrs[:name_kana] = profile['name_kana'] if profile['name_kana'].present?
 
     attrs
+  end
+
+  # スナップショット編集画面の一括編集フォーム（issue #1833）の入力値を割り当てる。
+  # name は person_name に入れる。紐付け済みで Person の名前と同じ場合は表示名の上書きをしない。
+  # sns は1行1アカウント。誕生日（extra_profile['birthday']）と経歴は Person 未紐付けのときだけ変更する。
+  def assign_bulk_edit_attributes(attrs)
+    attrs = attrs.to_h.with_indifferent_access
+    if attrs.key?(:person_name)
+      name = attrs[:person_name].to_s.strip.presence
+      self.person_name = person && name == person.name ? nil : name
+    end
+    self.sns = attrs[:sns].to_s.split("\n").map(&:strip).compact_blank.presence if attrs.key?(:sns)
+    return if person_id.present?
+
+    self.inline_history = attrs[:inline_history].to_s.strip.presence if attrs.key?(:inline_history)
+    return unless attrs.key?(:birthday)
+
+    self.extra_profile = (extra_profile || {}).merge('birthday' => attrs[:birthday].to_s.strip).compact_blank.presence
   end
 
   # extra_profile の誕生日（下書き）を管理画面の一覧向けに整形する（issue #1833）。

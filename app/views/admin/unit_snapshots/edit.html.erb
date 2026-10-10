@@ -35,6 +35,7 @@
       <div class="md:col-span-3">
         <%= render "snapshot_people_list", unit: @unit, unit_snapshot: @unit_snapshot, snapshot_people: @snapshot_people, other_unit_snapshots: @other_unit_snapshots %>
         <%= render "add_snapshot_person_form", unit: @unit, unit_snapshot: @unit_snapshot, snapshot_person: @snapshot_person %>
+        <%= render "bulk_edit_snapshot_people_form", unit: @unit, unit_snapshot: @unit_snapshot, snapshot_people: @snapshot_people %>
       </div>
     </div>
   </div>

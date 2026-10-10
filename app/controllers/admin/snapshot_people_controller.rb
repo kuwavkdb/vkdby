@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Admin
-  class SnapshotPeopleController < Admin::BaseController
+  class SnapshotPeopleController < Admin::BaseController # rubocop:disable Metrics/ClassLength
     before_action :set_unit
     before_action :set_unit_snapshot
     before_action :set_snapshot_person, only: %i[edit update destroy create_person]
@@ -66,6 +66,39 @@ module Admin
       head :ok
     end
 
+    # スナップショット全メンバーの名前・SNS・誕生日・経歴を一括で更新する（issue #1833）。
+    # 1件でも保存できなければ全件を取り消す。
+    def bulk_update
+      snapshot_people = @unit_snapshot.snapshot_people.includes(:person).where(id: bulk_update_params.keys).index_by { |sp| sp.id.to_s }
+      updated = []
+      failed = nil
+
+      SnapshotPerson.transaction do
+        bulk_update_params.each do |id, attrs|
+          sp = snapshot_people[id]
+          next if sp.nil?
+
+          sp.assign_bulk_edit_attributes(attrs)
+          next unless sp.changed?
+
+          unless sp.save
+            failed = sp
+            raise ActiveRecord::Rollback
+          end
+          record_update_log(sp, action: 'update', subject: @unit)
+          updated << sp
+        end
+      end
+
+      if failed
+        redirect_to edit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
+                    alert: "#{failed.name.presence || 'メンバー'}を更新できませんでした: #{failed.errors.full_messages.join(', ')}"
+      else
+        redirect_to edit_admin_unit_unit_snapshot_path(@unit, @unit_snapshot),
+                    notice: "#{updated.size}件のメンバーを更新しました。"
+      end
+    end
+
     def copy_or_move
       target_snapshot = @unit_snapshot.siblings.find_by(id: params[:target_unit_snapshot_id])
       snapshot_people = @unit_snapshot.snapshot_people.where(id: Array(params[:snapshot_person_ids]))
@@ -97,6 +130,11 @@ module Admin
 
     def snapshot_person_path
       edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @unit_snapshot, @snapshot_person)
+    end
+
+    def bulk_update_params
+      members = params.fetch(:members, {})
+      @bulk_update_params ||= members.permit(members.keys.index_with { %i[person_name sns birthday inline_history] }).to_h
     end
 
     def snapshot_person_params

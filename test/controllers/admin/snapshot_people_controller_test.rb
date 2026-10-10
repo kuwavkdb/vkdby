@@ -398,5 +398,67 @@ module Admin
 
       assert_redirected_to edit_admin_unit_unit_snapshot_path(@unit, @snapshot)
     end
+
+    # issue #1833: 名前・SNS・誕生日・経歴の一括更新
+    test 'bulk_update updates name, sns, birthday and history of unlinked members' do
+      sp = @snapshot.snapshot_people.create!(person_name: '旧名', part: :vocal,
+                                             extra_profile: { 'birthday' => '1/1', 'blood' => 'A' })
+
+      assert_difference('UpdateLog.count', 1) do
+        patch bulk_update_admin_unit_unit_snapshot_snapshot_people_path(@unit, @snapshot), params: {
+          members: { sp.id => { person_name: '新名', sns: "@new_handle\nhttps://www.instagram.com/new\n",
+                                birthday: '7/12', inline_history: '2020/01 加入' } }
+        }
+      end
+
+      assert_redirected_to edit_admin_unit_unit_snapshot_path(@unit, @snapshot)
+      sp.reload
+      assert_equal '新名', sp.person_name
+      assert_equal ['@new_handle', 'https://www.instagram.com/new'], sp.sns
+      assert_equal({ 'birthday' => '7/12', 'blood' => 'A' }, sp.extra_profile)
+      assert_equal '2020/01 加入', sp.inline_history
+    end
+
+    test 'bulk_update does not change birthday or history of linked members' do
+      person = people(:one)
+      sp = @snapshot.snapshot_people.create!(person: person, part: :guitar,
+                                             extra_profile: { 'birthday' => '3/4' }, inline_history: '元の経歴')
+
+      patch bulk_update_admin_unit_unit_snapshot_snapshot_people_path(@unit, @snapshot), params: {
+        members: { sp.id => { person_name: person.name, sns: '@linked', birthday: '7/12', inline_history: '変更' } }
+      }
+
+      sp.reload
+      assert_nil sp.person_name
+      assert_equal ['@linked'], sp.sns
+      assert_equal({ 'birthday' => '3/4' }, sp.extra_profile)
+      assert_equal '元の経歴', sp.inline_history
+    end
+
+    test 'bulk_update rolls back all members when one is invalid' do
+      first = @snapshot.snapshot_people.create!(person_name: 'A', part: :vocal)
+      second = @snapshot.snapshot_people.create!(person_name: 'B', part: :bass)
+
+      assert_no_difference('UpdateLog.count') do
+        patch bulk_update_admin_unit_unit_snapshot_snapshot_people_path(@unit, @snapshot), params: {
+          members: { first.id => { person_name: 'A2' }, second.id => { person_name: '' } }
+        }
+      end
+
+      assert_redirected_to edit_admin_unit_unit_snapshot_path(@unit, @snapshot)
+      assert_not_nil flash[:alert]
+      assert_equal 'A', first.reload.person_name
+      assert_equal 'B', second.reload.person_name
+    end
+
+    test 'bulk_update ignores members of other snapshots' do
+      other = unit_snapshots(:two).snapshot_people.create!(person_name: '他', part: :vocal)
+
+      patch bulk_update_admin_unit_unit_snapshot_snapshot_people_path(@unit, @snapshot), params: {
+        members: { other.id => { person_name: '書き換え' } }
+      }
+
+      assert_equal '他', other.reload.person_name
+    end
   end
 end
