@@ -23,6 +23,10 @@ module Admin
       get edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, @snapshot, snapshot_people(:one))
       assert_response :success
       assert_includes response.body, profile_path(@unit.key, anchor: "snapshot-#{@snapshot.id}")
+      # 同じタブで開く（issue #1818）
+      assert_select 'a[href=?]', profile_path(@unit.key, anchor: "snapshot-#{@snapshot.id}"), text: /公開ページで確認/ do |links|
+        assert_nil links.first['target']
+      end
     end
 
     test 'should create snapshot_person with person_name' do

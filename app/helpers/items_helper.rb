@@ -13,6 +13,37 @@ module ItemsHelper
     url.sub(/(\._[A-Z][A-Z0-9_]*_)?(\.(jpe?g|png|gif|webp))$/i) { "._SL#{size}_#{::Regexp.last_match(2)}" }
   end
 
+  # 購入リンクのラベル。ASINが無いアイテムはAmazon以外での販売なので汎用のラベルにする（issue #1820）
+  # with_domain: true のときは「販売ページ（ドメイン）で購入」とリンク先のドメインを示す（アイテムページ用）
+  # リンク先がTOWER RECORDSなら、アイテムページは「TOWER RECORDS で購入」、カードは「タワレコで購入」にする
+  def item_purchase_label(item, amazon_label: 'Amazonで購入', with_domain: false)
+    return amazon_label if item.asin.present?
+    return with_domain ? 'TOWER RECORDS で購入' : 'タワレコで購入' if tower_records_url?(item.display_link_url)
+
+    domain = purchase_link_domain(item.display_link_url) if with_domain
+    domain ? "販売ページ（#{domain}）で購入" : '販売サイト で購入'
+  end
+
+  # 購入リンクの配色。Amazonはamber、リンク先がTOWER RECORDS（tower.jp）ならTOWER RECORDSの配色、
+  # それ以外の販売サイトはAmazon・TOWER RECORDS・Yahoo!のボタンと見分けられるようtealにする
+  def item_purchase_color_class(item)
+    if item.asin.present?
+      'bg-amber-500 hover:bg-amber-600 text-black'
+    elsif tower_records_url?(item.display_link_url)
+      'bg-yellow-400 hover:bg-yellow-500 text-red-700'
+    else
+      'bg-teal-700 hover:bg-teal-800 text-white'
+    end
+  end
+
+  # TOWER RECORDS ONLINE の検索導線を無効にするか。ASINが無い（Amazon以外で販売している）アイテムと、
+  # 販売サイト自体がTOWER RECORDS（tower.jp）のアイテムは検索に誘導しない（issue #1820）
+  def tower_records_search_disabled?(item)
+    return true if item.asin.blank?
+
+    tower_records_url?(item.link_url)
+  end
+
   # アーティストのプロフィールページへのパスを生成
   # 優先順位: key > old_key。どちらも無い(名前のみの)アーティストはページが存在しないためリンクにしない
   def artist_profile_path(artist_data)
@@ -64,5 +95,21 @@ module ItemsHelper
       '&rid=aYyM8gAAoxaZ2Q0sCooAHwqKCJSeiA' \
       '&isec=698c8cf2' \
       "&vcurl=#{ERB::Util.url_encode(search_url)}"
+  end
+
+  private
+
+  # 購入リンクのドメイン（先頭の www. は省く）。URLとして解釈できなければnil
+  def purchase_link_domain(url)
+    host = URI.parse(url.to_s).host
+    host.presence&.delete_prefix('www.')
+  rescue URI::InvalidURIError
+    nil
+  end
+
+  # TOWER RECORDS（tower.jp とそのサブドメイン）のURLか
+  def tower_records_url?(url)
+    domain = purchase_link_domain(url)
+    domain.present? && (domain == 'tower.jp' || domain.end_with?('.tower.jp'))
   end
 end
