@@ -14,8 +14,12 @@ module ItemsHelper
   end
 
   # 購入リンクのラベル。ASINが無いアイテムはAmazon以外での販売なので汎用のラベルにする（issue #1820）
-  def item_purchase_label(item, amazon_label: 'Amazonで購入')
-    item.asin.present? ? amazon_label : '販売サイト で購入'
+  # with_domain: true のときは「販売ページ（ドメイン）で購入」とリンク先のドメインを示す（アイテムページ用）
+  def item_purchase_label(item, amazon_label: 'Amazonで購入', with_domain: false)
+    return amazon_label if item.asin.present?
+
+    domain = purchase_link_domain(item.display_link_url) if with_domain
+    domain ? "販売ページ（#{domain}）で購入" : '販売サイト で購入'
   end
 
   # 購入リンクの配色。Amazon・TOWER RECORDS・Yahoo!のボタンと見分けられるよう、販売サイトはtealにする
@@ -74,5 +78,15 @@ module ItemsHelper
       '&rid=aYyM8gAAoxaZ2Q0sCooAHwqKCJSeiA' \
       '&isec=698c8cf2' \
       "&vcurl=#{ERB::Util.url_encode(search_url)}"
+  end
+
+  private
+
+  # 購入リンクのドメイン（先頭の www. は省く）。URLとして解釈できなければnil
+  def purchase_link_domain(url)
+    host = URI.parse(url.to_s).host
+    host.presence&.delete_prefix('www.')
+  rescue URI::InvalidURIError
+    nil
   end
 end
