@@ -17,7 +17,7 @@ class OnThisDayPostBuilderTest < ActiveSupport::TestCase
 
     assert_equal [:trends], posts.map(&:kind)
     post = posts.first
-    assert_equal "ヴィジュアル系今日は何の日？（5/30）\n・1995年 黒夢 ワンマン\nhttps://example.com/date/-/5/30#trends\n#vkdb",
+    assert_equal "#ヴィジュアル系今日は何の日？（5/30）\n・1995年 黒夢 ワンマン\nhttps://example.com/date/-/5/30#trends",
                  post.text
     assert_equal 'https://example.com/date/-/5/30#trends', post.page_url
     assert_equal "https://x.com/intent/post?text=#{ERB::Util.url_encode(post.text)}", post.intent_url

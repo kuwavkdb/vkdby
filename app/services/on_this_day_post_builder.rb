@@ -8,15 +8,17 @@
 # - OnThisDayTrendRanker の優先順位（解散・活動休止・メジャーデビュー・結成・初ライブ・活動再開を優先し、
 #   その中でメジャー経験バンドを先にする。同じ優先度の中はランダム）の高いものから、入るだけ選ぶ。1バンド1件まで
 # - 入りきらなかった動向があれば「・他」を付ける
+# - 冒頭の見出しはハッシュタグ（#ヴィジュアル系今日は何の日？）にし、末尾に #vkdb は付けない
 #
 # 誕生日の投稿
 # - ランダムに選んで入るだけ、ヨミガナ順に1人1行で並べる。入りきらなかった人がいれば「・他」を付ける
 # - 人物名の後に、経歴で最後に書かれたユニット名（その後に「→」があれば ex-ユニット名）を括弧書きで付ける（PersonUnitLabel）
+# - 末尾にハッシュタグ #vkdb を付ける
 #
 # 管理画面のシェア用テキスト（TrendsHelper#on_this_day_share_text、issue #1732）とは別のルールで、
 # そちらには適用しない
 class OnThisDayPostBuilder # rubocop:disable Metrics/ClassLength
-  HEADER = 'ヴィジュアル系今日は何の日？'
+  HEADER = '#ヴィジュアル系今日は何の日？'
   TIME_ZONE = 'Asia/Tokyo'
   # 年を問わない日付（MM-DD）を Date にするときの年。2/29 も扱えるよううるう年にする
   MONTH_DAY_YEAR = 2000
@@ -129,7 +131,7 @@ class OnThisDayPostBuilder # rubocop:disable Metrics/ClassLength
     lines = ["#{HEADER}（#{month_day}）"]
     lines.concat(selected.sort_by(&:date).map { |trend| "・#{trend_line(trend)}" })
     lines << OTHERS_LINE if others
-    compose(lines, trends_page_url)
+    compose(lines, trends_page_url, hashtag: nil)
   end
 
   def compose_birthdays(selected, others)
@@ -139,8 +141,8 @@ class OnThisDayPostBuilder # rubocop:disable Metrics/ClassLength
     compose(lines, page_url)
   end
 
-  def compose(lines, url)
-    (lines + [url, HASHTAG]).join("\n")
+  def compose(lines, url, hashtag: HASHTAG)
+    (lines + [url, hashtag]).compact.join("\n")
   end
 
   def month_day
