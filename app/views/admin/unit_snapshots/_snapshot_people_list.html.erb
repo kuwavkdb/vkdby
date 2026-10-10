@@ -18,6 +18,7 @@
             </th>
             <th scope="col" class="w-32 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">パート</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">名前</th>
+            <th scope="col" class="w-28 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">誕生日</th>
             <th scope="col" class="relative w-20 py-3.5 pl-3 pr-4 sm:pr-6">
               <span class="sr-only">操作</span>
             </th>
@@ -70,10 +71,6 @@
                   </span>
                 <% end %>
                 <% if sp.person.nil? %>
-                  <% birthday = sp.extra_profile_birthday_display %>
-                  <% if birthday.present? %>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">誕生日: <%= birthday %></p>
-                  <% end %>
                   <% if sp.inline_history.present? %>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 whitespace-pre-line line-clamp-2" title="<%= sp.inline_history %>"><%= sp.inline_history %></p>
                   <% end %>
@@ -83,6 +80,7 @@
                   </p>
                 <% end %>
               </td>
+              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400"><%= sp.extra_profile_birthday_display if sp.person.nil? %></td>
               <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-3">
                 <%= link_to "編集",
                       edit_admin_unit_unit_snapshot_snapshot_person_path(unit, unit_snapshot, sp),

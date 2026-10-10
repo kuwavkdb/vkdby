@@ -104,7 +104,7 @@ class SnapshotPerson < ApplicationRecord
   end
 
   # extra_profile の誕生日（下書き）を管理画面の一覧向けに整形する（issue #1833）。
-  # パースできれば Person#birthday_display と同じ書式（生年があれば年付き）、できなければ入力値をそのまま返す。
+  # パースできれば "7/12"、生年があれば "1990/7/12" の形式にし、できなければ入力値をそのまま返す。
   def extra_profile_birthday_display
     profile = extra_profile || {}
     raw = profile['birthday'].to_s.strip
@@ -113,12 +113,9 @@ class SnapshotPerson < ApplicationRecord
     date = parse_extra_profile_birthday(raw)
     return raw unless date
 
+    month_day = "#{date.month}/#{date.day}"
     birth_year = profile['birth_year'].to_i
-    return date.strftime('%-m月%-d日') unless birth_year.positive?
-
-    Date.new(birth_year, date.month, date.day).strftime('%Y年%-m月%-d日')
-  rescue ArgumentError
-    date.strftime('%-m月%-d日')
+    birth_year.positive? ? "#{birth_year}/#{month_day}" : month_day
   end
 
   # sns（"@handle"形式、またはURLの配列）から、Person#links に作成する Link の属性へ変換する（issue #1653）。

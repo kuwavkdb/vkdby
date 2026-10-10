@@ -242,10 +242,10 @@ class SnapshotPersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/Cla
   # issue #1833
   test 'extra_profile_birthday_display formats month/day and birth year' do
     sp = SnapshotPerson.new(extra_profile: { 'birthday' => '7/12' })
-    assert_equal '7月12日', sp.extra_profile_birthday_display
+    assert_equal '7/12', sp.extra_profile_birthday_display
 
     sp.extra_profile = { 'birthday' => '07/12', 'birth_year' => 1990 }
-    assert_equal '1990年7月12日', sp.extra_profile_birthday_display
+    assert_equal '1990/7/12', sp.extra_profile_birthday_display
   end
 
   test 'extra_profile_birthday_display returns raw value when unparsable and nil when blank' do
