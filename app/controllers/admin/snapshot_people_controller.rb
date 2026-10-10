@@ -87,6 +87,7 @@ module Admin
             raise ActiveRecord::Rollback
           end
           record_update_log(sp, action: 'update', subject: @unit)
+          record_merged_sns_links(sp)
           updated << sp
         end
       end

@@ -461,6 +461,20 @@ module Admin
       assert_equal({ 'birthday' => '7/12', 'blood' => '' }, sp.reload.extra_profile)
     end
 
+    test 'bulk_update records update logs for links merged when a member is linked by person_key on save' do
+      person = people(:one)
+      sp = @snapshot.snapshot_people.create!(person_name: 'X', part: :vocal)
+      sp.update_columns(person_key: person.key)
+
+      assert_difference(-> { person.links.count } => 1, -> { UpdateLog.where(loggable_type: 'Link').count } => 1) do
+        patch bulk_update_admin_unit_unit_snapshot_snapshot_people_path(@unit, @snapshot), params: {
+          members: { sp.id => { sns: '@merged_handle' } }
+        }
+      end
+
+      assert_equal person.id, sp.reload.person_id
+    end
+
     test 'bulk_update rolls back all members when one is invalid' do
       first = @snapshot.snapshot_people.create!(person_name: 'A', part: :vocal)
       second = @snapshot.snapshot_people.create!(person_name: 'B', part: :bass)
