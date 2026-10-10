@@ -238,4 +238,19 @@ class SnapshotPersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/Cla
 
     assert_equal ['https://x.com/missing'], sp.sns_urls_missing_from(person, known_urls: ['https://twitter.com/planned'])
   end
+
+  # issue #1833
+  test 'extra_profile_birthday_display formats month/day and birth year' do
+    sp = SnapshotPerson.new(extra_profile: { 'birthday' => '7/12' })
+    assert_equal '7/12', sp.extra_profile_birthday_display
+
+    sp.extra_profile = { 'birthday' => '07/12', 'birth_year' => 1990 }
+    assert_equal '1990/7/12', sp.extra_profile_birthday_display
+  end
+
+  test 'extra_profile_birthday_display returns raw value when unparsable and nil when blank' do
+    assert_equal '不明', SnapshotPerson.new(extra_profile: { 'birthday' => '不明' }).extra_profile_birthday_display
+    assert_nil SnapshotPerson.new(extra_profile: {}).extra_profile_birthday_display
+    assert_nil SnapshotPerson.new.extra_profile_birthday_display
+  end
 end
