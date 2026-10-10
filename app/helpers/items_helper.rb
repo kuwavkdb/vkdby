@@ -27,6 +27,15 @@ module ItemsHelper
     item.asin.present? ? 'bg-amber-500 hover:bg-amber-600 text-black' : 'bg-teal-700 hover:bg-teal-800 text-white'
   end
 
+  # TOWER RECORDS ONLINE の検索導線を無効にするか。ASINが無い（Amazon以外で販売している）アイテムと、
+  # 販売サイト自体がTOWER RECORDS（tower.jp）のアイテムは検索に誘導しない（issue #1820）
+  def tower_records_search_disabled?(item)
+    return true if item.asin.blank?
+
+    domain = purchase_link_domain(item.link_url)
+    domain.present? && (domain == 'tower.jp' || domain.end_with?('.tower.jp'))
+  end
+
   # アーティストのプロフィールページへのパスを生成
   # 優先順位: key > old_key。どちらも無い(名前のみの)アーティストはページが存在しないためリンクにしない
   def artist_profile_path(artist_data)

@@ -31,6 +31,21 @@ class ItemsHelperTest < ActionView::TestCase
     assert_equal '販売サイト で購入', item_purchase_label(Item.new(asin: nil, link_url: 'not a url'), with_domain: true)
   end
 
+  test 'ASINがあり販売サイトがtower.jp以外ならTOWER RECORDSの検索導線は有効' do
+    item = Item.new(asin: 'B000000000', link_url: 'https://www.amazon.co.jp/dp/B000000000')
+    assert_not tower_records_search_disabled?(item)
+  end
+
+  test 'ASINが無ければTOWER RECORDSの検索導線は無効' do
+    assert tower_records_search_disabled?(Item.new(asin: nil, link_url: 'https://www.example-shop.jp/items/123'))
+  end
+
+  test '販売サイトがtower.jpならTOWER RECORDSの検索導線は無効' do
+    assert tower_records_search_disabled?(Item.new(asin: 'B000000000', link_url: 'https://tower.jp/item/123'))
+    assert tower_records_search_disabled?(Item.new(asin: 'B000000000', link_url: 'https://www.tower.jp/item/123'))
+    assert_not tower_records_search_disabled?(Item.new(asin: 'B000000000', link_url: 'https://notower.jp/item/123'))
+  end
+
   test 'ASINの有無で購入リンクの配色を切り替える' do
     assert_equal 'bg-amber-500 hover:bg-amber-600 text-black', item_purchase_color_class(Item.new(asin: 'B000000000'))
     assert_equal 'bg-teal-700 hover:bg-teal-800 text-white', item_purchase_color_class(Item.new(asin: nil))
