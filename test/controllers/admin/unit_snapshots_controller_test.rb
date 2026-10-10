@@ -91,6 +91,7 @@ module Admin
       assert_includes response.body, '2020/01 加入'
       assert_not_includes response.body, '3月4日'
       assert_not_includes response.body, '紐付け済みの経歴'
+      assert_select 'span', text: '紐付け済み', count: @snapshot.snapshot_people.where.not(person_id: nil).count
       assert_select 'th', text: 'ステータス', count: 0
     end
 

@@ -16,8 +16,8 @@
             <th scope="col" class="relative w-10 px-3 py-3.5">
               <span class="sr-only">選択</span>
             </th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">名前</th>
             <th scope="col" class="w-32 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">パート</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">名前</th>
             <th scope="col" class="relative w-20 py-3.5 pl-3 pr-4 sm:pr-6">
               <span class="sr-only">操作</span>
             </th>
@@ -39,6 +39,9 @@
                        form="bulk-copy-move-form"
                        aria-label="<%= sp.name %> を選択"
                        class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700">
+              </td>
+              <td class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 break-all">
+                <%= sp.part_alias.presence || sp.part.humanize %>
               </td>
               <td class="px-3 py-4 text-sm text-gray-900 dark:text-gray-200 break-all">
                 <% if sp.person %>
@@ -74,10 +77,11 @@
                   <% if sp.inline_history.present? %>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 whitespace-pre-line line-clamp-2" title="<%= sp.inline_history %>"><%= sp.inline_history %></p>
                   <% end %>
+                <% else %>
+                  <p class="mt-1">
+                    <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">紐付け済み</span>
+                  </p>
                 <% end %>
-              </td>
-              <td class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 break-all">
-                <%= sp.part_alias.presence || sp.part.humanize %>
               </td>
               <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-3">
                 <%= link_to "編集",
