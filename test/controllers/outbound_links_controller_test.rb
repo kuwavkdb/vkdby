@@ -18,6 +18,18 @@ class OutboundLinksControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'Cushion Item'
   end
 
+  test 'クッションページ専用の広告ユニットを表示する' do
+    item = create_item(link_url: 'https://www.example-shop.jp/items/123')
+    original = ENV.fetch('GOOGLE_ADSENSE_CLIENT_ID', nil)
+    ENV['GOOGLE_ADSENSE_CLIENT_ID'] = 'ca-pub-0000000000000000'
+
+    get item_outbound_path(item)
+
+    assert_select 'ins.adsbygoogle[data-ad-slot="9403210629"]'
+  ensure
+    ENV['GOOGLE_ADSENSE_CLIENT_ID'] = original
+  end
+
   test 'クエリパラメータで遷移先を差し替えられない' do
     item = create_item(link_url: 'https://www.example-shop.jp/items/123')
 
