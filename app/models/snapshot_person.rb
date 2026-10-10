@@ -103,6 +103,24 @@ class SnapshotPerson < ApplicationRecord
     attrs
   end
 
+  # extra_profile の誕生日（下書き）を管理画面の一覧向けに整形する（issue #1833）。
+  # パースできれば Person#birthday_display と同じ書式（生年があれば年付き）、できなければ入力値をそのまま返す。
+  def extra_profile_birthday_display
+    profile = extra_profile || {}
+    raw = profile['birthday'].to_s.strip
+    return nil if raw.blank?
+
+    date = parse_extra_profile_birthday(raw)
+    return raw unless date
+
+    birth_year = profile['birth_year'].to_i
+    return date.strftime('%-m月%-d日') unless birth_year.positive?
+
+    Date.new(birth_year, date.month, date.day).strftime('%Y年%-m月%-d日')
+  rescue ArgumentError
+    date.strftime('%-m月%-d日')
+  end
+
   # sns（"@handle"形式、またはURLの配列）から、Person#links に作成する Link の属性へ変換する（issue #1653）。
   # "@handle" は X(Twitter) のURLへ変換し、URLはそのまま使う。どちらでもない値（"@"のみ、
   # スキーム無しの文字列等）はリンク先を特定できないためスキップする。空要素・重複URLは除く。

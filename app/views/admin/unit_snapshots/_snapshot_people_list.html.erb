@@ -16,9 +16,8 @@
             <th scope="col" class="relative w-10 px-3 py-3.5">
               <span class="sr-only">選択</span>
             </th>
-            <th scope="col" class="w-2/5 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">名前</th>
-            <th scope="col" class="w-1/5 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">パート</th>
-            <th scope="col" class="w-24 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">ステータス</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">名前</th>
+            <th scope="col" class="w-32 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">パート</th>
             <th scope="col" class="relative w-20 py-3.5 pl-3 pr-4 sm:pr-6">
               <span class="sr-only">操作</span>
             </th>
@@ -56,24 +55,29 @@
                 <% if sp.support? %>
                   <span class="ml-1 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">サポート</span>
                 <% end %>
+                <% sns_links = sp.sns_link_attributes %>
+                <% if sns_links.any? %>
+                  <span class="ml-2 inline-flex items-center gap-1.5 align-middle">
+                    <% sns_links.each do |link| %>
+                      <%= link_to link[:url], target: "_blank", rel: "noopener noreferrer", title: link[:url],
+                            class: "inline-flex items-center rounded text-gray-500 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-gray-400 dark:hover:text-amber-400 dark:focus:ring-amber-400" do %>
+                        <%= sns_icon(SnsInfoIcon.icon_for_url(link[:url]), css_class: "w-4 h-4") %>
+                      <% end %>
+                    <% end %>
+                  </span>
+                <% end %>
+                <% if sp.person.nil? %>
+                  <% birthday = sp.extra_profile_birthday_display %>
+                  <% if birthday.present? %>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">誕生日: <%= birthday %></p>
+                  <% end %>
+                  <% if sp.inline_history.present? %>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 whitespace-pre-line line-clamp-2" title="<%= sp.inline_history %>"><%= sp.inline_history %></p>
+                  <% end %>
+                <% end %>
               </td>
               <td class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 break-all">
                 <%= sp.part_alias.presence || sp.part.humanize %>
-              </td>
-              <td class="whitespace-nowrap px-3 py-4 text-sm">
-                <%
-                  status_styles = {
-                    "active"    => "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-                    "left"      => "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400",
-                    "pending"   => "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-                    "pre"       => "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-                    "concerned" => "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-                    "undefined" => "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400",
-                  }
-                %>
-                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium <%= status_styles[sp.status] %>">
-                  <%= sp.status.humanize %>
-                </span>
               </td>
               <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-3">
                 <%= link_to "編集",
