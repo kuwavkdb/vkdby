@@ -57,6 +57,11 @@ class ItemsHelperTest < ActionView::TestCase
     assert_equal item_outbound_path(item), item_purchase_href(item)
   end
 
+  test 'ASINが無くてもリンク先がtower.jpならクッションページを挟まず直接遷移する' do
+    item = Item.create!(title: 'Tower Item', release_date: '2026-03-01', link_url: 'https://tower.jp/item/1234')
+    assert_equal 'https://tower.jp/item/1234', item_purchase_href(item)
+  end
+
   test '外部サイトへ遷移させられないURLの購入リンクは nil' do
     assert_nil item_purchase_href(Item.new(asin: nil, link_url: 'javascript:alert(1)'))
   end

@@ -24,12 +24,14 @@ module ItemsHelper
     domain ? "販売ページ（#{domain}）で購入" : '販売サイト で購入'
   end
 
-  # 購入リンクのリンク先。Amazon（ASINあり）は商品ページへ直接、それ以外の販売サイトは
-  # クッションページ（issue #1823）を挟む。外部サイトへ遷移させられないURLなら nil
+  # 購入リンクのリンク先。Amazon（ASINあり）とTOWER RECORDS（tower.jp）は商品ページへ直接、
+  # それ以外の販売サイトはクッションページ（issue #1823）を挟む。外部サイトへ遷移させられないURLなら nil
   def item_purchase_href(item)
-    return nil if ExternalUrl.sanitize(item.display_link_url).nil?
+    url = ExternalUrl.sanitize(item.display_link_url)
+    return nil if url.nil?
+    return url if item.asin.present? || tower_records_url?(url)
 
-    item.asin.present? ? ExternalUrl.sanitize(item.display_link_url) : item_outbound_path(item)
+    item_outbound_path(item)
   end
 
   # 購入リンクの配色。Amazonはamber、リンク先がTOWER RECORDS（tower.jp）ならTOWER RECORDSの配色、
