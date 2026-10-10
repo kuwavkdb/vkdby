@@ -15,8 +15,10 @@ module ItemsHelper
 
   # 購入リンクのラベル。ASINが無いアイテムはAmazon以外での販売なので汎用のラベルにする（issue #1820）
   # with_domain: true のときは「販売ページ（ドメイン）で購入」とリンク先のドメインを示す（アイテムページ用）
+  # リンク先がTOWER RECORDSなら、アイテムページは「TOWER RECORDS で購入」、カードは「タワレコで購入」にする
   def item_purchase_label(item, amazon_label: 'Amazonで購入', with_domain: false)
     return amazon_label if item.asin.present?
+    return with_domain ? 'TOWER RECORDS で購入' : 'タワレコで購入' if tower_records_url?(item.display_link_url)
 
     domain = purchase_link_domain(item.display_link_url) if with_domain
     domain ? "販売ページ（#{domain}）で購入" : '販売サイト で購入'
