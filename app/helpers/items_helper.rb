@@ -18,6 +18,11 @@ module ItemsHelper
     item.asin.present? ? amazon_label : '販売サイト で購入'
   end
 
+  # 購入リンクの配色。Amazon・TOWER RECORDS・Yahoo!のボタンと見分けられるよう、販売サイトはtealにする
+  def item_purchase_color_class(item)
+    item.asin.present? ? 'bg-amber-500 hover:bg-amber-600 text-black' : 'bg-teal-700 hover:bg-teal-800 text-white'
+  end
+
   # アーティストのプロフィールページへのパスを生成
   # 優先順位: key > old_key。どちらも無い(名前のみの)アーティストはページが存在しないためリンクにしない
   def artist_profile_path(artist_data)
