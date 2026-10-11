@@ -15,6 +15,8 @@ class PeopleController < ApplicationController
     @person_data_filters = build_person_data_filters
   end
 
+  # 一覧ページの入力候補（JSON）。候補には名前そのものを並べるため、名前・よみがな系の列だけを探す。
+  # セクション名やメンバー名でも探す matching_keyword（/search・/people?q=）とは、意図して範囲を分けている（issue #1841）。
   def search
     q = normalize_search_query(params[:q].to_s.strip.first(100))
     if q.length < 2
@@ -86,12 +88,7 @@ class PeopleController < ApplicationController
 
   def build_scope
     scope = base_scope.order(updated_at: :desc)
-    if params[:q].present?
-      scope = scope.where(
-        'people.name ILIKE :q OR people.name_kana ILIKE :q OR people.name_log::text ILIKE :q OR people.aliases::text ILIKE :q OR people.old_history ILIKE :q',
-        q: like_pattern(normalize_search_query(params[:q]))
-      )
-    end
+    scope = scope.matching_keyword(like_pattern(normalize_search_query(params[:q]))) if params[:q].present?
 
     @selected_tag_ids.each_value do |tag_id|
       scope = scope.where(id: Person.joins(:tag_indices).where(tag_indices: { id: tag_id }).select(:id))

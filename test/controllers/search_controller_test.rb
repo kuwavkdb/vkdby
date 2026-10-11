@@ -197,4 +197,28 @@ class SearchControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
     assert_response :success
     assert_not_includes response.body, 'ProvisionalMemberUnit'
   end
+
+  # issue #1841: /search と「View all →」の行き先（/units?q=・/people?q=）で、同じ検索語なら同じものが見つかる
+  test 'index and the units list find the same unit via a snapshot member name' do
+    unit = Unit.create!(name: 'ViewAllMemberMatchUnit', key: 'view-all-member-match-unit-test', status: :active)
+    snapshot = unit.unit_snapshots.create!(active: true)
+    snapshot.snapshot_people.create!(person_name: 'UniqueViewAllMemberNameTest', status: :left)
+
+    get search_path(q: 'UniqueViewAllMemberNameTest')
+    assert_includes response.body, 'ViewAllMemberMatchUnit'
+
+    get units_path(q: 'UniqueViewAllMemberNameTest')
+    assert_includes response.body, 'ViewAllMemberMatchUnit'
+  end
+
+  test 'index and the people list find the same person via a linked section name' do
+    person = Person.create!(name: 'ViewAllSectionMatchPerson', key: 'view-all-section-match-person-test', status: :active)
+    person.sections.create!(name: 'UniqueViewAllSectionNameTest', active: true)
+
+    get search_path(q: 'UniqueViewAllSectionNameTest')
+    assert_includes response.body, 'ViewAllSectionMatchPerson'
+
+    get people_path(q: 'UniqueViewAllSectionNameTest')
+    assert_includes response.body, 'ViewAllSectionMatchPerson'
+  end
 end
