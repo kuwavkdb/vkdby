@@ -4,8 +4,9 @@
 # person_name / name_alias / extra_profile の name_kana（ヨミガナの下書き）/ sections.name の
 # 部分一致（ILIKE）を trigram index で引けるようにする。OR で並べた条件のうち1つでも index が
 # なければ全件走査になるため、検索対象の列すべてに張る。
-# sections.name には手作業で作った index が環境によって存在しうるため、同じ列に gin_trgm_ops の
-# index が既にあれば作らない。
+# sections.name には手作業で作った index（index_sections_on_name）が環境によって存在しうる。
+# 同じ列に gin_trgm_ops の index が既にあれば、作り直さずに名前だけ付け替えて、どの環境でも
+# schema.rb の index 名がそろうようにする。
 class AddTrgmIndexesToSnapshotPeopleAndSections < ActiveRecord::Migration[8.1]
   disable_ddl_transaction!
 
@@ -18,9 +19,12 @@ class AddTrgmIndexesToSnapshotPeopleAndSections < ActiveRecord::Migration[8.1]
 
   def up
     INDEXES.each do |table, column, name|
-      next if trgm_index_exists?(table, column)
-
-      add_index table, column, using: :gin, opclass: :gin_trgm_ops, name:, algorithm: :concurrently
+      existing = existing_trgm_index_name(table, column)
+      if existing.nil?
+        add_index table, column, using: :gin, opclass: :gin_trgm_ops, name:, algorithm: :concurrently
+      elsif existing != name
+        rename_index table, existing, name
+      end
     end
 
     return if index_exists?(:snapshot_people, nil, name: NAME_KANA_INDEX)
@@ -40,12 +44,13 @@ class AddTrgmIndexesToSnapshotPeopleAndSections < ActiveRecord::Migration[8.1]
 
   private
 
-  def trgm_index_exists?(table, column)
-    select_value(<<~SQL.squish).present?
-      SELECT 1 FROM pg_indexes
+  def existing_trgm_index_name(table, column)
+    select_value(<<~SQL.squish)
+      SELECT indexname FROM pg_indexes
       WHERE schemaname = current_schema()
         AND tablename = #{connection.quote(table.to_s)}
         AND indexdef ILIKE #{connection.quote("%(#{column} gin_trgm_ops)%")}
+      LIMIT 1
     SQL
   end
 end

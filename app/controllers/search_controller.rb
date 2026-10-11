@@ -25,9 +25,14 @@ class SearchController < ApplicationController
                       .order(relevance_order, updated_at: :desc)
                       .limit(PEOPLE_LIMIT).load
       # 個人ページのないメンバーも個人と同じ欄に、個人ページのある人の後ろに並べる。合計で PEOPLE_LIMIT 件まで（issue #1843）
-      @unlinked_members = SnapshotPerson.unlinked_matching(normalized_query)
-                                        .includes(unit_snapshot: :unit)
-                                        .limit(PEOPLE_LIMIT - @people.size).load
+      remaining = PEOPLE_LIMIT - @people.size
+      @unlinked_members = if remaining.positive?
+                            SnapshotPerson.unlinked_matching(normalized_query)
+                                          .includes(unit_snapshot: :unit)
+                                          .limit(remaining).load
+                          else
+                            []
+                          end
       @custom_pages = CustomPage.published.non_system_pages
                                 .where(<<~SQL.squish, q: search_pattern, section_type: 'CustomPage')
                                   title ILIKE :q OR body ILIKE :q

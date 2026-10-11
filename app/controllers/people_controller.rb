@@ -4,8 +4,9 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
   # 個人データ（parts/blood/hometown/status）で直接絞り込むため、タグ運用の同名グループは一覧の絞り込みUIから除外する
   PERSON_DATA_TAG_GROUP_NAMES = %w[パート 血液型 出身地 状況].freeze
   BLOOD_TYPES = Person::BLOOD_TYPES
-  # 一覧の上に出す「個人ページのないメンバー」欄の上限（issue #1843）
-  UNLINKED_MEMBERS_LIMIT = 30
+  # 一覧の上に出す「個人ページのないメンバー」欄の上限（issue #1843）。スマホでは1列になるため、
+  # 個人ページのある人の一覧まで長くスクロールさせないよう少なめにする
+  UNLINKED_MEMBERS_LIMIT = 6
   SUGGESTION_LIMIT = 10
 
   def index

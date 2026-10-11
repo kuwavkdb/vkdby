@@ -215,4 +215,15 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
     assert_equal 'UnlinkedSuggestUnit', member['unit_name']
     assert_equal profile_path(unit.key, anchor: "snapshot-#{snapshot.id}"), member['url']
   end
+
+  test 'index lists at most six members without a person page' do
+    unit = Unit.create!(name: 'UnlinkedPeopleLimitUnit', key: 'unlinked-people-limit-unit', status: :active)
+    snapshot = unit.unit_snapshots.create!(active: true)
+    7.times { |i| snapshot.snapshot_people.create!(person_name: "UniqueUnlinkedPeopleLimitMember#{i}") }
+
+    get people_path(q: 'UniqueUnlinkedPeopleLimitMember')
+
+    assert_response :success
+    assert_select "a[href='#{profile_path(unit.key, anchor: "snapshot-#{snapshot.id}")}']", count: 6
+  end
 end
