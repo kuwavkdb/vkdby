@@ -19,6 +19,7 @@
 # Indexes
 #
 #  index_sections_on_discarded_at  (discarded_at)
+#  index_sections_on_name_trgm     (name)
 #  index_sections_on_sectionable   (sectionable_type,sectionable_id)
 #
 class Section < ApplicationRecord

@@ -22,7 +22,7 @@
     </div>
 
     <% if @query.present? %>
-      <% if @units.any? || @people.any? || @custom_pages.any? %>
+      <% if @units.any? || @people.any? || @unlinked_members.any? || @custom_pages.any? %>
         <!-- Units Section -->
         <% if @units.any? %>
           <section class="mb-8">
@@ -42,7 +42,7 @@
         <% end %>
 
         <!-- People Section -->
-        <% if @people.any? %>
+        <% if @people.any? || @unlinked_members.any? %>
           <section>
             <div class="flex items-center justify-between mb-4">
               <h2 class="text-xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-2">
@@ -55,6 +55,7 @@
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <%= render PersonCardComponent.with_collection(@people, show_history: true) %>
+              <%= render UnlinkedMemberCardComponent.with_collection(@unlinked_members) %>
             </div>
           </section>
         <% end %>

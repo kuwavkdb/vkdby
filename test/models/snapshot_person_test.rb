@@ -253,4 +253,61 @@ class SnapshotPersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/Cla
     assert_nil SnapshotPerson.new(extra_profile: {}).extra_profile_birthday_display
     assert_nil SnapshotPerson.new.extra_profile_birthday_display
   end
+
+  # issue #1843: 個人ページのないメンバーを個人の検索結果に出すための検索
+  test 'unlinked_matching returns one result per unit and opens the current snapshot' do
+    unit = Unit.create!(name: 'UnlinkedMatchUnit', key: 'unlinked-match-unit', status: :active)
+    newer = unit.unit_snapshots.create!(active: true, snapshot_date: Date.new(2010, 1, 1))
+    current = unit.unit_snapshots.create!(active: true, current: true, snapshot_date: Date.new(2005, 1, 1))
+    newer.snapshot_people.create!(person_name: 'UnlinkedMatchMember')
+    current.snapshot_people.create!(person_name: 'UnlinkedMatchMember')
+
+    results = SnapshotPerson.unlinked_matching('UnlinkedMatchMember').to_a
+
+    assert_equal 1, results.size
+    assert_equal current.id, results.first.unit_snapshot_id
+  end
+
+  test 'unlinked_matching opens the newest snapshot when none is current' do
+    unit = Unit.create!(name: 'UnlinkedNewestUnit', key: 'unlinked-newest-unit', status: :active)
+    older = unit.unit_snapshots.create!(active: true, snapshot_date: Date.new(2005, 1, 1))
+    newer = unit.unit_snapshots.create!(active: true, snapshot_date: Date.new(2010, 1, 1))
+    older.snapshot_people.create!(person_name: 'UnlinkedNewestMember')
+    newer.snapshot_people.create!(person_name: 'UnlinkedNewestMember')
+
+    assert_equal [newer.id], SnapshotPerson.unlinked_matching('UnlinkedNewestMember').map(&:unit_snapshot_id)
+  end
+
+  test 'unlinked_matching returns the same name in different units as separate results' do
+    %w[a b].each do |suffix|
+      unit = Unit.create!(name: "UnlinkedSameName#{suffix}", key: "unlinked-same-name-#{suffix}", status: :active)
+      unit.unit_snapshots.create!(active: true).snapshot_people.create!(person_name: 'UnlinkedSameNameMember')
+    end
+
+    assert_equal 2, SnapshotPerson.unlinked_matching('UnlinkedSameNameMember').to_a.size
+  end
+
+  test 'unlinked_matching matches the alias and the draft kana, and includes people in a past snapshot' do
+    unit = Unit.create!(name: 'UnlinkedAliasUnit', key: 'unlinked-alias-unit', status: :active)
+    unit.unit_snapshots.create!(active: true, past: true)
+        .snapshot_people.create!(person_name: 'Someone', name_alias: 'UnlinkedAliasName',
+                                 extra_profile: { 'name_kana' => 'アンリンクドカナ' })
+
+    assert_equal ['Someone'], SnapshotPerson.unlinked_matching('UnlinkedAliasName').map(&:name)
+    assert_equal ['Someone'], SnapshotPerson.unlinked_matching('アンリンクドカナ').map(&:name)
+  end
+
+  test 'unlinked_matching excludes linked, discarded, inactive-snapshot and non-public-unit members' do
+    person = Person.create!(name: 'UnlinkedExcludedLinked', key: 'unlinked-excluded-linked', status: :active)
+    unit = Unit.create!(name: 'UnlinkedExcludedUnit', key: 'unlinked-excluded-unit', status: :active)
+    snapshot = unit.unit_snapshots.create!(active: true)
+    snapshot.snapshot_people.create!(person_name: 'UnlinkedExcluded linked', person:)
+    snapshot.snapshot_people.create!(person_name: 'UnlinkedExcluded discarded').discard!
+    unit.unit_snapshots.create!(active: false).snapshot_people.create!(person_name: 'UnlinkedExcluded inactive')
+    provisional = Unit.create!(name: 'UnlinkedExcludedProvisional', key: 'unlinked-excluded-provisional',
+                               status: :active, provisional: true)
+    provisional.unit_snapshots.create!(active: true).snapshot_people.create!(person_name: 'UnlinkedExcluded provisional')
+
+    assert_empty SnapshotPerson.unlinked_matching('UnlinkedExcluded').to_a
+  end
 end

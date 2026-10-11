@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_09_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_11_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -218,6 +218,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_000000) do
     t.datetime "updated_at", null: false
     t.text "wiki_text"
     t.index ["discarded_at"], name: "index_sections_on_discarded_at"
+    t.index ["name"], name: "index_sections_on_name_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["sectionable_type", "sectionable_id"], name: "index_sections_on_sectionable"
   end
 
@@ -239,10 +240,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_000000) do
     t.boolean "support", default: false, null: false
     t.bigint "unit_snapshot_id", null: false
     t.datetime "updated_at", null: false
+    t.index "((extra_profile ->> 'name_kana'::text)) gin_trgm_ops", name: "index_snapshot_people_on_extra_profile_name_kana_trgm", using: :gin
     t.index ["discarded_at"], name: "index_snapshot_people_on_discarded_at"
+    t.index ["name_alias"], name: "index_snapshot_people_on_name_alias_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["old_person_key"], name: "index_snapshot_people_on_old_person_key"
     t.index ["person_id"], name: "index_snapshot_people_on_person_id"
     t.index ["person_key"], name: "index_snapshot_people_on_person_key"
+    t.index ["person_name"], name: "index_snapshot_people_on_person_name_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["unit_snapshot_id", "sort_order"], name: "index_snapshot_people_on_unit_snapshot_id_and_sort_order"
     t.index ["unit_snapshot_id"], name: "index_snapshot_people_on_unit_snapshot_id"
   end

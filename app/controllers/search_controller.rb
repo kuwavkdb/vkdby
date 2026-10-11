@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class SearchController < ApplicationController
+  PEOPLE_LIMIT = 15
+
   def index
     @query = params[:q]
 
@@ -21,7 +23,16 @@ class SearchController < ApplicationController
                    .limit(15)
       @people = Person.for_index.matching_keyword(search_pattern)
                       .order(relevance_order, updated_at: :desc)
-                      .limit(15)
+                      .limit(PEOPLE_LIMIT).load
+      # 個人ページのないメンバーも個人と同じ欄に、個人ページのある人の後ろに並べる。合計で PEOPLE_LIMIT 件まで（issue #1843）
+      remaining = PEOPLE_LIMIT - @people.size
+      @unlinked_members = if remaining.positive?
+                            SnapshotPerson.unlinked_matching(normalized_query)
+                                          .includes(unit_snapshot: :unit)
+                                          .limit(remaining).load
+                          else
+                            []
+                          end
       @custom_pages = CustomPage.published.non_system_pages
                                 .where(<<~SQL.squish, q: search_pattern, section_type: 'CustomPage')
                                   title ILIKE :q OR body ILIKE :q
@@ -39,6 +50,7 @@ class SearchController < ApplicationController
     else
       @units = []
       @people = []
+      @unlinked_members = []
       @custom_pages = []
     end
   end
