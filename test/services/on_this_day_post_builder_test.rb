@@ -23,23 +23,14 @@ class OnThisDayPostBuilderTest < ActiveSupport::TestCase
     assert_equal "https://x.com/intent/post?text=#{ERB::Util.url_encode(post.text)}", post.intent_url
   end
 
-  test '動向は件数の上限なく、280文字に入るだけ載せる（issue #1753）' do
-    8.times { |i| create_trend(create_unit("U#{i}"), title: '結成', phenomenon: :formation, year: 1990 + i) }
-
-    post = trend_post
-
-    assert_equal(8, post.text.scan(/^・1/).size)
-    assert_not_includes post.text, '・他'
-  end
-
-  test '280文字に収まらない動向は入れず、「・他」を付けて全体を280以内にする' do
+  test '動向は280文字を超えても、すべて載せる（issue #1848）' do
     8.times { |i| create_trend(create_unit("U#{i}"), title: 'あ' * 40, year: 1990 + i) }
 
     post = trend_post
 
-    assert_operator post.weighted_length, :<=, XPostLength::MAX
-    assert_operator post.text.scan(/^・1/).size, :<, 8
-    assert_includes post.text.split("\n"), '・他'
+    assert_operator post.weighted_length, :>, XPostLength::MAX
+    assert_equal(8, post.text.scan(/^・1/).size)
+    assert_not_includes post.text, '・他'
   end
 
   test '動向は年の古い順に並べる' do
@@ -50,36 +41,14 @@ class OnThisDayPostBuilderTest < ActiveSupport::TestCase
     assert_equal %w[1995 1999 2001], years
   end
 
-  test '解散・活動休止・メジャーデビュー・結成・初ライブ・活動再開を優先し、その中でメジャー経験バンドを先にする（issue #1753）' do
-    major = create_unit('M')
-    create_major_debut(major)
-    create_trend(major, title: 'メジャーライブ', phenomenon: :live, year: 2000)
-    indie_titles = { finish: 'インディ解散', suspend: 'インディ休止', major_debut: 'インディメジャーデビュー',
-                     formation: 'インディ結成', first_live: 'インディ初ライブ', restart: 'インディ再開' }
-    indie_titles.each_with_index do |(phenomenon, title), i|
-      create_trend(create_unit("I#{i}"), title: title, phenomenon: phenomenon, year: 2001 + i)
-    end
-    # 優先対象の動向で文字数がほぼ埋まるよう、長いタイトルにする
-    create_trend(create_unit('L'), title: "インディライブ#{'あ' * 60}", phenomenon: :live, year: 2010)
-
-    text = trend_post.text
-
-    indie_titles.each_value { |title| assert_includes text, title }
-    assert_includes text, 'メジャーライブ'
-    assert_not_includes text, 'インディライブ'
-    assert_includes text, '・他'
-  end
-
-  test '同じバンドの動向は1件だけ選ぶ' do
+  test '同じバンドの動向もすべて載せる（issue #1848）' do
     unit = create_unit('黒夢')
     create_trend(unit, title: 'ライブ', year: 1991)
     create_trend(unit, title: '解散', phenomenon: :finish, year: 1999)
 
     lines = trend_post.text.split("\n")
 
-    assert_includes lines, '・1999年 黒夢 解散'
-    assert_not_includes lines, '・1991年 黒夢 ライブ'
-    assert_includes lines, '・他'
+    assert_equal ['・1991年 黒夢 ライブ', '・1999年 黒夢 解散'], lines[1..2]
   end
 
   test '非公開の動向は含めない' do
@@ -111,23 +80,14 @@ class OnThisDayPostBuilderTest < ActiveSupport::TestCase
     assert_includes lines, '・人時（ex-黒夢）'
   end
 
-  test '誕生日が入りきらなければ入るだけ並べて「・他」を付ける' do
+  test '誕生日は280文字を超えても、全員をヨミガナ順に載せる（issue #1848）' do
     60.times { |i| create_person("名前#{format('%02d', i)}", "なまえ#{format('%02d', i)}") }
 
     post = birthday_post
+    names = post.text.split("\n").select { |line| line.start_with?('・') }
 
-    assert_equal '・他', post.text.split("\n")[-3]
-    assert_operator post.weighted_length, :<=, XPostLength::MAX
-  end
-
-  test '誕生日が1人しか入らなくても載せる（issue #1753）' do
-    create_person('あ' * 80, 'あ')
-    create_person('い' * 80, 'い')
-
-    lines = birthday_post.text.split("\n")
-
-    assert_equal(1, lines.count { |line| line.start_with?('・') && line != '・他' })
-    assert_includes lines, '・他'
+    assert_operator post.weighted_length, :>, XPostLength::MAX
+    assert_equal(60.times.map { |i| "・名前#{format('%02d', i)}" }, names)
   end
 
   test '動向がなく誕生日だけの日は誕生日の投稿だけを返す' do
@@ -164,11 +124,6 @@ class OnThisDayPostBuilderTest < ActiveSupport::TestCase
     Trend.create!(title: title, date: Date.new(year, DATE.month, DATE.day), publish_start_at: Time.utc(2000, 1, 1),
                   unit_phenomenon: phenomenon, active: active,
                   units: [{ 'unit_id' => unit.id, 'name' => unit.name }])
-  end
-
-  def create_major_debut(unit)
-    Trend.create!(title: 'メジャーデビュー', date: Date.new(1995, 1, 1), publish_start_at: Time.utc(2000, 1, 1),
-                  unit_phenomenon: :major_debut, units: [{ 'unit_id' => unit.id, 'name' => unit.name }])
   end
 
   def create_person(name, name_kana, old_history: nil)
