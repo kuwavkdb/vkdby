@@ -90,15 +90,6 @@
       </div>
     <% end %>
 
-    <% if @unlinked_members.any? %>
-      <section class="mb-8" aria-labelledby="unlinked-members-heading">
-        <h2 id="unlinked-members-heading" class="mb-4 text-sm font-bold text-zinc-600 dark:text-zinc-300">個人ページのないメンバー</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          <%= render UnlinkedMemberCardComponent.with_collection(@unlinked_members) %>
-        </div>
-      </section>
-    <% end %>
-
     <% if @people.any? %>
       <div id="results" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         <%= render PersonCardComponent.with_collection(@people, show_history: true, show_details: true) %>
@@ -107,6 +98,16 @@
       <div class="py-20 text-center">
         <p class="text-slate-500 font-bold">検索結果が見つかりませんでした。</p>
       </div>
+    <% end %>
+
+    <%# 個人ページのないメンバーは個人ページのある人より優先度が低いため、個人の一覧の下に出す（issue #1843） %>
+    <% if @unlinked_members.any? %>
+      <section class="<%= @people.any? ? 'mt-10' : '' %>" aria-labelledby="unlinked-members-heading">
+        <h2 id="unlinked-members-heading" class="mb-4 text-sm font-bold text-zinc-600 dark:text-zinc-300">個人ページのないメンバー</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <%= render UnlinkedMemberCardComponent.with_collection(@unlinked_members) %>
+        </div>
+      </section>
     <% end %>
 
     <div class="mt-8 flex justify-center">

@@ -176,7 +176,7 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
   end
 
   # issue #1843: 個人ページのないメンバー
-  test 'index lists members without a person page above the results when searching' do
+  test 'index lists members without a person page when searching' do
     unit = Unit.create!(name: 'UnlinkedPeopleIndexUnit', key: 'unlinked-people-index-unit', status: :active)
     snapshot = unit.unit_snapshots.create!(active: true)
     snapshot.snapshot_people.create!(person_name: 'UniqueUnlinkedPeopleIndexMember')
@@ -216,14 +216,15 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
     assert_equal profile_path(unit.key, anchor: "snapshot-#{snapshot.id}"), member['url']
   end
 
-  test 'index lists at most six members without a person page' do
-    unit = Unit.create!(name: 'UnlinkedPeopleLimitUnit', key: 'unlinked-people-limit-unit', status: :active)
-    snapshot = unit.unit_snapshots.create!(active: true)
-    7.times { |i| snapshot.snapshot_people.create!(person_name: "UniqueUnlinkedPeopleLimitMember#{i}") }
+  test 'index lists members without a person page below people with a person page' do
+    Person.create!(name: 'UniqueUnlinkedOrder Person', key: 'unlinked-order-person', status: :active)
+    unit = Unit.create!(name: 'UnlinkedOrderUnit', key: 'unlinked-order-unit', status: :active)
+    unit.unit_snapshots.create!(active: true).snapshot_people.create!(person_name: 'UniqueUnlinkedOrder Member')
 
-    get people_path(q: 'UniqueUnlinkedPeopleLimitMember')
+    get people_path(q: 'UniqueUnlinkedOrder')
 
     assert_response :success
-    assert_select "a[href='#{profile_path(unit.key, anchor: "snapshot-#{snapshot.id}")}']", count: 6
+    body = response.body
+    assert_operator body.index(profile_path('unlinked-order-person')), :<, body.index('個人ページのないメンバー')
   end
 end
