@@ -120,14 +120,19 @@ export default class extends Controller {
       return
     }
 
-    this.suggestionsTarget.innerHTML = items.map(item => `
-      <a href="/${this.escapeHtml(item.key)}"
-         data-key="${this.escapeHtml(item.key)}"
+    // 個人ページのないメンバー（issue #1843）は key を持たず、所属ユニットのページへの url と unit_name を持つ
+    this.suggestionsTarget.innerHTML = items.map(item => {
+      const href = item.url || `/${item.key}`
+      return `
+      <a href="${this.escapeHtml(href)}"
+         data-key="${this.escapeHtml(item.key || href)}"
          class="flex items-baseline gap-2 px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
         <span class="font-medium text-slate-800 dark:text-slate-100">${this.escapeHtml(item.name)}</span>
+        ${item.unit_name ? `<span class="text-xs text-slate-500 dark:text-slate-400 shrink-0">（${this.escapeHtml(item.unit_name)}）</span>` : ''}
         ${item.name_kana ? `<span class="text-xs text-slate-400 dark:text-slate-500 truncate">${this.escapeHtml(item.name_kana)}</span>` : ''}
       </a>
-    `).join('')
+    `
+    }).join('')
 
     this.reposition()
     this.suggestionsTarget.classList.remove('hidden')

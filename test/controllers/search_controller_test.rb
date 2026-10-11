@@ -221,4 +221,17 @@ class SearchControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
     get people_path(q: 'UniqueViewAllSectionNameTest')
     assert_includes response.body, 'ViewAllSectionMatchPerson'
   end
+
+  # issue #1843: 個人ページのないメンバーも People 欄に出し、所属ユニットのそのスナップショットへリンクする
+  test 'index lists a member without a person page in the people section' do
+    unit = Unit.create!(name: 'UnlinkedSearchUnit', key: 'unlinked-search-unit', status: :active)
+    snapshot = unit.unit_snapshots.create!(active: true)
+    snapshot.snapshot_people.create!(person_name: 'UniqueUnlinkedSearchMember', part: :guitar)
+
+    get search_path(q: 'UniqueUnlinkedSearchMember')
+
+    assert_response :success
+    assert_select "a[href='#{profile_path(unit.key, anchor: "snapshot-#{snapshot.id}")}']", text: /UniqueUnlinkedSearchMember/
+    assert_includes response.body, '個人ページなし'
+  end
 end

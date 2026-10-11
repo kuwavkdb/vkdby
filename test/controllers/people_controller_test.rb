@@ -174,4 +174,45 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
     assert_response :success
     assert_not_includes response.body, 'IndexInactiveSectionPerson'
   end
+
+  # issue #1843: 個人ページのないメンバー
+  test 'index lists members without a person page above the results when searching' do
+    unit = Unit.create!(name: 'UnlinkedPeopleIndexUnit', key: 'unlinked-people-index-unit', status: :active)
+    snapshot = unit.unit_snapshots.create!(active: true)
+    snapshot.snapshot_people.create!(person_name: 'UniqueUnlinkedPeopleIndexMember')
+
+    get people_path(q: 'UniqueUnlinkedPeopleIndexMember')
+
+    assert_response :success
+    assert_includes response.body, '個人ページのないメンバー'
+    assert_select "a[href='#{profile_path(unit.key, anchor: "snapshot-#{snapshot.id}")}']"
+    assert_not_includes response.body, '検索結果が見つかりませんでした'
+  end
+
+  test 'index does not list members without a person page while a person data filter is selected' do
+    unit = Unit.create!(name: 'UnlinkedPeopleFilterUnit', key: 'unlinked-people-filter-unit', status: :active)
+    snapshot = unit.unit_snapshots.create!(active: true)
+    snapshot.snapshot_people.create!(person_name: 'UniqueUnlinkedPeopleFilterMember')
+
+    get people_path(q: 'UniqueUnlinkedPeopleFilterMember', part: 'vocal')
+
+    assert_response :success
+    assert_not_includes response.body, '個人ページのないメンバー'
+    assert_select "a[href='#{profile_path(unit.key, anchor: "snapshot-#{snapshot.id}")}']", count: 0
+  end
+
+  test 'search suggests members without a person page after people, with a url to the unit snapshot' do
+    Person.create!(name: 'UnlinkedSuggest Person', key: 'unlinked-suggest-person', status: :active)
+    unit = Unit.create!(name: 'UnlinkedSuggestUnit', key: 'unlinked-suggest-unit', status: :active)
+    snapshot = unit.unit_snapshots.create!(active: true)
+    snapshot.snapshot_people.create!(person_name: 'UnlinkedSuggest Member')
+
+    get search_people_path(q: 'UnlinkedSuggest')
+
+    assert_response :success
+    assert_equal ['UnlinkedSuggest Person', 'UnlinkedSuggest Member'], response.parsed_body.pluck('name')
+    member = response.parsed_body.last
+    assert_equal 'UnlinkedSuggestUnit', member['unit_name']
+    assert_equal profile_path(unit.key, anchor: "snapshot-#{snapshot.id}"), member['url']
+  end
 end
