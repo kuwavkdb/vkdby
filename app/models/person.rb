@@ -18,6 +18,7 @@
 #  old_key       :string
 #  old_wiki_text :text
 #  parts         :jsonb
+#  search_text   :text
 #  status        :integer          default("active"), not null
 #  created_at    :datetime         not null
 #  updated_at    :datetime         not null
@@ -29,6 +30,7 @@
 #  index_people_on_name       (name)
 #  index_people_on_name_kana  (name_kana)
 #  index_people_on_old_key    (old_key) UNIQUE
+#  index_people_on_search_text_trgm  (search_text)
 #
 require 'cgi'
 require 'discard'
@@ -39,6 +41,7 @@ class Person < ApplicationRecord
   include KeyChangeable
   include Unpublishable
   include OgpImageAttachable
+  include SearchTextable
   has_many :links, as: :linkable, dependent: :destroy
   has_many :wiki_page_imports, as: :import_target
   has_many :unit_people
@@ -81,24 +84,26 @@ class Person < ApplicationRecord
   scope :for_index, -> { kept.where.not(key: [nil, '']) }
   # 公開側のキーワード検索（/search と /people?q=）の検索条件。
   # 両者で探す範囲がずれて「View all People →」の先で件数が減らないよう、ここ1か所にまとめる（issue #1841）。
-  # pattern は like_pattern でエスケープ済みの ILIKE パターンを渡す。
+  # query は normalize_search_query 済みの検索語を渡す。空白で区切った語ごとの AND 検索にする（issue #1842）。
+  # 名前系の列（名前・ヨミガナ・名前の履歴・別名）は表記ゆれを吸収した search_text で探す（SearchTextable）。
   # 紐づくSection（discard済み・非公開を除く）の名前もマッチ対象にする。
-  # OR EXISTS (...) で書くと people の名前系の列のtrigram indexを組み合わせて使えず全件走査になるため、
+  # OR EXISTS (...) で書くと people の列のtrigram indexを組み合わせて使えず全件走査になるため、
   # 条件ごとに people.id を集めて UNION する形にしている。
-  scope :matching_keyword, lambda { |pattern|
-    where(<<~SQL.squish, q: pattern, section_type: 'Person')
-      people.id IN (
-        SELECT id FROM people
-        WHERE name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q
-          OR aliases::text ILIKE :q OR old_history ILIKE :q
-        UNION
-        SELECT sectionable_id FROM sections
-        WHERE sectionable_type = :section_type
-          AND discarded_at IS NULL
-          AND active = TRUE
-          AND name ILIKE :q
-      )
-    SQL
+  scope :matching_keyword, lambda { |query|
+    SearchNormalizer.words(query).inject(all) do |relation, word|
+      name_sql, name_binds = search_text_condition(word)
+      relation.where(<<~SQL.squish, q: "%#{sanitize_sql_like(word)}%", section_type: 'Person', **name_binds)
+        people.id IN (
+          SELECT id FROM people WHERE #{name_sql} OR old_history ILIKE :q
+          UNION
+          SELECT sectionable_id FROM sections
+          WHERE sectionable_type = :section_type
+            AND discarded_at IS NULL
+            AND active = TRUE
+            AND name ILIKE :q
+        )
+      SQL
+    end
   }
 
   STATUS_TRANSLATIONS = {

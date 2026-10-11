@@ -19,7 +19,8 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
     @person_data_filters = build_person_data_filters
   end
 
-  # 一覧ページの入力候補（JSON）。候補には名前そのものを並べるため、名前・よみがな系の列だけを探す。
+  # 一覧ページの入力候補（JSON）。候補には名前そのものを並べるため、名前系の列（名前・ヨミガナ・名前の履歴・別名を
+  # 表記ゆれを吸収してまとめた search_text、issue #1842）だけを探す。
   # セクション名やメンバー名でも探す matching_keyword（/search・/people?q=）とは、意図して範囲を分けている（issue #1841）。
   def search
     q = normalize_search_query(params[:q].to_s.strip.first(100))
@@ -31,8 +32,7 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
     conn = ActiveRecord::Base.connection
     quoted_exact = conn.quote(q)
     quoted_prefix = conn.quote(like_pattern(q, match: :prefix))
-    people = Person.kept
-                   .where('name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q', q: like_pattern(q))
+    people = Person.kept.matching_name(q)
                    .order(Arel.sql(<<~SQL.squish))
                      CASE
                        WHEN name = #{quoted_exact} OR name_kana = #{quoted_exact} THEN 0
@@ -114,7 +114,7 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
 
   def build_scope
     scope = base_scope.order(updated_at: :desc)
-    scope = scope.matching_keyword(like_pattern(normalize_search_query(params[:q]))) if params[:q].present?
+    scope = scope.matching_keyword(normalize_search_query(params[:q])) if params[:q].present?
 
     @selected_tag_ids.each_value do |tag_id|
       scope = scope.where(id: Person.joins(:tag_indices).where(tag_indices: { id: tag_id }).select(:id))

@@ -13,6 +13,7 @@
 #  old_key       :string
 #  old_wiki_text :text
 #  provisional   :boolean          default(FALSE), not null
+#  search_text   :text
 #  status        :integer          default("active"), not null
 #  unit_type     :integer
 #  created_at    :datetime         not null
@@ -25,6 +26,7 @@
 #  index_units_on_name       (name)
 #  index_units_on_name_kana  (name_kana)
 #  index_units_on_old_key    (old_key) UNIQUE
+#  index_units_on_search_text_trgm  (search_text)
 #
 require 'cgi'
 require 'ostruct'
@@ -35,6 +37,7 @@ class Unit < ApplicationRecord # rubocop:disable Metrics/ClassLength
   include KeyChangeable
   include Unpublishable
   include OgpImageAttachable
+  include SearchTextable
   has_many :links, as: :linkable, dependent: :destroy
   accepts_nested_attributes_for :links, allow_destroy: true, reject_if: proc { |attrs| attrs['url'].blank? }
   has_many :wiki_page_imports, as: :import_target
@@ -59,33 +62,36 @@ class Unit < ApplicationRecord # rubocop:disable Metrics/ClassLength
 
   # 公開側のキーワード検索（/search と /units?q=）の検索条件。
   # 両者で探す範囲がずれて「View all Units →」の先で件数が減らないよう、ここ1か所にまとめる（issue #1841）。
-  # pattern は like_pattern でエスケープ済みの ILIKE パターンを渡す。
+  # query は normalize_search_query 済みの検索語を渡す。空白で区切った語ごとの AND 検索にする（issue #1842）。
+  # 名前系の列（名前・ヨミガナ・名前の履歴・別名）は表記ゆれを吸収した search_text で探す（SearchTextable）。
   # 紐づくSection（discard済み・非公開を除く）の名前もマッチ対象にする。
   # スナップショットのメンバー名（person_name / name_alias）もマッチ対象にし、
   # 個人ページのないメンバー名からも所属ユニットを辿れるようにする（issue #1768）。
   # discard済みのメンバーと非表示（active = false）のスナップショットは除く。
   # メンバー情報は廃止予定の unit_people ではなく snapshot_people を参照する。
-  # OR EXISTS (...) で書くと units の名前系の列のtrigram indexを組み合わせて使えず全件走査になるため、
+  # OR EXISTS (...) で書くと units の列のtrigram indexを組み合わせて使えず全件走査になるため、
   # 条件ごとに units.id を集めて UNION する形にしている。
-  scope :matching_keyword, lambda { |pattern|
-    where(<<~SQL.squish, q: pattern, section_type: 'Unit')
-      units.id IN (
-        SELECT id FROM units
-        WHERE name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q
-        UNION
-        SELECT sectionable_id FROM sections
-        WHERE sectionable_type = :section_type
-          AND discarded_at IS NULL
-          AND active = TRUE
-          AND name ILIKE :q
-        UNION
-        SELECT unit_snapshots.unit_id FROM unit_snapshots
-        INNER JOIN snapshot_people ON snapshot_people.unit_snapshot_id = unit_snapshots.id
-        WHERE unit_snapshots.active = TRUE
-          AND snapshot_people.discarded_at IS NULL
-          AND (snapshot_people.person_name ILIKE :q OR snapshot_people.name_alias ILIKE :q)
-      )
-    SQL
+  scope :matching_keyword, lambda { |query|
+    SearchNormalizer.words(query).inject(all) do |relation, word|
+      name_sql, name_binds = search_text_condition(word)
+      relation.where(<<~SQL.squish, q: "%#{sanitize_sql_like(word)}%", section_type: 'Unit', **name_binds)
+        units.id IN (
+          SELECT id FROM units WHERE #{name_sql}
+          UNION
+          SELECT sectionable_id FROM sections
+          WHERE sectionable_type = :section_type
+            AND discarded_at IS NULL
+            AND active = TRUE
+            AND name ILIKE :q
+          UNION
+          SELECT unit_snapshots.unit_id FROM unit_snapshots
+          INNER JOIN snapshot_people ON snapshot_people.unit_snapshot_id = unit_snapshots.id
+          WHERE unit_snapshots.active = TRUE
+            AND snapshot_people.discarded_at IS NULL
+            AND (snapshot_people.person_name ILIKE :q OR snapshot_people.name_alias ILIKE :q)
+        )
+      SQL
+    end
   }
 
   validates :status, presence: true

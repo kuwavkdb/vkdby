@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_11_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_12_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -168,6 +168,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_000000) do
     t.jsonb "parts"
     t.integer "status", default: 1, null: false
     t.datetime "updated_at", null: false
+    t.text "search_text"
     t.index "((aliases)::text) gin_trgm_ops", name: "index_people_on_aliases_trgm", using: :gin
     t.index "((name_log)::text) gin_trgm_ops", name: "index_people_on_name_log_trgm", using: :gin
     t.index ["aliases"], name: "index_people_on_aliases", using: :gin
@@ -179,6 +180,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_000000) do
     t.index ["name_kana"], name: "index_people_on_name_kana", opclass: :gin_trgm_ops, using: :gin
     t.index ["old_history"], name: "index_people_on_old_history", opclass: :gin_trgm_ops, using: :gin
     t.index ["parts"], name: "index_people_on_parts", using: :gin
+    t.index ["search_text"], name: "index_people_on_search_text_trgm", opclass: :gin_trgm_ops, using: :gin
   end
 
   create_table "release_schedules", force: :cascade do |t|
@@ -437,6 +439,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_000000) do
     t.integer "unit_type"
     t.datetime "updated_at", null: false
     t.boolean "provisional", default: false, null: false
+    t.text "search_text"
     t.index "((aliases)::text) gin_trgm_ops", name: "index_units_on_aliases_trgm", using: :gin
     t.index "((name_log)::text) gin_trgm_ops", name: "index_units_on_name_log_trgm", using: :gin
     t.index ["aliases"], name: "index_units_on_aliases", using: :gin
@@ -445,6 +448,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_000000) do
     t.index ["name"], name: "index_units_on_name", opclass: :gin_trgm_ops, using: :gin
     t.index ["name_kana"], name: "index_units_on_name_kana", opclass: :gin_trgm_ops, using: :gin
     t.index ["provisional"], name: "index_units_on_provisional", where: "(provisional = true)"
+    t.index ["search_text"], name: "index_units_on_search_text_trgm", opclass: :gin_trgm_ops, using: :gin
   end
 
   create_table "update_logs", force: :cascade do |t|
@@ -520,6 +524,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_000000) do
     t.decimal "latitude", precision: 9, scale: 6
     t.decimal "longitude", precision: 9, scale: 6
     t.integer "coordinates_source"
+    t.text "search_text"
     t.index "((aliases)::text) gin_trgm_ops", name: "index_venues_on_aliases_trgm", using: :gin
     t.index "((name_log)::text) gin_trgm_ops", name: "index_venues_on_name_log_trgm", using: :gin
     t.index ["destination_key"], name: "index_venues_on_destination_key", where: "(destination_key IS NOT NULL)"
@@ -528,6 +533,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_000000) do
     t.index ["name"], name: "index_venues_on_name", opclass: :gin_trgm_ops, using: :gin
     t.index ["old_key"], name: "index_venues_on_old_key", unique: true
     t.index ["prefecture"], name: "index_venues_on_prefecture"
+    t.index ["search_text"], name: "index_venues_on_search_text_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["venue_type"], name: "index_venues_on_venue_type"
   end
 
