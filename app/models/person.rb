@@ -79,6 +79,26 @@ class Person < ApplicationRecord
   }
   # /peopleの索引ページ（一覧・フィルタ選択肢の件数集計）の対象となる人物
   scope :for_index, -> { kept.where.not(key: [nil, '']) }
+  # 公開側のキーワード検索（/search と /people?q=）の検索条件。
+  # 両者で探す範囲がずれて「View all People →」の先で件数が減らないよう、ここ1か所にまとめる（issue #1841）。
+  # pattern は like_pattern でエスケープ済みの ILIKE パターンを渡す。
+  # 紐づくSection（discard済み・非公開を除く）の名前もマッチ対象にする。
+  # sections テーブルは (sectionable_type, sectionable_id) の複合indexを持つため、
+  # このEXISTS句は新規indexなしでも低コストに評価できる。
+  scope :matching_keyword, lambda { |pattern|
+    where(<<~SQL.squish, q: pattern, section_type: 'Person')
+      people.name ILIKE :q OR people.name_kana ILIKE :q OR people.name_log::text ILIKE :q
+      OR people.aliases::text ILIKE :q OR people.old_history ILIKE :q
+      OR EXISTS (
+        SELECT 1 FROM sections
+        WHERE sections.sectionable_type = :section_type
+          AND sections.sectionable_id = people.id
+          AND sections.discarded_at IS NULL
+          AND sections.active = TRUE
+          AND sections.name ILIKE :q
+      )
+    SQL
+  }
 
   STATUS_TRANSLATIONS = {
     'pre' => '準備中',
