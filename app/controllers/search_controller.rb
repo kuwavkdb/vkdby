@@ -15,11 +15,11 @@ class SearchController < ApplicationController
         "WHEN name_kana ILIKE #{Unit.connection.quote("#{exact_pattern}%")} THEN 1 " \
         'ELSE 2 END'
       )
-      # 検索条件は「View all →」の行き先（/units?q=・/people?q=）と共通（issue #1841）。
-      @units = Unit.publicly_visible.matching_keyword(search_pattern)
+      # 対象（for_index）と検索条件は「View all →」の行き先（/units?q=・/people?q=）と共通（issue #1841）。
+      @units = Unit.for_index.matching_keyword(search_pattern)
                    .order(relevance_order, updated_at: :desc)
                    .limit(15)
-      @people = Person.kept.matching_keyword(search_pattern)
+      @people = Person.for_index.matching_keyword(search_pattern)
                       .order(relevance_order, updated_at: :desc)
                       .limit(15)
       @custom_pages = CustomPage.published.non_system_pages

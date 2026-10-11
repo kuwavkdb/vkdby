@@ -8,7 +8,7 @@ class UnitsController < ApplicationController
                                    .group(:tag_index_id)
                                    .count
 
-    scope = Unit.publicly_visible.where.not(name: [nil, '']).where.not(key: [nil, '']).order(updated_at: :desc)
+    scope = Unit.for_index.order(updated_at: :desc)
     scope = scope.matching_keyword(like_pattern(normalize_search_query(params[:q]))) if params[:q].present?
     @selected_tag_ids = params[:tag_ids]&.to_unsafe_h&.transform_values(&:presence)&.compact || {}
     if @selected_tag_ids.any?

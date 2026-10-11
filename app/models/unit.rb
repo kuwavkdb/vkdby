@@ -53,32 +53,35 @@ class Unit < ApplicationRecord # rubocop:disable Metrics/ClassLength
   # 公開側でユニットを取得するときは kept ではなくこのスコープを使う。
   scope :publicly_visible, -> { kept.where(provisional: false) }
 
+  # 公開側の一覧（/units）と検索（/search）の対象。名前・keyが空のユニットは
+  # カードのリンク（profile_path(key)）を作れないため除く（issue #1277, #1841）。
+  scope :for_index, -> { publicly_visible.where.not(name: [nil, '']).where.not(key: [nil, '']) }
+
   # 公開側のキーワード検索（/search と /units?q=）の検索条件。
   # 両者で探す範囲がずれて「View all Units →」の先で件数が減らないよう、ここ1か所にまとめる（issue #1841）。
   # pattern は like_pattern でエスケープ済みの ILIKE パターンを渡す。
   # 紐づくSection（discard済み・非公開を除く）の名前もマッチ対象にする。
-  # sections テーブルは (sectionable_type, sectionable_id) の複合indexを持つため、
-  # このEXISTS句は新規indexなしでも低コストに評価できる。
   # スナップショットのメンバー名（person_name / name_alias）もマッチ対象にし、
   # 個人ページのないメンバー名からも所属ユニットを辿れるようにする（issue #1768）。
   # discard済みのメンバーと非表示（active = false）のスナップショットは除く。
   # メンバー情報は廃止予定の unit_people ではなく snapshot_people を参照する。
+  # OR EXISTS (...) で書くと units の名前系の列のtrigram indexを組み合わせて使えず全件走査になるため、
+  # 条件ごとに units.id を集めて UNION する形にしている。
   scope :matching_keyword, lambda { |pattern|
     where(<<~SQL.squish, q: pattern, section_type: 'Unit')
-      units.name ILIKE :q OR units.name_kana ILIKE :q OR units.name_log::text ILIKE :q OR units.aliases::text ILIKE :q
-      OR EXISTS (
-        SELECT 1 FROM sections
-        WHERE sections.sectionable_type = :section_type
-          AND sections.sectionable_id = units.id
-          AND sections.discarded_at IS NULL
-          AND sections.active = TRUE
-          AND sections.name ILIKE :q
-      )
-      OR EXISTS (
-        SELECT 1 FROM unit_snapshots
+      units.id IN (
+        SELECT id FROM units
+        WHERE name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q
+        UNION
+        SELECT sectionable_id FROM sections
+        WHERE sectionable_type = :section_type
+          AND discarded_at IS NULL
+          AND active = TRUE
+          AND name ILIKE :q
+        UNION
+        SELECT unit_snapshots.unit_id FROM unit_snapshots
         INNER JOIN snapshot_people ON snapshot_people.unit_snapshot_id = unit_snapshots.id
-        WHERE unit_snapshots.unit_id = units.id
-          AND unit_snapshots.active = TRUE
+        WHERE unit_snapshots.active = TRUE
           AND snapshot_people.discarded_at IS NULL
           AND (snapshot_people.person_name ILIKE :q OR snapshot_people.name_alias ILIKE :q)
       )
