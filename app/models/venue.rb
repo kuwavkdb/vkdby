@@ -132,8 +132,7 @@ class Venue < ApplicationRecord # rubocop:disable Metrics/ClassLength
   # 空白で区切った語ごとの AND 検索にする（issue #1842）
   scope :matching, lambda { |query|
     SearchNormalizer.words(query).inject(all) do |relation, word|
-      name_sql, name_binds = search_text_condition(word)
-      relation.where("(#{name_sql}) OR venues.key ILIKE :key", key: "%#{sanitize_sql_like(word)}%", **name_binds)
+      relation.where(name_match_condition(word).or(arel_table[:key].matches("%#{sanitize_sql_like(word)}%")))
     end
   }
 

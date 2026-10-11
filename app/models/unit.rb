@@ -73,26 +73,22 @@ class Unit < ApplicationRecord # rubocop:disable Metrics/ClassLength
   # 条件ごとに units.id を集めて UNION する形にしている。
   scope :matching_keyword, lambda { |query|
     SearchNormalizer.words(query).inject(all) do |relation, word|
-      name_sql, name_binds = search_text_condition(word)
-      relation.where(<<~SQL.squish, q: "%#{sanitize_sql_like(word)}%", section_type: 'Unit', **name_binds)
-        units.id IN (
-          SELECT id FROM units WHERE #{name_sql}
-          UNION
-          SELECT sectionable_id FROM sections
-          WHERE sectionable_type = :section_type
-            AND discarded_at IS NULL
-            AND active = TRUE
-            AND name ILIKE :q
-          UNION
-          SELECT unit_snapshots.unit_id FROM unit_snapshots
-          INNER JOIN snapshot_people ON snapshot_people.unit_snapshot_id = unit_snapshots.id
-          WHERE unit_snapshots.active = TRUE
-            AND snapshot_people.discarded_at IS NULL
-            AND (snapshot_people.person_name ILIKE :q OR snapshot_people.name_alias ILIKE :q)
-        )
-      SQL
+      relation.where(Arel::Nodes::In.new(arel_table[:id], keyword_match_ids(word)))
     end
   }
+
+  # matching_keyword の1語ぶん。名前系・セクション名・メンバー名で一致した units.id を UNION した Arel
+  def self.keyword_match_ids(word)
+    pattern = "%#{sanitize_sql_like(word)}%"
+    names = unscoped.where(name_match_condition(word)).select(:id)
+    sections = Section.unscoped.where(sectionable_type: 'Unit', discarded_at: nil, active: true)
+                      .where(Section.arel_table[:name].matches(pattern)).select(:sectionable_id)
+    member = SnapshotPerson.arel_table
+    members = UnitSnapshot.unscoped.joins(:snapshot_people).where(active: true)
+                          .where(member[:person_name].matches(pattern).or(member[:name_alias].matches(pattern)))
+                          .select(:unit_id)
+    Arel::Nodes::Union.new(Arel::Nodes::Union.new(names.arel, sections.arel), members.arel)
+  end
 
   validates :status, presence: true
   # keyが空だと一覧ページのprofile_path(key)がUrlGenerationErrorで落ちるため必須（issue #1277）

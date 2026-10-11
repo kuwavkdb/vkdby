@@ -251,7 +251,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
     get search_path(q: 'symbolsfold')
 
     assert_response :success
-    assert_includes response.body, "Sym Bol&#39;s Fold"
+    assert_includes response.body, 'Sym Bol&#39;s Fold'
   end
 
   test 'index matches every space-separated word' do

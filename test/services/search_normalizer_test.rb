@@ -23,6 +23,15 @@ class SearchNormalizerTest < ActiveSupport::TestCase
   end
 
   test 'words splits the query on half- and full-width spaces' do
-    assert_equal %w[京 ディル], SearchNormalizer.words(" 京　ディル ")
+    assert_equal %w[京 ディル], SearchNormalizer.words(' 京　ディル ')
+  end
+
+  test 'words uses at most five words' do
+    assert_equal %w[a b c d e], SearchNormalizer.words('a b c d e f g')
+  end
+
+  test 'words truncates the whole query to thirty characters before splitting' do
+    assert_equal ['a' * 30], SearchNormalizer.words('a' * 40)
+    assert_equal ['a' * 28, 'b'], SearchNormalizer.words("#{'a' * 28} bbbb")
   end
 end

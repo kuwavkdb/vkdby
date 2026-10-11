@@ -91,20 +91,18 @@ class Person < ApplicationRecord
   # 条件ごとに people.id を集めて UNION する形にしている。
   scope :matching_keyword, lambda { |query|
     SearchNormalizer.words(query).inject(all) do |relation, word|
-      name_sql, name_binds = search_text_condition(word)
-      relation.where(<<~SQL.squish, q: "%#{sanitize_sql_like(word)}%", section_type: 'Person', **name_binds)
-        people.id IN (
-          SELECT id FROM people WHERE #{name_sql} OR old_history ILIKE :q
-          UNION
-          SELECT sectionable_id FROM sections
-          WHERE sectionable_type = :section_type
-            AND discarded_at IS NULL
-            AND active = TRUE
-            AND name ILIKE :q
-        )
-      SQL
+      relation.where(Arel::Nodes::In.new(arel_table[:id], keyword_match_ids(word)))
     end
   }
+
+  # matching_keyword の1語ぶん。名前系・old_history・セクション名で一致した people.id を UNION した Arel
+  def self.keyword_match_ids(word)
+    pattern = "%#{sanitize_sql_like(word)}%"
+    names = unscoped.where(name_match_condition(word).or(arel_table[:old_history].matches(pattern))).select(:id)
+    sections = Section.unscoped.where(sectionable_type: 'Person', discarded_at: nil, active: true)
+                      .where(Section.arel_table[:name].matches(pattern)).select(:sectionable_id)
+    Arel::Nodes::Union.new(names.arel, sections.arel)
+  end
 
   STATUS_TRANSLATIONS = {
     'pre' => '準備中',

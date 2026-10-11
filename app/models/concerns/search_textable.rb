@@ -12,38 +12,33 @@ module SearchTextable
     before_save :assign_search_text
 
     # 名前系の列（search_text）の部分一致。query は空白で区切った語ごとの AND 検索にする。
-    # 記号だけの語など、正規化すると空になる語は元の列（名前・ヨミガナ・名前の履歴・別名）を
-    # ILIKE で探す。
     scope :matching_name, lambda { |query|
-      SearchNormalizer.words(query).inject(all) do |relation, word|
-        relation.where(*search_text_condition(word))
-      end
+      SearchNormalizer.words(query).inject(all) { |relation, word| relation.where(name_match_condition(word)) }
     }
   end
 
   class_methods do
-    # 1語ぶんの条件（[SQL, binds]）。他のテーブルと UNION で組み合わせるときにも使う
-    def search_text_condition(word)
+    # 1語ぶんの名前系の条件（Arel）。他の条件と組み合わせて使う。
+    # 記号だけの語など、正規化すると空になる語は元の列（名前・ヨミガナ・名前の履歴・別名）を ILIKE で探す。
+    # SQL 文字列への埋め込みを避けるため Arel で組み立てる（Brakeman 対策）
+    def name_match_condition(word)
       normalized = SearchNormalizer.normalize(word)
-      if normalized.present?
-        ["#{table_name}.search_text LIKE :n", { n: "%#{sanitize_sql_like(normalized)}%" }]
-      else
-        columns = %w[name name_kana].map { |c| "#{table_name}.#{c} ILIKE :q" } +
-                  %w[name_log aliases].map { |c| "#{table_name}.#{c}::text ILIKE :q" }
-        [columns.join(' OR '), { q: "%#{sanitize_sql_like(word)}%" }]
-      end
+      return arel_table[:search_text].matches("%#{sanitize_sql_like(normalized)}%", nil, true) if normalized.present?
+
+      pattern = "%#{sanitize_sql_like(word)}%"
+      columns = [arel_table[:name], arel_table[:name_kana]] +
+                %i[name_log aliases].map { |c| Arel::Nodes::NamedFunction.new('CAST', [arel_table[c].as('text')]) }
+      columns.map { |column| column.matches(pattern) }.reduce(:or)
     end
 
     # 全件の search_text を作り直す（正規化のルールを変えたとき・列を追加したときに使う）。
-    # デプロイ時のマイグレーションでも使うため、1000件ずつまとめて1回の UPDATE で書き込む
+    # デプロイ時のマイグレーションでも使うため、1000件ずつまとめて1回の UPDATE（CASE 式）で書き込む
     def rebuild_search_text!
       unscoped.in_batches(of: 1000) do |batch|
-        values = batch.map { |record| "(#{record.id}, #{connection.quote(record.build_search_text)})" }
-        connection.execute(<<~SQL.squish)
-          UPDATE #{quoted_table_name} SET search_text = v.search_text
-          FROM (VALUES #{values.join(', ')}) AS v(id, search_text)
-          WHERE #{quoted_table_name}.id = v.id
-        SQL
+        values = batch.each_with_object(Arel::Nodes::Case.new(arel_table[:id])) do |record, node|
+          node.when(record.id).then(record.build_search_text)
+        end
+        batch.update_all(search_text: values)
       end
     end
   end

@@ -11,6 +11,8 @@
 module SearchNormalizer
   VU_TO_BA = { 'ヴァ' => 'バ', 'ヴィ' => 'ビ', 'ヴェ' => 'ベ', 'ヴォ' => 'ボ', 'ヴ' => 'ブ' }.freeze
   VU_PATTERN = Regexp.union(VU_TO_BA.keys)
+  MAX_QUERY_LENGTH = 30
+  MAX_WORDS = 5
 
   module_function
 
@@ -28,8 +30,11 @@ module SearchNormalizer
     texts.map { |text| normalize(text) }.compact_blank.uniq.join(' ')
   end
 
-  # 検索語を空白で区切った語の配列（語ごとの AND 検索に使う）
+  # 検索語を空白で区切った語の配列（語ごとの AND 検索に使う）。
+  # 語の数だけ検索のサブクエリが増えるため、検索語全体を MAX_QUERY_LENGTH 文字までに切ったうえで、
+  # 先頭の MAX_WORDS 語だけを使う（それより後ろは無視する）
   def words(query)
-    query.to_s.unicode_normalize(:nfkc).split(/[[:space:]]+/).compact_blank
+    query.to_s.unicode_normalize(:nfkc).first(MAX_QUERY_LENGTH)
+         .split(/[[:space:]]+/).compact_blank.first(MAX_WORDS)
   end
 end
