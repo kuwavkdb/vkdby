@@ -63,6 +63,18 @@ class TrendTest < ActiveSupport::TestCase
     assert_equal [published.id], Trend.published.where(title: titles).pluck(:id)
   end
 
+  test 'on_month_day scope excludes trends whose month or day is unknown (issue #1848)' do
+    titles = ['Exact date', 'Day unknown', 'Month unknown']
+    exact = Trend.create!(title: titles[0], date: Date.new(1999, 1, 1), publish_start_at: 1.minute.ago,
+                          etc_phenomenon: :other)
+    Trend.create!(title: titles[1], date: Date.new(1999, 1, 1), publish_start_at: 1.minute.ago,
+                  etc_phenomenon: :other, day_unknown: true)
+    Trend.create!(title: titles[2], date: Date.new(1999, 1, 1), publish_start_at: 1.minute.ago,
+                  etc_phenomenon: :other, month_unknown: true, day_unknown: true)
+
+    assert_equal [exact.id], Trend.on_month_day(1, 1).where(title: titles).pluck(:id)
+  end
+
   test 'title_without_trailing_parenthetical strips a trailing half-width parenthetical' do
     trend = Trend.new(title: '無期限活動休止(Shibuya Spotify O-EAST)')
 

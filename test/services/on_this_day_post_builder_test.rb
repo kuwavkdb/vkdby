@@ -57,6 +57,12 @@ class OnThisDayPostBuilderTest < ActiveSupport::TestCase
     assert_empty OnThisDayPostBuilder.new(DATE).build
   end
 
+  test '月や日が不明な動向は含めない（issue #1848）' do
+    create_trend(create_unit('黒夢'), title: '日が不明な動向', year: 1995, day_unknown: true)
+
+    assert_empty OnThisDayPostBuilder.new(DATE).build
+  end
+
   test '誕生日は別の投稿にし、誕生日用の見出しで1人1行ヨミガナ順に並べる（issue #1753）' do
     create_trend(create_unit('黒夢'), title: '結成', year: 1991)
     create_person('乙', 'おつ')
@@ -120,9 +126,9 @@ class OnThisDayPostBuilderTest < ActiveSupport::TestCase
     Unit.create!(name: name, key: "on-this-day-unit-#{@unit_seq}", status: :active)
   end
 
-  def create_trend(unit, title:, year:, phenomenon: :other, active: true)
+  def create_trend(unit, title:, year:, phenomenon: :other, active: true, day_unknown: false)
     Trend.create!(title: title, date: Date.new(year, DATE.month, DATE.day), publish_start_at: Time.utc(2000, 1, 1),
-                  unit_phenomenon: phenomenon, active: active,
+                  unit_phenomenon: phenomenon, active: active, day_unknown: day_unknown,
                   units: [{ 'unit_id' => unit.id, 'name' => unit.name }])
   end
 

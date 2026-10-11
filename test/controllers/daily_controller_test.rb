@@ -37,6 +37,19 @@ class DailyControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, 'All Years Summary'
   end
 
+  test '年指定なしの日付ページは月や日が不明な動向を表示しない（issue #1848）' do
+    Trend.create!(title: '日付が確定した動向', date: Date.new(1995, 12, 1), publish_start_at: Time.current,
+                  unit_phenomenon: :other)
+    Trend.create!(title: '日が不明な動向', date: Date.new(1995, 12, 1), publish_start_at: Time.current,
+                  unit_phenomenon: :other, day_unknown: true)
+
+    get birthday_date_path(month: 12, day: 1)
+
+    assert_response :success
+    assert_includes response.body, '日付が確定した動向'
+    assert_not_includes response.body, '日が不明な動向'
+  end
+
   test '年指定なしの日付ページはadminにのみ「今日は何の日？」シェア用テキストを表示する（issue #1732）' do
     Trend.create!(title: 'シェア対象の動向', date: Date.new(1995, 5, 30), publish_start_at: Time.current,
                   unit_phenomenon: :other)
