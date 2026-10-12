@@ -3,12 +3,23 @@
     「広告」の表記と囲みは、広告が実際に入ったときだけ出す（issue #1837。microad_controller が data-filled を付ける）。
     未配信のまま「広告」の文字だけが残ると、近くの販売サイトへの導線が広告の中身のように見えてしまうため %>
 <% if Rails.env.production? && !(defined?(logged_in?) && logged_in?) %>
+  <%# compass.js は async で読み込むため、キャッシュがあると本文（<body>）を読み込む前に onload が動くことがある。
+      その時点で初期化すると compass.js 内の appendChild が null に対して呼ばれて止まり、広告が出ない（issue #1856）。
+      本文の読み込みが終わってから初期化する %>
   <% content_for :head do %>
     <script type="text/javascript">
       var microadCompass = microadCompass || {};
       microadCompass.queue = microadCompass.queue || [];
+      var initMicroadCompass = function () {
+        var init = function () { new microadCompass.AdInitializer().initialize(); };
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', init);
+        } else {
+          init();
+        }
+      };
     </script>
-    <script type="text/javascript" charset="UTF-8" src="https://j.microad.net/js/compass.js" onload="new microadCompass.AdInitializer().initialize();" async></script>
+    <script type="text/javascript" charset="UTF-8" src="https://j.microad.net/js/compass.js" onload="initMicroadCompass();" async></script>
   <% end %>
   <% width = local_assigns[:width]&.to_i %>
   <% height = local_assigns[:height]&.to_i %>
