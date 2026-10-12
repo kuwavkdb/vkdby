@@ -21,6 +21,7 @@
 #  old_key       :string
 #  old_wiki_text :text
 #  prefecture    :string
+#  search_text   :text
 #  status        :integer          default("active"), not null
 #  venue_type    :integer          default("live_house"), not null
 #  created_at    :datetime         not null
@@ -38,6 +39,7 @@
 #  index_venues_on_name_log_trgm  ((name_log)::text) USING gin
 #  index_venues_on_old_key        (old_key) UNIQUE
 #  index_venues_on_prefecture     (prefecture)
+#  index_venues_on_search_text_trgm (search_text) USING gin
 #  index_venues_on_venue_type     (venue_type)
 #
 require 'ostruct'
@@ -51,6 +53,7 @@ class Venue < ApplicationRecord # rubocop:disable Metrics/ClassLength
   include Discard::Model
   include KeyChangeable
   include VenueGeocodable
+  include SearchTextable
 
   has_many :links, as: :linkable, dependent: :destroy
   accepts_nested_attributes_for :links, allow_destroy: true, reject_if: proc { |attrs| attrs['url'].blank? }
@@ -124,10 +127,13 @@ class Venue < ApplicationRecord # rubocop:disable Metrics/ClassLength
   validate :key_immutable, on: :update
   validate :destination_key_must_differ_from_key
 
-  # 名前・ヨミ・キー・名前の履歴・別名の部分一致（管理画面の一覧・Trendフォームのサジェスト）
+  # 名前・ヨミ・名前の履歴・別名（表記ゆれを吸収した search_text、SearchTextable）とキーの部分一致
+  # （管理画面の一覧・Trendフォームのサジェスト・投稿フォームの重複チェック）。
+  # 空白で区切った語ごとの AND 検索にする（issue #1842）
   scope :matching, lambda { |query|
-    where('name ILIKE :q OR name_kana ILIKE :q OR key ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q',
-          q: "%#{sanitize_sql_like(query)}%")
+    SearchNormalizer.words(query).inject(all) do |relation, word|
+      relation.where(name_match_condition(word).or(arel_table[:key].matches("%#{sanitize_sql_like(word)}%")))
+    end
   }
 
   # keyから会場を引き、destination_key（キー変更・統合による転送）を辿った先の会場を返す。

@@ -217,4 +217,21 @@ class VenueTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
     assert_equal '東京都新宿区1-1', Venue.new(address: 'MAP:東京都新宿区1-1').map_query
     assert_nil Venue.new(address: '東京都新宿区1-1', venue_type: :streaming).map_query
   end
+
+  # issue #1842: 表記ゆれを吸収した検索（search_text）
+  test 'matching finds a venue by its reading in hiragana, word by word, and by key' do
+    venue = Venue.create!(name: 'マッチング テスト会場', name_kana: 'マッチングテストカイジョウ', key: 'matching-fold-venue',
+                          prefecture: '東京都')
+
+    assert_includes Venue.matching('まっちんぐ かいじょう'), venue
+    assert_includes Venue.matching('matching-fold'), venue
+    assert_not_includes Venue.matching('まっちんぐ 存在しない語'), venue
+  end
+
+  test 'search_text is rebuilt when the name history changes' do
+    venue = Venue.create!(name: 'リネーム前会場', key: 'search-text-rebuild-venue', prefecture: '東京都')
+    venue.update!(name_log: [{ 'name' => 'Former Hall' }])
+
+    assert_includes venue.reload.search_text, 'formerhall'
+  end
 end

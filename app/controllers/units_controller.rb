@@ -9,7 +9,7 @@ class UnitsController < ApplicationController
                                    .count
 
     scope = Unit.for_index.order(updated_at: :desc)
-    scope = scope.matching_keyword(like_pattern(normalize_search_query(params[:q]))) if params[:q].present?
+    scope = scope.matching_keyword(normalize_search_query(params[:q])) if params[:q].present?
     @selected_tag_ids = params[:tag_ids]&.to_unsafe_h&.transform_values(&:presence)&.compact || {}
     if @selected_tag_ids.any?
       @selected_tag_ids.each_value do |tag_id|
@@ -21,7 +21,8 @@ class UnitsController < ApplicationController
     @pagy, @units = pagy(scope, limit: 60)
   end
 
-  # 一覧ページの入力候補（JSON）。候補には名前そのものを並べるため、名前・よみがな系の列だけを探す。
+  # 一覧ページの入力候補（JSON）。候補には名前そのものを並べるため、名前系の列（名前・ヨミガナ・名前の履歴・別名を
+  # 表記ゆれを吸収してまとめた search_text、issue #1842）だけを探す。
   # セクション名やメンバー名でも探す matching_keyword（/search・/units?q=）とは、意図して範囲を分けている（issue #1841）。
   def search
     q = normalize_search_query(params[:q].to_s.strip.first(100))
@@ -33,7 +34,7 @@ class UnitsController < ApplicationController
     conn = ActiveRecord::Base.connection
     quoted_exact = conn.quote(q)
     quoted_prefix = conn.quote(like_pattern(q, match: :prefix))
-    units = Unit.publicly_visible.where('name ILIKE :q OR name_kana ILIKE :q', q: like_pattern(q))
+    units = Unit.publicly_visible.matching_name(q)
                 .order(Arel.sql(<<~SQL.squish))
                   CASE
                     WHEN name = #{quoted_exact} OR name_kana = #{quoted_exact} THEN 0

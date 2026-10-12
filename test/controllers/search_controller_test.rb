@@ -234,4 +234,45 @@ class SearchControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
     assert_select "a[href='#{profile_path(unit.key, anchor: "snapshot-#{snapshot.id}")}']", text: /UniqueUnlinkedSearchMember/
     assert_includes response.body, '個人ページなし'
   end
+
+  # issue #1842: 表記ゆれの吸収
+  test 'index finds a unit by its kana written in hiragana' do
+    Unit.create!(name: 'KanaFoldUnit', name_kana: 'カナフォールドユニット', key: 'kana-fold-unit-test', status: :active)
+
+    get search_path(q: 'かなふぉーるど')
+
+    assert_response :success
+    assert_includes response.body, 'KanaFoldUnit'
+  end
+
+  test 'index finds a unit while ignoring spaces and symbols' do
+    Unit.create!(name: "Sym Bol's Fold", key: 'symbol-fold-unit-test', status: :active)
+
+    get search_path(q: 'symbolsfold')
+
+    assert_response :success
+    assert_includes response.body, 'Sym Bol&#39;s Fold'
+  end
+
+  test 'index matches every space-separated word' do
+    Unit.create!(name: 'AndWordAlpha AndWordBeta', key: 'and-word-both-test', status: :active)
+    Unit.create!(name: 'AndWordAlpha Only', key: 'and-word-alpha-test', status: :active)
+
+    get search_path(q: 'andwordbeta andwordalpha')
+
+    assert_response :success
+    assert_includes response.body, 'AndWordAlpha AndWordBeta'
+    assert_not_includes response.body, 'AndWordAlpha Only'
+  end
+
+  test 'index ranks an exact match on a former name above a prefix match on a current name' do
+    Unit.create!(name: 'RankFormerName Tribute', key: 'rank-prefix-unit-test', status: :active)
+    Unit.create!(name: 'RankCurrentName', key: 'rank-former-unit-test', status: :active,
+                 name_log: [{ name: 'RankFormerName' }])
+
+    get search_path(q: 'RankFormerName')
+
+    assert_response :success
+    assert_operator response.body.index('RankCurrentName'), :<, response.body.index('RankFormerName Tribute')
+  end
 end
