@@ -154,25 +154,15 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
     Rails.cache = original_cache
   end
 
-  # issue #1841: /search の「View all People →」の行き先でも、/search と同じ範囲で見つかる
-  test 'index finds a person via a linked section name the same way the search page does' do
+  # issue #1855: 一覧ページの検索は名前系の列と old_history だけを探す。セクション名で探すのは /search だけ
+  test 'index does not search section names' do
     person = Person.create!(name: 'IndexSectionMatchPerson', key: 'index-section-match-person-test', status: :active)
     person.sections.create!(name: 'UniqueIndexSectionNameForPersonTest', active: true)
 
     get people_path(q: 'UniqueIndexSectionNameForPersonTest')
 
     assert_response :success
-    assert_includes response.body, 'IndexSectionMatchPerson'
-  end
-
-  test 'index does not find a person via an inactive section name' do
-    person = Person.create!(name: 'IndexInactiveSectionPerson', key: 'index-inactive-section-person-test', status: :active)
-    person.sections.create!(name: 'UniqueIndexInactiveSectionNameTest', active: false)
-
-    get people_path(q: 'UniqueIndexInactiveSectionNameTest')
-
-    assert_response :success
-    assert_not_includes response.body, 'IndexInactiveSectionPerson'
+    assert_not_includes response.body, 'IndexSectionMatchPerson'
   end
 
   # issue #1843: 個人ページのないメンバー

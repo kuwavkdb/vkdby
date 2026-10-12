@@ -57,8 +57,17 @@ class Unit < ApplicationRecord # rubocop:disable Metrics/ClassLength
   # カードのリンク（profile_path(key)）を作れないため除く（issue #1277, #1841）。
   scope :for_index, -> { publicly_visible.where.not(name: [nil, '']).where.not(key: [nil, '']) }
 
-  # 公開側のキーワード検索（/search と /units?q=）の検索条件。
-  # 両者で探す範囲がずれて「View all Units →」の先で件数が減らないよう、ここ1か所にまとめる（issue #1841）。
+  # 一覧ページ（/units?q=）の検索条件。名前系の列（名前・ヨミガナ・名前の履歴・別名）だけを探す。
+  # セクション名・メンバー名まで探す matching_keyword は重く、クローラーによる q と tag_ids の組み合わせ
+  # アクセスでレスポンスタイムが悪化したため（issue #1855）、一覧ページでは使わない。
+  # pattern は like_pattern でエスケープ済みの ILIKE パターンを渡す。
+  scope :matching_name_keyword, lambda { |pattern|
+    where('units.name ILIKE :q OR units.name_kana ILIKE :q OR units.name_log::text ILIKE :q OR units.aliases::text ILIKE :q',
+          q: pattern)
+  }
+
+  # サイト内検索（/search）の検索条件。名前系の列に加えて、セクション名・メンバー名でも探す（issue #1841）。
+  # 一覧ページ（/units?q=）は軽い matching_name_keyword を使うため、範囲は意図して分けている（issue #1855）。
   # pattern は like_pattern でエスケープ済みの ILIKE パターンを渡す。
   # 紐づくSection（discard済み・非公開を除く）の名前もマッチ対象にする。
   # スナップショットのメンバー名（person_name / name_alias）もマッチ対象にし、

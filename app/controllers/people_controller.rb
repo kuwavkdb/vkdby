@@ -13,14 +13,16 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
     load_selected_filters
 
     scope = build_scope
+    # ビューの @people.any? で存在確認のクエリが別に走らないよう、ここで読み込んでおく（issue #1855）
     @pagy, @people = pagy(scope, limit: 60)
+    @people = @people.load
     @unlinked_members = load_unlinked_members
 
     @person_data_filters = build_person_data_filters
   end
 
   # 一覧ページの入力候補（JSON）。候補には名前そのものを並べるため、名前・よみがな系の列だけを探す。
-  # セクション名やメンバー名でも探す matching_keyword（/search・/people?q=）とは、意図して範囲を分けている（issue #1841）。
+  # セクション名やメンバー名でも探す matching_keyword（/search）とは、意図して範囲を分けている（issue #1841、#1855）。
   def search
     q = normalize_search_query(params[:q].to_s.strip.first(100))
     if q.length < 2
@@ -114,7 +116,7 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
 
   def build_scope
     scope = base_scope.order(updated_at: :desc)
-    scope = scope.matching_keyword(like_pattern(normalize_search_query(params[:q]))) if params[:q].present?
+    scope = scope.matching_name_keyword(like_pattern(normalize_search_query(params[:q]))) if params[:q].present?
 
     @selected_tag_ids.each_value do |tag_id|
       scope = scope.where(id: Person.joins(:tag_indices).where(tag_indices: { id: tag_id }).select(:id))

@@ -17,7 +17,8 @@ class SearchController < ApplicationController
         "WHEN name_kana ILIKE #{Unit.connection.quote("#{exact_pattern}%")} THEN 1 " \
         'ELSE 2 END'
       )
-      # 対象（for_index）と検索条件は「View all →」の行き先（/units?q=・/people?q=）と共通（issue #1841）。
+      # 対象（for_index）は「View all →」の行き先（/units?q=・/people?q=）と共通（issue #1841）。
+      # 検索条件は、一覧ページより広い matching_keyword（セクション名・メンバー名も探す）を使う（issue #1855）。
       @units = Unit.for_index.matching_keyword(search_pattern)
                    .order(relevance_order, updated_at: :desc)
                    .limit(15)
