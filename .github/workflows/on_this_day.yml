@@ -110,7 +110,7 @@ jobs:
                 + (.posts | map(
                     "### " + (if .kind == "birthdays" then "誕生日" else "出来事" end) + "\n\n"
                     + "````text\n\(.text)\n````\n\n"
-                    + "文字数（X換算）: \(.weighted_length) / \(.max_length)\n\n"
+                    + "文字数（X換算）: \(.weighted_length) / \(.max_length)" + (if .weighted_length > .max_length then "（上限超過。投稿時に取捨選択してください）" else "" end) + "\n\n"
                     + "- [X の投稿画面を開く（投稿文入力済み）](\(.intent_url))\n"
                   ) | join("\n"))
                 + "\n- [「今日は何の日？」ページ](\(.page_url))\n"

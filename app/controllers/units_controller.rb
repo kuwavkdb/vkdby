@@ -8,13 +8,8 @@ class UnitsController < ApplicationController
                                    .group(:tag_index_id)
                                    .count
 
-    scope = Unit.publicly_visible.where.not(name: [nil, '']).where.not(key: [nil, '']).order(updated_at: :desc)
-    if params[:q].present?
-      scope = scope.where(
-        'units.name ILIKE :q OR units.name_kana ILIKE :q OR units.name_log::text ILIKE :q OR units.aliases::text ILIKE :q',
-        q: like_pattern(normalize_search_query(params[:q]))
-      )
-    end
+    scope = Unit.for_index.order(updated_at: :desc)
+    scope = scope.matching_keyword(like_pattern(normalize_search_query(params[:q]))) if params[:q].present?
     @selected_tag_ids = params[:tag_ids]&.to_unsafe_h&.transform_values(&:presence)&.compact || {}
     if @selected_tag_ids.any?
       @selected_tag_ids.each_value do |tag_id|
@@ -26,6 +21,8 @@ class UnitsController < ApplicationController
     @pagy, @units = pagy(scope, limit: 60)
   end
 
+  # 一覧ページの入力候補（JSON）。候補には名前そのものを並べるため、名前・よみがな系の列だけを探す。
+  # セクション名やメンバー名でも探す matching_keyword（/search・/units?q=）とは、意図して範囲を分けている（issue #1841）。
   def search
     q = normalize_search_query(params[:q].to_s.strip.first(100))
     if q.length < 2

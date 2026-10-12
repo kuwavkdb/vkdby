@@ -1,0 +1,27 @@
+<%= link_to path, class: card_classes do %>
+  <span class="absolute inset-y-0 left-0 w-1 bg-person dark:bg-amber-400 origin-top scale-y-0 group-hover:scale-y-100 group-focus-visible:scale-y-100 transition-transform" aria-hidden="true"></span>
+  <div class="absolute top-0 right-0 <%= icon_padding_classes %> opacity-10 group-hover:opacity-20 group-hover:text-person dark:group-hover:text-amber-400 transition-all">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="<%= icon_size_classes %>" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+    </svg>
+  </div>
+  <div class="relative z-10">
+    <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+      <h3 class="<%= name_classes %>">
+        <% if @member.extra_profile_name_kana %>
+          <ruby><%= @member.name %><rt class="<%= kana_classes %>"><%= @member.extra_profile_name_kana %></rt></ruby>
+        <% else %>
+          <%= @member.name %>
+        <% end %>
+      </h3>
+      <% if @member.name_alias.present? %>
+        <span class="text-sm text-zinc-400 dark:text-zinc-500 opacity-60 mx-1" aria-hidden="true">/</span>
+        <span class="text-sm text-zinc-600 dark:text-zinc-300 group-hover:text-person dark:group-hover:text-amber-400 transition-colors"><%= @member.name_alias %></span>
+      <% end %>
+    </div>
+    <p class="mt-2 text-xs text-zinc-600 dark:text-zinc-300">
+      <span class="font-semibold"><%= unit.name %></span> の<%= role_label %><% if part_text %>（<%= part_text %>）<% end %>
+    </p>
+    <span class="mt-2 inline-block text-[0.65rem] font-bold px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">個人ページなし</span>
+  </div>
+<% end %>

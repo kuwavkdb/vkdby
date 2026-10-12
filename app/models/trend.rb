@@ -91,14 +91,16 @@ class Trend < ApplicationRecord
 
   # Scopes
   scope :on_date, ->(date) { where(date: date) }
+  # 年を問わない月日で探す。月や日が不明な動向は date がその月の1日・その年の1月1日になっているため除く（issue #1848）
   scope :on_month_day, lambda { |month, day|
-    where('EXTRACT(MONTH FROM date) = ? AND EXTRACT(DAY FROM date) = ?', month, day)
+    where(month_unknown: false, day_unknown: false)
+      .where('EXTRACT(MONTH FROM date) = ? AND EXTRACT(DAY FROM date) = ?', month, day)
   }
   # 公開画面に表示してよいTrend（非公開active: falseと、公開開始日時が未到来のものを除く）
   scope :published, -> { where(active: true).where(publish_start_at: ..Time.current) }
 
   # メジャー経験バンド（メジャーデビューの動向が登録されているユニット）のID一覧。
-  # 年表（TimelineController）と「今日は何の日？」の投稿文（OnThisDayPostBuilder、issue #1742）で共有する
+  # 年表（TimelineController）で使う
   def self.major_debut_unit_ids
     where(unit_phenomenon: :major_debut, active: true)
       .pluck(:units)

@@ -1,9 +1,12 @@
 # frozen_string_literal: true
 
-class PeopleController < ApplicationController
+class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLength
   # 個人データ（parts/blood/hometown/status）で直接絞り込むため、タグ運用の同名グループは一覧の絞り込みUIから除外する
   PERSON_DATA_TAG_GROUP_NAMES = %w[パート 血液型 出身地 状況].freeze
   BLOOD_TYPES = Person::BLOOD_TYPES
+  # 個人の一覧の下に出す「個人ページのないメンバー」欄の上限（issue #1843）
+  UNLINKED_MEMBERS_LIMIT = 30
+  SUGGESTION_LIMIT = 10
 
   def index
     load_tag_filter_groups
@@ -11,10 +14,13 @@ class PeopleController < ApplicationController
 
     scope = build_scope
     @pagy, @people = pagy(scope, limit: 60)
+    @unlinked_members = load_unlinked_members
 
     @person_data_filters = build_person_data_filters
   end
 
+  # 一覧ページの入力候補（JSON）。候補には名前そのものを並べるため、名前・よみがな系の列だけを探す。
+  # セクション名やメンバー名でも探す matching_keyword（/search・/people?q=）とは、意図して範囲を分けている（issue #1841）。
   def search
     q = normalize_search_query(params[:q].to_s.strip.first(100))
     if q.length < 2
@@ -35,10 +41,10 @@ class PeopleController < ApplicationController
                      END
                    SQL
                    .order(name_kana: :asc)
-                   .limit(10)
+                   .limit(SUGGESTION_LIMIT)
                    .pluck(:name, :name_kana, :key)
                    .map { |name, name_kana, key| { name:, name_kana:, key: } }
-    render json: people
+    render json: people + unlinked_member_suggestions(q, SUGGESTION_LIMIT - people.size)
   end
 
   def units
@@ -61,6 +67,28 @@ class PeopleController < ApplicationController
   end
 
   private
+
+  # 個人ページのないメンバー（issue #1843）。検索語だけで探しているときの1ページ目にだけ出す。
+  # パート・血液型・出身地・状況・タグの絞り込みは Person の項目なので、絞り込み中は出さない
+  def load_unlinked_members
+    return [] if params[:q].blank? || any_filter_selected? || @pagy.page > 1
+
+    SnapshotPerson.unlinked_matching(normalize_search_query(params[:q]))
+                  .includes(unit_snapshot: :unit)
+                  .limit(UNLINKED_MEMBERS_LIMIT).load
+  end
+
+  # 入力候補の後ろに、個人ページのないメンバーを「名前（ユニット名）」として混ぜる（issue #1843）。
+  # 個人ページがないため、url に所属ユニットのページのそのスナップショットを開いた状態を渡す
+  def unlinked_member_suggestions(query, limit)
+    return [] unless limit.positive?
+
+    SnapshotPerson.unlinked_matching(query).includes(unit_snapshot: :unit).limit(limit).map do |member|
+      unit = member.unit_snapshot.unit
+      { name: member.name, name_kana: member.extra_profile_name_kana, unit_name: unit.name,
+        url: profile_path(unit.key, anchor: "snapshot-#{member.unit_snapshot_id}") }
+    end
+  end
 
   def base_scope
     @base_scope ||= Person.for_index
@@ -86,12 +114,7 @@ class PeopleController < ApplicationController
 
   def build_scope
     scope = base_scope.order(updated_at: :desc)
-    if params[:q].present?
-      scope = scope.where(
-        'people.name ILIKE :q OR people.name_kana ILIKE :q OR people.name_log::text ILIKE :q OR people.aliases::text ILIKE :q OR people.old_history ILIKE :q',
-        q: like_pattern(normalize_search_query(params[:q]))
-      )
-    end
+    scope = scope.matching_keyword(like_pattern(normalize_search_query(params[:q]))) if params[:q].present?
 
     @selected_tag_ids.each_value do |tag_id|
       scope = scope.where(id: Person.joins(:tag_indices).where(tag_indices: { id: tag_id }).select(:id))

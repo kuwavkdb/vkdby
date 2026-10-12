@@ -24,9 +24,11 @@
 #
 # Indexes
 #
+#  index_snapshot_people_on_name_alias_trgm              (name_alias)
 #  index_snapshot_people_on_old_person_key               (old_person_key)
 #  index_snapshot_people_on_person_id                    (person_id)
 #  index_snapshot_people_on_person_key                   (person_key)
+#  index_snapshot_people_on_person_name_trgm             (person_name)
 #  index_snapshot_people_on_unit_snapshot_id             (unit_snapshot_id)
 #  index_snapshot_people_on_unit_snapshot_id_and_sort_order  (unit_snapshot_id,sort_order)
 #
@@ -77,6 +79,44 @@ class SnapshotPerson < ApplicationRecord # rubocop:disable Metrics/ClassLength
 
   def key
     person&.key || person_key
+  end
+
+  # 個人ページのないメンバー（person_id が空）を、公開側の個人検索に個人のように出すための検索（issue #1843）。
+  # query は normalize_search_query 済みの検索語を渡す。
+  # 1件 = 「ユニット × 名前」。同じユニットの複数のスナップショットにいる人は1件にまとめ、
+  # 遷移先として開くスナップショットは「現在」→ 日付が新しいもの の順で選ぶ。
+  # 同名でもユニットが違えば同一人物か判断できないため、別の件として返す。
+  # discard済みのメンバー、非表示のスナップショット、公開一覧の対象外（Unit.for_index 以外）のユニットは除く。
+  # 関係者スナップショット（past: true）の人も含める。遷移先は unit_snapshot.unit と unit_snapshot_id から作る。
+  def self.unlinked_matching(query)
+    pattern = "%#{sanitize_sql_like(query)}%"
+    candidates = unscoped
+                 .select('DISTINCT ON (unit_snapshots.unit_id, snapshot_people.person_name) snapshot_people.*')
+                 .joins(:unit_snapshot)
+                 .where(person_id: nil, discarded_at: nil)
+                 .where(unit_snapshots: { active: true, unit_id: Unit.for_index.select(:id) })
+                 .where(<<~SQL.squish, q: pattern)
+                   snapshot_people.person_name ILIKE :q OR snapshot_people.name_alias ILIKE :q
+                   OR snapshot_people.extra_profile->>'name_kana' ILIKE :q
+                 SQL
+                 .order(Arel.sql(<<~SQL.squish))
+                   unit_snapshots.unit_id, snapshot_people.person_name,
+                   unit_snapshots.current DESC, unit_snapshots.snapshot_date DESC NULLS LAST, unit_snapshots.id DESC
+                 SQL
+
+    exact = sanitize_sql_like(query)
+    from(candidates, :snapshot_people)
+      .order(Arel.sql(sanitize_sql_array([<<~SQL.squish, { exact:, prefix: "#{exact}%" }])))
+        CASE WHEN snapshot_people.person_name ILIKE :exact THEN 0
+             WHEN snapshot_people.person_name ILIKE :prefix THEN 1
+             ELSE 2 END
+      SQL
+      .order(:person_name, :id)
+  end
+
+  # extra_profile に下書きとして入っているヨミガナ（Person未紐付けメンバーの表示用）
+  def extra_profile_name_kana
+    extra_profile&.dig('name_kana').presence
   end
 
   def parse_inline_history

@@ -68,4 +68,37 @@ class UnitsControllerTest < ActionDispatch::IntegrationTest
     get unit_path('hidden-provisional-band', format: :json)
     assert_response :not_found
   end
+
+  # issue #1841: /search の「View all Units →」の行き先でも、/search と同じ範囲で見つかる
+  test 'index finds a unit via a snapshot member name the same way the search page does' do
+    unit = Unit.create!(name: 'IndexMemberNameMatchUnit', key: 'index-member-name-match-unit-test', status: :active)
+    snapshot = unit.unit_snapshots.create!(active: true)
+    snapshot.snapshot_people.create!(person_name: 'UniqueIndexSnapshotMemberNameTest', status: :left)
+
+    get units_path(q: 'UniqueIndexSnapshotMemberNameTest')
+
+    assert_response :success
+    assert_includes response.body, 'IndexMemberNameMatchUnit'
+  end
+
+  test 'index finds a unit via a linked section name the same way the search page does' do
+    unit = Unit.create!(name: 'IndexSectionMatchUnit', key: 'index-section-match-unit-test', status: :active)
+    unit.sections.create!(name: 'UniqueIndexSectionNameForUnitTest', active: true)
+
+    get units_path(q: 'UniqueIndexSectionNameForUnitTest')
+
+    assert_response :success
+    assert_includes response.body, 'IndexSectionMatchUnit'
+  end
+
+  test 'index does not find a unit via a member of an inactive snapshot' do
+    unit = Unit.create!(name: 'IndexInactiveSnapshotUnit', key: 'index-inactive-snapshot-unit-test', status: :active)
+    snapshot = unit.unit_snapshots.create!(active: false)
+    snapshot.snapshot_people.create!(person_name: 'UniqueIndexInactiveSnapshotMemberTest')
+
+    get units_path(q: 'UniqueIndexInactiveSnapshotMemberTest')
+
+    assert_response :success
+    assert_not_includes response.body, 'IndexInactiveSnapshotUnit'
+  end
 end
