@@ -126,10 +126,9 @@ class OnThisDayPostBuilderTest < ActiveSupport::TestCase
     Unit.create!(name: name, key: "on-this-day-unit-#{@unit_seq}", status: :active)
   end
 
-  def create_trend(unit, title:, year:, phenomenon: :other, active: true, day_unknown: false)
+  def create_trend(unit, title:, year:, phenomenon: :other, **attributes)
     Trend.create!(title: title, date: Date.new(year, DATE.month, DATE.day), publish_start_at: Time.utc(2000, 1, 1),
-                  unit_phenomenon: phenomenon, active: active, day_unknown: day_unknown,
-                  units: [{ 'unit_id' => unit.id, 'name' => unit.name }])
+                  unit_phenomenon: phenomenon, units: [{ 'unit_id' => unit.id, 'name' => unit.name }], **attributes)
   end
 
   def create_person(name, name_kana, old_history: nil)
