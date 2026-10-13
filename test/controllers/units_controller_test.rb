@@ -69,8 +69,8 @@ class UnitsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
-  # issue #1841: /search の「View all Units →」の行き先でも、/search と同じ範囲で見つかる
-  test 'index finds a unit via a snapshot member name the same way the search page does' do
+  # issue #1855: 一覧ページの検索は名前系の列だけを探す。セクション名・メンバー名で探すのは /search だけ
+  test 'index does not search snapshot member names' do
     unit = Unit.create!(name: 'IndexMemberNameMatchUnit', key: 'index-member-name-match-unit-test', status: :active)
     snapshot = unit.unit_snapshots.create!(active: true)
     snapshot.snapshot_people.create!(person_name: 'UniqueIndexSnapshotMemberNameTest', status: :left)
@@ -78,27 +78,27 @@ class UnitsControllerTest < ActionDispatch::IntegrationTest
     get units_path(q: 'UniqueIndexSnapshotMemberNameTest')
 
     assert_response :success
-    assert_includes response.body, 'IndexMemberNameMatchUnit'
+    assert_not_includes response.body, 'IndexMemberNameMatchUnit'
   end
 
-  test 'index finds a unit via a linked section name the same way the search page does' do
+  test 'index does not search section names' do
     unit = Unit.create!(name: 'IndexSectionMatchUnit', key: 'index-section-match-unit-test', status: :active)
     unit.sections.create!(name: 'UniqueIndexSectionNameForUnitTest', active: true)
 
     get units_path(q: 'UniqueIndexSectionNameForUnitTest')
 
     assert_response :success
-    assert_includes response.body, 'IndexSectionMatchUnit'
+    assert_not_includes response.body, 'IndexSectionMatchUnit'
   end
 
-  test 'index does not find a unit via a member of an inactive snapshot' do
-    unit = Unit.create!(name: 'IndexInactiveSnapshotUnit', key: 'index-inactive-snapshot-unit-test', status: :active)
-    snapshot = unit.unit_snapshots.create!(active: false)
-    snapshot.snapshot_people.create!(person_name: 'UniqueIndexInactiveSnapshotMemberTest')
+  test 'index finds a unit by a former name and an alias' do
+    Unit.create!(name: 'IndexFormerNameUnit', key: 'index-former-name-unit-test', status: :active,
+                 name_log: [{ name: 'UniqueIndexFormerUnitName' }], aliases_attributes: { '0' => { 'name' => 'UniqueIndexUnitAlias' } })
 
-    get units_path(q: 'UniqueIndexInactiveSnapshotMemberTest')
+    get units_path(q: 'UniqueIndexFormerUnitName')
+    assert_includes response.body, 'IndexFormerNameUnit'
 
-    assert_response :success
-    assert_not_includes response.body, 'IndexInactiveSnapshotUnit'
+    get units_path(q: 'UniqueIndexUnitAlias')
+    assert_includes response.body, 'IndexFormerNameUnit'
   end
 end

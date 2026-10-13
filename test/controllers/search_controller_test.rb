@@ -198,20 +198,21 @@ class SearchControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
     assert_not_includes response.body, 'ProvisionalMemberUnit'
   end
 
-  # issue #1841: /search と「View all →」の行き先（/units?q=・/people?q=）で、同じ検索語なら同じものが見つかる
-  test 'index and the units list find the same unit via a snapshot member name' do
+  # issue #1855: セクション名・メンバー名で探すのは /search だけ。「View all ... by name →」の行き先（一覧ページ）は名前系の列だけを探す
+  test 'index finds a unit via a snapshot member name but the units list does not' do
     unit = Unit.create!(name: 'ViewAllMemberMatchUnit', key: 'view-all-member-match-unit-test', status: :active)
     snapshot = unit.unit_snapshots.create!(active: true)
     snapshot.snapshot_people.create!(person_name: 'UniqueViewAllMemberNameTest', status: :left)
 
     get search_path(q: 'UniqueViewAllMemberNameTest')
     assert_includes response.body, 'ViewAllMemberMatchUnit'
+    assert_select "a[href='#{units_path(q: 'UniqueViewAllMemberNameTest')}']", text: /by name/
 
     get units_path(q: 'UniqueViewAllMemberNameTest')
-    assert_includes response.body, 'ViewAllMemberMatchUnit'
+    assert_not_includes response.body, 'ViewAllMemberMatchUnit'
   end
 
-  test 'index and the people list find the same person via a linked section name' do
+  test 'index finds a person via a linked section name but the people list does not' do
     person = Person.create!(name: 'ViewAllSectionMatchPerson', key: 'view-all-section-match-person-test', status: :active)
     person.sections.create!(name: 'UniqueViewAllSectionNameTest', active: true)
 
@@ -219,7 +220,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
     assert_includes response.body, 'ViewAllSectionMatchPerson'
 
     get people_path(q: 'UniqueViewAllSectionNameTest')
-    assert_includes response.body, 'ViewAllSectionMatchPerson'
+    assert_not_includes response.body, 'ViewAllSectionMatchPerson'
   end
 
   # issue #1843: 個人ページのないメンバーも People 欄に出し、所属ユニットのそのスナップショットへリンクする
