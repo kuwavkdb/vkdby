@@ -1,7 +1,8 @@
 # See https://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
 
-# 個人・ユニット一覧の検索（q）と絞り込み（tag_ids など）、サイト内検索は組み合わせが事実上無限にあり、
-# クロールされると重いクエリが大量に走る（issue #1439、#1855）。個人・ユニットのページは sitemap から辿れる
+# Searching (q) and filtering (tag_ids etc.) on the people / units lists, and site search,
+# have practically unlimited combinations and cause heavy queries when crawled (issue #1439, #1855).
+# Individual people / units pages are reachable from the sitemap.
 User-agent: *
 Disallow: /people?*q=
 Disallow: /people?*tag_ids
