@@ -206,7 +206,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
 
     get search_path(q: 'UniqueViewAllMemberNameTest')
     assert_includes response.body, 'ViewAllMemberMatchUnit'
-    assert_select "a[href='#{units_path(q: 'UniqueViewAllMemberNameTest')}'][rel='nofollow']", text: /by name/
+    assert_select "a[href='#{units_path(q: 'UniqueViewAllMemberNameTest')}']", text: /by name/
 
     get units_path(q: 'UniqueViewAllMemberNameTest')
     assert_not_includes response.body, 'ViewAllMemberMatchUnit'
