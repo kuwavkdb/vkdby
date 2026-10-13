@@ -1,3 +1,11 @@
 # See https://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
 
+# Search results with a free-text query (q) on the people / units lists, and site search, have
+# practically unlimited combinations, little value as search engine entries, and cause heavy queries
+# when crawled (issue #1439, #1855). Tag / part / blood / hometown / status filter pages stay crawlable.
+User-agent: *
+Disallow: /people?*q=
+Disallow: /units?*q=
+Disallow: /search
+
 Sitemap: https://vkdb.jp/sitemap.xml

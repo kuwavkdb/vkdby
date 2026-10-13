@@ -33,7 +33,9 @@
                 </svg>
                 Units
               </h2>
-              <%= link_to "View all Units →", units_path(q: @query), class: "text-sm font-bold text-indigo-600 dark:text-amber-400 hover:text-indigo-700 dark:hover:text-amber-300 transition-colors" %>
+              <%# 一覧ページの検索は名前系の列だけを探す（セクション名・メンバー名は探さない。issue #1855）ため、
+                  件数が減ることがあると分かる文言にする %>
+              <%= link_to "View all Units by name →", units_path(q: @query), class: "text-sm font-bold text-indigo-600 dark:text-amber-400 hover:text-indigo-700 dark:hover:text-amber-300 transition-colors" %>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               <%= render UnitCardComponent.with_collection(@units) %>
@@ -51,7 +53,9 @@
                 </svg>
                 People
               </h2>
-              <%= link_to "View all People →", people_path(q: @query), class: "text-sm font-bold text-indigo-600 dark:text-amber-400 hover:text-indigo-700 dark:hover:text-amber-300 transition-colors" %>
+              <%# 一覧ページの検索は名前系の列だけを探す（セクション名・メンバー名は探さない。issue #1855）ため、
+                  件数が減ることがあると分かる文言にする %>
+              <%= link_to "View all People by name →", people_path(q: @query), class: "text-sm font-bold text-indigo-600 dark:text-amber-400 hover:text-indigo-700 dark:hover:text-amber-300 transition-colors" %>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <%= render PersonCardComponent.with_collection(@people, show_history: true) %>

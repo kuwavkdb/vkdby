@@ -79,8 +79,17 @@ class Person < ApplicationRecord
   }
   # /peopleの索引ページ（一覧・フィルタ選択肢の件数集計）の対象となる人物
   scope :for_index, -> { kept.where.not(key: [nil, '']) }
-  # 公開側のキーワード検索（/search と /people?q=）の検索条件。
-  # 両者で探す範囲がずれて「View all People →」の先で件数が減らないよう、ここ1か所にまとめる（issue #1841）。
+  # 一覧ページ（/people?q=）の検索条件。名前系の列（名前・ヨミガナ・名前の履歴・別名）と old_history だけを探す。
+  # セクション名まで探す matching_keyword は重く、クローラーによる q と tag_ids の組み合わせアクセスで
+  # レスポンスタイムが悪化したため（issue #1855）、一覧ページでは使わない。
+  # pattern は like_pattern でエスケープ済みの ILIKE パターンを渡す。
+  scope :matching_name_keyword, lambda { |pattern|
+    where('people.name ILIKE :q OR people.name_kana ILIKE :q OR people.name_log::text ILIKE :q ' \
+          'OR people.aliases::text ILIKE :q OR people.old_history ILIKE :q', q: pattern)
+  }
+
+  # サイト内検索（/search）の検索条件。名前系の列に加えて、セクション名でも探す（issue #1841）。
+  # 一覧ページ（/people?q=）は軽い matching_name_keyword を使うため、範囲は意図して分けている（issue #1855）。
   # pattern は like_pattern でエスケープ済みの ILIKE パターンを渡す。
   # 紐づくSection（discard済み・非公開を除く）の名前もマッチ対象にする。
   # OR EXISTS (...) で書くと people の名前系の列のtrigram indexを組み合わせて使えず全件走査になるため、
