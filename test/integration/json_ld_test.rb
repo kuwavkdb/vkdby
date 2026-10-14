@@ -36,7 +36,7 @@ class JsonLdTest < ActionDispatch::IntegrationTest
 
   test '会場詳細はMusicVenueを出力し、空の項目は出さない' do
     venue = Venue.create!(key: 'json-ld-venue', name: '新宿LOFT', prefecture: '東京都', capacity: 550,
-                          address: '東京都新宿区歌舞伎町1-12-9', latitude: 35.6948, longitude: 139.7012,
+                          address: 'MAP:東京都新宿区歌舞伎町1-12-9', latitude: 35.6948, longitude: 139.7012,
                           name_log: [{ 'name' => '旧LOFT' }, { 'name' => '新宿LOFT' }],
                           aliases: [{ 'name' => 'LOFT' }, { 'name' => '非表示の別名', 'hidden' => true }])
     bare = Venue.create!(key: 'json-ld-bare-venue', name: '情報の少ない会場')

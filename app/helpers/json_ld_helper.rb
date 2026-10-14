@@ -88,12 +88,13 @@ module JsonLdHelper
     (alias_names + former_names).compact_blank.uniq - [venue.name]
   end
 
+  # 住所は画面と同じく、旧サイトの「MAP:」を取り除いた display_address を使う
   def venue_json_ld_address(venue)
-    return if venue.address.blank? && venue.prefecture.blank?
+    return if venue.display_address.blank? && venue.prefecture.blank?
 
     {
       '@type' => 'PostalAddress',
-      'streetAddress' => venue.address,
+      'streetAddress' => venue.display_address,
       'addressRegion' => venue.prefecture,
       'addressCountry' => 'JP'
     }
