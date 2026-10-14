@@ -75,6 +75,11 @@ module Vkdby
     require_relative '../lib/middleware/asset_error_no_store'
     config.middleware.insert_before Middleware::LegacyDomainRedirector, Middleware::AssetErrorNoStore
 
+    # Cloudflare の IP を信頼するプロキシに加え、request.remote_ip で利用者の IP を取れるようにする（issue #1867）。
+    # Rack::Request#ip（Rack::Attack・IpBlocker が使う）側は config/initializers/trusted_proxies.rb で設定する
+    require_relative '../lib/cloudflare_ip_ranges'
+    config.action_dispatch.trusted_proxies = ActionDispatch::RemoteIp::TRUSTED_PROXIES + CloudflareIpRanges::RANGES
+
     # Set default locale to Japanese
     config.i18n.default_locale = :ja
 
