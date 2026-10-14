@@ -7,5 +7,9 @@ User-agent: *
 Disallow: /people?*q=
 Disallow: /units?*q=
 Disallow: /search
+# Combinations of 4 or more filter parameters are crawled exhaustively and multiply without limit (issue #1863).
+# Filter pages with 1 to 3 parameters stay crawlable.
+Disallow: /people?*&*&*&
+Disallow: /units?*&*&*&
 
 Sitemap: https://vkdb.jp/sitemap.xml

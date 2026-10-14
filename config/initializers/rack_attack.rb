@@ -30,6 +30,25 @@ Rack::Attack.throttle('people_units_filter/ip', limit: 5, period: 60) do |req|
   req.ip if people_units_filter_request.call(req)
 end
 
+# /people, /units で、絞り込み条件を3種類以上重ねたリクエストか判定する（issue #1863）。
+# 条件は q・part・blood・hometown・status と、tag_ids のカテゴリ（1カテゴリを1種類と数える）。
+# 絞り込みリンクは選択中の条件をすべて引き継ぐため、リンクを辿るだけで組み合わせがかけ算で増え、
+# それを総当たりするクローラー（IPを変えるスクレイパー・Applebot）が本番で確認された。
+# part・blood・hometown・status だけの組み合わせは people_units_filter_request に当たらないため、
+# ここで拾う。条件1〜2種類の絞り込みは通常の操作で連続して押されうるため制限しない。
+filter_combo_params = %w[q part blood hometown status].freeze
+filter_combo_request = lambda do |req|
+  next false unless req.get? && %w[/people /units].include?(req.path)
+
+  tag_ids = req.params['tag_ids']
+  tag_count = tag_ids.is_a?(Hash) ? tag_ids.count { |_, v| v.present? } : 0
+  filter_combo_params.count { |key| req.params[key].present? } + tag_count >= 3
+end
+
+Rack::Attack.throttle('people_units_filter_combo/ip', limit: 5, period: 60) do |req|
+  req.ip if filter_combo_request.call(req)
+end
+
 # tag_ids を4カテゴリ以上同時に指定するリクエストか判定する。tag_idsで絞り込める
 # グループは現状のUIで people 最大1（個人カナ索引）・units 最大3（カナ索引/地域/
 # バンド状態）までしかなく、4カテゴリ以上は通常のユーザー操作では発生し得ない、
@@ -101,4 +120,15 @@ end
 # 数名程度の見込み）で通常操作でこの回数に達することはない。
 Rack::Attack.throttle('login_page/ip', limit: 10, period: 60) do |req|
   req.ip if req.path == '/login' && req.get?
+end
+
+# 制限（429）・ブロック（403）したリクエストを1行ずつログに出す（issue #1863）。
+# Rack::Attack はアプリより手前で応答を返すため、Rails のログには残らない。どの規則に当たったか、
+# パス・User-Agent・IP を残し、クロールの傾向をすぐにつかめるようにする
+ActiveSupport::Notifications.subscribe(/\A(throttle|blocklist)\.rack_attack\z/) do |name, _start, _finish, _id, payload|
+  req = payload[:request]
+  Rails.logger.warn(
+    "[Rack::Attack] #{name.delete_suffix('.rack_attack')} rule=#{req.env['rack.attack.matched']} " \
+    "ip=#{req.ip} path=#{req.fullpath} ua=#{req.user_agent.to_s.inspect}"
+  )
 end
