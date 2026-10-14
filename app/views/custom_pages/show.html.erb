@@ -1,4 +1,6 @@
 <% content_for :title, @page.title %>
+<%# トップページ（ルート）ではサイト名の構造化データを出す（issue #1254） %>
+<% content_for :head, json_ld_tag(website_json_ld) if @root_page %>
 <%# タイトル入りのog:image（issue #1263）。index/footer/top_message・IPブロックリスト用
     ページ等の「システムページ」（@page.system?）はサイト共通のデフォルト画像のままにする
     （トップページ扱いのため、issue #1253/#1259の対象外）。生成できない場合

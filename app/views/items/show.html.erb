@@ -1,4 +1,6 @@
 <% content_for :title, [@item.title, @item.artists.map { |a| a['alias'].presence || a['name'] }.join(' / ')].reject(&:blank?).join(' / ') %>
+<%# 構造化データ（issue #1254） %>
+<% content_for :head, json_ld_tag(item_json_ld(@item)) %>
 <div class="flex justify-center">
   <div class="bg-white dark:bg-zinc-900 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
     <!-- ヘッダー（タイトル） -->
