@@ -17,8 +17,12 @@ Rails.application.configure do
   # Turn on fragment caching in view templates.
   config.action_controller.perform_caching = true
 
-  # Cache assets for far-future expiry since they are all digest stamped.
-  config.public_file_server.headers = { 'cache-control' => "public, max-age=#{1.year.to_i}, immutable" }
+  # public/ の下のファイルは短い期間だけキャッシュさせる（issue #1862）。robots.txt・ads.txt・ファビコン・
+  # エラーページなどはファイル名を変えずに中身を書き換えるため、長い期間にすると古い内容が残り続ける。
+  # digest 付きの /assets/ だけは Middleware::ImmutableAssetCache で1年・immutable に置き換える。
+  config.public_file_server.headers = { 'cache-control' => "public, max-age=#{1.hour.to_i}" }
+  require_relative '../../lib/middleware/immutable_asset_cache'
+  config.middleware.insert_after Middleware::AssetErrorNoStore, Middleware::ImmutableAssetCache
 
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
