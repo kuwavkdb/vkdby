@@ -188,11 +188,12 @@ class SnapshotPerson < ApplicationRecord # rubocop:disable Metrics/ClassLength
   # sns（"@handle"形式、またはURLの配列）から、Person#links に作成する Link の属性へ変換する（issue #1653）。
   # "@handle" は X(Twitter) のURLへ変換し、URLはそのまま使う。どちらでもない値（"@"のみ、
   # スキーム無しの文字列等）はリンク先を特定できないためスキップする。空要素・重複URLは除く。
+  # 行頭が "//" または "#" のコメント行（issue #1854）も取り込まない。
   # text は空のままにし、表示名・アイコンは Link#sns_info のURL判定に任せる。
   def sns_link_attributes
     urls = Array(sns).filter_map do |account|
       account = account.to_s.strip
-      next if account.blank? || account == '@'
+      next if account.blank? || account == '@' || SnsInfoIcon.commented_out?(account)
 
       url = SnsInfoIcon.url_for_account(account)
       url if url.match?(SNS_LINK_URL_PATTERN)

@@ -20,11 +20,9 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <% if @member.sns.present? && @member.sns.is_a?(Array) %>
-          <% @member.sns.each do |sns_account| %>
-            <%= link_to sns_url_for(sns_account), target: "_blank", rel: "noopener noreferrer", class: "inline-flex items-center text-slate-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors" do %>
-              <%= sns_icon(sns_icon_for(sns_account), css_class: "w-4 h-4") %>
-            <% end %>
+        <% visible_sns_accounts.each do |sns_account| %>
+          <%= link_to sns_url_for(sns_account), target: "_blank", rel: "noopener noreferrer", class: "inline-flex items-center text-slate-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors" do %>
+            <%= sns_icon(sns_icon_for(sns_account), css_class: "w-4 h-4") %>
           <% end %>
         <% end %>
         <% if show_status? %>
