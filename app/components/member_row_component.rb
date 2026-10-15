@@ -17,6 +17,13 @@ class MemberRowComponent < ViewComponent::Base
     @admin_unit_id = admin_unit_id
   end
 
+  # 表示するSNSアカウント。空の行と、行頭が "//" または "#" のコメント行（issue #1854）は除く
+  def visible_sns_accounts
+    return [] unless @member.sns.is_a?(Array)
+
+    @member.sns.reject { |account| account.blank? || SnsInfoIcon.commented_out?(account) }
+  end
+
   # @member.sns の1要素（"@handle"形式、またはURL）からアイコン種別を判定する。
   # "@"始まりは常にX(Twitter)アカウントの記法として扱う（{{member}}プラグイン記法、
   # app/helpers/application_helper.rb参照）。それ以外はURLとしてSnsInfoIconで判定し、

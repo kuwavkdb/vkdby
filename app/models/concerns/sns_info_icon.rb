@@ -21,6 +21,15 @@ module SnsInfoIcon
     PLATFORM_ICONS[Link.new(url: url).sns_info&.[](:platform)]
   end
 
+  # 行頭が "//" または "#" のアカウントは、コメントアウトとして扱う（issue #1854）。
+  # 管理画面の入力値には残すが、公開ページのメンバー行（MemberRowComponent）には表示せず、
+  # Person へのリンク取り込み（SnapshotPerson#sns_link_attributes）でも使わない
+  COMMENT_PREFIXES = %w[// #].freeze
+
+  def commented_out?(sns_account)
+    sns_account.to_s.lstrip.start_with?(*COMMENT_PREFIXES)
+  end
+
   # UnitPerson#sns / SnapshotPerson#sns 等の1要素（"@handle"形式、またはURL）をURLに変換する。
   # "@"始まりは常にX(Twitter)アカウントの記法として扱い、それ以外はそのまま返す。
   # MemberRowComponent（表示用リンク）と SnapshotPerson#sns_link_attributes（issue #1653）で共通。

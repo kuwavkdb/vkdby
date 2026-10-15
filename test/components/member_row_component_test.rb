@@ -58,4 +58,17 @@ class MemberRowComponentTest < ActionView::TestCase
     assert_text '(YouTube)'
     assert_text '(外部サイト)'
   end
+
+  test '行頭が // または # のSNSアカウントは表示しない（issue #1854）' do
+    member = UnitPerson.new(
+      part: 'vocal',
+      sns: ['@vocalist', '// https://instagram.com/old_account', '#@old_handle', ' # https://example.com/old']
+    )
+
+    render_inline(MemberRowComponent.new(member: member))
+
+    assert_selector 'a', count: 1
+    assert_selector "a[href='https://x.com/vocalist']"
+    assert_no_text '(Instagram)'
+  end
 end

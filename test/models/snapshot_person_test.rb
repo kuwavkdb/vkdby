@@ -168,6 +168,20 @@ class SnapshotPersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/Cla
                  sp.sns_link_attributes
   end
 
+  test 'sns_link_attributes skips lines starting with // or # (issue #1854)' do
+    sp = SnapshotPerson.new(sns: ['// https://www.instagram.com/old/', '#@old_handle', '#https://example.com/old',
+                                  '@handle'])
+
+    assert_equal [{ url: 'https://x.com/handle', sort_order: 1 }], sp.sns_link_attributes
+  end
+
+  test 'sns_text keeps comment lines as entered (issue #1854)' do
+    sp = SnapshotPerson.new
+    sp.sns_text = ['@handle', '// https://www.instagram.com/old/', '#@old_handle'].join("\n")
+
+    assert_equal ['@handle', '// https://www.instagram.com/old/', '#@old_handle'], sp.sns
+  end
+
   test 'sns_link_attributes returns an empty array when sns is nil' do
     assert_equal [], SnapshotPerson.new(sns: nil).sns_link_attributes
   end
