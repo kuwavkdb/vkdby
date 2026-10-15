@@ -164,4 +164,66 @@ class JsonLdTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/Cla
     assert_response :success
     assert_select 'script[type="application/ld+json"]', count: 0
   end
+
+  test '結成日・解散日は活動期間の並び順によらず最も古い・新しい日付にし、文章が続く値は読まない' do
+    unit = Unit.create!(name: 'JsonLd Unordered', key: 'json-ld-unordered', status: :disbanded,
+                        activity_period: [{ 'from' => '2015/03/05', 'to' => '2018/06/**' },
+                                          { 'from' => '2010/01/**', 'to' => '2012/**/**' },
+                                          { 'from' => '2019頃', 'to' => '2013以降状況不明' },
+                                          { 'from' => '2020/01/01', 'to' => '****/**/**' }])
+
+    get profile_path(unit.key)
+
+    data = json_ld_data
+    assert_equal '2010-01', data['foundingDate']
+    assert_equal '2018-06', data['dissolutionDate']
+  end
+
+  test 'sameAsにはYouTubeの動画やXの個別投稿へのリンクを入れない' do
+    unit = Unit.create!(name: 'JsonLd SameAs', key: 'json-ld-same-as', status: :active)
+    unit.links.create!(url: 'https://x.com/json_ld_same_as', sort_order: 1)
+    unit.links.create!(url: 'https://www.youtube.com/watch?v=abcdefghijk', sort_order: 2)
+    unit.links.create!(url: 'https://x.com/json_ld_same_as/status/1234567890', sort_order: 3)
+    unit.links.create!(url: 'https://www.youtube.com/@json_ld_same_as', sort_order: 4)
+
+    get profile_path(unit.key)
+
+    assert_equal ['https://x.com/json_ld_same_as', 'https://www.youtube.com/@json_ld_same_as'], json_ld_data['sameAs']
+  end
+
+  test 'メンバーには非公開の個人を出さず、転送している個人は転送先のURLにする' do
+    unit = Unit.create!(name: 'JsonLd Hidden Members', key: 'json-ld-hidden-members', status: :active)
+    hidden = Person.create!(name: 'JsonLd Hidden Member', key: 'json-ld-hidden-member', status: :active)
+    tag_index = TagIndex.create!(id: Rails.application.config.unpublished_tag_ids.first, name: '掲載停止')
+    TagIndexItem.create!(tag_index: tag_index, indexable: hidden)
+    moved = Person.create!(name: 'JsonLd Moved Member', key: 'json-ld-moved-member', status: :active,
+                           destination_key: 'json-ld-moved-destination')
+    snapshot = unit.unit_snapshots.create!(snapshot_date: Date.current, current: true)
+    snapshot.snapshot_people.create!(person: hidden, part: :vocal, sort_order: 1)
+    snapshot.snapshot_people.create!(person: moved, part: :guitar, sort_order: 2)
+
+    get profile_path(unit.key)
+
+    assert_equal [{ '@type' => 'Person', 'name' => 'JsonLd Moved Member',
+                    'url' => 'http://www.example.com/json-ld-moved-destination' }], json_ld_data['member']
+  end
+
+  test '個人の所属には解散したユニットと非公開のユニットを含めず、別名も出す' do
+    person = Person.create!(name: 'JsonLd Member Of', key: 'json-ld-member-of', status: :active,
+                            aliases: [{ 'name' => '別名義' }, { 'name' => '非表示の別名', 'hidden' => true }])
+    disbanded = Unit.create!(name: 'JsonLd Disbanded', key: 'json-ld-disbanded', status: :disbanded)
+    hidden = Unit.create!(name: 'JsonLd Hidden Unit', key: 'json-ld-hidden-unit', status: :active)
+    tag_index = TagIndex.create!(id: Rails.application.config.unpublished_tag_ids.first, name: '掲載停止')
+    TagIndexItem.create!(tag_index: tag_index, indexable: hidden)
+    [disbanded, hidden].each do |unit|
+      unit.unit_snapshots.create!(snapshot_date: Date.current, current: true)
+          .snapshot_people.create!(person: person, part: :vocal, sort_order: 1)
+    end
+
+    get profile_path(person.key)
+
+    data = json_ld_data
+    assert_nil data['memberOf']
+    assert_equal ['別名義'], data['alternateName']
+  end
 end

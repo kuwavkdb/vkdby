@@ -7,7 +7,8 @@ module JsonLdHelper # rubocop:disable Metrics/ModuleLength
   SCHEMA_CONTEXT = 'https://schema.org'
   GENRE = 'ヴィジュアル系'
   # 活動期間などの日付（"2010/01/**" のように、不明な部分を ** で書く）
-  PARTIAL_DATE_PATTERN = %r{\A(\d{4})(?:[/.-](\d{1,2}|\*\*))?(?:[/.-](\d{1,2}|\*\*))?}
+  # 後ろに文章が続く値（"2013以降状況不明" など）は確定した日付ではないので読まない
+  PARTIAL_DATE_PATTERN = %r{\A(\d{4})(?:[/.-](\d{1,2}|\*\*))?(?:[/.-](\d{1,2}|\*\*))?\z}
 
   # <script type="application/ld+json"> を返す。
   # json_escape で <・>・& をエスケープし、値に "</script>" が含まれていてもタグを閉じられないようにする
@@ -50,7 +51,7 @@ module JsonLdHelper # rubocop:disable Metrics/ModuleLength
       'address' => venue_json_ld_address(venue),
       'geo' => venue_json_ld_geo(venue),
       'maximumAttendeeCapacity' => venue.capacity,
-      'sameAs' => links.map(&:url).compact_blank.uniq
+      'sameAs' => json_ld_same_as(links)
     }
   end
 
@@ -64,10 +65,10 @@ module JsonLdHelper # rubocop:disable Metrics/ModuleLength
       'url' => profile_url(unit.key),
       'alternateName' => json_ld_alternate_names(unit),
       'genre' => GENRE,
-      'foundingDate' => json_ld_partial_date(unit.activity_periods.first&.from),
-      'dissolutionDate' => (json_ld_partial_date(unit.activity_periods.last&.to) if unit.disbanded?),
+      'foundingDate' => json_ld_partial_dates(unit.activity_periods.map(&:from)).min,
+      'dissolutionDate' => (json_ld_partial_dates(unit.activity_periods.map(&:to)).max if unit.disbanded?),
       'member' => unit_json_ld_members(snapshots),
-      'sameAs' => links.map(&:url).compact_blank.uniq
+      'sameAs' => json_ld_same_as(links)
     }
   end
 
@@ -79,11 +80,11 @@ module JsonLdHelper # rubocop:disable Metrics/ModuleLength
       '@type' => 'Person',
       'name' => person.name,
       'url' => profile_url(person.key),
-      'alternateName' => person.name_logs.map(&:name).compact_blank.uniq - [person.name],
+      'alternateName' => json_ld_alternate_names(person),
       'birthDate' => person_json_ld_birth_date(person),
       'homeLocation' => (person.hometown.present? ? { '@type' => 'Place', 'name' => person.hometown } : nil),
       'memberOf' => person_json_ld_member_of(person),
-      'sameAs' => links.map(&:url).compact_blank.uniq
+      'sameAs' => json_ld_same_as(links)
     }
   end
 
@@ -117,11 +118,24 @@ module JsonLdHelper # rubocop:disable Metrics/ModuleLength
     end
   end
 
-  # 別名（非表示のものを除く）と旧名。会場・ユニットで共通
+  # 別名（非表示のものを除く）と旧名。会場・ユニット・個人で共通
   def json_ld_alternate_names(record)
     alias_names = record.aliases.reject(&:hidden).map(&:name)
     former_names = record.name_logs.map(&:name)
     (alias_names + former_names).compact_blank.uniq - [record.name]
+  end
+
+  # sameAs は「同じものを表す別のページ」。公式サイト・SNSのアカウントだけにし、
+  # YouTube の動画や X の個別投稿へのリンクは除く（ページ上でも別枠で表示しているもの）
+  def json_ld_same_as(links)
+    links.reject { |link| link.youtube_video_id.present? || link.twitter_status_url? }
+         .map(&:url).compact_blank.uniq
+  end
+
+  # 読み取れた日付だけを返す。"2010" < "2010-01" < "2010-01-05" と文字列の比較で前後が決まるので、
+  # min・max で最も古い・新しい日付を選べる（活動期間は日付順に並んでいるとは限らない）
+  def json_ld_partial_dates(values)
+    values.filter_map { |value| json_ld_partial_date(value) }
   end
 
   # "2010/01/**" → "2010-01"、"2003/**/**" → "2003"、"2010/1/5" → "2010-01-05"。読めなければ nil
@@ -141,14 +155,22 @@ module JsonLdHelper # rubocop:disable Metrics/ModuleLength
     snapshot = snapshots.find { |s| s.current? && !s.past? }
     return [] unless snapshot
 
-    snapshot.snapshot_people.select { |sp| sp.active? && !sp.support? }.sort_by(&:sort_order).map do |member|
-      person = member.person
-      {
-        '@type' => 'Person',
-        'name' => member.name,
-        'url' => (profile_url(person.key) if person&.key.present? && !person.discarded?)
-      }
+    members = snapshot.snapshot_people.select { |sp| sp.active? && !sp.support? }.sort_by(&:sort_order)
+    # 非公開の個人は、名前もURLも出さない
+    person_ids = members.filter_map(&:person_id)
+    unpublished_ids = person_ids.any? ? person_ids - Person.published.where(id: person_ids).pluck(:id) : []
+
+    members.reject { |member| unpublished_ids.include?(member.person_id) }.map do |member|
+      { '@type' => 'Person', 'name' => member.name, 'url' => json_ld_person_url(member.person) }
     end
+  end
+
+  # 個人ページの正規のURL。キー変更・統合で転送している個人は転送先のURLにする
+  def json_ld_person_url(person)
+    return if person.nil? || person.discarded?
+
+    key = person.destination_key.presence || person.key
+    profile_url(key) if key.present?
   end
 
   def person_json_ld_birth_date(person)
@@ -158,11 +180,14 @@ module JsonLdHelper # rubocop:disable Metrics/ModuleLength
     person.birth_year.to_i.positive? ? "#{person.birth_year}-#{month_day}" : "--#{month_day}"
   end
 
-  # 今在籍しているユニット（「現在」のスナップショットの在籍メンバー。サポート・関係者は除く）
+  # 今在籍しているユニット（「現在」のスナップショットの在籍メンバー。サポート・関係者は除く）。
+  # 解散したユニットは「現在」のスナップショットが残っていても所属に含めない。
+  # 非公開のユニットと、キー変更・統合で転送しているユニットも除く
   def person_json_ld_member_of(person)
+    units = Unit.for_index.published.where.not(status: :disbanded).where(destination_key: [nil, ''])
     SnapshotPerson.where(person_id: person.id, status: :active, support: false)
                   .joins(:unit_snapshot)
-                  .where(unit_snapshots: { current: true, past: false, active: true, unit_id: Unit.for_index.select(:id) })
+                  .where(unit_snapshots: { current: true, past: false, active: true, unit_id: units.select(:id) })
                   .includes(unit_snapshot: :unit)
                   .map { |member| member.unit_snapshot.unit }
                   .uniq
