@@ -3,7 +3,7 @@
 require 'test_helper'
 
 # 構造化データ（JSON-LD）の出力（issue #1254）
-class JsonLdTest < ActionDispatch::IntegrationTest
+class JsonLdTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
   def json_ld_data
     scripts = css_select('script[type="application/ld+json"]')
     assert_equal 1, scripts.size
@@ -77,5 +77,91 @@ class JsonLdTest < ActionDispatch::IntegrationTest
 
     assert_not_includes response.body, '</script><script>alert(1)'
     assert_equal '</script><script>alert(1)</script>', json_ld_data['name']
+  end
+
+  test 'ユニットのページはMusicGroupを出力し、メンバーは現在のスナップショットの在籍メンバーだけにする' do
+    unit = Unit.create!(name: 'JsonLd Band', key: 'json-ld-band', status: :disbanded,
+                        name_log: [{ 'name' => '旧JsonLd Band' }],
+                        aliases: [{ 'name' => 'JLB' }, { 'name' => '非表示の別名', 'hidden' => true }],
+                        activity_period: [{ 'from' => '2010/01/**', 'to' => '2012/**/**' },
+                                          { 'from' => '2015/03/05', 'to' => '2020/12/31' }])
+    unit.links.create!(url: 'https://x.com/json_ld_band', sort_order: 1)
+    vocal = Person.create!(name: 'JsonLd Vocal', key: 'json-ld-vocal', status: :active)
+    old_snapshot = unit.unit_snapshots.create!(snapshot_date: Date.new(2011, 1, 1))
+    old_snapshot.snapshot_people.create!(person_name: '旧スナップショットのメンバー', part: :bass, sort_order: 1)
+    snapshot = unit.unit_snapshots.create!(snapshot_date: Date.new(2020, 1, 1), current: true)
+    snapshot.snapshot_people.create!(person: vocal, part: :vocal, sort_order: 1)
+    snapshot.snapshot_people.create!(person_name: 'ページのないメンバー', part: :guitar, sort_order: 2)
+    snapshot.snapshot_people.create!(person_name: '脱退したメンバー', part: :bass, status: :left, sort_order: 3)
+    snapshot.snapshot_people.create!(person_name: 'サポートメンバー', part: :drums, support: true, sort_order: 4)
+
+    get profile_path(unit.key)
+
+    data = json_ld_data
+    assert_equal 'MusicGroup', data['@type']
+    assert_equal 'JsonLd Band', data['name']
+    assert_equal 'http://www.example.com/json-ld-band', data['url']
+    assert_equal ['JLB', '旧JsonLd Band'], data['alternateName']
+    assert_equal 'ヴィジュアル系', data['genre']
+    assert_equal '2010-01', data['foundingDate']
+    assert_equal '2020-12-31', data['dissolutionDate']
+    assert_equal ['https://x.com/json_ld_band'], data['sameAs']
+    assert_equal [{ '@type' => 'Person', 'name' => 'JsonLd Vocal', 'url' => 'http://www.example.com/json-ld-vocal' },
+                  { '@type' => 'Person', 'name' => 'ページのないメンバー' }], data['member']
+  end
+
+  test '活動中のユニットには解散日を出さない' do
+    unit = Unit.create!(name: 'JsonLd Active Band', key: 'json-ld-active-band', status: :active,
+                        activity_period: [{ 'from' => '2010/**/**', 'to' => '2012/05/**' }])
+
+    get profile_path(unit.key)
+
+    data = json_ld_data
+    assert_equal '2010', data['foundingDate']
+    assert_nil data['dissolutionDate']
+  end
+
+  test '個人のページはPersonを出力し、所属は今在籍しているユニットだけにする' do
+    person = Person.create!(name: 'JsonLd Person Page', key: 'json-ld-person-page', status: :active,
+                            birthday: Date.new(Person::DUMMY_BIRTH_YEAR, 7, 12), birth_year: 1985, hometown: '東京都',
+                            blood: 'A', name_log: [{ 'name' => '旧名義' }])
+    current_unit = Unit.create!(name: 'JsonLd Current Unit', key: 'json-ld-current-unit', status: :active)
+    current_unit.unit_snapshots.create!(snapshot_date: Date.current, current: true)
+                .snapshot_people.create!(person: person, part: :vocal, sort_order: 1)
+    left_unit = Unit.create!(name: 'JsonLd Left Unit', key: 'json-ld-left-unit', status: :active)
+    left_unit.unit_snapshots.create!(snapshot_date: Date.current, current: true)
+             .snapshot_people.create!(person: person, part: :vocal, status: :left, sort_order: 1)
+
+    get profile_path(person.key)
+
+    data = json_ld_data
+    assert_equal 'Person', data['@type']
+    assert_equal 'JsonLd Person Page', data['name']
+    assert_equal ['旧名義'], data['alternateName']
+    assert_equal '1985-07-12', data['birthDate']
+    assert_equal({ '@type' => 'Place', 'name' => '東京都' }, data['homeLocation'])
+    assert_equal [{ '@type' => 'MusicGroup', 'name' => 'JsonLd Current Unit',
+                    'url' => 'http://www.example.com/json-ld-current-unit' }], data['memberOf']
+    assert_not data.key?('bloodType')
+  end
+
+  test '生年が分からない個人の誕生日は月日だけを出す' do
+    person = Person.create!(name: 'JsonLd No Year', key: 'json-ld-no-year', status: :active,
+                            birthday: Date.new(Person::DUMMY_BIRTH_YEAR, 2, 29))
+
+    get profile_path(person.key)
+
+    assert_equal '--02-29', json_ld_data['birthDate']
+  end
+
+  test '非公開の個人には構造化データを出さない' do
+    person = Person.create!(name: 'JsonLd Unpublished', key: 'json-ld-unpublished', status: :active)
+    tag_index = TagIndex.create!(id: Rails.application.config.unpublished_tag_ids.first, name: '掲載停止')
+    TagIndexItem.create!(tag_index: tag_index, indexable: person)
+
+    get profile_path(person.key)
+
+    assert_response :success
+    assert_select 'script[type="application/ld+json"]', count: 0
   end
 end

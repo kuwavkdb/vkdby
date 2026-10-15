@@ -1,4 +1,8 @@
 <% content_for :title, name_with_kana(@resource.name, @resource.name_kana) %>
+<%# 構造化データ（issue #1254）。非公開の個人・ユニットには出さない %>
+<% unless @unpublished %>
+  <% content_for :head, json_ld_tag(@resource.is_a?(Unit) ? unit_json_ld(@resource, links: @links, snapshots: @snapshots) : person_json_ld(@resource, links: @links)) %>
+<% end %>
 <%# ユニット名/メンバー名入りのog:image（issue #1259）。生成できない場合（libvips未導入等）は
     ogp_image_relative_urlがnilを返し、application_helper#og_image_urlのデフォルト画像
     フォールバックに任せる %>
