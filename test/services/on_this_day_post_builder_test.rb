@@ -102,6 +102,18 @@ class OnThisDayPostBuilderTest < ActiveSupport::TestCase
     assert_equal [:birthdays], OnThisDayPostBuilder.new(DATE).build.map(&:kind)
   end
 
+  test '読み込み済みの動向・誕生日・関連ユニットを渡すと、それから同じ内容を作る（issue #1890）' do
+    unit = create_unit('黒夢')
+    trend = create_trend(unit, title: '解散', phenomenon: :finish, year: 1999)
+    person = create_person('清春', 'きよはる', old_history: '[[黒夢]]')
+    expected = OnThisDayPostBuilder.new(DATE).build.map(&:text)
+
+    posts = OnThisDayPostBuilder.new(DATE, trends: [trend], birthdays: [person],
+                                           related_units: { unit.id => unit }).build
+
+    assert_equal expected, posts.map(&:text)
+  end
+
   test 'parse_month_dayはMM-DDとM/Dを受け付け、不正ならnil' do
     may30 = OnThisDayPostBuilder.parse_month_day('05-30')
     feb29 = OnThisDayPostBuilder.parse_month_day('2/29')
