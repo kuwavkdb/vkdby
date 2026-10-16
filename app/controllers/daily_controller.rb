@@ -16,13 +16,12 @@ class DailyController < ApplicationController
     if @year_agnostic
       month = @date.month
       day = @date.day
-      # active・publish_start_at はシェア用テキストで公開中の動向に絞るため（issue #1890）
-      @trends = Trend.on_month_day(month, day)
-                     .select(:id, :date, :title, :units, :unit_phenomenon, :active, :publish_start_at).order(date: :asc)
+      @trends = Trend.published.on_month_day(month, day)
+                     .select(:id, :date, :title, :units, :unit_phenomenon).order(date: :asc)
       @birthdays = Person.kept.published.birthday_on(@date).select(*PERSON_CARD_COLUMNS).order(name_kana: :asc)
       @releases = Item.released_on_month_day(month, day).order(release_date: :asc)
     else
-      @trends = Trend.on_date(@date).select(:id, :date, :title, :units).order(created_at: :desc)
+      @trends = Trend.published.on_date(@date).select(:id, :date, :title, :units).order(created_at: :desc)
       @birthdays = Person.kept.published.birthday_on(@date).where(status: %i[active hiatus])
                          .select(*PERSON_CARD_COLUMNS).order(name_kana: :asc)
       @releases = Item.released_on(@date).order(created_at: :desc)

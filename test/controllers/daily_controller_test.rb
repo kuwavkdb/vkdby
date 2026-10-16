@@ -71,7 +71,7 @@ class DailyControllerTest < ActionDispatch::IntegrationTest
     assert_select '#on-this-day-share-text-trends', text: /\A#ヴィジュアル系今日は何の日？（5\/30）\n・1995年 シェア対象の動向\n/
   end
 
-  test 'シェア用テキストは投稿文バッチと同じ内容で、非公開の動向を含めない（issue #1890）' do
+  test 'シェア用テキストは投稿文バッチと同じ内容にする（issue #1890）' do
     Trend.create!(title: '公開中の動向', date: Date.new(1995, 5, 30), publish_start_at: 1.day.ago, unit_phenomenon: :other)
     Trend.create!(title: '非公開の動向', date: Date.new(1996, 5, 30), publish_start_at: 1.day.ago, unit_phenomenon: :other,
                   active: false)
@@ -85,7 +85,22 @@ class DailyControllerTest < ActionDispatch::IntegrationTest
     posts = OnThisDayPostBuilder.new(Date.new(2000, 5, 30)).build
     assert_select '#on-this-day-share-text-trends', text: posts.find { |item| item.kind == :trends }.text
     assert_select '#on-this-day-share-text-birthdays', text: posts.find { |item| item.kind == :birthdays }.text
-    assert_select '#on-this-day-share-text-trends', text: /非公開の動向/, count: 0
+  end
+
+  test '日付ページは非公開・公開予定の動向を表示しない（issue #1890）' do
+    Trend.create!(title: '公開中の動向', date: Date.new(1995, 5, 30), publish_start_at: 1.day.ago, unit_phenomenon: :other)
+    Trend.create!(title: '非公開の動向', date: Date.new(1995, 5, 30), publish_start_at: 1.day.ago, unit_phenomenon: :other,
+                  active: false)
+    Trend.create!(title: '公開予定の動向', date: Date.new(1995, 5, 30), publish_start_at: 1.day.from_now,
+                  unit_phenomenon: :other)
+
+    [birthday_date_path(month: 5, day: 30), daily_path(year: 1995, month: 5, day: 30)].each do |path|
+      get path
+
+      assert_includes response.body, '公開中の動向'
+      assert_not_includes response.body, '非公開の動向'
+      assert_not_includes response.body, '公開予定の動向'
+    end
   end
 
   test '年指定なしの日付ページは動向がなくても誕生日があればadminにシェア用テキストを表示する（issue #1732）' do

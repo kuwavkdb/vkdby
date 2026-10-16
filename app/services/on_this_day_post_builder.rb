@@ -44,11 +44,11 @@ class OnThisDayPostBuilder
   end
 
   # trends・birthdays・related_units を渡すと、DBから読まずにそれを使う（ページで読み込み済みのデータ、issue #1890）。
-  # trends は公開中のものに絞るため active・publish_start_at を、birthdays はヨミガナ順で name・old_history を含めること。
-  # related_units はユニットIDをキーにした Unit のハッシュ
+  # trends は公開中のもの、birthdays はヨミガナ順で name・old_history を含むもの、
+  # related_units はユニットIDをキーにした Unit のハッシュを渡すこと
   def initialize(date, trends: nil, birthdays: nil, related_units: nil)
     @date = date
-    @trends = trends&.select(&:published?)
+    @trends = trends&.to_a
     @birthdays = birthdays&.to_a
     @related_units = related_units
   end
