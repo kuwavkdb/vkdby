@@ -24,13 +24,15 @@ services:
         sync: false
       - key: WEB_CONCURRENCY
         value: 1
-      # 512MB/0.5CPUのStarter向けに2まで絞っていたが、2GB/1CPUのStandard増強（#1344）
-      # 後はスレッド枯渇によるレスポンス遅延が発生したため5に引き上げた（#1370）。
-      # その後Starter（512MB/0.5CPU）に戻した状態で5のままにしていたところ、メモリが上限近くまで
-      # 増えてMemoryWatchdogの再起動が1日2回かかり、レスポンスも悪化したため3に戻す（#1881）。
-      # Standardに戻すときは、ここも5に戻すことを検討する
+      # 本番（Render の Environment）の実際の値に合わせる。Blueprint の同期で本番に反映されていない
+      # ことがあり、以前ここは 5 のまま本番は 2 で動いていた（#1894）。値を変えるときは、Render の
+      # 画面の値も同じにすること。
+      # 経緯: 512MB/0.5CPUのStarter向けに2まで絞っていたが、2GB/1CPUのStandard増強（#1344）後は
+      # スレッド枯渇によるレスポンス遅延が発生したため5に引き上げた（#1370）。今はStarterのため2。
+      # Starterではメモリが上限近くまで増えている（#1881）ので、増やすとメモリ不足が悪化しうる。
+      # Standardに戻すときは、ここ（と Render の画面）を5に戻すことを検討する
       - key: RAILS_MAX_THREADS
-        value: 3
+        value: 2
       - key: MALLOC_ARENA_MAX
         value: 2
       # MemoryWatchdog（lib/memory_watchdog.rb、issue #743）の再起動閾値。
