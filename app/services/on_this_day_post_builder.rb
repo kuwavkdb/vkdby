@@ -14,8 +14,8 @@
 # - 人物名の後に、経歴で最後に書かれたユニット名（その後に「→」があれば ex-ユニット名）を括弧書きで付ける（PersonUnitLabel）
 # - 末尾にハッシュタグ #vkdb を付ける
 #
-# 管理画面のシェア用テキスト（TrendsHelper#on_this_day_share_text、issue #1732）とは別のルールで、
-# そちらには適用しない
+# 「今日は何の日？」ページの管理者向けシェア用テキストも、このクラスで同じ内容を作る（issue #1890）。
+# その場合はページで読み込んだ動向・誕生日・関連ユニットを渡し、DBを読み直さない
 class OnThisDayPostBuilder
   HEADER = '#ヴィジュアル系今日は何の日？'
   TIME_ZONE = 'Asia/Tokyo'
@@ -43,8 +43,14 @@ class OnThisDayPostBuilder
     nil
   end
 
-  def initialize(date)
+  # trends・birthdays・related_units を渡すと、DBから読まずにそれを使う（ページで読み込み済みのデータ、issue #1890）。
+  # trends は公開中のものに絞るため active・publish_start_at を、birthdays はヨミガナ順で name・old_history を含めること。
+  # related_units はユニットIDをキーにした Unit のハッシュ
+  def initialize(date, trends: nil, birthdays: nil, related_units: nil)
     @date = date
+    @trends = trends&.select(&:published?)
+    @birthdays = birthdays&.to_a
+    @related_units = related_units
   end
 
   # OnThisDayPost の配列（出来事、誕生日の順）を返す。載せる内容がない投稿は含めない（両方なければ空配列）

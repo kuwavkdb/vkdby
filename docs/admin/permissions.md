@@ -113,7 +113,7 @@
 | `admin?` でない | Unit 編集画面の「本登録にする」ボタン |
 | `admin?` でない | Unit 簡単登録フォームの「仮登録として保存する」チェックボックス（代わりに「仮登録になる」旨の案内を表示） |
 | ログインしていない | 公開ページ（ユニットページ）のスナップショット見出し・メンバー行の「編集」「個人」リンク |
-| `admin?` でない | 年指定なしの日付ページ（`/date/-/:month/:day`）下部の「今日は何の日？」Xシェア用テキスト・コピーボタン（動向・誕生日から抽出） |
+| `admin?` でない | 年指定なしの日付ページ（`/date/-/:month/:day`）下部の「今日は何の日？」Xシェア用テキスト・コピーボタン（出来事・誕生日の2つ。投稿文バッチと同じ内容、issue #1890） |
 
 ---
 
@@ -129,4 +129,4 @@
 - 投稿画像の引き継ぎ（選んだ画像を Unit の「画像」セクションへ移し、残りは縮小して投稿に残す）: `app/services/unit_submission_image_transfer.rb`。`Admin::UnitsController#new/#create` では `current_user.admin?` のときだけ行う
 - Trend Submissions（投稿の一覧・却下、承認時のTrend新規作成フォームへの引き継ぎ）: `app/controllers/admin/trend_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/trends_controller.rb#new/#create`
 - Venue Submissions（投稿の一覧・却下・対応済み、登録時の会場新規作成フォームへの引き継ぎ、編集画面での訂正の表示）: `app/controllers/admin/venue_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/venues_controller.rb#new/#create/#edit`（`current_user.admin?` のときのみ）
-- 「今日は何の日？」投稿文（issue #1742、#1753）: 投稿文（出来事・誕生日の2件）の生成 `app/services/on_this_day_post_builder.rb`（誕生日の人物に付けるユニット名は `app/services/person_unit_label.rb`）、JSONで返す `app/controllers/internal/on_this_day_posts_controller.rb`、起動とコメント `.github/workflows/on_this_day.yml`（ラベル `on-this-day` の open な Issue にコメントし、なければ Issue を作る。動向・誕生日がない日はその旨をコメントする）。メールは送らない。エンドポイントはログインではなく環境変数 `ON_THIS_DAY_MAIL_TOKEN` の Bearer トークンで認証し、未設定なら 404 になる
+- 「今日は何の日？」投稿文（issue #1742、#1753）: 投稿文（出来事・誕生日の2件）の生成 `app/services/on_this_day_post_builder.rb`（誕生日の人物に付けるユニット名は `app/services/person_unit_label.rb`）、JSONで返す `app/controllers/internal/on_this_day_posts_controller.rb`、起動とコメント `.github/workflows/on_this_day.yml`（ラベル `on-this-day` の open な Issue にコメントし、なければ Issue を作る。動向・誕生日がない日はその旨をコメントする）。メールは送らない。年指定なしの日付ページの管理者向けシェア用テキストも同じ `OnThisDayPostBuilder` で、ページで読み込んだデータから作る（issue #1890）。エンドポイントはログインではなく環境変数 `ON_THIS_DAY_MAIL_TOKEN` の Bearer トークンで認証し、未設定なら 404 になる

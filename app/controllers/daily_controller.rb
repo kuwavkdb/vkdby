@@ -16,7 +16,9 @@ class DailyController < ApplicationController
     if @year_agnostic
       month = @date.month
       day = @date.day
-      @trends = Trend.on_month_day(month, day).select(:id, :date, :title, :units, :unit_phenomenon).order(date: :asc)
+      # active・publish_start_at はシェア用テキストで公開中の動向に絞るため（issue #1890）
+      @trends = Trend.on_month_day(month, day)
+                     .select(:id, :date, :title, :units, :unit_phenomenon, :active, :publish_start_at).order(date: :asc)
       @birthdays = Person.kept.published.birthday_on(@date).select(*PERSON_CARD_COLUMNS).order(name_kana: :asc)
       @releases = Item.released_on_month_day(month, day).order(release_date: :asc)
     else
@@ -29,9 +31,15 @@ class DailyController < ApplicationController
     # Load related units for trends
     all_unit_ids = @trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
     @related_units = Unit.publicly_visible.where(id: all_unit_ids).index_by(&:id)
+    @on_this_day_posts = on_this_day_posts if @year_agnostic && current_user&.admin?
   end
 
   private
+
+  # 管理者向けの「今日は何の日？」シェア用テキスト。投稿文バッチと同じ内容を、ページで読み込んだデータから作る（issue #1890）
+  def on_this_day_posts
+    OnThisDayPostBuilder.new(@date, trends: @trends, birthdays: @birthdays, related_units: @related_units).build
+  end
 
   def parse_date_params
     month = params[:month].to_i

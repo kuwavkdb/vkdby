@@ -55,20 +55,37 @@ class DailyControllerTest < ActionDispatch::IntegrationTest
                   unit_phenomenon: :other)
 
     get birthday_date_path(month: 5, day: 30)
-    assert_select '#on-this-day-share-text', count: 0
+    assert_select '[id^="on-this-day-share-text"]', count: 0
 
     operator = User.create!(email: 'on-this-day-operator@example.com', name: 'Operator', password: 'password',
                             role: :super_operator)
     post login_path, params: { email: operator.email, password: 'password' }
     get birthday_date_path(month: 5, day: 30)
-    assert_select '#on-this-day-share-text', count: 0
+    assert_select '[id^="on-this-day-share-text"]', count: 0
 
     delete logout_path
     admin = User.create!(email: 'on-this-day-admin@example.com', name: 'Admin', password: 'password', role: :admin)
     post login_path, params: { email: admin.email, password: 'password' }
     get birthday_date_path(month: 5, day: 30)
 
-    assert_select '#on-this-day-share-text', text: /ヴィジュアル系今日は何の日？\n・1995年 シェア対象の動向\n/
+    assert_select '#on-this-day-share-text-trends', text: /\A#ヴィジュアル系今日は何の日？（5\/30）\n・1995年 シェア対象の動向\n/
+  end
+
+  test 'シェア用テキストは投稿文バッチと同じ内容で、非公開の動向を含めない（issue #1890）' do
+    Trend.create!(title: '公開中の動向', date: Date.new(1995, 5, 30), publish_start_at: 1.day.ago, unit_phenomenon: :other)
+    Trend.create!(title: '非公開の動向', date: Date.new(1996, 5, 30), publish_start_at: 1.day.ago, unit_phenomenon: :other,
+                  active: false)
+    Person.create!(name: 'シェア対象の誕生日', name_kana: 'しぇあ', key: 'person-on-this-day-share-batch', status: :active,
+                   birthday: Date.new(1970, 5, 30))
+    admin = User.create!(email: 'on-this-day-admin3@example.com', name: 'Admin', password: 'password', role: :admin)
+    post login_path, params: { email: admin.email, password: 'password' }
+
+    get birthday_date_path(month: 5, day: 30)
+
+    posts = OnThisDayPostBuilder.new(Date.new(2000, 5, 30)).build
+    assert_select '#on-this-day-share-text-trends', text: posts.find { |item| item.kind == :trends }.text
+    assert_select '#on-this-day-share-text-birthdays', text: posts.find { |item| item.kind == :birthdays }.text
+    assert_select '#on-this-day-share-text-trends', text: /非公開の動向/, count: 0
   end
 
   test '年指定なしの日付ページは動向がなくても誕生日があればadminにシェア用テキストを表示する（issue #1732）' do
@@ -79,7 +96,8 @@ class DailyControllerTest < ActionDispatch::IntegrationTest
 
     get birthday_date_path(month: 6, day: 1)
 
-    assert_select '#on-this-day-share-text', text: /ヴィジュアル系今日は何の日？\n誕生日: シェア対象の誕生日\n/
+    assert_select '#on-this-day-share-text-trends', count: 0
+    assert_select '#on-this-day-share-text-birthdays', text: /\A今日（6\/1）誕生日のヴィジュアル系アーティスト\n・シェア対象の誕生日\n/
   end
 
   test '年指定なしの日付ページは日付入りバナー画像をog:imageにする（issue #1746）' do
