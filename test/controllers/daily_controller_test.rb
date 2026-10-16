@@ -68,7 +68,7 @@ class DailyControllerTest < ActionDispatch::IntegrationTest
     post login_path, params: { email: admin.email, password: 'password' }
     get birthday_date_path(month: 5, day: 30)
 
-    assert_select '#on-this-day-share-text-trends', text: /\A#ヴィジュアル系今日は何の日？（5\/30）\n・1995年 シェア対象の動向\n/
+    assert_select '#on-this-day-share-text-trends', text: %r{\A#ヴィジュアル系今日は何の日？（5/30）\n・1995年 シェア対象の動向\n}
   end
 
   test 'シェア用テキストは投稿文バッチと同じ内容にする（issue #1890）' do
@@ -112,7 +112,7 @@ class DailyControllerTest < ActionDispatch::IntegrationTest
     get birthday_date_path(month: 6, day: 1)
 
     assert_select '#on-this-day-share-text-trends', count: 0
-    assert_select '#on-this-day-share-text-birthdays', text: /\A今日（6\/1）誕生日のヴィジュアル系アーティスト\n・シェア対象の誕生日\n/
+    assert_select '#on-this-day-share-text-birthdays', text: %r{\A今日（6/1）誕生日のヴィジュアル系アーティスト\n・シェア対象の誕生日\n}
   end
 
   test '年指定なしの日付ページは日付入りバナー画像をog:imageにする（issue #1746）' do
