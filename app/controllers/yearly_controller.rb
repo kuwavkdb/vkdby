@@ -3,7 +3,7 @@
 class YearlyController < ApplicationController
   def index
     @start_year = 1970
-    @end_year = Date.today.year
+    @end_year = Date.current.year
     @years = (@start_year..@end_year).to_a.reverse
   end
 
