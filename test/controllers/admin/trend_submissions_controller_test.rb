@@ -59,6 +59,40 @@ module Admin
       assert_predicate @submission.reload, :rejected?
     end
 
+    # issue #1902: 動向を作らずに対応済みにする
+    test 'resolve requires admin role' do
+      post login_path, params: { email: users(:one).email, password: 'password' }
+
+      patch resolve_admin_trend_submission_path(@submission)
+
+      assert_redirected_to root_path
+      assert_predicate @submission.reload, :pending?
+    end
+
+    test 'resolve marks the submission as converted without a trend' do
+      login_as_admin
+
+      assert_no_difference -> { Trend.count } do
+        patch resolve_admin_trend_submission_path(@submission)
+      end
+
+      assert_redirected_to admin_trend_submissions_path
+      @submission.reload
+      assert_predicate @submission, :converted?
+      assert_nil @submission.converted_trend
+
+      get admin_trend_submissions_path(status: 'converted')
+      assert_includes response.body, '対応済み（Trend作成なし）'
+    end
+
+    test 'index shows the resolve button for pending submissions' do
+      login_as_admin
+
+      get admin_trend_submissions_path
+
+      assert_select "form[action='#{resolve_admin_trend_submission_path(@submission)}'] button", text: '対応済みにする'
+    end
+
     private
 
     def login_as_admin

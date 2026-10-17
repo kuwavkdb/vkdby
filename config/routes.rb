@@ -60,9 +60,8 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
       end
     end
     resources :trend_submissions, only: %i[index] do
-      member do
-        patch :reject
-      end
+      patch :reject, on: :member
+      patch :resolve, on: :member
     end
     resources :people do
       collection do
