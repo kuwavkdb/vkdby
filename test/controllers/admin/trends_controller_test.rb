@@ -97,6 +97,7 @@ module Admin
         }
       end
 
+      assert_redirected_to edit_admin_trend_path(Trend.last)
       assert_equal Date.new(2024, 3, 15), Trend.last.date
     end
 
@@ -174,6 +175,7 @@ module Admin
         }
       end
 
+      assert_redirected_to edit_admin_trend_path(Trend.last)
       submission.reload
       assert_predicate submission, :converted?
       assert_equal Trend.last, submission.converted_trend
