@@ -71,7 +71,7 @@ module Admin
 
       if @trend.save
         convert_trend_submission(@trend, params[:trend_submission_id])
-        redirect_to admin_trends_path, notice: 'Trend created successfully.'
+        redirect_to edit_admin_trend_path(@trend), notice: 'Trendを作成しました。'
       else
         @trend_submission = TrendSubmission.pending.find_by(id: params[:trend_submission_id]) if params[:trend_submission_id].present?
         set_snapshots_from_trend
