@@ -265,7 +265,9 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>
-            <%= @resource.is_a?(Unit) ? "このバンドの情報の訂正を送る" : "この人の情報の訂正を送る" %>
+            <%# ユニットは種類がバンドのときだけ「バンド」、ソロ・セッションなどは「ユニット」と呼ぶ %>
+            <% target_word = @resource.is_a?(Person) ? "人" : (@resource.band? ? "バンド" : "ユニット") %>
+            この<%= target_word %>の情報の訂正を送る
           <% end %>
         </div>
       <% end %>

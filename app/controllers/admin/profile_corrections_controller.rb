@@ -12,7 +12,7 @@ module Admin
     def index
       @status_filter = STATUS_FILTERS.include?(params[:status]) ? params[:status] : 'pending'
       @target_filter = params[:target_type].presence_in(TARGET_FILTERS)
-      scope = ProfileCorrection.public_send(@status_filter).includes(:target)
+      scope = ProfileCorrection.where(submission_status: @status_filter).includes(:target)
       scope = scope.where(target_type: @target_filter) if @target_filter
       @pagy, @profile_corrections = pagy(scope.recent)
     end

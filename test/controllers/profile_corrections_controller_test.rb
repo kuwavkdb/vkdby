@@ -78,9 +78,15 @@ class ProfileCorrectionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'profile pages link to the correction form' do
+    @unit.update!(unit_type: :band)
     get profile_path(@unit.key)
     assert_response :success
     assert_select "a[href='#{new_profile_correction_path(key: @unit.key)}']", text: /このバンドの情報の訂正を送る/
+
+    # バンド以外の種類のユニットは「ユニット」と呼ぶ
+    @unit.update!(unit_type: :solo)
+    get profile_path(@unit.key)
+    assert_select "a[href='#{new_profile_correction_path(key: @unit.key)}']", text: /このユニットの情報の訂正を送る/
 
     get profile_path(@person.key)
     assert_response :success
