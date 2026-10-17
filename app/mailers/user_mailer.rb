@@ -34,4 +34,12 @@ class UserMailer < ApplicationMailer
               end
     mail(to: @admin_user.email, subject: subject)
   end
+
+  # ユニット・個人の情報の訂正の投稿（issue #1902）
+  def new_profile_correction_email(profile_correction, admin_user)
+    @profile_correction = profile_correction
+    @admin_user = admin_user
+    @url = admin_profile_corrections_url
+    mail(to: @admin_user.email, subject: "[VKDBY] 情報の訂正の投稿があります: #{@profile_correction.target.name}")
+  end
 end

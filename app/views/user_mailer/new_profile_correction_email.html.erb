@@ -1,0 +1,16 @@
+<h1>情報の訂正の投稿があります</h1>
+<p>
+  <%= @admin_user.name %> さん、<br>
+  ログイン不要の投稿フォームから<%= @profile_correction.target_label %>の情報の訂正の投稿がありました。
+</p>
+<p>
+  <%= @profile_correction.target_label %>: <%= @profile_correction.target.name %><br>
+  訂正内容: <%= simple_format(@profile_correction.correction, {}, wrapper_tag: "span") %>
+</p>
+<p>
+  内容を確認のうえ、対応をお願いします。
+</p>
+<p>
+  <%= link_to '投稿一覧を確認する', @url %>
+</p>
+<p>Thanks, <br>VKDBY Team</p>

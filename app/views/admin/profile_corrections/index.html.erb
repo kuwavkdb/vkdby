@@ -1,0 +1,111 @@
+<% status_labels = { 'pending' => '未処理', 'rejected' => '却下済み', 'resolved' => '対応済み' } %>
+<% target_labels = { nil => 'すべて', 'Unit' => 'ユニット', 'Person' => '個人' } %>
+<% title = "訂正投稿一覧（#{status_labels[@status_filter]}）" %>
+<% content_for :title, title %>
+<%
+  # ユニット・個人の情報の訂正の投稿（issue #1902）。会場の投稿一覧と同じ作り
+  tab_active = "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
+  tab_inactive = "bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+  link_class = "text-indigo-600 dark:text-indigo-400 hover:underline"
+  edit_path = ->(target) { target.is_a?(Unit) ? edit_admin_unit_path(target) : edit_admin_person_path(target) }
+%>
+<div class="container mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100"><%= title %></h1>
+    <span class="text-sm text-gray-500 dark:text-gray-400"><%= @pagy.count %> 件</span>
+  </div>
+
+  <nav aria-label="状態" class="flex gap-1 mb-3 border-b border-gray-200 dark:border-gray-700">
+    <% status_labels.each do |status, label| %>
+      <%= link_to label, admin_profile_corrections_path(status: status, target_type: @target_filter),
+            aria: { current: (@status_filter == status ? "page" : nil) },
+            class: "px-4 py-2 text-sm font-medium rounded-t-md border border-b-0 #{@status_filter == status ? tab_active : tab_inactive}" %>
+    <% end %>
+  </nav>
+
+  <nav aria-label="対象" class="flex flex-wrap gap-2 mb-6 text-sm">
+    <% target_labels.each do |target_type, label| %>
+      <%= link_to label, admin_profile_corrections_path(status: @status_filter, target_type: target_type),
+            aria: { current: (@target_filter == target_type ? "page" : nil) },
+            class: "px-3 py-1 rounded #{@target_filter == target_type ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}" %>
+    <% end %>
+  </nav>
+
+  <div class="mb-4 flex justify-center">
+    <%== pagy_tailwind_nav(@pagy) if @pagy.pages > 1 %>
+  </div>
+
+  <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg mb-4">
+    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+      <thead class="bg-gray-50 dark:bg-gray-700">
+        <tr>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">受付日時</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">対象</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">訂正内容</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">情報源/連絡先</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">アクション</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+        <% @profile_corrections.each do |correction| %>
+          <tr>
+            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+              <%= correction.created_at.strftime('%Y-%m-%d %H:%M') %>
+              <% if correction.submitter_ip.present? %>
+                <span class="block text-xs text-gray-500">IP: <%= correction.submitter_ip %></span>
+              <% end %>
+            </td>
+            <td class="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">
+              <span class="block text-xs text-gray-500 dark:text-gray-400"><%= correction.target_label %></span>
+              <% if correction.target %>
+                <span class="block"><%= link_to correction.target.name, edit_path.call(correction.target), class: link_class %></span>
+              <% else %>
+                <span class="block text-gray-500">対象が見つかりません</span>
+              <% end %>
+            </td>
+            <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-300 max-w-sm">
+              <p class="whitespace-pre-wrap break-words"><%= correction.correction %></p>
+              <% if correction.note.present? %>
+                <p class="mt-1 text-xs whitespace-pre-wrap break-words">補足: <%= correction.note %></p>
+              <% end %>
+            </td>
+            <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+              <% if correction.source_url.present? %>
+                <%= link_to correction.source_url, correction.source_url, target: "_blank", rel: "noopener", class: "#{link_class} break-all" %>
+              <% end %>
+              <% if correction.email.present? %>
+                <p class="mt-1 text-xs">連絡先: <%= correction.email %></p>
+              <% end %>
+            </td>
+            <td class="px-4 py-4 whitespace-nowrap text-sm">
+              <% if correction.pending? %>
+                <div class="flex flex-col gap-2 items-start">
+                  <% if correction.target %>
+                    <%= link_to "#{correction.target_label}を編集", edit_path.call(correction.target),
+                          class: "px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded hover:bg-indigo-700" %>
+                  <% end %>
+                  <%= button_to "対応済みにする", resolve_admin_profile_correction_path(correction), method: :patch,
+                        form_class: "inline",
+                        class: "px-3 py-1.5 text-xs font-medium bg-white dark:bg-gray-800 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700 rounded hover:bg-indigo-50 dark:hover:bg-gray-700 cursor-pointer" %>
+                  <%= button_to "却下", reject_admin_profile_correction_path(correction), method: :patch,
+                        form_class: "inline",
+                        onclick: "return confirm('この投稿を却下しますか？')",
+                        class: "px-3 py-1.5 text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer border-0" %>
+                </div>
+              <% elsif correction.resolved? %>
+                <span class="text-gray-500">対応済み</span>
+              <% else %>
+                <span class="text-gray-500">却下済み</span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @profile_corrections.none? %>
+          <tr>
+            <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">該当する投稿はありません</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -127,7 +127,9 @@ module Vkdby
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
-    # config.time_zone = "Central Time (US & Canada)"
+    # 「今日」の判定（今日は何の日？・サイドバーの誕生日等）や時刻の表示を日本時間にする。
+    # DBへの保存はUTCのまま（active_record.default_timezone は既定の :utc）（issue #1904）
+    config.time_zone = 'Tokyo'
     # config.eager_load_paths << Rails.root.join("extras")
   end
 end

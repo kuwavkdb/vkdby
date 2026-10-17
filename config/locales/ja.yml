@@ -14,6 +14,10 @@ ja:
       venue:
         latitude: "緯度"
         longitude: "経度"
+      profile_correction:
+        correction: "訂正内容"
+        source_url: "情報源のURL"
+        email: "メールアドレス"
       trend:
         unit_phenomenon:
           announcement: お知らせ

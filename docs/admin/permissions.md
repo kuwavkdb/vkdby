@@ -62,7 +62,7 @@
 | Items — 削除・復元 | destroy / undiscard |
 | Users 管理 | 全アクション |
 | Operation Logs（ログイン履歴） | index（全アクション） |
-| Wiki Page Imports | 全アクション |
+| Wiki Page Imports（管理メニューには出さない。機能は `/admin/wiki_page_imports` で引き続き使える、issue #1902） | 全アクション |
 | Units / People / Venues — キー変更（旧キーは転送用スタブとして残り、新キーへ転送される） | change_key |
 | Units / People — リダイレクト元の物理削除 | purge |
 | Units / People — 一覧からのStatus一括更新 | bulk_update_status |
@@ -71,8 +71,9 @@
 | 仮登録ユニットの公開ページ（`/キー`）の閲覧。admin 以外とログインしていない人には 404 になり、一覧・検索・サイトマップ等にも出ない（issue #1764） | ― （公開側 `ProfilesController#show` ほか） |
 | Unit Submissions（ログイン不要の投稿フォームからの投稿一覧・添付画像の確認・却下。却下時に添付画像を削除。変換済み投稿に残った画像を変換先 Unit の「画像」セクションへ追加） | 全アクション（index / reject / add_image_to_unit） |
 | Units — 投稿からの新規作成時に、投稿画像を「画像」セクションへ引き継ぐ（admin 以外が作成した場合は画像を引き継がない） | new / create（画像の選択欄・引き継ぎのみ） |
-| Trend Submissions（ログイン不要の投稿フォームからの投稿一覧・却下） | 全アクション |
+| Trend Submissions（ログイン不要の投稿フォームからの投稿一覧・却下・対応済みにする。対応済みは動向を作らずに処理を終え、「変換・対応済み」に入る、issue #1902） | 全アクション（index / reject / resolve） |
 | Venue Submissions（ログイン不要の投稿フォームから送られた新しい会場・既存の会場の訂正の一覧・却下・対応済みにする。新しい会場は「登録する」から会場の新規作成画面に内容を引き継ぎ、作成すると登録済みになる。会場の編集画面に未処理の訂正を表示する、issue #1814） | 全アクション（index / reject / resolve）、Venues の new / create（投稿の引き継ぎのみ）、edit（訂正の表示のみ） |
+| Profile Corrections（ログイン不要の投稿フォームから送られた、既存のユニット・個人の情報の訂正の一覧・却下・対応済みにする。ユニット・個人の編集画面に未処理の訂正を表示する、issue #1902） | 全アクション（index / reject / resolve）、Units / People の edit（訂正の表示のみ） |
 | 「今日は何の日？」投稿文の確認（毎時起動し、未コメントなら JST 16時以降は翌日分・それより前は当日分を GitHub の Issue にコメント） | ― （管理画面ではなく GitHub Actions から `GET /internal/on_this_day_post` を呼び、ラベル `on-this-day` の Issue にコメント。見られるのはリポジトリの閲覧権限がある人） |
 
 ---

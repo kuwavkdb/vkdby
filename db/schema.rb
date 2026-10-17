@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_11_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_17_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -179,6 +179,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_000000) do
     t.index ["name_kana"], name: "index_people_on_name_kana", opclass: :gin_trgm_ops, using: :gin
     t.index ["old_history"], name: "index_people_on_old_history", opclass: :gin_trgm_ops, using: :gin
     t.index ["parts"], name: "index_people_on_parts", using: :gin
+  end
+
+  create_table "profile_corrections", force: :cascade do |t|
+    t.string "target_type", null: false
+    t.bigint "target_id", null: false
+    t.text "correction", null: false
+    t.string "source_url"
+    t.text "note"
+    t.string "email"
+    t.string "submitter_ip"
+    t.integer "submission_status", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["submission_status"], name: "index_profile_corrections_on_submission_status"
+    t.index ["target_type", "target_id"], name: "index_profile_corrections_on_target"
   end
 
   create_table "release_schedules", force: :cascade do |t|

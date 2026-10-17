@@ -5,7 +5,7 @@ class MonthlyCalendarComponent < ViewComponent::Base
     super()
     @date = date
     @daily_trend_counts = daily_trend_counts
-    @today = Date.today
+    @today = Date.current
   end
 
   def render?
