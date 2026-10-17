@@ -21,6 +21,7 @@
         <% end %>
       </div>
     <% end %>
+    <%= render "admin/profile_corrections/pending", profile_corrections: @profile_corrections if @profile_corrections.present? %>
     <div class="md:grid md:grid-cols-5 md:gap-8">
       <div class="md:col-span-2">
         <div class="bg-white shadow rounded-lg p-6 mb-6 dark:bg-gray-800">

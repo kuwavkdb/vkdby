@@ -89,6 +89,11 @@ Rack::Attack.throttle('venue_submissions/ip', limit: 5, period: 60) do |req|
   req.ip if req.path == '/venue_submissions' && req.post?
 end
 
+# ユニット・個人の情報の訂正の投稿フォーム（issue #1902）: 会場の投稿フォームと同じく、IPごとに60秒間5回まで
+Rack::Attack.throttle('profile_corrections/ip', limit: 5, period: 60) do |req|
+  req.ip if req.path == '/profile_corrections' && req.post?
+end
+
 # ログイン: IP ごとに 20 秒間 5 回まで（ブルートフォース対策）
 Rack::Attack.throttle('login/ip', limit: 5, period: 20) do |req|
   req.ip if req.path == '/login' && req.post?
