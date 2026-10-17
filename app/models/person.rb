@@ -41,6 +41,8 @@ class Person < ApplicationRecord
   include OgpImageAttachable
   has_many :links, as: :linkable, dependent: :destroy
   has_many :wiki_page_imports, as: :import_target
+  # 公開フォームから送られた情報の訂正（issue #1902）
+  has_many :profile_corrections, as: :target, dependent: :delete_all
   has_many :unit_people
   has_many :units, through: :unit_people
   has_many :tag_index_items, as: :indexable, dependent: :destroy

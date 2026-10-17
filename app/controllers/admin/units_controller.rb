@@ -114,6 +114,8 @@ module Admin
                              .order(past: :asc, current: :desc, snapshot_index: :asc)
       @unit.links.build # Build an empty link for the form
       @wiki_page_imports = @unit.wiki_page_imports.includes(:wikipage).order(updated_at: :desc)
+      # 未処理の情報の訂正の投稿（issue #1902）。投稿の管理は admin のみのため admin にだけ表示する
+      @profile_corrections = @unit.profile_corrections.pending.recent if current_user.admin?
       @update_logs = UpdateLog.for_unit(@unit)
                               .includes(:user)
                               .order(created_at: :desc)

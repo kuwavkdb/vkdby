@@ -54,4 +54,15 @@ class UserMailerTest < ActionMailer::TestCase
     assert_equal '[VKDBY] 会場の訂正の投稿があります: 新宿LOFT', mail.subject
     assert_match '閉店しました', mail.text_part.decoded
   end
+
+  test 'new_profile_correction_email' do
+    admin_user = users(:admin)
+    unit = Unit.create!(key: 'correction-unit', name: '訂正ユニット', status: 'active')
+    correction = ProfileCorrection.create!(target: unit, correction: '結成日が違います')
+
+    mail = UserMailer.new_profile_correction_email(correction, admin_user)
+    assert_equal '[VKDBY] 情報の訂正の投稿があります: 訂正ユニット', mail.subject
+    assert_equal [admin_user.email], mail.to
+    assert_match '結成日が違います', mail.text_part.decoded
+  end
 end

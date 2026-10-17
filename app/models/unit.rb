@@ -38,6 +38,8 @@ class Unit < ApplicationRecord # rubocop:disable Metrics/ClassLength
   has_many :links, as: :linkable, dependent: :destroy
   accepts_nested_attributes_for :links, allow_destroy: true, reject_if: proc { |attrs| attrs['url'].blank? }
   has_many :wiki_page_imports, as: :import_target
+  # 公開フォームから送られた情報の訂正（issue #1902）
+  has_many :profile_corrections, as: :target, dependent: :delete_all
   has_many :unit_people
   has_many :people, through: :unit_people
   has_many :unit_logs, dependent: :destroy
