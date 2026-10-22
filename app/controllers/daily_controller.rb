@@ -25,10 +25,15 @@ class DailyController < ApplicationController
       @birthdays = Person.kept.published.birthday_on(@date).where(status: %i[active hiatus])
                          .select(*PERSON_CARD_COLUMNS).order(name_kana: :asc)
       @releases = Item.released_on(@date).order(created_at: :desc)
+      # 毎月1日のページにだけ、その年月の日が不明な動向を別の欄で出す。年だけ分かっている動向は出さない（issue #1915）
+      if @date.day == 1
+        @day_unknown_trends = Trend.published.day_unknown_in_month_of(@date)
+                                   .select(:id, :date, :title, :units).order(created_at: :desc)
+      end
     end
 
     # Load related units for trends
-    all_unit_ids = @trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
+    all_unit_ids = [*@trends, *@day_unknown_trends].flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
     @related_units = Unit.publicly_visible.where(id: all_unit_ids).index_by(&:id)
     @on_this_day_posts = on_this_day_posts if @year_agnostic && current_user&.admin?
   end
