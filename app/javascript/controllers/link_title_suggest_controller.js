@@ -2,8 +2,9 @@ import { Controller } from "@hotwired/stimulus"
 
 // リンク欄全体に1つだけ付け、各行（data-link-title-suggest-row）の URL 欄から、同じ行のタイトル欄（data-link-title-suggest-title）を補完する
 export default class extends Controller {
-    // 管理画面の外部サイトに登録された表示名と URL パターン（[{ name, url_pattern }]）
-    static values = { sites: Array }
+    // sites: 管理画面の外部サイトに登録された表示名と URL パターン（[{ name, url_pattern }]）
+    // builtins: 登録しなくても補完できるサービスの対応表（ExternalSite::BUILTIN_LINK_TITLES）
+    static values = { sites: Array, builtins: Array }
 
     suggest(event) {
         const urlInput = event.target
@@ -49,22 +50,16 @@ export default class extends Controller {
         const registered = this.guessTitleFromSites(url)
         if (registered) return registered
 
-        if (host === "x.com" || host === "twitter.com") {
-            if (/^\/[^/]+\/status\/\d+/.test(path)) return "X Post"
-            return "X"
-        }
-        if (host === "open.spotify.com") return "Spotify"
-        if (host === "youtube.com" || host === "m.youtube.com") {
-            if (/^\/(?:watch|shorts\/)/.test(path)) return "YouTube Movie"
-            if (/^\/(?:@|channel\/|c\/|user\/)/.test(path)) return "YouTube Channel"
-            return "YouTube"
-        }
-        if (host === "youtu.be") return "YouTube Movie"
-        if (host === "instagram.com") return "Instagram"
-        if (host === "tiktok.com") return "TikTok"
-        if (host === "facebook.com" || host === "fb.com") return "Facebook"
-        if (host === "nicovideo.jp") return "niconico"
+        return this.guessTitleFromBuiltins(host, path)
+    }
 
+    guessTitleFromBuiltins(host, path) {
+        for (const service of this.builtinsValue) {
+            const rule = service.rules.find(
+                (r) => r.hosts.includes(host) && (!r.path || new RegExp(r.path).test(path))
+            )
+            if (rule) return rule.title
+        }
         return null
     }
 

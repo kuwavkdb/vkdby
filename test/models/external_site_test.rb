@@ -25,4 +25,15 @@ class ExternalSiteTest < ActiveSupport::TestCase
 
     assert_equal [{ name: 'Ameba Blog', url_pattern: 'https://ameblo.jp/{account}/' }], ExternalSite.link_title_suggestions
   end
+
+  test 'BUILTIN_LINK_TITLES rules have hosts, a title and a valid path pattern' do
+    ExternalSite::BUILTIN_LINK_TITLES.each do |builtin|
+      assert builtin[:service].present?
+      builtin[:rules].each do |rule|
+        assert rule[:hosts].present?, builtin[:service]
+        assert rule[:title].present?, builtin[:service]
+        assert_nothing_raised { Regexp.new(rule[:path]) } if rule[:path]
+      end
+    end
+  end
 end
