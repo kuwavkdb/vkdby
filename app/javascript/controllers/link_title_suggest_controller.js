@@ -2,6 +2,8 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
     static targets = ["title", "url"]
+    // 管理画面の外部サイトに登録された表示名と URL パターン（[{ name, url_pattern }]）
+    static values = { sites: Array }
 
     suggest() {
         const normalized = this.normalizeXAccount(this.urlTarget.value.trim())
@@ -38,6 +40,9 @@ export default class extends Controller {
         const host = url.hostname.replace(/^www\./i, "").toLowerCase()
         const path = url.pathname
 
+        const registered = this.guessTitleFromSites(url)
+        if (registered) return registered
+
         if (host === "x.com" || host === "twitter.com") {
             if (/^\/[^/]+\/status\/\d+/.test(path)) return "X Post"
             return "X"
@@ -55,5 +60,28 @@ export default class extends Controller {
         if (host === "nicovideo.jp") return "niconico"
 
         return null
+    }
+
+    // 外部サイトの url_pattern（例: https://ameblo.jp/{account}/）の {account} を任意の文字列とみなして照合する。
+    // スキームと先頭の www. は区別せず、パターンより後ろに続くパス・クエリがあっても一致とする
+    guessTitleFromSites(url) {
+        const target = this.stripScheme(url.href)
+        const site = this.sitesValue.find((s) => s.name && this.sitePatternRegExp(s.url_pattern)?.test(target))
+        return site ? site.name : null
+    }
+
+    sitePatternRegExp(pattern) {
+        if (!pattern || !pattern.includes("{account}")) return null
+
+        const body = this.stripScheme(pattern).replace(/\/+$/, "")
+        const source = body
+            .split("{account}")
+            .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+            .join("[^/?#&]+")
+        return new RegExp(`^${source}(?:[/?#&].*)?$`, "i")
+    }
+
+    stripScheme(value) {
+        return value.trim().replace(/^https?:\/\//i, "").replace(/^www\./i, "")
     }
 }

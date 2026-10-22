@@ -17,5 +17,10 @@ module Admin
         value.to_s
       end
     end
+
+    # リンク欄のタイトル補完に使う外部サイトの一覧（JSON）。リンク欄の行ごとに使うので1リクエストで1回だけ読む
+    def link_title_suggest_sites_json
+      @link_title_suggest_sites_json ||= ExternalSite.link_title_suggestions.to_json
+    end
   end
 end
