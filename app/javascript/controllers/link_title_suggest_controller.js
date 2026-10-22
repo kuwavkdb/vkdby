@@ -1,21 +1,27 @@
 import { Controller } from "@hotwired/stimulus"
 
+// リンク欄全体に1つだけ付け、各行（data-link-title-suggest-row）の URL 欄からタイトル欄を補完する
 export default class extends Controller {
-    static targets = ["title", "url"]
     // 管理画面の外部サイトに登録された表示名と URL パターン（[{ name, url_pattern }]）
     static values = { sites: Array }
 
-    suggest() {
-        const normalized = this.normalizeXAccount(this.urlTarget.value.trim())
+    suggest(event) {
+        const urlInput = event.target
+        const titleInput = urlInput
+            .closest("[data-link-title-suggest-row]")
+            ?.querySelector('[data-link-title-suggest-target="title"]')
+        if (!titleInput) return
+
+        const normalized = this.normalizeXAccount(urlInput.value.trim())
         if (normalized) {
-            this.urlTarget.value = normalized
+            urlInput.value = normalized
         }
 
-        if (this.titleTarget.value.trim() !== "") return
+        if (titleInput.value.trim() !== "") return
 
-        const guessed = this.guessTitle(this.urlTarget.value.trim())
+        const guessed = this.guessTitle(urlInput.value.trim())
         if (guessed) {
-            this.titleTarget.value = guessed
+            titleInput.value = guessed
         }
     }
 
