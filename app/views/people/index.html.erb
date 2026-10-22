@@ -8,6 +8,9 @@
       </h1>
     </header>
 
+    <%# キーワード以外の絞り込みは、指定がないときは折りたたむ（issue #1921） %>
+    <% has_filters = @filter_groups.present? || @person_data_filters.present? %>
+    <div data-controller="disclosure">
     <div class="mb-6">
       <%= form_with url: people_path, method: :get, local: true, class: "flex gap-2" do |f| %>
         <div class="relative w-full"
@@ -25,14 +28,29 @@
                class="hidden z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg overflow-y-auto max-h-80">
           </div>
         </div>
-        <%= f.button class: "bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl transition-colors shadow-sm hover:shadow-md flex items-center justify-center min-w-[3rem]" do %>
-           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+        <% if has_filters %>
+          <button type="button"
+                  data-disclosure-target="button"
+                  data-action="disclosure#toggle"
+                  aria-expanded="<%= @filters_open %>"
+                  aria-controls="people-filters"
+                  aria-label="詳細検索"
+                  title="詳細検索"
+                  class="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 aria-expanded:bg-indigo-50 aria-expanded:text-indigo-700 aria-expanded:border-indigo-300 dark:aria-expanded:bg-zinc-800 dark:aria-expanded:text-amber-400 dark:aria-expanded:border-amber-400/60 p-3 rounded-xl transition-colors flex items-center justify-center min-w-[3rem] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+            </svg>
+          </button>
+        <% end %>
+        <%= f.button "aria-label": "検索", class: "bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl transition-colors shadow-sm hover:shadow-md flex items-center justify-center min-w-[3rem]" do %>
+           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
         <% end %>
       <% end %>
     </div>
 
+    <div id="people-filters" data-disclosure-target="panel" <%= "hidden" unless @filters_open %>>
     <% if @filter_groups.present? %>
       <div class="mb-8 space-y-2">
         <% @filter_groups.each do |group| %>
@@ -89,6 +107,8 @@
         <% end %>
       </div>
     <% end %>
+    </div>
+    </div>
 
     <% if @people.any? %>
       <div id="results" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">

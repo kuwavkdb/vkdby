@@ -16,6 +16,9 @@ application.register("autocomplete", AutocompleteController)
 import DatePickerController from "controllers/date_picker_controller"
 application.register("date-picker", DatePickerController)
 
+import DisclosureController from "controllers/disclosure_controller"
+application.register("disclosure", DisclosureController)
+
 import DropdownController from "controllers/dropdown_controller"
 application.register("dropdown", DropdownController)
 
