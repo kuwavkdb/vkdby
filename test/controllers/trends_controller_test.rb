@@ -281,6 +281,39 @@ class TrendsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test 'index shows the date of a trend with an unknown day or month only as far as it is known and links to that page' do
+    Trend.create!(title: 'Known date trend', date: Date.new(2020, 12, 5), publish_start_at: Time.current,
+                  etc_phenomenon: :other)
+    Trend.create!(title: 'Day unknown trend', date: Date.new(2020, 12, 1), publish_start_at: Time.current,
+                  etc_phenomenon: :other, day_unknown: true)
+    Trend.create!(title: 'Month unknown trend', date: Date.new(2020, 1, 1), publish_start_at: Time.current,
+                  etc_phenomenon: :other, day_unknown: true, month_unknown: true)
+
+    get trends_path(year: 2020)
+
+    assert_response :success
+    assert_select "a[href='#{daily_path(year: 2020, month: 12, day: 5)}']", text: '2020/12/05'
+    assert_select "a[href='#{monthly_path(year: 2020, month: 12)}']", text: '2020/12'
+    assert_select "a[href='#{yearly_path(year: 2020)}']", text: '2020'
+    assert_select "a[href='#{daily_path(year: 2020, month: 12, day: 1)}']", count: 0
+    assert_select "a[href='#{daily_path(year: 2020, month: 1, day: 1)}']", count: 0
+  end
+
+  test 'show lists the unit trends with dates only as far as they are known (issue #1917)' do
+    unit = Unit.create!(name: 'Date Label Unit', key: 'trend-date-label-unit', status: :active)
+    trend = Trend.create!(title: 'Current trend', date: Date.new(2020, 12, 5), publish_start_at: Time.current,
+                          unit_phenomenon: :other, units: [{ 'unit_id' => unit.id, 'name' => unit.name }])
+    Trend.create!(title: 'Day unknown unit trend', date: Date.new(2020, 11, 1), publish_start_at: Time.current,
+                  unit_phenomenon: :other, day_unknown: true, units: [{ 'unit_id' => unit.id, 'name' => unit.name }])
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_includes response.body, 'Day unknown unit trend'
+    assert_includes response.body, '2020/11'
+    assert_not_includes response.body, '2020/11/01'
+  end
+
   test 'index does not list an inactive trend when logged out' do
     Trend.create!(title: 'Inactive listing trend', date: Date.current, publish_start_at: Time.current,
                   etc_phenomenon: :other, active: false)

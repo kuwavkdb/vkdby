@@ -28,14 +28,7 @@
         <span class="inline-block mb-2 px-2 py-0.5 rounded text-xs font-bold bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/40 dark:text-red-300 dark:border-red-700">非公開（管理者のみ閲覧可）</span>
       <% end %>
       <div class="flex items-center gap-3 text-sm text-zinc-900 font-mono mb-2 font-bold">
-        <% date_path = if @trend.month_unknown?
-                         yearly_path(year: @trend.date.year)
-                       elsif @trend.day_unknown?
-                         monthly_path(year: @trend.date.year, month: @trend.date.month)
-                       else
-                         daily_path(year: @trend.date.year, month: @trend.date.month, day: @trend.date.day)
-                       end %>
-        <%= link_to trend_date_label(@trend), date_path, class: "hover:underline transition-colors" %>
+        <%= link_to trend_date_label(@trend), trend_date_path(@trend), class: "hover:underline transition-colors" %>
         <%# 会場（issue #1689）。紐付けた会場が公開中（または統合先へ転送される）なら会場ページへリンクする（issue #1691） %>
         <% if (venue_display_name = @trend.venue_display_name).present? %>
           <% venue_linkable = @trend.venue && (@trend.venue.kept? || @trend.venue.redirect_source?) %>
