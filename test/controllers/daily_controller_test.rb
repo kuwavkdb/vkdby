@@ -37,7 +37,7 @@ class DailyControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, 'All Years Summary'
   end
 
-  test '年指定なしの日付ページは月や日が不明な動向を表示しない（issue #1848）' do
+  test '年指定なしの日付ページは月や日が不明な動向を通常の動向の欄に表示しない（issue #1848）' do
     Trend.create!(title: '日付が確定した動向', date: Date.new(1995, 12, 1), publish_start_at: Time.current,
                   unit_phenomenon: :other)
     Trend.create!(title: '日が不明な動向', date: Date.new(1995, 12, 1), publish_start_at: Time.current,
@@ -46,8 +46,64 @@ class DailyControllerTest < ActionDispatch::IntegrationTest
     get birthday_date_path(month: 12, day: 1)
 
     assert_response :success
-    assert_includes response.body, '日付が確定した動向'
-    assert_not_includes response.body, '日が不明な動向'
+    assert_select '#trends', text: /日付が確定した動向/
+    assert_select '#trends', text: /日が不明な動向/, count: 0
+  end
+
+  test '年指定なしの毎月1日のページは、その月の日が不明な動向を別の欄に表示する（issue #1851）' do
+    Trend.create!(title: '12月の日が不明な動向', date: Date.new(1999, 12, 1), publish_start_at: Time.current,
+                  unit_phenomenon: :other, day_unknown: true)
+    Trend.create!(title: '11月の日が不明な動向', date: Date.new(1999, 11, 1), publish_start_at: Time.current,
+                  unit_phenomenon: :other, day_unknown: true)
+    Trend.create!(title: '非公開の日が不明な動向', date: Date.new(1999, 12, 1), publish_start_at: Time.current,
+                  unit_phenomenon: :other, day_unknown: true, active: false)
+    Trend.create!(title: '月も不明な動向', date: Date.new(1999, 1, 1), publish_start_at: Time.current,
+                  unit_phenomenon: :other, day_unknown: true, month_unknown: true)
+
+    get birthday_date_path(month: 12, day: 1)
+
+    assert_response :success
+    assert_select 'a[href="#day-unknown-trends"]', text: '日付不明の動向'
+    assert_select '#day-unknown-trends' do
+      assert_select 'h2', text: /12月・日付不明/
+      assert_select "a[href='#{monthly_path(year: 1999, month: 12)}']", text: '1999年12月'
+      assert_select 'a', text: '12月の日が不明な動向'
+    end
+    assert_not_includes response.body, '11月の日が不明な動向'
+    assert_not_includes response.body, '非公開の日が不明な動向'
+    assert_not_includes response.body, 'この日には記録がありません。'
+
+    get birthday_date_path(month: 1, day: 1)
+
+    assert_not_includes response.body, '月も不明な動向'
+  end
+
+  test '毎月1日以外のページ・年指定ありのページには日が不明な動向の欄を出さない（issue #1851）' do
+    Trend.create!(title: '日が不明な動向', date: Date.new(1999, 12, 1), publish_start_at: Time.current,
+                  unit_phenomenon: :other, day_unknown: true)
+
+    [birthday_date_path(month: 12, day: 2), daily_path(year: 1999, month: 12, day: 1)].each do |path|
+      get path
+
+      assert_select '#day-unknown-trends', count: 0
+      assert_not_includes response.body, '日が不明な動向'
+    end
+  end
+
+  test '日が不明な動向はシェア用テキストに含めない（issue #1851）' do
+    Trend.create!(title: '日が不明な動向', date: Date.new(1999, 12, 1), publish_start_at: Time.current,
+                  unit_phenomenon: :other, day_unknown: true)
+    Person.create!(name: '12月1日生まれ', name_kana: 'じゅうにがつ', key: 'person-on-this-day-day-unknown', status: :active,
+                   birthday: Date.new(1970, 12, 1))
+    admin = User.create!(email: 'on-this-day-admin-day-unknown@example.com', name: 'Admin', password: 'password',
+                         role: :admin)
+    post login_path, params: { email: admin.email, password: 'password' }
+
+    get birthday_date_path(month: 12, day: 1)
+
+    assert_select '#day-unknown-trends', text: /日が不明な動向/
+    assert_select '#on-this-day-share-text-trends', count: 0
+    assert_select '#on-this-day-share-text-birthdays', text: /12月1日生まれ/
   end
 
   test '年指定なしの日付ページはadminにのみ「今日は何の日？」シェア用テキストを表示する（issue #1732）' do

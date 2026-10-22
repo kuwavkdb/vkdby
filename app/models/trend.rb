@@ -96,6 +96,10 @@ class Trend < ApplicationRecord
     where(month_unknown: false, day_unknown: false)
       .where('EXTRACT(MONTH FROM date) = ? AND EXTRACT(DAY FROM date) = ?', month, day)
   }
+  # 年を問わず、指定した月の日が不明な動向（月は分かっているもの）。「今日は何の日？」の毎月1日のページに出す（issue #1851）
+  scope :day_unknown_in_month, lambda { |month|
+    where(day_unknown: true, month_unknown: false).where('EXTRACT(MONTH FROM date) = ?', month)
+  }
   # 公開画面に表示してよいTrend（非公開active: falseと、公開開始日時が未到来のものを除く）
   scope :published, -> { where(active: true).where(publish_start_at: ..Time.current) }
 

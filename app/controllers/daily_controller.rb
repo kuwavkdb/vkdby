@@ -20,6 +20,7 @@ class DailyController < ApplicationController
                      .select(:id, :date, :title, :units, :unit_phenomenon).order(date: :asc)
       @birthdays = Person.kept.published.birthday_on(@date).select(*PERSON_CARD_COLUMNS).order(name_kana: :asc)
       @releases = Item.released_on_month_day(month, day).order(release_date: :asc)
+      @day_unknown_trends = day_unknown_trends(month) if day == 1
     else
       @trends = Trend.published.on_date(@date).select(:id, :date, :title, :units).order(created_at: :desc)
       @birthdays = Person.kept.published.birthday_on(@date).where(status: %i[active hiatus])
@@ -28,12 +29,17 @@ class DailyController < ApplicationController
     end
 
     # Load related units for trends
-    all_unit_ids = @trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
+    all_unit_ids = [*@trends, *@day_unknown_trends].flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
     @related_units = Unit.publicly_visible.where(id: all_unit_ids).index_by(&:id)
     @on_this_day_posts = on_this_day_posts if @year_agnostic && current_user&.admin?
   end
 
   private
+
+  # 毎月1日のページにだけ出す、その月の日が不明な動向（issue #1851）。シェア用テキスト・投稿文には含めない
+  def day_unknown_trends(month)
+    Trend.published.day_unknown_in_month(month).select(:id, :date, :title, :units).order(date: :asc, created_at: :desc)
+  end
 
   # 管理者向けの「今日は何の日？」シェア用テキスト。投稿文バッチと同じ内容を、ページで読み込んだデータから作る（issue #1890）
   def on_this_day_posts

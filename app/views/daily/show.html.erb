@@ -56,13 +56,16 @@
       </div>
 
       <!-- Page-internal Links -->
-      <% if @year_agnostic && (@birthdays.present? || @trends.present? || @releases.present?) %>
+      <% if @year_agnostic && (@birthdays.present? || @trends.present? || @day_unknown_trends.present? || @releases.present?) %>
         <nav class="flex flex-wrap justify-center gap-2" aria-label="ページ内リンク">
           <% if @birthdays.present? %>
             <%= link_to '#birthdays', class: "px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-amber-400" do %>誕生日<% end %>
           <% end %>
           <% if @trends.present? %>
             <%= link_to '#trends', class: "px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-amber-400" do %>動向<% end %>
+          <% end %>
+          <% if @day_unknown_trends.present? %>
+            <%= link_to '#day-unknown-trends', class: "px-3 py-1.5 rounded-full text-xs font-bold bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-amber-400" do %>日付不明の動向<% end %>
           <% end %>
           <% if @releases.present? %>
             <%= link_to '#releases', class: "px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-amber-400" do %>リリース<% end %>
@@ -89,6 +92,35 @@
               <% if @year_agnostic %>
                 <%= link_to daily_path(year: trend.date.year, month: trend.date.month, day: trend.date.day), class: "inline-block px-2 py-0.5 rounded text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 mr-2" do %><%= trend.date.year %>年<% end %>
               <% end %>
+              <% if trend.units %>
+                <% trend.units.each do |unit_data| %>
+                  <% unit = @related_units&.dig(unit_data['unit_id']) %>
+                  <% if unit %>
+                    <%= link_to unit.name, profile_path(unit.key), class: "inline-block px-2 py-0.5 rounded text-sm font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800 transition-colors mr-1 border border-indigo-200 dark:border-indigo-700" %>
+                  <% elsif unit_data['name'].present? %>
+                    <%= unit_name_badge(unit_data['name']) %>
+                  <% end %>
+                <% end %>
+              <% end %>
+              <%= link_to trend_path(trend), class: "inline" do %>
+                <span class="font-bold text-indigo-600 dark:text-amber-400 hover:text-indigo-800 dark:hover:text-amber-300 transition-colors"><%= format_wiki_title(trend.title, link: false) %></span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+
+    <!-- Day Unknown Trends Section（毎月1日のページだけ。その月の日が不明な動向、issue #1851） -->
+    <% if @day_unknown_trends.present? %>
+      <section id="day-unknown-trends" class="mb-12">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 pb-2 mb-4">
+          Trends (<%= @date.month %>月・日付不明)
+        </h2>
+        <div class="space-y-0">
+          <% @day_unknown_trends.each do |trend| %>
+            <div class="p-4 border-b border-zinc-200 dark:border-zinc-700 last:border-0">
+              <%= link_to monthly_path(year: trend.date.year, month: trend.date.month), class: "inline-block px-2 py-0.5 rounded text-xs font-bold bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 mr-2 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-amber-400" do %><%= trend.date.year %>年<%= trend.date.month %>月<% end %>
               <% if trend.units %>
                 <% trend.units.each do |unit_data| %>
                   <% unit = @related_units&.dig(unit_data['unit_id']) %>
@@ -154,7 +186,7 @@
     <% end %>
 
     <!-- Empty State -->
-    <% if @trends.blank? && @birthdays.blank? && @releases.blank? %>
+    <% if @trends.blank? && @day_unknown_trends.blank? && @birthdays.blank? && @releases.blank? %>
       <div class="py-20 text-center">
         <p class="text-slate-500 font-bold">
           この日には記録がありません。
