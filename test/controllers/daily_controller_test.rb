@@ -145,8 +145,7 @@ class DailyControllerTest < ActionDispatch::IntegrationTest
     assert_select '#trends', text: /1日に確定した動向/
     assert_select '#trends', text: /日が不明な動向/, count: 0
     assert_select '#day-unknown-trends' do
-      assert_select 'h2', text: /日付不明の動向（2020年12月）/
-      assert_select "h2 a[href='#{monthly_path(year: 2020, month: 12)}']", text: '2020年12月'
+      assert_select 'h2', text: '日付不明の動向'
       assert_select 'a', text: '2020年12月の日が不明な動向'
     end
     assert_not_includes response.body, '2019年12月の日が不明な動向'
