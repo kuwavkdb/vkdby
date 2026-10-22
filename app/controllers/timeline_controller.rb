@@ -64,7 +64,7 @@ class TimelineController < ApplicationController
       unit_id_array = unit_id_set.to_a
       unit_trends = Trend
                     .where.not(unit_phenomenon: nil)
-                    .where(active: true)
+                    .published
                     .where(
                       'units @> ANY(ARRAY[?]::jsonb[])',
                       unit_id_array.map { |uid| [{ unit_id: uid }].to_json }
@@ -104,7 +104,7 @@ class TimelineController < ApplicationController
     return head :not_found unless unit
 
     markers = []
-    Trend.where(active: true)
+    Trend.published
          .where.not(unit_phenomenon: nil)
          .where('units @> ?', [{ unit_id: unit.id }].to_json)
          .select(:id, :date, :title, :units, :unit_phenomenon).each do |trend|

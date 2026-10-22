@@ -43,4 +43,13 @@ class TrendsHelperTest < ActionView::TestCase
     assert_equal 1, html.scan('<script').size
     assert_includes html, '<script async="async" src="https://platform.twitter.com/widgets.js"'
   end
+
+  test 'trend_date_pathは日付の分かり方に応じて日付・月別・年別ページを返す（issue #1917）' do
+    date = Date.new(2020, 12, 1)
+
+    assert_equal daily_path(year: 2020, month: 12, day: 1), trend_date_path(Trend.new(date: date))
+    assert_equal monthly_path(year: 2020, month: 12), trend_date_path(Trend.new(date: date, day_unknown: true))
+    assert_equal yearly_path(year: 2020),
+                 trend_date_path(Trend.new(date: Date.new(2020, 1, 1), day_unknown: true, month_unknown: true))
+  end
 end

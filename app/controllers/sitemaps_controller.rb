@@ -55,9 +55,9 @@ class SitemapsController < ApplicationController
       Person.kept.published.pluck(:key, :updated_at).map { |key, updated_at| { loc: profile_url(key), lastmod: updated_at } }
   end
 
-  # Trendには非公開の仕組みがないため全件対象
+  # 非公開・公開予定のTrendは公開画面で404になるため除外する（issue #1891）
   def trend_urls
-    Trend.pluck(:id, :updated_at).map { |id, updated_at| { loc: trend_url(id), lastmod: updated_at } }
+    Trend.published.pluck(:id, :updated_at).map { |id, updated_at| { loc: trend_url(id), lastmod: updated_at } }
   end
 
   def item_urls
@@ -106,7 +106,7 @@ class SitemapsController < ApplicationController
   # Trend/Itemの実データが存在する日のみを対象とする。
   def daily_urls
     range = (Date.current - DAILY_PAGES_LOOKBACK)..Date.current
-    trend_dates = Trend.where(date: range, day_unknown: false, month_unknown: false).distinct.pluck(:date)
+    trend_dates = Trend.published.where(date: range, day_unknown: false, month_unknown: false).distinct.pluck(:date)
     item_dates = Item.where(release_date: range).distinct.pluck(:release_date)
     (trend_dates + item_dates).uniq.map { |date| { loc: daily_url(year: date.year, month: date.month, day: date.day) } }
   end

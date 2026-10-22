@@ -44,7 +44,7 @@ module Admin
     end
 
     def external_site_params
-      params.require(:external_site).permit(:site_key, :url_pattern)
+      params.require(:external_site).permit(:site_key, :name, :url_pattern)
     end
   end
 end

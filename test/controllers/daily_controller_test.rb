@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-class DailyControllerTest < ActionDispatch::IntegrationTest
+class DailyControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
   test 'birthday date page excludes a person tagged as unpublished' do
     person = Person.create!(name: 'Unpublished Birthday Person', key: 'person-unpublished-birthday',
                             status: :active, birthday: Date.new(1904, 5, 1))
@@ -127,5 +127,55 @@ class DailyControllerTest < ActionDispatch::IntegrationTest
 
     assert_select 'meta[property="og:image"][content=?]',
                   "http://www.example.com#{Rails.application.config.site_ogp_image_path}"
+  end
+
+  test '年指定ありの毎月1日のページは、日が不明な動向を通常の動向と別の欄に表示する（issue #1915）' do
+    Trend.create!(title: '1日に確定した動向', date: Date.new(2020, 12, 1), publish_start_at: Time.current,
+                  unit_phenomenon: :other)
+    Trend.create!(title: '2020年12月の日が不明な動向', date: Date.new(2020, 12, 1), publish_start_at: Time.current,
+                  unit_phenomenon: :other, day_unknown: true)
+    Trend.create!(title: '2019年12月の日が不明な動向', date: Date.new(2019, 12, 1), publish_start_at: Time.current,
+                  unit_phenomenon: :other, day_unknown: true)
+    Trend.create!(title: '非公開の日が不明な動向', date: Date.new(2020, 12, 1), publish_start_at: Time.current,
+                  unit_phenomenon: :other, day_unknown: true, active: false)
+
+    get daily_path(year: 2020, month: 12, day: 1)
+
+    assert_response :success
+    assert_select '#trends', text: /1日に確定した動向/
+    assert_select '#trends', text: /日が不明な動向/, count: 0
+    assert_select '#day-unknown-trends' do
+      assert_select 'h2', text: '日付不明の動向'
+      assert_select 'a', text: '2020年12月の日が不明な動向'
+    end
+    assert_not_includes response.body, '2019年12月の日が不明な動向'
+    assert_not_includes response.body, '非公開の日が不明な動向'
+  end
+
+  test '年指定ありの日付ページは、年だけ分かっている動向を表示しない（issue #1915）' do
+    Trend.create!(title: '月も不明な動向', date: Date.new(2020, 1, 1), publish_start_at: Time.current,
+                  unit_phenomenon: :other, day_unknown: true, month_unknown: true)
+
+    get daily_path(year: 2020, month: 1, day: 1)
+
+    assert_response :success
+    assert_not_includes response.body, '月も不明な動向'
+    assert_select '#day-unknown-trends', count: 0
+    assert_includes response.body, 'この日には記録がありません。'
+  end
+
+  test '年指定ありの日付ページは、日が不明な動向だけでも「記録がありません」を出さない（issue #1915）' do
+    Trend.create!(title: '日が不明な動向', date: Date.new(2020, 12, 1), publish_start_at: Time.current,
+                  unit_phenomenon: :other, day_unknown: true)
+
+    get daily_path(year: 2020, month: 12, day: 1)
+
+    assert_select '#day-unknown-trends', text: /日が不明な動向/
+    assert_not_includes response.body, 'この日には記録がありません。'
+
+    get daily_path(year: 2020, month: 12, day: 2)
+
+    assert_select '#day-unknown-trends', count: 0
+    assert_not_includes response.body, '日が不明な動向'
   end
 end

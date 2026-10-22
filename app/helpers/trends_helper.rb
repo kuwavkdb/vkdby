@@ -44,6 +44,17 @@ module TrendsHelper
     trend.date_label
   end
 
+  # 日付ラベル（trend_date_label）のリンク先。月が不明なら年別、日が不明なら月別、確定していれば日付ページ（issue #1917）
+  def trend_date_path(trend)
+    if trend.month_unknown?
+      yearly_path(year: trend.date.year)
+    elsif trend.day_unknown?
+      monthly_path(year: trend.date.year, month: trend.date.month)
+    else
+      daily_path(year: trend.date.year, month: trend.date.month, day: trend.date.day)
+    end
+  end
+
   # X（Twitter）へのシェア用テキストを生成する（issue #1313）
   # ヘッダに表示している内容（日付・Units・タイトル・People）＋ TrendのURL ＋ ハッシュタグ #vkdb
   # trend_show_person_badge_in_title?と同じ判定で、件名前に個人名を出す設定の場合は

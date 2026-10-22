@@ -17,5 +17,15 @@ module Admin
         value.to_s
       end
     end
+
+    # リンク欄のタイトル補完に使う外部サイトの一覧（JSON）
+    def link_title_suggest_sites_json
+      ExternalSite.link_title_suggestions.to_json
+    end
+
+    # 外部サイトに登録しなくてもタイトルを補完できるサービスの対応表（JSON）
+    def link_title_suggest_builtins_json
+      ExternalSite::BUILTIN_LINK_TITLES.to_json
+    end
   end
 end

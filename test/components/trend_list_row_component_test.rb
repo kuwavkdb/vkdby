@@ -3,6 +3,8 @@
 require 'test_helper'
 
 class TrendListRowComponentTest < ActiveSupport::TestCase
+  include ViewComponent::TestHelpers
+
   test 'unit_badges is empty when resource is not given' do
     unit = Unit.create!(name: 'No Resource Unit', key: 'trend-row-no-resource', status: :active)
     trend = Trend.create!(title: 'Trend', date: Date.current, publish_start_at: Time.current,
@@ -61,5 +63,15 @@ class TrendListRowComponentTest < ActiveSupport::TestCase
                                                            other_unit.id => other_unit })
 
     assert_equal ['Old Name'], component.unit_badges
+  end
+
+  test 'renders the date only as far as it is known (issue #1917)' do
+    trend = Trend.create!(title: 'Day unknown row', date: Date.new(2020, 12, 1), publish_start_at: Time.current,
+                          unit_phenomenon: :other, day_unknown: true)
+
+    text = render_inline(TrendListRowComponent.new(trend: trend)).text
+
+    assert_includes text, '2020/12'
+    assert_not_includes text, '2020/12/01'
   end
 end

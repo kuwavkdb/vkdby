@@ -22,6 +22,7 @@ Metrics/ClassLength:
     - 'test/controllers/admin/temporary_snapshot_people_controller_test.rb'
     - 'test/models/unit_test.rb'
     - 'test/controllers/profiles_controller_test.rb'
+    - 'test/controllers/sitemaps_controller_test.rb'
     - 'test/controllers/custom_pages_controller_test.rb'
     - 'test/controllers/trends_controller_test.rb'
     - 'test/services/on_this_day_post_builder_test.rb'
