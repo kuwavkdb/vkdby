@@ -1,6 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 
-// リンク欄全体に1つだけ付け、各行（data-link-title-suggest-row）の URL 欄からタイトル欄を補完する
+// リンク欄全体に1つだけ付け、各行（data-link-title-suggest-row）の URL 欄から、同じ行のタイトル欄（data-link-title-suggest-title）を補完する
 export default class extends Controller {
     // 管理画面の外部サイトに登録された表示名と URL パターン（[{ name, url_pattern }]）
     static values = { sites: Array }
@@ -9,7 +9,7 @@ export default class extends Controller {
         const urlInput = event.target
         const titleInput = urlInput
             .closest("[data-link-title-suggest-row]")
-            ?.querySelector('[data-link-title-suggest-target="title"]')
+            ?.querySelector("[data-link-title-suggest-title]")
         if (!titleInput) return
 
         const normalized = this.normalizeXAccount(urlInput.value.trim())

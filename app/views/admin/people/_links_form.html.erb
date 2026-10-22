@@ -18,7 +18,7 @@
               </svg>
             </span>
             <span class="sr-only">並び替え</span>
-            <%= link_form.text_field :text, placeholder: "タイトル", data: { "link-title-suggest-target": "title" }, class: "block w-40 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+            <%= link_form.text_field :text, placeholder: "タイトル", data: { "link-title-suggest-title": true }, class: "block w-40 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
             <%= link_form.text_field :url, placeholder: "URL（https://...）", data: { action: "blur->link-title-suggest#suggest" }, class: "block flex-1 min-w-0 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
           </div>
           <div class="flex items-center gap-4">
@@ -39,7 +39,7 @@
       <%= form.fields_for :links, person.links.reject(&:persisted?) do |link_form| %>
         <div data-link-title-suggest-row class="flex flex-col gap-2 items-start bg-gray-50 dark:bg-gray-800 p-3 rounded-md border border-gray-200 dark:border-gray-700">
           <div class="w-full flex gap-2">
-            <%= link_form.text_field :text, placeholder: "タイトル", data: { "link-title-suggest-target": "title" }, class: "block w-40 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+            <%= link_form.text_field :text, placeholder: "タイトル", data: { "link-title-suggest-title": true }, class: "block w-40 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
             <%= link_form.text_field :url, placeholder: "URL（https://...）", data: { action: "blur->link-title-suggest#suggest" }, class: "block flex-1 min-w-0 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
           </div>
           <div class="flex items-center gap-4">
