@@ -94,16 +94,14 @@ class ProfilesController < ApplicationController
     @old_history_items = @resource.parse_old_history if @resource.old_history.present?
 
     @trends = viewable_trends.where('people @> ?', [{ person_id: @resource.id }].to_json)
-                   .order(date: :desc)
-                   .limit(10)
+                             .order(date: :desc).limit(10)
   end
 
   def load_unit_data
     @history = @resource.unit_logs.select(:id, :log_date, :phenomenon, :phenomenon_alias, :text)
 
     @trends = viewable_trends.where('units @> ?', [{ unit_id: @resource.id }].to_json)
-                   .order(date: :desc)
-                   .limit(10)
+                             .order(date: :desc).limit(10)
 
     trend_unit_ids = @trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
     @trend_related_units = viewable_units.where(id: trend_unit_ids).index_by(&:id)
