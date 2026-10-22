@@ -102,7 +102,8 @@ class Trend < ApplicationRecord
   # メジャー経験バンド（メジャーデビューの動向が登録されているユニット）のID一覧。
   # 年表（TimelineController）で使う
   def self.major_debut_unit_ids
-    where(unit_phenomenon: :major_debut, active: true)
+    published
+      .where(unit_phenomenon: :major_debut)
       .pluck(:units)
       .flat_map { |arr| Array(arr).map { |u| u['unit_id'].to_i } }
       .uniq

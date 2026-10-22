@@ -85,6 +85,23 @@ class SitemapsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes locs, item_url(discarded_item.id)
   end
 
+  test 'excludes unpublished and scheduled trends and their daily pages (issue #1891)' do
+    inactive_date = Date.current - 10.days
+    scheduled_date = Date.current - 11.days
+    inactive = Trend.create!(title: 'Sitemap Inactive Trend', date: inactive_date, publish_start_at: 1.day.ago,
+                             unit_phenomenon: :other, active: false)
+    scheduled = Trend.create!(title: 'Sitemap Scheduled Trend', date: scheduled_date, publish_start_at: 1.day.from_now,
+                              unit_phenomenon: :other)
+
+    get '/sitemap.xml'
+
+    locs = Nokogiri::XML(response.body).css('url > loc').map(&:text)
+    assert_not_includes locs, trend_url(inactive.id)
+    assert_not_includes locs, trend_url(scheduled.id)
+    assert_not_includes locs, daily_url(year: inactive_date.year, month: inactive_date.month, day: inactive_date.day)
+    assert_not_includes locs, daily_url(year: scheduled_date.year, month: scheduled_date.month, day: scheduled_date.day)
+  end
+
   test 'includes yearly/monthly pages from 1980 onward but not earlier years' do
     get '/sitemap.xml'
 
