@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-class DailyControllerTest < ActionDispatch::IntegrationTest
+class DailyControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
   test 'birthday date page excludes a person tagged as unpublished' do
     person = Person.create!(name: 'Unpublished Birthday Person', key: 'person-unpublished-birthday',
                             status: :active, birthday: Date.new(1904, 5, 1))

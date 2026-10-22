@@ -93,9 +93,7 @@ class Trend < ApplicationRecord
   # 日付を指定して探す。月や日が不明な動向は date がその月の1日・その年の1月1日になっているため除く（issue #1915）
   scope :on_date, ->(date) { where(date: date, month_unknown: false, day_unknown: false) }
   # 指定した日付と同じ年月の、日が不明な動向（月は分かっているもの）。日付ページの毎月1日に別の欄で出す（issue #1915）
-  scope :day_unknown_in_month_of, lambda { |date|
-    where(date: date.all_month, day_unknown: true, month_unknown: false)
-  }
+  scope :day_unknown_in_month_of, ->(date) { where(date: date.all_month, day_unknown: true, month_unknown: false) }
   # 年を問わない月日で探す。月や日が不明な動向は date がその月の1日・その年の1月1日になっているため除く（issue #1848）
   scope :on_month_day, lambda { |month, day|
     where(month_unknown: false, day_unknown: false)
