@@ -234,6 +234,30 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'Old Trend Unit Name'
   end
 
+  test 'unit trend list hides unpublished and scheduled trends from a guest but shows them to an admin (issue #1891)' do
+    unit = Unit.create!(name: 'Trend Visibility Unit', key: 'unit-trend-visibility', status: :active)
+    units = [{ 'unit_id' => unit.id, 'name' => unit.name }]
+    Trend.create!(title: 'Published Unit Trend', date: Date.new(1995, 5, 1), publish_start_at: 1.day.ago,
+                  unit_phenomenon: :other, units:)
+    Trend.create!(title: 'Inactive Unit Trend', date: Date.new(1995, 5, 1), publish_start_at: 1.day.ago,
+                  unit_phenomenon: :other, units:, active: false)
+    Trend.create!(title: 'Scheduled Unit Trend', date: Date.new(1995, 5, 1), publish_start_at: 1.day.from_now,
+                  unit_phenomenon: :other, units:)
+
+    get profile_path(unit.key)
+
+    assert_includes response.body, 'Published Unit Trend'
+    assert_not_includes response.body, 'Inactive Unit Trend'
+    assert_not_includes response.body, 'Scheduled Unit Trend'
+
+    admin = User.create!(email: 'admin-trend-visibility@example.com', name: 'Admin', password: 'password', role: :admin)
+    post login_path, params: { email: admin.email, password: 'password' }
+    get profile_path(unit.key)
+
+    assert_includes response.body, 'Inactive Unit Trend'
+    assert_includes response.body, 'Scheduled Unit Trend'
+  end
+
   test 'person page hides tags belonging to an inactive index group but shows tags with no group' do
     person = Person.create!(name: 'タグ非表示テスト', key: 'person-hidden-tag-group', status: :active)
     inactive_group = IndexGroup.create!(name: '無効グループ', active: false)

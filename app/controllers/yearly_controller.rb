@@ -29,7 +29,7 @@ class YearlyController < ApplicationController
   end
 
   def calculate_monthly_trend_counts(year)
-    Trend
+    Trend.published
       .where('EXTRACT(YEAR FROM date) = ?', year)
       .where(month_unknown: false)
       .group('EXTRACT(MONTH FROM date)')
@@ -38,7 +38,7 @@ class YearlyController < ApplicationController
   end
 
   def fetch_month_unknown_trends(year)
-    Trend
+    Trend.published
       .where('EXTRACT(YEAR FROM date) = ?', year)
       .where(month_unknown: true)
       .order(created_at: :desc)

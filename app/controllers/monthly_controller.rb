@@ -23,7 +23,7 @@ class MonthlyController < ApplicationController
   end
 
   def calculate_daily_trend_counts(date)
-    Trend
+    Trend.published
       .where('EXTRACT(YEAR FROM date) = ? AND EXTRACT(MONTH FROM date) = ?', date.year, date.month)
       .where(day_unknown: false)
       .group('EXTRACT(DAY FROM date)')
@@ -32,7 +32,7 @@ class MonthlyController < ApplicationController
   end
 
   def fetch_day_unknown_trends(date)
-    Trend
+    Trend.published
       .where('EXTRACT(YEAR FROM date) = ? AND EXTRACT(MONTH FROM date) = ?', date.year, date.month)
       .where(day_unknown: true, month_unknown: false)
       .order(created_at: :desc)

@@ -87,10 +87,13 @@ class ProfilesController < ApplicationController
   # 仮登録のユニット（issue #1764）は admin のみ閲覧できる
   def viewable_units = current_user&.admin? ? Unit.kept : Unit.publicly_visible
 
+  # 非公開・公開予定の動向（issue #1891）は admin のみ閲覧できる（TrendsController と同じ）
+  def viewable_trends = current_user&.admin? ? Trend.all : Trend.published
+
   def load_person_data
     @old_history_items = @resource.parse_old_history if @resource.old_history.present?
 
-    @trends = Trend.where('people @> ?', [{ person_id: @resource.id }].to_json)
+    @trends = viewable_trends.where('people @> ?', [{ person_id: @resource.id }].to_json)
                    .order(date: :desc)
                    .limit(10)
   end
@@ -98,7 +101,7 @@ class ProfilesController < ApplicationController
   def load_unit_data
     @history = @resource.unit_logs.select(:id, :log_date, :phenomenon, :phenomenon_alias, :text)
 
-    @trends = Trend.where('units @> ?', [{ unit_id: @resource.id }].to_json)
+    @trends = viewable_trends.where('units @> ?', [{ unit_id: @resource.id }].to_json)
                    .order(date: :desc)
                    .limit(10)
 

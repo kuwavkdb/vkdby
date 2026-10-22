@@ -124,16 +124,27 @@ module SidebarLoadable
     end
   end
 
+  # 公開開始日時（publish_start_at）が来た動向をすぐ出せるよう、範囲内で次に公開される
+  # 動向の公開開始日時（refresh_at）も一緒にキャッシュし、それを過ぎていたら作り直す（issue #1891）。
+  # キャッシュする値の形を変えたため、ローリングデプロイ中の新旧混在を避けるようキーに v2 を付ける
   def load_recent_trends(today, ttl)
-    @weekly_trends = Rails.cache.fetch("sidebar/weekly_trends/#{today}", expires_in: ttl, race_condition_ttl: RACE_CONDITION_TTL) do
-      from_today = Trend.where(date: today..).order(date: :asc).limit(5).to_a
-      recent     = Trend.where(date: (today - 2)..(today - 1)).order(date: :desc).limit(5).to_a
-      (from_today + recent).sort_by(&:date).reverse
+    key = "sidebar/weekly_trends/v2/#{today}"
+    entry = Rails.cache.fetch(key, expires_in: ttl, race_condition_ttl: RACE_CONDITION_TTL) { weekly_trends_entry(today) }
+    if entry[:refresh_at] && entry[:refresh_at] <= Time.current
+      entry = Rails.cache.fetch(key, expires_in: ttl, race_condition_ttl: RACE_CONDITION_TTL, force: true) { weekly_trends_entry(today) }
     end
+    @weekly_trends = entry[:trends]
 
     unit_ids   = @weekly_trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
     person_ids = @weekly_trends.flat_map { |t| t.people&.map { |p| p['person_id'] } }.compact.uniq
     @weekly_trend_units  = Unit.publicly_visible.where(id: unit_ids).index_by(&:id)
     @weekly_trend_people = Person.kept.where(id: person_ids).index_by(&:id)
+  end
+
+  def weekly_trends_entry(today)
+    from_today = Trend.published.where(date: today..).order(date: :asc).limit(5).to_a
+    recent     = Trend.published.where(date: (today - 2)..(today - 1)).order(date: :desc).limit(5).to_a
+    refresh_at = Trend.where(active: true, date: (today - 2)..).where(publish_start_at: Time.current..).minimum(:publish_start_at)
+    { trends: (from_today + recent).sort_by(&:date).reverse, refresh_at: }
   end
 end
