@@ -43,7 +43,7 @@
 |---|---|
 | Units — 削除・復元 | destroy / undiscard |
 | People — 削除 | destroy |
-| Trends — 削除 | destroy |
+| Trends — 削除（一覧のほか、非表示の動向は編集画面からも削除できる。投稿から作った動向を削除すると、投稿側の動向への参照は外れる、issue #1923） | destroy |
 | Venues（会場）— 削除・復元 | destroy / undiscard |
 | Venues（会場）— 一覧でチェックした会場の都道府県・エリア・種別の一括更新（項目ごとに「変更しない」、都道府県・エリアは「空にする」も選べる。値が変わる会場だけを更新し、1件ずつ更新履歴を残す。issue #1793） | bulk_update |
 | Items — 閲覧・作成・編集 | index / new / create / edit / update |
