@@ -217,4 +217,45 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
     body = response.body
     assert_operator body.index(profile_path('unlinked-order-person')), :<, body.index('個人ページのないメンバー')
   end
+
+  # issue #1921: キーワード以外の絞り込みは、指定がないときは折りたたむ
+  test 'index collapses the filters when no filter is selected' do
+    Person.create!(name: '開閉テスト', key: 'people-index-filters-collapsed', status: :active, blood: 'A')
+
+    get people_path
+
+    assert_response :success
+    assert_select '#people-filters[hidden]'
+    assert_select 'button[aria-controls="people-filters"][aria-expanded="false"]'
+  end
+
+  test 'index keeps the filters collapsed when only a keyword is given' do
+    Person.create!(name: '開閉テスト', key: 'people-index-filters-keyword-only', status: :active, blood: 'A')
+
+    get people_path(q: '開閉')
+
+    assert_response :success
+    assert_select '#people-filters[hidden]'
+    assert_select 'button[aria-controls="people-filters"][aria-expanded="false"]'
+  end
+
+  test 'index opens the filters when a person data filter is selected' do
+    Person.create!(name: '開閉テスト', key: 'people-index-filters-blood', status: :active, blood: 'A')
+
+    get people_path(blood: 'A')
+
+    assert_response :success
+    assert_select '#people-filters:not([hidden])'
+    assert_select 'button[aria-controls="people-filters"][aria-expanded="true"]'
+  end
+
+  test 'index opens the filters when a tag filter is selected' do
+    Person.create!(name: '開閉テスト', key: 'people-index-filters-tag', status: :active, blood: 'A')
+
+    get people_path(tag_ids: { '1' => '1' })
+
+    assert_response :success
+    assert_select '#people-filters:not([hidden])'
+    assert_select 'button[aria-controls="people-filters"][aria-expanded="true"]'
+  end
 end

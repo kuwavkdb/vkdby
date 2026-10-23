@@ -217,5 +217,56 @@ module Admin
       assert_select "input[type=hidden][name='trend[venue_id]'][value='#{venue.id}']"
       assert_select "[data-venue-picker-target='selectedName']", text: 'CLUB QUATTRO'
     end
+
+    # issue #1923: 動向の削除
+    test 'index shows the delete button as a form that sends DELETE' do
+      get admin_trends_path
+
+      assert_response :success
+      assert_select "form[action='#{admin_trend_path(@trend)}'] input[name='_method'][value='delete']"
+    end
+
+    test 'destroy deletes the trend and redirects to the index' do
+      assert_difference('Trend.count', -1) do
+        delete admin_trend_path(@trend)
+      end
+
+      assert_redirected_to admin_trends_path
+    end
+
+    test 'destroy deletes a trend converted from a submission and clears the reference' do
+      submission = TrendSubmission.create!(target_type: :unit, target_name: 'Submitted Unit',
+                                           date: Date.new(2026, 1, 1), via_url: 'https://example.com/submitted',
+                                           phenomenon: Trend.unit_phenomenons['announcement'],
+                                           submission_status: :converted, converted_trend: @trend)
+
+      assert_difference('Trend.count', -1) do
+        delete admin_trend_path(@trend)
+      end
+
+      assert_nil submission.reload.converted_trend_id
+    end
+
+    test 'edit shows the delete button only for an inactive trend' do
+      @trend.update!(active: false)
+      get edit_admin_trend_path(@trend)
+      assert_select "form[action='#{admin_trend_path(@trend)}'] input[name='_method'][value='delete']"
+
+      @trend.update!(active: true)
+      get edit_admin_trend_path(@trend)
+      assert_select "form[action='#{admin_trend_path(@trend)}'] input[name='_method'][value='delete']", count: 0
+    end
+
+    test 'operator sees no delete button on the index or the edit page' do
+      User.create!(email: 'operator@example.com', name: 'Operator', password: 'password', role: :operator)
+      post login_path, params: { email: 'operator@example.com', password: 'password' }
+      @trend.update!(active: false)
+
+      get admin_trends_path
+      assert_select "form[action='#{admin_trend_path(@trend)}']", count: 0
+
+      get edit_admin_trend_path(@trend)
+      assert_select "form[action='#{admin_trend_path(@trend)}'] input[name='_method'][value='delete']", count: 0
+    end
   end
 end

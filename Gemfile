@@ -2,7 +2,7 @@
 
 source 'https://rubygems.org'
 
-ruby '4.0.2'
+ruby '4.0.9'
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem 'rails', '~> 8.1.4'
@@ -105,5 +105,5 @@ gem 'discard', '~> 2.0'
 gem 'rack-attack'
 gem 'romaji', '~> 0.3.0'
 
-gem 'pagy', '~> 43.7'
+gem 'pagy', '~> 43.8'
 gem 'redcarpet'
