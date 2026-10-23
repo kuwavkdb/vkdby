@@ -48,6 +48,8 @@ class Trend < ApplicationRecord
 
   # 開催場所（issue #1689）。1件のTrendにつき会場は1件のみ
   belongs_to :venue, optional: true
+  # 投稿フォームの投稿から作った動向を削除しても、投稿側の外部キーで止まらないよう参照を外す（issue #1923）
+  has_many :trend_submissions, foreign_key: :converted_trend_id, inverse_of: :converted_trend, dependent: :nullify
 
   # Enums
   enum :unit_phenomenon, {
