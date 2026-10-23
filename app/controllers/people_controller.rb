@@ -19,6 +19,7 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
     @unlinked_members = load_unlinked_members
 
     @person_data_filters = build_person_data_filters
+    @filters_open = any_filter_selected?
   end
 
   # 一覧ページの入力候補（JSON）。候補には名前そのものを並べるため、名前・よみがな系の列だけを探す。
@@ -111,7 +112,7 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
   end
 
   def any_filter_selected?
-    @selected_tag_ids.any? || @selected_part || @selected_blood || @selected_hometown || @selected_status
+    @selected_tag_ids.any? || [@selected_part, @selected_blood, @selected_hometown, @selected_status].any?(&:present?)
   end
 
   def build_scope
