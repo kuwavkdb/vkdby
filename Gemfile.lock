@@ -268,7 +268,7 @@ GEM
     observer (0.1.2)
     open3 (0.2.1)
     ostruct (0.6.3)
-    pagy (43.7.1)
+    pagy (43.8.1)
       json
       uri
       yaml
@@ -552,7 +552,7 @@ DEPENDENCIES
   lookbook
   mini_magick
   mysql2 (~> 0.5)
-  pagy (~> 43.7)
+  pagy (~> 43.8)
   pg (~> 1.7)
   propshaft
   puma (>= 5.0)
