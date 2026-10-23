@@ -144,6 +144,7 @@ export default class extends Controller {
       if (!newKeys.length) return
       await this._restoreKeys(newKeys)
       this._saveToStorage()
+      this.dispatch("added")
     } catch (e) {
       console.error("timeline-search addPersonUnits error:", e)
       alert(`「${personName}」の関連バンドの追加に失敗しました`)
@@ -183,6 +184,7 @@ export default class extends Controller {
       this.addedKeys.add(key)
       this._saveToStorage()
       this._insertRow(key, html, { scroll })
+      this.dispatch("added")
     } catch (e) {
       console.error("timeline-search addUnit error:", e)
     }

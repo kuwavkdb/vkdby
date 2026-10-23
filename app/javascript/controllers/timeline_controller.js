@@ -102,6 +102,19 @@ export default class extends Controller {
     localStorage.setItem(this.constructor.LEGEND_STORAGE_KEY, JSON.stringify([...this.hiddenTypes]))
   }
 
+  // バンド追加時、「任意追加バンド」が非表示設定になっていると追加した行が見えないため、非表示を解除する
+  unhideAddedType() {
+    if (!this.hiddenTypes.has("added")) return
+    this.hiddenTypes.delete("added")
+    this._applyVisibility("added")
+    const btn = this.element.querySelector("[data-type='added']")
+    if (btn) {
+      btn.classList.remove("opacity-40", "line-through")
+      btn.setAttribute("aria-pressed", "false")
+    }
+    localStorage.setItem(this.constructor.LEGEND_STORAGE_KEY, JSON.stringify([...this.hiddenTypes]))
+  }
+
   setZoom(event) {
     this._applyZoom(event.currentTarget.dataset.zoomValue, true)
   }
@@ -229,7 +242,8 @@ export default class extends Controller {
     this.bodyTarget.querySelectorAll(`[data-row-type='${type}']`).forEach(row => {
       row.classList.toggle("hidden", hidden)
     })
-    this.bodyTarget.querySelectorAll(`[data-marker-type='${type}']`).forEach(marker => {
+    // data-marker-type はタイムライン本体のマーカーに加え、下部の動向一覧にも付与されているため element 全体を対象にする
+    this.element.querySelectorAll(`[data-marker-type='${type}']`).forEach(marker => {
       marker.style.display = hidden ? "none" : ""
     })
   }
