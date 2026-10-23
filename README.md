@@ -1,6 +1,6 @@
 # 実行・運用ガイド
 
-本プロジェクトは Homebrew でインストールされた Ruby 4.0.0 と PostgreSQL 17 に依存しています。システム標準の Ruby（2.6.x）との競合を避けるため、サーバーの起動や Rails 関連のコマンドを実行する際は、必ず `PATH` を指定し、`bundle exec` を使用してください。
+本プロジェクトは Ruby（版は `.ruby-version` を参照）と PostgreSQL 17 に依存しています。Ruby は [mise](https://mise.jdx.dev/) で管理し、ディレクトリの `.ruby-version` に合わせて版を自動で切り替えます。Rails 関連のコマンドを実行する際は `bundle exec` を使用してください。
 
 ## 前提条件
 
@@ -14,12 +14,32 @@ brew install postgresql@17
 brew services start postgresql@17
 ```
 
+### Ruby のインストール（mise）
+
+Ruby の版を上げる作業中は、ブランチによって必要な版が異なります。mise を使うと、`.ruby-version` を読んで版を自動で切り替えられます。
+
+```bash
+# mise をインストール
+brew install mise
+
+# .zshrc に以下を追加して、シェルを開き直す
+eval "$(mise activate zsh)"
+
+# mise が .ruby-version を読むようにする（初期設定では読まない）
+mise settings add idiomatic_version_file_enable_tools ruby
+
+# .ruby-version の版の Ruby をインストール（プロジェクトのディレクトリで実行）
+mise install ruby
+
+# mysql2 のビルドで Homebrew の zstd・OpenSSL を見つけられるようにする
+bundle config set --global build.mysql2 "--with-ldflags=-L/opt/homebrew/opt/zstd/lib -L/opt/homebrew/opt/openssl@4/lib"
+```
+
+Ruby の版を上げたときや、新しい版のブランチに切り替えたときは、`mise install ruby` と `bundle install` を実行してください。
+
 ## コマンド実行時の基本形式
 
-まず .zshrc 等に以下のようにPATHを追加してから実行してください。
-```
-PATH=/opt/homebrew/opt/ruby/bin:$PATH 
-```
+`ruby -v` で `.ruby-version` と同じ版が表示されることを確認してから実行してください。
 
 ```bash
 # サーバーの起動
@@ -131,5 +151,5 @@ bin/rails on_this_day:preview DATE=05-30
 
 ## 注意事項
 - サーバー起動後は `http://127.0.0.1:3000` でアクセス可能です。
-- `bin/rails` 等を直接叩くとシステム Ruby が呼ばれてエラーになる可能性があるため、上記のように明示的にパスを通した実行を強く推奨します。
+- `ruby -v` の版が `.ruby-version` と異なる場合は、mise が有効になっていない可能性があります。`mise current ruby` と `which ruby` で確認してください。
 - PostgreSQL 17 を使用しています。データベース接続の設定は `config/database.yml` を参照してください。
