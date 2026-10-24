@@ -70,9 +70,10 @@ module JsonLdHelper # rubocop:disable Metrics/ModuleLength
     }
   end
 
-  # 個人のページ: Person。所属は今在籍しているユニットだけ。
+  # 個人のページ: Person。所属は今在籍しているユニットだけ。member_of には Person#current_units の結果を渡す
+  # （meta description と同じものを使い、問い合わせを2回しないため）。
   # 誕生日は生年があれば年月日、なければ月日だけ（--MM-DD）を出す。パート・血液型は出さない
-  def person_json_ld(person, links: [])
+  def person_json_ld(person, links: [], member_of: [])
     {
       '@context' => SCHEMA_CONTEXT,
       '@type' => 'Person',
@@ -81,7 +82,7 @@ module JsonLdHelper # rubocop:disable Metrics/ModuleLength
       'alternateName' => json_ld_alternate_names(person),
       'birthDate' => person_json_ld_birth_date(person),
       'homeLocation' => (person.hometown.present? ? { '@type' => 'Place', 'name' => person.hometown } : nil),
-      'memberOf' => person_json_ld_member_of(person),
+      'memberOf' => member_of.map { |unit| { '@type' => 'MusicGroup', 'name' => unit.name, 'url' => profile_url(unit.key) } },
       'sameAs' => json_ld_same_as(links)
     }
   end
@@ -143,20 +144,6 @@ module JsonLdHelper # rubocop:disable Metrics/ModuleLength
 
     month_day = person.birthday.strftime('%m-%d')
     person.birth_year.to_i.positive? ? "#{person.birth_year}-#{month_day}" : "--#{month_day}"
-  end
-
-  # 今在籍しているユニット（「現在」のスナップショットの在籍メンバー。サポート・関係者は除く）。
-  # 解散したユニットは「現在」のスナップショットが残っていても所属に含めない。
-  # 非公開のユニットと、キー変更・統合で転送しているユニットも除く
-  def person_json_ld_member_of(person)
-    units = Unit.for_index.published.where.not(status: :disbanded).where(destination_key: [nil, ''])
-    SnapshotPerson.where(person_id: person.id, status: :active, support: false)
-                  .joins(:unit_snapshot)
-                  .where(unit_snapshots: { current: true, past: false, active: true, unit_id: units.select(:id) })
-                  .includes(unit_snapshot: :unit)
-                  .map { |member| member.unit_snapshot.unit }
-                  .uniq
-                  .map { |unit| { '@type' => 'MusicGroup', 'name' => unit.name, 'url' => profile_url(unit.key) } }
   end
 
   # 住所は画面と同じく、旧サイトの「MAP:」を取り除いた display_address を使う

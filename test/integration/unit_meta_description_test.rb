@@ -105,7 +105,7 @@ class UnitMetaDescriptionTest < ActionDispatch::IntegrationTest
     assert_equal 'Meta No Fromは2010年解散のバンド。バンドの歴史やメンバーの経歴、音源等を掲載。', meta_description
   end
 
-  test 'メンバーが多いときは160字に収まる人数だけ並べて「ほか」とし、締めの文を残す' do
+  test 'メンバーが多いときは160字に収まる人数だけ並べて「他」とし、締めの文を残す' do
     unit = Unit.create!(name: 'Meta Many', key: 'meta-many', status: :active, activity_period: [{ 'from' => '2001' }])
     snapshot = unit.unit_snapshots.create!(snapshot_date: Date.new(2020, 1, 1), current: true)
     names = (1..30).map { |i| "メンバー#{i.to_s.rjust(2, '0')}" }
@@ -116,7 +116,7 @@ class UnitMetaDescriptionTest < ActionDispatch::IntegrationTest
     description = meta_description
     assert_operator description.length, :<=, 160
     assert description.start_with?('Meta Manyは2001年結成のバンド。メンバーはメンバー01、メンバー02、')
-    assert description.end_with?('ほか。バンドの歴史やメンバーの経歴、音源等を掲載。')
+    assert description.end_with?('他。バンドの歴史やメンバーの経歴、音源等を掲載。')
     assert_not_includes description, 'メンバー30'
   end
 

@@ -39,6 +39,7 @@ class Person < ApplicationRecord
   include KeyChangeable
   include Unpublishable
   include OgpImageAttachable
+  include PersonMembershipSummary
   has_many :links, as: :linkable, dependent: :destroy
   has_many :wiki_page_imports, as: :import_target
   # 公開フォームから送られた情報の訂正（issue #1902）

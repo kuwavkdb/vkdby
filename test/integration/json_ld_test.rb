@@ -241,6 +241,17 @@ class JsonLdTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/Cla
                     'url' => 'http://www.example.com/json-ld-moved-destination' }], json_ld_data['member']
   end
 
+  test '引退した個人には、現在のスナップショットに在籍として残っていても所属を出さない（issue #1938）' do
+    person = Person.create!(name: 'JsonLd Retired', key: 'json-ld-retired', status: :retirement)
+    unit = Unit.create!(name: 'JsonLd Retired Unit', key: 'json-ld-retired-unit', status: :active)
+    unit.unit_snapshots.create!(snapshot_date: Date.current, current: true)
+        .snapshot_people.create!(person: person, part: :vocal, sort_order: 1)
+
+    get profile_path(person.key)
+
+    assert_not json_ld_data.key?('memberOf')
+  end
+
   test '個人の所属には解散したユニットと非公開のユニットを含めず、別名も出す' do
     person = Person.create!(name: 'JsonLd Member Of', key: 'json-ld-member-of', status: :active,
                             aliases: [{ 'name' => '別名義' }, { 'name' => '非表示の別名', 'hidden' => true }])
