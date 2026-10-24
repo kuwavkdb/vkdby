@@ -31,15 +31,15 @@ module MetaDescriptionHelper
   # 個人のページ（issue #1938）。例:
   #   「〇〇（読み）は△△のボーカル・ギター。過去の在籍バンドは□□、××。経歴や在籍バンド、音源等を掲載。」
   # 今の所属が無ければ「〇〇はボーカル。」、パートも無ければ「〇〇はアーティスト。」とする。
-  # 引退した人は今の所属が無いものとし、所属していたユニットはすべて「過去の在籍バンド」に並べる
-  # （Person#current_units が空を返す）。死去した人は、最後に在籍したバンドのメンバーとして書く。
-  # 状態・誕生日・出身地は書かない。current_units は Person#current_units の結果。
+  # 過去の在籍バンドは個人の経歴（old_history）から組み立てる（person_meta_description_past_names）。
+  # 引退した人は今の所属が無いものとする（Person#current_units が空を返す）。死去した人は、
+  # 最後に在籍したバンドのメンバーとして書く。状態・誕生日・出身地は書かない。current_units は Person#current_units の結果。
   # 今の所属・過去の在籍バンドとも、上限の字数に収まる件数だけ並べ、残りは「他」とする
   def person_meta_description(person, current_units: [])
     tail = '経歴や在籍バンド、音源等を掲載。'
     head = person_meta_description_head(person, current_units, tail)
     room = ApplicationHelper::META_DESCRIPTION_MAX_LENGTH - head.length - tail.length
-    past_names = person.past_units(excluding: current_units).map(&:name).compact_blank
+    past_names = person_meta_description_past_names(person, current_units)
     "#{head}#{meta_description_list('過去の在籍バンド', past_names, room)}#{tail}"
   end
 
@@ -67,6 +67,27 @@ module MetaDescriptionHelper
     room = ApplicationHelper::META_DESCRIPTION_MAX_LENGTH - "#{name}は#{suffix}#{tail}".length
     unit_names = meta_description_names(units.map(&:name), room) || "#{units.first.name}#{'他' if units.size > 1}"
     "#{name}は#{unit_names}#{suffix}"
+  end
+
+  # 過去の在籍バンドの名前。個人の経歴の新しい順（末尾の期間から）に並べる（issue #1945）。
+  # リンクのある項目（[[ユニット名]]・リンク）だけを対象にし、括弧で囲んだ項目（セッション・企画など）、
+  # ソロ活動（[[ソロ|本人]]）、サポートとしての在籍、今の所属と同じ名前のものは除く。
+  # 同じ名前は新しい位置で1回だけ書く。名前は大文字・小文字を区別せずに比べる（"Sads" と "SADS" など）
+  def person_meta_description_past_names(person, current_units)
+    current_names = current_units.flat_map { |unit| [unit.name, *unit.aliases.map(&:name)] }.map(&:downcase)
+    names = person.parse_old_history.reverse.flat_map { |items| items.filter_map { |item| history_band_name(item) } }
+    names.reject { |name| current_names.include?(name.downcase) }.uniq(&:downcase)
+  end
+
+  # 経歴の項目を過去の在籍バンドとして書くときの名前。書かない項目は nil
+  def history_band_name(item)
+    return unless item[:old_key] || item[:internal_url] || item[:external_url]
+    return if item[:unit_name].to_s.start_with?('(')
+    return if [item[:unit_name], item[:part_and_name]].any? { |text| text.to_s.include?('サポート') }
+
+    # 表示名に含まれる {{rb}} のルビ（<rt>）とタグを除く
+    name = CGI.unescapeHTML(strip_tags(item[:unit_name].to_s.gsub(%r{<rt>.*?</rt>}m, '')).strip)
+    name.presence unless name == 'ソロ'
   end
 
   # 「最終メンバーは〇〇、〇〇他。」。room 字に収まるところまで並べ、1つも収まらなければ書かない
