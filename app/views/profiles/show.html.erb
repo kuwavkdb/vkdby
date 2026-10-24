@@ -10,7 +10,7 @@
   <% else %>
     <%# 今の所属は構造化データとmeta descriptionの両方で使うため、ここで一度だけ求める（issue #1938） %>
     <% current_units = @resource.current_units %>
-    <% content_for :description, person_meta_description(@resource, current_units:, past_units: @resource.past_units(excluding: current_units)) %>
+    <% content_for :description, person_meta_description(@resource, current_units:) %>
     <% content_for :head, json_ld_tag(person_json_ld(@resource, links: @links, member_of: current_units)) %>
   <% end %>
 <% end %>

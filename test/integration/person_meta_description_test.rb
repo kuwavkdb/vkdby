@@ -59,7 +59,7 @@ class PersonMetaDescriptionTest < ActionDispatch::IntegrationTest
     assert_equal 'Meta Nothingはアーティスト。経歴や在籍バンド、音源等を掲載。', meta_description
   end
 
-  test '過去の在籍バンドが多いときは160字に収まる件数だけ並べて「ほか」とし、締めの文を残す' do
+  test '過去の在籍バンドが多いときは160字に収まる件数だけ並べて「他」とし、締めの文を残す' do
     person = Person.create!(name: 'Meta Many Units', key: 'meta-many-units', status: :active, parts: %w[bass])
     30.times do |i|
       add_member(person, Unit.create!(name: "過去のバンド#{i.to_s.rjust(2, '0')}", key: "meta-past-#{i}", status: :disbanded),
@@ -71,7 +71,58 @@ class PersonMetaDescriptionTest < ActionDispatch::IntegrationTest
     description = meta_description
     assert_operator description.length, :<=, 160
     assert description.start_with?('Meta Many Unitsはベース。過去の在籍バンドは過去のバンド29、過去のバンド28、')
-    assert description.end_with?('ほか。経歴や在籍バンド、音源等を掲載。')
+    assert description.end_with?('他。経歴や在籍バンド、音源等を掲載。')
+  end
+
+  test '今の所属が多いときも160字に収まる件数だけ並べて「他」とし、締めの文を残す' do
+    person = Person.create!(name: 'Meta Many Current', key: 'meta-many-current', status: :active, parts: %w[guitar])
+    20.times do |i|
+      add_member(person, Unit.create!(name: "今のバンド#{i.to_s.rjust(2, '0')}", key: "meta-current-#{i}", status: :active),
+                 snapshot_date: Date.new(2024, 1, 1), current: true)
+    end
+
+    get profile_path(person.key)
+
+    description = meta_description
+    assert_operator description.length, :<=, 160
+    assert description.start_with?('Meta Many Currentは今のバンド')
+    assert description.end_with?('他のギター。経歴や在籍バンド、音源等を掲載。')
+  end
+
+  test '引退した人は今の所属を書かず、今の所属だったユニットも過去の在籍バンドとして新しい順に並べる' do
+    person = Person.create!(name: 'Meta Retired', key: 'meta-retired', status: :retirement, parts: %w[guitar])
+    add_member(person, Unit.create!(name: 'Meta Still Listed', key: 'meta-still-listed', status: :active),
+               snapshot_date: Date.new(2020, 1, 1), current: true)
+    add_member(person, Unit.create!(name: 'Meta Earlier', key: 'meta-earlier', status: :disbanded),
+               snapshot_date: Date.new(2010, 1, 1), current: true)
+
+    get profile_path(person.key)
+
+    assert_equal 'Meta Retiredはギター。過去の在籍バンドはMeta Still Listed、Meta Earlier。経歴や在籍バンド、音源等を掲載。',
+                 meta_description
+  end
+
+  test '死去した人は最後に在籍したバンドのメンバーとして書く' do
+    person = Person.create!(name: 'Meta Passed', key: 'meta-passed', status: :passed_away, parts: %w[drums])
+    add_member(person, Unit.create!(name: 'Meta Last Band', key: 'meta-last-band', status: :active),
+               snapshot_date: Date.new(2020, 1, 1), current: true)
+
+    get profile_path(person.key)
+
+    assert_equal 'Meta PassedはMeta Last Bandのドラム。経歴や在籍バンド、音源等を掲載。', meta_description
+  end
+
+  test '過去の在籍バンドの日付が同じ・無いときはユニットのid順に並べる' do
+    person = Person.create!(name: 'Meta Same Date', key: 'meta-same-date', status: :active)
+    units = %w[B A C].map do |suffix|
+      Unit.create!(name: "Meta Same #{suffix}", key: "meta-same-#{suffix.downcase}", status: :disbanded)
+    end
+    units.first(2).each { |unit| add_member(person, unit, snapshot_date: Date.new(2015, 1, 1), current: true) }
+    add_member(person, units.last, snapshot_date: nil, current: true)
+
+    get profile_path(person.key)
+
+    assert_includes meta_description, '過去の在籍バンドはMeta Same B、Meta Same A、Meta Same C。'
   end
 
   test '非公開の個人はサイト共通の説明文のままにする' do
