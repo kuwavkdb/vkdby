@@ -8,10 +8,10 @@
     <% content_for :description, unit_meta_description(@resource, members: current_members) %>
     <% content_for :head, json_ld_tag(unit_json_ld(@resource, links: @links, members: current_members)) %>
   <% else %>
-    <%# 今の所属は構造化データとmeta descriptionの両方で使うため、ここで一度だけ求める（issue #1938） %>
-    <% current_units = @resource.current_units %>
-    <% content_for :description, person_meta_description(@resource, current_units:) %>
-    <% content_for :head, json_ld_tag(person_json_ld(@resource, links: @links, member_of: current_units)) %>
+    <%# meta descriptionは今の所属・過去の在籍バンドとも経歴から組み立てる（issue #1951）。
+        構造化データの所属（memberOf）はスナップショットから求めたまま（#1950 で検討） %>
+    <% content_for :description, person_meta_description(@resource) %>
+    <% content_for :head, json_ld_tag(person_json_ld(@resource, links: @links, member_of: @resource.current_units)) %>
   <% end %>
 <% end %>
 <%# ユニット名/メンバー名入りのog:image（issue #1259）。生成できない場合（libvips未導入等）は
