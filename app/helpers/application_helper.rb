@@ -4,6 +4,8 @@ require 'cgi'
 require 'digest'
 
 module ApplicationHelper # rubocop:disable Metrics/ModuleLength
+  META_DESCRIPTION_MAX_LENGTH = 160
+
   class ExternalAwareHtmlRenderer < Redcarpet::Render::HTML
     # variantのURL生成（rails_representation_path）に使う。ActionView::Base外の
     # クラスなので、ビューのURLヘルパーを個別にincludeする必要がある。
@@ -203,9 +205,11 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
   # content_for(:description, ...)にプレーン文字列を渡した場合も、page_title_textと同様に
   # ActionViewの内部バッファ格納時に一度HTMLエスケープされる可能性があるため、
   # 一度デコードしてから属性値として正しくエスケープし直す。
-  # 検索結果のスニペットとして不自然に途切れないよう、150〜160字程度に切り詰める。
+  # 検索結果のスニペットとして不自然に途切れないよう、META_DESCRIPTION_MAX_LENGTH字に切り詰める。
+  # 日本語の文には空白がほとんど無く、空白の位置で切ると名前の中の空白などで大きく削れるため、
+  # 区切り（separator）は指定しない（issue #1937）。
   def meta_description_text(text)
-    ERB::Util.html_escape(CGI.unescapeHTML(text.to_s).truncate(160, separator: ' '))
+    ERB::Util.html_escape(CGI.unescapeHTML(text.to_s).truncate(META_DESCRIPTION_MAX_LENGTH))
   end
 
   # og:title / twitter:title やog:type等、meta_description_textと同じくHTML属性値

@@ -66,6 +66,49 @@ class UnitMetaDescriptionTest < ActionDispatch::IntegrationTest
     assert_equal 'Meta Unknownはバンド。バンドの歴史やメンバーの経歴、音源等を掲載。', meta_description
   end
 
+  test '再結成後の活動期間に終わりが無い解散バンドは、前の解散年を書かない' do
+    unit = Unit.create!(name: 'Meta Reunion', key: 'meta-reunion', status: :disbanded,
+                        activity_period: [{ 'from' => '2005', 'to' => '2008' }, { 'from' => '2015', 'to' => nil }])
+
+    get profile_path(unit.key)
+
+    assert_equal 'Meta Reunionは2005年結成のバンド。バンドの歴史やメンバーの経歴、音源等を掲載。', meta_description
+  end
+
+  test '結成年が読めなくても解散年は書く' do
+    unit = Unit.create!(name: 'Meta No From', key: 'meta-no-from', status: :disbanded,
+                        activity_period: [{ 'from' => nil, 'to' => '2010/03/**' }])
+
+    get profile_path(unit.key)
+
+    assert_equal 'Meta No Fromは2010年解散のバンド。バンドの歴史やメンバーの経歴、音源等を掲載。', meta_description
+  end
+
+  test 'メンバーが多いときは160字に収まる人数だけ並べて「ほか」とし、締めの文を残す' do
+    unit = Unit.create!(name: 'Meta Many', key: 'meta-many', status: :active, activity_period: [{ 'from' => '2001' }])
+    snapshot = unit.unit_snapshots.create!(snapshot_date: Date.new(2020, 1, 1), current: true)
+    names = (1..30).map { |i| "メンバー#{i.to_s.rjust(2, '0')}" }
+    names.each_with_index { |name, i| snapshot.snapshot_people.create!(person_name: name, part: :vocal, sort_order: i) }
+
+    get profile_path(unit.key)
+
+    description = meta_description
+    assert_operator description.length, :<=, 160
+    assert description.start_with?('Meta Manyは2001年結成のバンド。メンバーはメンバー01、メンバー02、')
+    assert description.end_with?('ほか。バンドの歴史やメンバーの経歴、音源等を掲載。')
+    assert_not_includes description, 'メンバー30'
+  end
+
+  test '名前に空白を含む長い説明文でも、空白の位置で大きく削らない' do
+    unit = Unit.create!(name: 'Meta Long Name With Spaces', key: 'meta-long-name', status: :active)
+    snapshot = unit.unit_snapshots.create!(snapshot_date: Date.new(2020, 1, 1), current: true)
+    snapshot.snapshot_people.create!(person_name: "Member #{'あ' * 200}", part: :vocal, sort_order: 1)
+
+    get profile_path(unit.key)
+
+    assert_equal 'Meta Long Name With Spacesはバンド。バンドの歴史やメンバーの経歴、音源等を掲載。', meta_description
+  end
+
   test '非公開のユニットはサイト共通の説明文のままにする' do
     unit = Unit.create!(name: 'Meta Unpublished', key: 'meta-unpublished', status: :active)
     tag_index = TagIndex.create!(id: Rails.application.config.unpublished_tag_ids.first, name: '掲載停止')

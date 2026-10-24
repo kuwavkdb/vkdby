@@ -179,6 +179,17 @@ class JsonLdTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/Cla
     assert_equal '2018-06', data['dissolutionDate']
   end
 
+  test '終わりの日付が無い活動期間がある解散ユニットには解散日を出さない（issue #1937）' do
+    unit = Unit.create!(name: 'JsonLd Reunion', key: 'json-ld-reunion', status: :disbanded,
+                        activity_period: [{ 'from' => '2005', 'to' => '2008' }, { 'from' => '2015', 'to' => nil }])
+
+    get profile_path(unit.key)
+
+    data = json_ld_data
+    assert_equal '2005', data['foundingDate']
+    assert_nil data['dissolutionDate']
+  end
+
   test 'sameAsにはYouTubeの動画やXの個別投稿へのリンクを入れない' do
     unit = Unit.create!(name: 'JsonLd SameAs', key: 'json-ld-same-as', status: :active)
     unit.links.create!(url: 'https://x.com/json_ld_same_as', sort_order: 1)
