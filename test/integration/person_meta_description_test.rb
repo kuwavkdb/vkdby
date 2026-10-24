@@ -3,7 +3,7 @@
 require 'test_helper'
 
 # 個人のページのmeta description（issue #1938）
-class PersonMetaDescriptionTest < ActionDispatch::IntegrationTest
+class PersonMetaDescriptionTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
   def meta_description
     css_select('meta[name="description"]').first['content']
   end
