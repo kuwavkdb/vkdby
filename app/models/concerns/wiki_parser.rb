@@ -13,7 +13,7 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
   #   ],
   #   ...
   # ]
-  def parse_history_string(history_text) # rubocop:disable Metrics/PerceivedComplexity, Metrics/AbcSize
+  def parse_history_string(history_text) # rubocop:disable Metrics/PerceivedComplexity
     return [] if history_text.blank?
 
     clean_history_text = strip_history_comments(history_text)
