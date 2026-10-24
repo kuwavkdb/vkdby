@@ -35,6 +35,7 @@ class Unit < ApplicationRecord # rubocop:disable Metrics/ClassLength
   include KeyChangeable
   include Unpublishable
   include OgpImageAttachable
+  include UnitActivitySummary
   has_many :links, as: :linkable, dependent: :destroy
   accepts_nested_attributes_for :links, allow_destroy: true, reject_if: proc { |attrs| attrs['url'].blank? }
   has_many :wiki_page_imports, as: :import_target

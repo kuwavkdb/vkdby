@@ -165,18 +165,51 @@ class JsonLdTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/Cla
     assert_select 'script[type="application/ld+json"]', count: 0
   end
 
-  test '結成日・解散日は活動期間の並び順によらず最も古い・新しい日付にし、文章が続く値は読まない' do
+  test '結成日・解散日は活動期間の並び順によらず最も古い・新しい日付にする' do
     unit = Unit.create!(name: 'JsonLd Unordered', key: 'json-ld-unordered', status: :disbanded,
                         activity_period: [{ 'from' => '2015/03/05', 'to' => '2018/06/**' },
                                           { 'from' => '2010/01/**', 'to' => '2012/**/**' },
-                                          { 'from' => '2019頃', 'to' => '2013以降状況不明' },
-                                          { 'from' => '2020/01/01', 'to' => '****/**/**' }])
+                                          { 'from' => '2013', 'to' => '2013/**/**' }])
 
     get profile_path(unit.key)
 
     data = json_ld_data
     assert_equal '2010-01', data['foundingDate']
     assert_equal '2018-06', data['dissolutionDate']
+  end
+
+  test '始まりの日付が日付として読めない活動期間があるユニットには結成日を出さない（issue #1937）' do
+    unit = Unit.create!(name: 'JsonLd Vague Start', key: 'json-ld-vague-start', status: :disbanded,
+                        activity_period: [{ 'from' => '1999頃', 'to' => '2003' }, { 'from' => '2005', 'to' => '2010' }])
+
+    get profile_path(unit.key)
+
+    data = json_ld_data
+    assert_nil data['foundingDate']
+    assert_equal '2010', data['dissolutionDate']
+  end
+
+  test '終わりの日付が日付として読めない活動期間がある解散ユニットには解散日を出さない（issue #1937）' do
+    unit = Unit.create!(name: 'JsonLd Vague End', key: 'json-ld-vague-end', status: :disbanded,
+                        activity_period: [{ 'from' => '2005', 'to' => '2008' },
+                                          { 'from' => '2015', 'to' => '2013以降状況不明' }])
+
+    get profile_path(unit.key)
+
+    data = json_ld_data
+    assert_equal '2005', data['foundingDate']
+    assert_nil data['dissolutionDate']
+  end
+
+  test '終わりの日付が無い活動期間がある解散ユニットには解散日を出さない（issue #1937）' do
+    unit = Unit.create!(name: 'JsonLd Reunion', key: 'json-ld-reunion', status: :disbanded,
+                        activity_period: [{ 'from' => '2005', 'to' => '2008' }, { 'from' => '2015', 'to' => nil }])
+
+    get profile_path(unit.key)
+
+    data = json_ld_data
+    assert_equal '2005', data['foundingDate']
+    assert_nil data['dissolutionDate']
   end
 
   test 'sameAsにはYouTubeの動画やXの個別投稿へのリンクを入れない' do
