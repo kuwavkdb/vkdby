@@ -4,11 +4,14 @@
   <% if @resource.is_a?(Unit) %>
     <%# 現在の公開メンバーは構造化データとmeta descriptionの両方で使うため、ここで一度だけ求める %>
     <% current_members = @resource.current_public_members(@snapshots) %>
-    <%# ページ別のmeta description（issue #1937）。個人ページは #1938 で対応する %>
+    <%# ページ別のmeta description（issue #1937） %>
     <% content_for :description, unit_meta_description(@resource, members: current_members) %>
     <% content_for :head, json_ld_tag(unit_json_ld(@resource, links: @links, members: current_members)) %>
   <% else %>
-    <% content_for :head, json_ld_tag(person_json_ld(@resource, links: @links)) %>
+    <%# 今の所属は構造化データとmeta descriptionの両方で使うため、ここで一度だけ求める（issue #1938） %>
+    <% current_units = @resource.current_units %>
+    <% content_for :description, person_meta_description(@resource, current_units:, past_units: @resource.past_units(excluding: current_units)) %>
+    <% content_for :head, json_ld_tag(person_json_ld(@resource, links: @links, member_of: current_units)) %>
   <% end %>
 <% end %>
 <%# ユニット名/メンバー名入りのog:image（issue #1259）。生成できない場合（libvips未導入等）は
