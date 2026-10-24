@@ -38,6 +38,12 @@ class MemberRowComponent < ViewComponent::Base
     SnsInfoIcon.url_for_account(sns_account)
   end
 
+  # パートの表示名。別名（part_alias、"Vocal&Guitar" など先頭だけ大文字の表記）に合わせて
+  # 先頭だけ大文字にする。DJ は略語なのですべて大文字にする（issue #1939）
+  def part_label
+    @member.part == 'dj' ? 'DJ' : @member.part.capitalize
+  end
+
   private
 
   def edit_path
@@ -94,6 +100,18 @@ class MemberRowComponent < ViewComponent::Base
       @member.parse_inline_history
     else
       []
+    end
+  end
+
+  # 経歴が「→」で終わっていれば、最後の期間のあとに「現在不明」の行を出す。末尾の「→」は
+  # 読み捨てられ、最後に書かれたユニットに在籍中のように見えてしまうため（issue #1939）
+  def history_ends_with_arrow?
+    if @member.person&.old_history.present?
+      @member.person.history_ends_with_arrow?(@member.person.old_history)
+    elsif @member.inline_history.present?
+      @member.history_ends_with_arrow?(@member.inline_history)
+    else
+      false
     end
   end
 end

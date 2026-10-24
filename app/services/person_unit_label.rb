@@ -11,7 +11,6 @@
 #   それより前の期間のユニットになり、後ろに「→」があるので ex- が付く（issue #1775）
 class PersonUnitLabel
   EX_PREFIX = 'ex-'
-  ARROW = '→'
   SUPPORT = 'サポート'
   # 表示名から除く <rt>（{{rb}}プラグインのルビ）
   RUBY_TEXT_PATTERN = %r{<rt>.*?</rt>}m
@@ -27,7 +26,7 @@ class PersonUnitLabel
 
     name = display_name(timeline[index].find { |item| candidate?(item) })
     # 後ろに別の期間（ステータスタグのみの期間など）があるか、経歴が「→」で終わっていれば在籍していない
-    former = index < timeline.size - 1 || history_ends_with_arrow?
+    former = index < timeline.size - 1 || @person.history_ends_with_arrow?(@person.old_history)
     former ? "#{EX_PREFIX}#{name}" : name
   end
 
@@ -40,11 +39,6 @@ class PersonUnitLabel
 
   def support?(item)
     item[:part_and_name].to_s.include?(SUPPORT) || item[:unit_name].to_s.include?(SUPPORT)
-  end
-
-  # parse_old_history は末尾の「→」を読み捨てるため、元のテキストで判定する（//で始まるコメント行は除く）
-  def history_ends_with_arrow?
-    @person.old_history.to_s.lines.reject { |line| line.strip.start_with?('//') }.join.strip.end_with?(ARROW)
   end
 
   # 経歴の表示名からタグ・ルビ・全体を囲む括弧を除く

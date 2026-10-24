@@ -13,14 +13,10 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
   #   ],
   #   ...
   # ]
-  def parse_history_string(history_text) # rubocop:disable Metrics/PerceivedComplexity, Metrics/AbcSize
+  def parse_history_string(history_text) # rubocop:disable Metrics/PerceivedComplexity
     return [] if history_text.blank?
 
-    # Filter out comment lines starting with //
-    clean_history_text = history_text.lines
-                                     .reject { |line| line.strip.start_with?('//') }
-                                     .map(&:strip)
-                                     .join
+    clean_history_text = strip_history_comments(history_text)
 
     timeline = []
 
@@ -119,7 +115,22 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
     timeline
   end
 
+  # 経歴が「→」で終わっているか（//で始まるコメント行は除く）。どこにも在籍していない人・現在が
+  # わからない人は経歴の末尾に「→」を付けて書く運用だが、parse_history_string は末尾の「→」を
+  # 読み捨てるため、元のテキストで判定する（issue #1939）
+  def history_ends_with_arrow?(history_text)
+    strip_history_comments(history_text).end_with?('→')
+  end
+
   private
+
+  # Filter out comment lines starting with //
+  def strip_history_comments(history_text)
+    history_text.to_s.lines
+                .reject { |line| line.strip.start_with?('//') }
+                .map(&:strip)
+                .join
+  end
 
   # リンク先がサイト内の相対パスならinternal_url、それ以外（外部URL）ならexternal_urlとして
   # ハッシュを組み立てる。表示側（profiles/show.html.erb, history_row_component.html.erb）は
