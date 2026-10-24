@@ -31,17 +31,22 @@ module UnitActivitySummary
     end
   end
 
-  # 最も古い活動開始日（"2010-01" のように、分かっている部分だけの文字列）。読めなければ nil
+  # 最も古い活動開始日（"2010-01" のように、分かっている部分だけの文字列）。
+  # 始まりの日付が空・日付として読めない（"1999頃" など）活動期間が1つでもあるときは、
+  # それより前に結成していた可能性があり確かでないため nil にする（issue #1937）
   def founding_date
+    return if activity_periods.any? { |period| self.class.partial_date(period.from).nil? }
+
     self.class.partial_dates(activity_periods.map(&:from)).min
   end
 
   # 解散したユニットの、最も新しい活動終了日。
-  # 終わりの日付が無い活動期間があるとき（再結成後の解散日が未入力など）は、前の解散日を
-  # 最後の解散日と取り違えないよう nil にする
+  # 終わりの日付が空・日付として読めない（"2019頃"・"状況不明"・"活動中" など）活動期間が1つでもあるときは、
+  # 解散したのかどうか・いつ解散したのかが確かでないため nil にする（前の解散日を最後の解散日と
+  # 取り違えないため。issue #1937）
   def dissolution_date
     return unless disbanded?
-    return if activity_periods.any? { |period| period.to.blank? }
+    return if activity_periods.any? { |period| self.class.partial_date(period.to).nil? }
 
     self.class.partial_dates(activity_periods.map(&:to)).max
   end

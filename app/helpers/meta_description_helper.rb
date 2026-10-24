@@ -32,9 +32,10 @@ module MetaDescriptionHelper
     parts.any? ? "#{parts.join('、')}の" : ''
   end
 
-  # 「最終メンバーは〇〇、〇〇ほか。」。room 字に収まるところまで並べ、1人も収まらなければ書かない
+  # 「最終メンバーは〇〇、〇〇ほか。」。room 字に収まるところまで並べ、1人も収まらなければ書かない。
+  # 「最終」は解散年が確かなとき（Unit#dissolution_date があるとき）だけ付ける
   def unit_meta_description_members(unit, names, room)
-    label = unit.disbanded? ? '最終メンバー' : 'メンバー'
+    label = unit.dissolution_date ? '最終メンバー' : 'メンバー'
     names.size.downto(1).each do |count|
       text = "#{label}は#{names.first(count).join('、')}#{'ほか' if count < names.size}。"
       return text if text.length <= room

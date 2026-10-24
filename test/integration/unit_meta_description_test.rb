@@ -75,6 +75,27 @@ class UnitMetaDescriptionTest < ActionDispatch::IntegrationTest
     assert_equal 'Meta Reunionは2005年結成のバンド。バンドの歴史やメンバーの経歴、音源等を掲載。', meta_description
   end
 
+  test '終わりの日付が曖昧な期間がある解散バンドは、解散とも最終メンバーとも書かない' do
+    unit = Unit.create!(name: 'Meta Vague', key: 'meta-vague', status: :disbanded,
+                        activity_period: [{ 'from' => '2005', 'to' => '2008' }, { 'from' => '2015', 'to' => '2019頃' }])
+    snapshot = unit.unit_snapshots.create!(snapshot_date: Date.new(2019, 1, 1), current: true)
+    snapshot.snapshot_people.create!(person_name: 'ボーカル', part: :vocal, sort_order: 1)
+
+    get profile_path(unit.key)
+
+    assert_equal 'Meta Vagueは2005年結成のバンド。メンバーはボーカル。バンドの歴史やメンバーの経歴、音源等を掲載。',
+                 meta_description
+  end
+
+  test '始まりの日付が曖昧な期間があるバンドは結成年を書かない' do
+    unit = Unit.create!(name: 'Meta Vague Start', key: 'meta-vague-start', status: :active,
+                        activity_period: [{ 'from' => '1999頃', 'to' => '2003' }, { 'from' => '2005', 'to' => nil }])
+
+    get profile_path(unit.key)
+
+    assert_equal 'Meta Vague Startはバンド。バンドの歴史やメンバーの経歴、音源等を掲載。', meta_description
+  end
+
   test '結成年が読めなくても解散年は書く' do
     unit = Unit.create!(name: 'Meta No From', key: 'meta-no-from', status: :disbanded,
                         activity_period: [{ 'from' => nil, 'to' => '2010/03/**' }])
