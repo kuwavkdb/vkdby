@@ -842,6 +842,13 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_equal 'Title &quot;quoted&quot; &lt;b&gt;&amp;&lt;/b&gt;', result
   end
 
+  test 'meta_description_textは空白の位置ではなく160字で切り詰める（issue #1937）' do
+    result = meta_description_text("Meta Band（メタバンド）は#{'あ' * 200}")
+
+    assert_equal 160, result.length
+    assert result.start_with?('Meta Band（メタバンド）はあ')
+  end
+
   test 'meta_content_textはmeta_description_textと違い160字で切り詰めない（issue #1253）' do
     long_text = 'あ' * 200
 
