@@ -21,9 +21,8 @@
     <header class="mb-8 text-center flex flex-col items-center">
       <h1 class="text-3xl font-black text-zinc-800 dark:text-zinc-100 flex items-center justify-center gap-3">
         <span class="text-unit">UNITS</span>
-        <span class="text-zinc-500 dark:text-zinc-400 text-lg font-bold"><%= @pagy.count %> records</span>
       </h1>
-      <%# meta description と同じ文を見出しの下に表示する（issue #1957） %>
+      <%# meta description と同じ文を見出しの下に表示する。件数もこの文で示す（issue #1957） %>
       <p class="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-300"><%= units_description %></p>
     </header>
 

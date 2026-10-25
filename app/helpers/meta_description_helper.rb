@@ -50,22 +50,22 @@ module MetaDescriptionHelper
 
   # バンド索引（/units。issue #1957）。一覧ページはサイトの方向性の説明なので「ヴィジュアル系」と書く。
   # 索引に載るのはバンド（ユニット）だけで個人は載らないため「アーティスト」とは書かない。
-  # ページの見出しの下にも同じ文を表示する。
+  # ページの見出しの下にも同じ文を表示する（件数もこの文で示す）。索引ページの説明にならないため、
+  # バンドページのような「各バンドの歴史や…を掲載」は付けない。
   # 例:
-  #   絞り込みなし「ヴィジュアル系バンドの索引。登録数は3,456組。…」
-  #   絞り込みあり「「活動中」「2000年代」のヴィジュアル系バンドのうち、「〇〇」で探した一覧（3/3,456件）。…」
+  #   絞り込みなし「ヴィジュアル系バンドの索引。登録数は3,456組。名前やよみがなで探せるほか、タグで絞り込めます。」
+  #   絞り込みあり「「活動中」「2000年代」のヴィジュアル系バンドのうち、「〇〇」で探した一覧（3/3,456件）。」
   # filtered_count は絞り込み後の件数（絞り込んでいなければ nil）。検索語とタグは、タグを先に書き検索語を加える。
   # 検索語は利用者の入力なので UNITS_INDEX_QUERY_MAX_LENGTH 字で切る。2ページ目以降はページ番号を添える
   def units_index_meta_description(total:, filtered_count: nil, query: nil, tag_names: [], page: 1)
-    tail = '各バンドの歴史やメンバーの経歴、音源等を掲載。'
     page_note = "#{page}ページ目" if page > 1
     if filtered_count.nil?
       return "ヴィジュアル系バンドの索引。登録数は#{number_with_delimiter(total)}組" \
-             "#{"（#{page_note}）" if page_note}。名前やよみがなで探せるほか、タグで絞り込めます。#{tail}"
+             "#{"（#{page_note}）" if page_note}。名前やよみがなで探せるほか、タグで絞り込めます。"
     end
 
     counts = ["#{number_with_delimiter(filtered_count)}/#{number_with_delimiter(total)}件", page_note].compact.join('・')
-    "#{units_index_meta_description_lead(query, tag_names)}（#{counts}）。#{tail}"
+    "#{units_index_meta_description_lead(query, tag_names)}（#{counts}）。"
   end
 
   private
