@@ -10,7 +10,8 @@
   <% else %>
     <%# meta descriptionは今の所属・過去の在籍バンドとも経歴から組み立てる（issue #1951）。
         構造化データの所属（memberOf）はスナップショットから求めたまま（#1950 で検討） %>
-    <% content_for :description, person_meta_description(@resource) %>
+    <%# 経歴は表示用に解析した結果（ProfilesController#load_person_data）を使い回す（issue #1955） %>
+    <% content_for :description, person_meta_description(@resource, history_items: @old_history_items) %>
     <% content_for :head, json_ld_tag(person_json_ld(@resource, links: @links, member_of: @resource.current_units)) %>
   <% end %>
 <% end %>

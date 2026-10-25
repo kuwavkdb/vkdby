@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 # ページごとの meta description（検索結果のスニペット）を登録データから組み立てる（issue #1937, #1938）。
+# 索引ページ（バンド・個人）の説明文は IndexMetaDescriptionHelper。
 # 出力は layout の content_for(:description) 経由。長さの上限は ApplicationHelper::META_DESCRIPTION_MAX_LENGTH。
-# ジャンル（ヴィジュアル系）はサイトの方向性であってユニット自体の分類ではないため書かない。
+# ユニット・個人のページでは、ジャンル（ヴィジュアル系）はサイトの方向性であってユニット自体の分類ではないため書かない。
 module MetaDescriptionHelper
   # Person#parts（Person::AVAILABLE_PARTS）の表記。パートを足したら、ここにも足す
   PART_NAMES = {
@@ -33,10 +34,12 @@ module MetaDescriptionHelper
   # 今の所属が無ければ「〇〇はボーカル。」、パートも無ければ「〇〇はアーティスト。」とする。
   # 今の所属・過去の在籍バンドとも個人の経歴（old_history）だけから組み立て、スナップショットは使わない
   # （issue #1945, #1951。person_meta_description_memberships）。状態・誕生日・出身地は書かない。
-  # 今の所属・過去の在籍バンドとも、上限の字数に収まる件数だけ並べ、残りは「他」とする
-  def person_meta_description(person)
+  # 今の所属・過去の在籍バンドとも、上限の字数に収まる件数だけ並べ、残りは「他」とする。
+  # history_items は解析済みの経歴（Person#parse_old_history の結果）。ページの表示用に解析した結果を渡し、
+  # 1回の表示で解析を2回しないようにする（issue #1955）。省略したときはここで解析する
+  def person_meta_description(person, history_items: person.parse_old_history)
     tail = '経歴や在籍バンド、音源等を掲載。'
-    current_names, past_names = person_meta_description_memberships(person)
+    current_names, past_names = person_meta_description_memberships(person, history_items)
     head = person_meta_description_head(person, current_names, tail)
     room = ApplicationHelper::META_DESCRIPTION_MAX_LENGTH - head.length - tail.length
     "#{head}#{meta_description_list('過去の在籍バンド', past_names, room)}#{tail}"
@@ -76,8 +79,8 @@ module MetaDescriptionHelper
   # - どちらも history_band_name で書く項目だけを対象にする。最後の期間に書く項目が無ければ今の所属なし
   #   （最後が {{category 個人/状況不明}} だけの場合など）。ただし死去した人は、最後に在籍したバンドのメンバーとして
   #   書くため、書く項目がある最後の期間を今の所属とする（最後が {{category 死去}} だけの場合など）
-  def person_meta_description_memberships(person)
-    timeline = person.parse_old_history.map { |items| items.filter_map { |item| history_band_name(item) } }
+  def person_meta_description_memberships(person, history_items)
+    timeline = history_items.map { |items| items.filter_map { |item| history_band_name(item) } }
     timeline = timeline.reject(&:empty?) if person.passed_away?
     ended = person.retirement? || person.history_ends_with_arrow?(person.old_history)
     current_names = ended ? [] : timeline.pop.to_a.uniq(&:downcase)
