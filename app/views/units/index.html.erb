@@ -1,4 +1,13 @@
 <% content_for :title, "バンド索引" %>
+<%# 選んだタグは絞り込みグループの並び順で書く。名前はボタンと同じく「グループ/」の前置きを除く（issue #1957） %>
+<% selected_tag_names = @filter_groups.filter_map do |group|
+     tag = group.tag_indices.find { |t| t.id.to_s == @selected_tag_ids[group.id.to_s].to_s }
+     tag&.name&.sub(/\A[^\/]*\//, '')
+   end %>
+<% content_for :description, units_index_meta_description(
+     total: @total_unit_count, filtered_count: (@pagy.count if @filtered),
+     query: params[:q], tag_names: selected_tag_names, page: @pagy.page
+   ) %>
 <div class="flex justify-center">
   <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
     <header class="mb-8 text-center flex flex-col items-center">
