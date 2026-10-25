@@ -52,6 +52,21 @@ class UnitsIndexMetaDescriptionTest < ActionDispatch::IntegrationTest
                  meta_description
   end
 
+  test 'tag_ids のキーがグループと合わなくても、選んだタグの名前を書く' do
+    get units_path(tag_ids: { '999' => @active_tag.id.to_s })
+
+    assert_equal "「活動中」のヴィジュアル系バンド・アーティストの一覧（2/#{@total.to_fs(:delimited)}件）。#{TAIL}",
+                 meta_description
+  end
+
+  test '検索語付きのページだけ noindex にする' do
+    get units_path(q: 'Meta Index')
+    assert_select 'meta[name="robots"][content="noindex, follow"]', count: 1
+
+    get units_path(tag_ids: { @status_group.id.to_s => @active_tag.id.to_s })
+    assert_select 'meta[name="robots"]', count: 0
+  end
+
   test 'タグと検索語で絞り込んだときは、タグを先に書いて検索語を加える' do
     get units_path(q: 'Beta', tag_ids: { @status_group.id.to_s => @active_tag.id.to_s })
 

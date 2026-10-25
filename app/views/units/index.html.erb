@@ -1,9 +1,16 @@
 <% content_for :title, "バンド索引" %>
-<%# 選んだタグは絞り込みグループの並び順で書く。名前はボタンと同じく「グループ/」の前置きを除く（issue #1957） %>
-<% selected_tag_names = @filter_groups.filter_map do |group|
-     tag = group.tag_indices.find { |t| t.id.to_s == @selected_tag_ids[group.id.to_s].to_s }
-     tag&.name&.sub(/\A[^\/]*\//, '')
+<%# 選んだタグは絞り込みグループの並び順で書く（issue #1957）。コントローラは tag_ids のキーに関係なく値で
+    絞り込むので、ここでも値（タグの id）で探す %>
+<% selected_tag_ids = @selected_tag_ids.values.map(&:to_s) %>
+<% selected_tag_names = @filter_groups.flat_map do |group|
+     group.tag_indices.select { |tag| selected_tag_ids.include?(tag.id.to_s) }.sort_by { |tag| tag.order_in_group.to_i }.map(&:short_name)
    end %>
+<% if params[:q].present? %>
+  <%# 検索語は利用者が自由に入れられ、説明文にも入るため、検索語付きのページは検索エンジンに載せない（issue #1957） %>
+  <% content_for :head do %>
+    <meta name="robots" content="noindex, follow">
+  <% end %>
+<% end %>
 <% content_for :description, units_index_meta_description(
      total: @total_unit_count, filtered_count: (@pagy.count if @filtered),
      query: params[:q], tag_names: selected_tag_names, page: @pagy.page
@@ -63,7 +70,7 @@
                 is_selected = current_tag_ids[group.id.to_s].to_s == tag.id.to_s
               %>
               <%= link_to units_path(q: params[:q], tag_ids: new_tag_ids), class: "px-2 py-1 rounded-lg text-sm font-bold transition-all #{is_selected ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600'}" do %>
-                <%= tag.name.sub(/\A[^\/]*\//, '') %>
+                <%= tag.short_name %>
                 <span class="ml-1 opacity-70 text-xs font-normal">(<%= @tag_unit_counts[tag.id] || 0 %>)</span>
               <% end %>
             <% end %>

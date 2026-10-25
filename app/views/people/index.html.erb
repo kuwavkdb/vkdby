@@ -73,7 +73,7 @@
                 is_selected = current_tag_ids[group.id.to_s].to_s == tag.id.to_s
               %>
               <%= link_to people_path(common_params.merge(tag_ids: new_tag_ids)), class: "px-2 py-1 rounded-lg text-sm font-bold transition-all #{is_selected ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600'}" do %>
-                <%= tag.name.sub(/\A[^\/]*\//, '') %>
+                <%= tag.short_name %>
                 <span class="ml-1 opacity-70 text-xs font-normal">(<%= @tag_person_counts[tag.id] || 0 %>)</span>
               <% end %>
             <% end %>

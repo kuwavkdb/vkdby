@@ -35,4 +35,9 @@ class TagIndex < ApplicationRecord
   scope :active, -> { where(active: true) }
   # 所属グループがない、またはグループがactiveなタグのみに絞る（非表示にしたグループのタグを除外する）
   scope :group_active, -> { left_joins(:index_group).where(index_groups: { active: [true, nil] }) }
+
+  # 絞り込みボタンや説明文で使う表示名。「状況/活動中」のような「グループ/」の前置きを除く（issue #1957）
+  def short_name
+    name.sub(%r{\A[^/]*/}, '')
+  end
 end
