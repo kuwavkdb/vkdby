@@ -18,4 +18,15 @@ class MetaDescriptionHelperTest < ActionView::TestCase
 
     assert_includes description, "「#{'あ' * 27}...」で探した"
   end
+
+  test 'people_index_filter_namesはパート→出身地→状況→血液型の順に表示名を返す（issue #1959）' do
+    assert_equal %w[ボーカル 東京都 引退 B型],
+                 people_index_filter_names(part: 'vocal', hometown: '東京都', status: 'retirement', blood: 'B')
+    assert_equal %w[血液型不明], people_index_filter_names(blood: 'Unknown')
+    assert_empty people_index_filter_names
+  end
+
+  test 'people_index_meta_descriptionは2ページ目以降にページ番号を添える（issue #1959）' do
+    assert_includes people_index_meta_description(total: 12_345, page: 2), '登録数は12,345人（2ページ目）。'
+  end
 end

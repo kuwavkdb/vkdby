@@ -17,6 +17,9 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
     @pagy, @people = pagy(scope, limit: 60)
     @people = @people.load
     @unlinked_members = load_unlinked_members
+    # meta description の「絞り込み後の件数/全体の件数」用（issue #1959）。絞り込んでいなければ件数は同じ
+    @filtered = params[:q].present? || any_filter_selected?
+    @total_person_count = @filtered ? base_scope.count : @pagy.count
 
     @person_data_filters = build_person_data_filters
     @filters_open = any_filter_selected?
