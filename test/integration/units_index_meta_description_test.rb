@@ -34,28 +34,30 @@ class UnitsIndexMetaDescriptionTest < ActionDispatch::IntegrationTest
   test '絞り込みなしは登録数を書く' do
     get units_path
 
-    assert_equal "ヴィジュアル系バンド・アーティストの索引。登録数は#{@total.to_fs(:delimited)}組。" \
+    assert_equal "ヴィジュアル系バンドの索引。登録数は#{@total.to_fs(:delimited)}組。" \
                  "名前やよみがなで探せるほか、タグで絞り込めます。#{TAIL}", meta_description
+    # 見出しの下にも同じ文を表示する
+    assert_select 'header p', text: meta_description
   end
 
   test '検索語だけで絞り込んだときは検索語と「絞り込み後/全体」の件数を書く' do
     get units_path(q: 'Meta Index')
 
-    assert_equal "「Meta Index」で探したヴィジュアル系バンド・アーティストの一覧（2/#{@total.to_fs(:delimited)}件）。#{TAIL}",
+    assert_equal "「Meta Index」で探したヴィジュアル系バンドの一覧（2/#{@total.to_fs(:delimited)}件）。#{TAIL}",
                  meta_description
   end
 
   test 'タグだけで絞り込んだときは、タグを絞り込みグループの順に書く' do
     get units_path(tag_ids: { @era_group.id.to_s => @era_tag.id.to_s, @status_group.id.to_s => @active_tag.id.to_s })
 
-    assert_equal "「活動中」「2000年代」のヴィジュアル系バンド・アーティストの一覧（1/#{@total.to_fs(:delimited)}件）。#{TAIL}",
+    assert_equal "「活動中」「2000年代」のヴィジュアル系バンドの一覧（1/#{@total.to_fs(:delimited)}件）。#{TAIL}",
                  meta_description
   end
 
   test 'tag_ids のキーがグループと合わなくても、選んだタグの名前を書く' do
     get units_path(tag_ids: { '999' => @active_tag.id.to_s })
 
-    assert_equal "「活動中」のヴィジュアル系バンド・アーティストの一覧（2/#{@total.to_fs(:delimited)}件）。#{TAIL}",
+    assert_equal "「活動中」のヴィジュアル系バンドの一覧（2/#{@total.to_fs(:delimited)}件）。#{TAIL}",
                  meta_description
   end
 
@@ -70,7 +72,7 @@ class UnitsIndexMetaDescriptionTest < ActionDispatch::IntegrationTest
   test 'タグと検索語で絞り込んだときは、タグを先に書いて検索語を加える' do
     get units_path(q: 'Beta', tag_ids: { @status_group.id.to_s => @active_tag.id.to_s })
 
-    assert_equal '「活動中」のヴィジュアル系バンド・アーティストのうち、「Beta」で探した一覧' \
+    assert_equal '「活動中」のヴィジュアル系バンドのうち、「Beta」で探した一覧' \
                  "（1/#{@total.to_fs(:delimited)}件）。#{TAIL}", meta_description
   end
 end

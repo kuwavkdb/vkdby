@@ -49,16 +49,18 @@ module MetaDescriptionHelper
   end
 
   # バンド索引（/units。issue #1957）。一覧ページはサイトの方向性の説明なので「ヴィジュアル系」と書く。
+  # 索引に載るのはバンド（ユニット）だけで個人は載らないため「アーティスト」とは書かない。
+  # ページの見出しの下にも同じ文を表示する。
   # 例:
-  #   絞り込みなし「ヴィジュアル系バンド・アーティストの索引。登録数は3,456組。…」
-  #   絞り込みあり「「活動中」「2000年代」のヴィジュアル系バンド・アーティストのうち、「〇〇」で探した一覧（3/3,456件）。…」
+  #   絞り込みなし「ヴィジュアル系バンドの索引。登録数は3,456組。…」
+  #   絞り込みあり「「活動中」「2000年代」のヴィジュアル系バンドのうち、「〇〇」で探した一覧（3/3,456件）。…」
   # filtered_count は絞り込み後の件数（絞り込んでいなければ nil）。検索語とタグは、タグを先に書き検索語を加える。
   # 検索語は利用者の入力なので UNITS_INDEX_QUERY_MAX_LENGTH 字で切る。2ページ目以降はページ番号を添える
   def units_index_meta_description(total:, filtered_count: nil, query: nil, tag_names: [], page: 1)
     tail = '各バンドの歴史やメンバーの経歴、音源等を掲載。'
     page_note = "#{page}ページ目" if page > 1
     if filtered_count.nil?
-      return "ヴィジュアル系バンド・アーティストの索引。登録数は#{number_with_delimiter(total)}組" \
+      return "ヴィジュアル系バンドの索引。登録数は#{number_with_delimiter(total)}組" \
              "#{"（#{page_note}）" if page_note}。名前やよみがなで探せるほか、タグで絞り込めます。#{tail}"
     end
 
@@ -68,9 +70,9 @@ module MetaDescriptionHelper
 
   private
 
-  # 「「活動中」のヴィジュアル系バンド・アーティストのうち、「〇〇」で探した一覧」など
+  # 「「活動中」のヴィジュアル系バンドのうち、「〇〇」で探した一覧」など
   def units_index_meta_description_lead(query, tag_names)
-    subject = 'ヴィジュアル系バンド・アーティスト'
+    subject = 'ヴィジュアル系バンド'
     tags = tag_names.map { |name| "「#{name}」" }.join.presence
     keyword = "「#{query.to_s.strip.truncate(UNITS_INDEX_QUERY_MAX_LENGTH)}」" if query.to_s.strip.present?
     if tags && keyword
