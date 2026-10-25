@@ -33,7 +33,7 @@ class UnitsIndexMetaDescriptionTest < ActionDispatch::IntegrationTest
     get units_path
 
     assert_equal "ヴィジュアル系バンドの索引。登録数は#{@total.to_fs(:delimited)}組。" \
-                 "名前やよみがなで探せるほか、タグで絞り込めます。", meta_description
+                 '名前やよみがなで探せるほか、タグで絞り込めます。', meta_description
     # 見出しの下にも同じ文を表示し、件数はこの文で示す（「records」の表示は出さない）
     assert_select 'header p', text: meta_description
     assert_no_match(/records/, css_select('header h1').text)
