@@ -8,7 +8,7 @@ module MetaDescriptionHelper
   # 索引ページ（バンド・個人）の説明文に入れる検索語の長さの上限（利用者の入力なので切る）
   INDEX_QUERY_MAX_LENGTH = 30
   UNITS_INDEX_SUBJECT = 'ヴィジュアル系バンド'
-  PEOPLE_INDEX_SUBJECT = 'ヴィジュアル系バンドマン・アーティスト'
+  PEOPLE_INDEX_SUBJECT = 'ヴィジュアル系バンドマン'
 
   # Person#parts（Person::AVAILABLE_PARTS）の表記。パートを足したら、ここにも足す
   PART_NAMES = {
@@ -55,28 +55,30 @@ module MetaDescriptionHelper
   # ページの見出しの下にも同じ文を表示する（件数もこの文で示す）。索引ページの説明にならないため、
   # バンドページのような「各バンドの歴史や…を掲載」は付けない。
   # 例:
-  #   絞り込みなし「ヴィジュアル系バンドの索引。登録数は3,456組。名前やよみがなで探せるほか、タグで絞り込めます。」
+  #   絞り込みなし「ヴィジュアル系バンドの索引。登録数は3,456組。名前やタグで絞り込めます。」
+  # 一覧の検索はひらがなのよみがなに対応していないため、「よみがなで探せる」とは書かない（個人索引と同じ）
   #   絞り込みあり「「活動中」「2000年代」のヴィジュアル系バンドのうち、「〇〇」で探した一覧（3/3,456件）。」
   # filtered_count は絞り込み後の件数（絞り込んでいなければ nil）。検索語とタグは、タグを先に書き検索語を加える。
   # 検索語は利用者の入力なので INDEX_QUERY_MAX_LENGTH 字で切る。2ページ目以降はページ番号を添える
   def units_index_meta_description(total:, filtered_count: nil, query: nil, tag_names: [], page: 1)
     if filtered_count.nil?
       return "#{UNITS_INDEX_SUBJECT}の索引。登録数は#{number_with_delimiter(total)}組#{index_page_note(page)}。" \
-             '名前やよみがなで探せるほか、タグで絞り込めます。'
+             '名前やタグで絞り込めます。'
     end
 
     index_filtered_meta_description(UNITS_INDEX_SUBJECT, total:, filtered_count:, query:, condition_names: tag_names, page:)
   end
 
   # 個人索引（/people。issue #1959）。バンド索引と同じ作りで、見出しの下にも同じ文を表示する。例:
-  #   絞り込みなし「ヴィジュアル系バンドマン・アーティストの索引。登録数は12,345人。…」
-  #   絞り込みあり「「ボーカル」「東京都」のヴィジュアル系バンドマン・アーティストのうち、「〇〇」で探した一覧（3/12,345件）。」
+  #   絞り込みなし「ヴィジュアル系バンドマンの索引。登録数は12,345人。名前やパート・出身地などで絞り込めます。」
+  #   絞り込みあり「「ボーカル」「東京都」のヴィジュアル系バンドマンのうち、「〇〇」で探した一覧（3/12,345件）。」
+  # 一覧の検索はひらがなのよみがなに対応していないため、「よみがなで探せる」とは書かない
   # condition_names は絞り込みの条件の表示名（people_index_filter_names の結果のあとに選んだタグの名前を続ける）。
   # 件数は個人ページのある人だけで、検索したときに出る「個人ページのないメンバー」は含めない
   def people_index_meta_description(total:, filtered_count: nil, query: nil, condition_names: [], page: 1)
     if filtered_count.nil?
       return "#{PEOPLE_INDEX_SUBJECT}の索引。登録数は#{number_with_delimiter(total)}人#{index_page_note(page)}。" \
-             '名前やよみがなで探せるほか、パート・出身地・タグなどで絞り込めます。'
+             '名前やパート・出身地などで絞り込めます。'
     end
 
     index_filtered_meta_description(PEOPLE_INDEX_SUBJECT, total:, filtered_count:, query:, condition_names:, page:)
