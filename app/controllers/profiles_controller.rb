@@ -91,7 +91,7 @@ class ProfilesController < ApplicationController
   def viewable_trends = current_user&.admin? ? Trend.all : Trend.published
 
   def load_person_data
-    @old_history_items = @resource.parse_old_history if @resource.old_history.present?
+    @old_history_items = @resource.parse_old_history
 
     @trends = viewable_trends.where('people @> ?', [{ person_id: @resource.id }].to_json)
                              .order(date: :desc).limit(10)
