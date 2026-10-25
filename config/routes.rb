@@ -257,6 +257,9 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
   # Legacy redirects for fixed important pages (issue #925)
   get '/NEWS.html', to: redirect('/trends')
   get '/release_recent.htm', to: redirect('/items')
+  # 旧サイトの索引ページ（key が "-"）がバンドとして取り込まれていたため、バンド索引へ転送する（issue #1957）。
+  # /:key より前に置く
+  get '/-', to: redirect('/units')
 
   # Legacy redirect for old search CGI (issue #1481)
   # 旧msearch.cgiの検索語パラメータは `query` だったため、新しい検索の `q` に

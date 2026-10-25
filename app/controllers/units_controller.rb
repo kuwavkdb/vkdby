@@ -21,6 +21,9 @@ class UnitsController < ApplicationController
     # ビューの @units.any? で存在確認のクエリが別に走らないよう、ここで読み込んでおく（issue #1855）
     @pagy, @units = pagy(scope, limit: 60)
     @units = @units.load
+    # meta description の「絞り込み後の件数/全体の件数」用（issue #1957）。絞り込んでいなければ件数は同じ
+    @filtered = params[:q].present? || @selected_tag_ids.any?
+    @total_unit_count = @filtered ? Unit.for_index.count : @pagy.count
   end
 
   # 一覧ページの入力候補（JSON）。候補には名前そのものを並べるため、名前・よみがな系の列だけを探す。

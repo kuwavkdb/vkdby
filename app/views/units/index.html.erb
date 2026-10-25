@@ -1,11 +1,29 @@
 <% content_for :title, "バンド索引" %>
+<%# 選んだタグは絞り込みグループの並び順で書く（issue #1957）。コントローラは tag_ids のキーに関係なく値で
+    絞り込むので、ここでも値（タグの id）で探す %>
+<% selected_tag_ids = @selected_tag_ids.values.map(&:to_s) %>
+<% selected_tag_names = @filter_groups.flat_map do |group|
+     group.tag_indices.select { |tag| selected_tag_ids.include?(tag.id.to_s) }.sort_by { |tag| tag.order_in_group.to_i }.map(&:short_name)
+   end %>
+<% if params[:q].present? %>
+  <%# 検索語は利用者が自由に入れられ、説明文にも入るため、検索語付きのページは検索エンジンに載せない（issue #1957） %>
+  <% content_for :head do %>
+    <meta name="robots" content="noindex, follow">
+  <% end %>
+<% end %>
+<% units_description = units_index_meta_description(
+     total: @total_unit_count, filtered_count: (@pagy.count if @filtered),
+     query: params[:q], tag_names: selected_tag_names, page: @pagy.page
+   ) %>
+<% content_for :description, units_description %>
 <div class="flex justify-center">
   <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
     <header class="mb-8 text-center flex flex-col items-center">
-      <h1 class="text-3xl font-black text-slate-800 dark:text-slate-100 flex items-center justify-center gap-3">
+      <h1 class="text-3xl font-black text-zinc-800 dark:text-zinc-100 flex items-center justify-center gap-3">
         <span class="text-unit">UNITS</span>
-        <span class="text-slate-500 dark:text-slate-600 text-lg font-bold"><%= @pagy.count %> records</span>
       </h1>
+      <%# meta description と同じ文を見出しの下に表示する。件数もこの文で示す（issue #1957） %>
+      <p class="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-300"><%= units_description %></p>
     </header>
 
     <div class="mb-6">
@@ -54,7 +72,7 @@
                 is_selected = current_tag_ids[group.id.to_s].to_s == tag.id.to_s
               %>
               <%= link_to units_path(q: params[:q], tag_ids: new_tag_ids), class: "px-2 py-1 rounded-lg text-sm font-bold transition-all #{is_selected ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600'}" do %>
-                <%= tag.name.sub(/\A[^\/]*\//, '') %>
+                <%= tag.short_name %>
                 <span class="ml-1 opacity-70 text-xs font-normal">(<%= @tag_unit_counts[tag.id] || 0 %>)</span>
               <% end %>
             <% end %>

@@ -2,8 +2,12 @@
 
 # ページごとの meta description（検索結果のスニペット）を登録データから組み立てる（issue #1937, #1938）。
 # 出力は layout の content_for(:description) 経由。長さの上限は ApplicationHelper::META_DESCRIPTION_MAX_LENGTH。
-# ジャンル（ヴィジュアル系）はサイトの方向性であってユニット自体の分類ではないため書かない。
+# ユニット・個人のページでは、ジャンル（ヴィジュアル系）はサイトの方向性であってユニット自体の分類ではないため書かない
+# （一覧ページはサイトの説明なので書く。issue #1957）。
 module MetaDescriptionHelper
+  # バンド索引の説明文に入れる検索語の長さの上限（利用者の入力なので切る）
+  UNITS_INDEX_QUERY_MAX_LENGTH = 30
+
   # Person#parts（Person::AVAILABLE_PARTS）の表記。パートを足したら、ここにも足す
   PART_NAMES = {
     'vocal' => 'ボーカル', 'guitar' => 'ギター', 'bass' => 'ベース', 'drums' => 'ドラム', 'keyboard' => 'キーボード',
@@ -44,7 +48,43 @@ module MetaDescriptionHelper
     "#{head}#{meta_description_list('過去の在籍バンド', past_names, room)}#{tail}"
   end
 
+  # バンド索引（/units。issue #1957）。一覧ページはサイトの方向性の説明なので「ヴィジュアル系」と書く。
+  # 索引に載るのはバンド（ユニット）だけで個人は載らないため「アーティスト」とは書かない。
+  # ページの見出しの下にも同じ文を表示する（件数もこの文で示す）。索引ページの説明にならないため、
+  # バンドページのような「各バンドの歴史や…を掲載」は付けない。
+  # 例:
+  #   絞り込みなし「ヴィジュアル系バンドの索引。登録数は3,456組。名前やよみがなで探せるほか、タグで絞り込めます。」
+  #   絞り込みあり「「活動中」「2000年代」のヴィジュアル系バンドのうち、「〇〇」で探した一覧（3/3,456件）。」
+  # filtered_count は絞り込み後の件数（絞り込んでいなければ nil）。検索語とタグは、タグを先に書き検索語を加える。
+  # 検索語は利用者の入力なので UNITS_INDEX_QUERY_MAX_LENGTH 字で切る。2ページ目以降はページ番号を添える
+  def units_index_meta_description(total:, filtered_count: nil, query: nil, tag_names: [], page: 1)
+    page_note = "#{page}ページ目" if page > 1
+    if filtered_count.nil?
+      return "ヴィジュアル系バンドの索引。登録数は#{number_with_delimiter(total)}組" \
+             "#{"（#{page_note}）" if page_note}。名前やよみがなで探せるほか、タグで絞り込めます。"
+    end
+
+    counts = ["#{number_with_delimiter(filtered_count)}/#{number_with_delimiter(total)}件", page_note].compact.join('・')
+    "#{units_index_meta_description_lead(query, tag_names)}（#{counts}）。"
+  end
+
   private
+
+  # 「「活動中」のヴィジュアル系バンドのうち、「〇〇」で探した一覧」など
+  def units_index_meta_description_lead(query, tag_names)
+    subject = 'ヴィジュアル系バンド'
+    tags = tag_names.map { |name| "「#{name}」" }.join.presence
+    keyword = "「#{query.to_s.strip.truncate(UNITS_INDEX_QUERY_MAX_LENGTH)}」" if query.to_s.strip.present?
+    if tags && keyword
+      "#{tags}の#{subject}のうち、#{keyword}で探した一覧"
+    elsif tags
+      "#{tags}の#{subject}の一覧"
+    elsif keyword
+      "#{keyword}で探した#{subject}の一覧"
+    else
+      "#{subject}の一覧"
+    end
+  end
 
   # 「2012年結成、2018年解散の」。準備中・不明のユニットと、結成年・解散年がどちらも読めないユニットは何も書かない
   def unit_meta_description_period(unit, solo:)
