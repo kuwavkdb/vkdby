@@ -23,6 +23,8 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
 
     @person_data_filters = build_person_data_filters
     @filters_open = any_filter_selected?
+    # 出身地は自由に入れられる値なので、登録されている出身地（絞り込みの候補）にあるときだけ説明文に書く（issue #1959）
+    @described_hometown = @selected_hometown if registered_hometown?(@selected_hometown)
   end
 
   # 一覧ページの入力候補（JSON）。候補には名前そのものを並べるため、名前・よみがな系の列だけを探す。
@@ -131,6 +133,12 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
     scope = scope.where(status: @selected_status) if @selected_status
 
     any_filter_selected? ? scope.reorder(name_kana: :asc) : scope
+  end
+
+  def registered_hometown?(hometown)
+    return false if hometown.blank?
+
+    @person_data_filters.find { |filter| filter[:param] == :hometown }[:options].any? { |option| option[:value] == hometown }
   end
 
   def build_person_data_filters

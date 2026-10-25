@@ -51,4 +51,11 @@ class PeopleIndexMetaDescriptionTest < ActionDispatch::IntegrationTest
     assert_equal "「ボーカル」のヴィジュアル系バンドマンの一覧（2/#{total}件）。", meta_description
     assert_select 'meta[name="robots"]', count: 0
   end
+
+  test '登録されていない出身地は、絞り込んでも説明文と見出しの下に書かない' do
+    get people_path(hometown: '最安値はこちらexample.com')
+
+    assert_equal "ヴィジュアル系バンドマンの一覧（0/#{total}件）。", meta_description
+    assert_select 'header p', text: meta_description
+  end
 end

@@ -1,12 +1,9 @@
 <% content_for :title, "個人一覧" %>
-<%# 説明文の絞り込み条件は、個人の項目（パート→出身地→状況→血液型）のあとに、選んだタグを絞り込みグループの順で続ける
-    （issue #1959）。コントローラは tag_ids のキーに関係なく値で絞り込むので、タグは値（id）で探す %>
-<% selected_tag_ids = @selected_tag_ids.values.map(&:to_s) %>
-<% selected_tag_names = @filter_groups.flat_map do |group|
-     group.tag_indices.select { |tag| selected_tag_ids.include?(tag.id.to_s) }.sort_by { |tag| tag.order_in_group.to_i }.map(&:short_name)
-   end %>
-<% condition_names = people_index_filter_names(part: @selected_part, hometown: @selected_hometown,
-                                               status: @selected_status, blood: @selected_blood) + selected_tag_names %>
+<%# 説明文の絞り込み条件は、個人の項目（パート→出身地→状況→血液型）のあとに選んだタグを続ける（issue #1959）。
+    出身地は登録されている値のときだけ書く（@described_hometown） %>
+<% condition_names = people_index_filter_names(part: @selected_part, hometown: @described_hometown,
+                                               status: @selected_status, blood: @selected_blood) +
+                     index_selected_tag_names(@filter_groups, @selected_tag_ids) %>
 <% if params[:q].present? %>
   <%# 検索語は利用者が自由に入れられ、説明文にも入るため、検索語付きのページは検索エンジンに載せない（issue #1959） %>
   <% content_for :head do %>

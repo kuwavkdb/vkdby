@@ -1,15 +1,10 @@
 # frozen_string_literal: true
 
 # ページごとの meta description（検索結果のスニペット）を登録データから組み立てる（issue #1937, #1938）。
+# 索引ページ（バンド・個人）の説明文は IndexMetaDescriptionHelper。
 # 出力は layout の content_for(:description) 経由。長さの上限は ApplicationHelper::META_DESCRIPTION_MAX_LENGTH。
-# ユニット・個人のページでは、ジャンル（ヴィジュアル系）はサイトの方向性であってユニット自体の分類ではないため書かない
-# （一覧ページはサイトの説明なので書く。issue #1957）。
+# ユニット・個人のページでは、ジャンル（ヴィジュアル系）はサイトの方向性であってユニット自体の分類ではないため書かない。
 module MetaDescriptionHelper
-  # 索引ページ（バンド・個人）の説明文に入れる検索語の長さの上限（利用者の入力なので切る）
-  INDEX_QUERY_MAX_LENGTH = 30
-  UNITS_INDEX_SUBJECT = 'ヴィジュアル系バンド'
-  PEOPLE_INDEX_SUBJECT = 'ヴィジュアル系バンドマン'
-
   # Person#parts（Person::AVAILABLE_PARTS）の表記。パートを足したら、ここにも足す
   PART_NAMES = {
     'vocal' => 'ボーカル', 'guitar' => 'ギター', 'bass' => 'ベース', 'drums' => 'ドラム', 'keyboard' => 'キーボード',
@@ -50,70 +45,7 @@ module MetaDescriptionHelper
     "#{head}#{meta_description_list('過去の在籍バンド', past_names, room)}#{tail}"
   end
 
-  # バンド索引（/units。issue #1957）。一覧ページはサイトの方向性の説明なので「ヴィジュアル系」と書く。
-  # 索引に載るのはバンド（ユニット）だけで個人は載らないため「アーティスト」とは書かない。
-  # ページの見出しの下にも同じ文を表示する（件数もこの文で示す）。索引ページの説明にならないため、
-  # バンドページのような「各バンドの歴史や…を掲載」は付けない。
-  # 例:
-  #   絞り込みなし「ヴィジュアル系バンドの索引。登録数は3,456組。名前やタグで絞り込めます。」
-  # 一覧の検索はひらがなのよみがなに対応していないため、「よみがなで探せる」とは書かない（個人索引と同じ）
-  #   絞り込みあり「「活動中」「2000年代」のヴィジュアル系バンドのうち、「〇〇」で探した一覧（3/3,456件）。」
-  # filtered_count は絞り込み後の件数（絞り込んでいなければ nil）。検索語とタグは、タグを先に書き検索語を加える。
-  # 検索語は利用者の入力なので INDEX_QUERY_MAX_LENGTH 字で切る。2ページ目以降はページ番号を添える
-  def units_index_meta_description(total:, filtered_count: nil, query: nil, tag_names: [], page: 1)
-    if filtered_count.nil?
-      return "#{UNITS_INDEX_SUBJECT}の索引。登録数は#{number_with_delimiter(total)}組#{index_page_note(page)}。" \
-             '名前やタグで絞り込めます。'
-    end
-
-    index_filtered_meta_description(UNITS_INDEX_SUBJECT, total:, filtered_count:, query:, condition_names: tag_names, page:)
-  end
-
-  # 個人索引（/people。issue #1959）。バンド索引と同じ作りで、見出しの下にも同じ文を表示する。例:
-  #   絞り込みなし「ヴィジュアル系バンドマンの索引。登録数は12,345人。名前やパート・出身地などで絞り込めます。」
-  #   絞り込みあり「「ボーカル」「東京都」のヴィジュアル系バンドマンのうち、「〇〇」で探した一覧（3/12,345件）。」
-  # 一覧の検索はひらがなのよみがなに対応していないため、「よみがなで探せる」とは書かない
-  # condition_names は絞り込みの条件の表示名（people_index_filter_names の結果のあとに選んだタグの名前を続ける）。
-  # 件数は個人ページのある人だけで、検索したときに出る「個人ページのないメンバー」は含めない
-  def people_index_meta_description(total:, filtered_count: nil, query: nil, condition_names: [], page: 1)
-    if filtered_count.nil?
-      return "#{PEOPLE_INDEX_SUBJECT}の索引。登録数は#{number_with_delimiter(total)}人#{index_page_note(page)}。" \
-             '名前やパート・出身地などで絞り込めます。'
-    end
-
-    index_filtered_meta_description(PEOPLE_INDEX_SUBJECT, total:, filtered_count:, query:, condition_names:, page:)
-  end
-
-  # 個人索引の、個人の項目での絞り込みの表示名。パート→出身地→状況→血液型の順（issue #1959）
-  def people_index_filter_names(part: nil, hometown: nil, status: nil, blood: nil)
-    blood_name = blood == 'Unknown' ? '血液型不明' : "#{blood}型" if blood.present?
-    [PART_NAMES[part], hometown.presence, Person::STATUS_TRANSLATIONS[status], blood_name].compact
-  end
-
   private
-
-  # 「（2ページ目）」。1ページ目は空
-  def index_page_note(page)
-    "（#{page}ページ目）" if page > 1
-  end
-
-  # 絞り込んだ索引ページの説明文。「「活動中」のヴィジュアル系バンドのうち、「〇〇」で探した一覧（3/3,456件・2ページ目）。」など。
-  # 条件を先に書き、検索語を加える
-  def index_filtered_meta_description(subject, total:, filtered_count:, query:, condition_names:, page:)
-    conditions = condition_names.map { |name| "「#{name}」" }.join.presence
-    keyword = "「#{query.to_s.strip.truncate(INDEX_QUERY_MAX_LENGTH)}」" if query.to_s.strip.present?
-    lead = if conditions && keyword
-             "#{conditions}の#{subject}のうち、#{keyword}で探した一覧"
-           elsif conditions
-             "#{conditions}の#{subject}の一覧"
-           elsif keyword
-             "#{keyword}で探した#{subject}の一覧"
-           else
-             "#{subject}の一覧"
-           end
-    counts = ["#{number_with_delimiter(filtered_count)}/#{number_with_delimiter(total)}件", ("#{page}ページ目" if page > 1)]
-    "#{lead}（#{counts.compact.join('・')}）。"
-  end
 
   # 「2012年結成、2018年解散の」。準備中・不明のユニットと、結成年・解散年がどちらも読めないユニットは何も書かない
   def unit_meta_description_period(unit, solo:)
