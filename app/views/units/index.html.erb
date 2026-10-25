@@ -1,10 +1,6 @@
 <% content_for :title, "バンド索引" %>
-<%# 選んだタグは絞り込みグループの並び順で書く（issue #1957）。コントローラは tag_ids のキーに関係なく値で
-    絞り込むので、ここでも値（タグの id）で探す %>
-<% selected_tag_ids = @selected_tag_ids.values.map(&:to_s) %>
-<% selected_tag_names = @filter_groups.flat_map do |group|
-     group.tag_indices.select { |tag| selected_tag_ids.include?(tag.id.to_s) }.sort_by { |tag| tag.order_in_group.to_i }.map(&:short_name)
-   end %>
+<%# 選んだタグは絞り込みグループの並び順で書く（issue #1957） %>
+<% selected_tag_names = index_selected_tag_names(@filter_groups, @selected_tag_ids) %>
 <% if params[:q].present? %>
   <%# 検索語は利用者が自由に入れられ、説明文にも入るため、検索語付きのページは検索エンジンに載せない（issue #1957） %>
   <% content_for :head do %>
