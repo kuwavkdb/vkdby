@@ -37,16 +37,14 @@
     end
 
     if @resource.status.present?
-      compact_items << { label: "ステータス", value: capture do %>
-        <span class="inline-block whitespace-nowrap bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded text-xs font-bold text-zinc-600 dark:text-zinc-300"><%= @resource.status_text %></span>
-      <% end }
+      compact_items << { label: "ステータス", value: capture { tag.span(@resource.status_text, class: "whitespace-nowrap") } }
     end
   %>
-  <dl class="grid grid-cols-1 @[28rem]:grid-cols-2 gap-x-6 gap-y-3">
+  <dl class="grid grid-cols-1 @[20rem]:grid-cols-2 gap-x-6 gap-y-3">
     <%= render BasicAttributeItemComponent.with_collection(compact_items) %>
 
     <% if @resource.is_a?(Unit) && @resource.activity_periods.present? %>
-      <div class="@[28rem]:col-span-2 flex flex-row justify-between items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3">
+      <div class="@[20rem]:col-span-2 flex flex-row justify-between items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3">
         <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3">活動時期</dt>
         <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 grid gap-x-3 justify-end" style="grid-template-columns: auto auto">
           <% @resource.activity_periods.each do |period| %>
@@ -58,7 +56,7 @@
     <% end %>
 
     <% if visible_tag_indices.present? %>
-      <div class="@[28rem]:col-span-2 flex flex-row justify-between items-baseline pb-3">
+      <div class="@[20rem]:col-span-2 flex flex-row justify-between items-baseline pb-3">
         <dt class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3">タグ</dt>
         <dd class="text-right flex flex-wrap justify-end gap-2">
           <% visible_tag_indices.each do |tag| %>
