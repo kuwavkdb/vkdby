@@ -58,7 +58,11 @@ module Admin
       @unit = Unit.new(params[:unit]&.permit(:name, :key, :name_kana, :status, :unit_type, :old_key))
       @unit.name ||= params[:name]
       @unit.old_key ||= params[:old_key]
-      prefill_from_unit_submission(@unit, params[:unit_submission_id]) if params[:unit_submission_id].present?
+      return if params[:unit_submission_id].blank?
+
+      # 投稿から作成するユニットは仮登録を初期値にする（issue #1965）
+      @unit.provisional = true
+      prefill_from_unit_submission(@unit, params[:unit_submission_id])
     end
 
     def show
@@ -124,6 +128,7 @@ module Admin
 
     def create
       @unit = Unit.new(unit_params)
+      @unit.provisional = unit_submission_provisional? if params[:unit_submission_id].present?
 
       if @unit.save
         record_update_log(@unit, action: 'create')
@@ -299,6 +304,14 @@ module Admin
                                                links_attributes: %i[text url])
       permitted[:provisional] = true unless current_user.admin? && permitted.key?(:provisional)
       permitted
+    end
+
+    # 投稿から作成するとき（issue #1965）は仮登録にする。「仮登録として保存する」を外して
+    # 公開状態で作成できるのは admin のみ（quick_unit_params と同じ扱い）。
+    def unit_submission_provisional?
+      return true unless current_user.admin?
+
+      ActiveModel::Type::Boolean.new.cast(params.dig(:unit, :provisional)) != false
     end
 
     # quick_new（GET）用。URL経由の事前入力に対応する（issue #1611, #1616）。quick_unit_params と異なり

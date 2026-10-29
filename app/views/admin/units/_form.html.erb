@@ -174,6 +174,22 @@
 
   <% if local_assigns[:unit_submission_id].present? %>
     <%= hidden_field_tag :unit_submission_id, unit_submission_id %>
+
+    <%# 投稿から作成するユニットは仮登録を初期値にする（issue #1965） %>
+    <div class="rounded-md border border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/30 p-4">
+      <% if current_user.admin? %>
+        <label class="inline-flex items-start gap-2">
+          <%= form.check_box :provisional, class: "mt-0.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600" %>
+          <span class="text-sm font-semibold text-amber-900 dark:text-amber-100">仮登録として保存する</span>
+        </label>
+        <p class="mt-1 text-xs text-amber-900 dark:text-amber-100">仮登録のユニットは一般には公開されず、公開ページは admin のみ閲覧できます。編集画面の「本登録にする」で公開できます。</p>
+      <% else %>
+        <p class="text-sm text-amber-900 dark:text-amber-100">
+          <span class="inline-block px-2 py-0.5 mr-1 rounded bg-amber-200 dark:bg-amber-800 text-xs font-semibold">仮登録</span>
+          投稿から作成したユニットは仮登録になり、一般には公開されません。admin が内容を確認して本登録にすると公開されます。
+        </p>
+      <% end %>
+    </div>
   <% end %>
 
   <%# 投稿画像の引き継ぎ（issue #1719）。選んだ画像はUnitの「画像」セクションへ移し、選ばなかった画像は縮小して投稿に残す %>

@@ -9,6 +9,7 @@
 # - 経歴が空、またはユニット名を持つ項目がなければ付けない
 # - サポートとしての在籍（役割か項目名に「サポート」を含む項目）は除く。最後の期間がサポートだけなら、
 #   それより前の期間のユニットになり、後ろに「→」があるので ex- が付く（issue #1775）
+# - {{temp}}プラグインで書かれた項目（要出典など、確かでない経歴）も同じように除く（issue #1970）
 class PersonUnitLabel
   EX_PREFIX = 'ex-'
   SUPPORT = 'サポート'
@@ -32,9 +33,9 @@ class PersonUnitLabel
 
   private
 
-  # 付けるユニットの候補か（ユニット名があり、サポートとしての在籍ではない）
+  # 付けるユニットの候補か（ユニット名があり、サポートとしての在籍でも{{temp}}の項目でもない）
   def candidate?(item)
-    display_name(item).present? && !support?(item)
+    display_name(item).present? && !support?(item) && !item[:is_temp]
   end
 
   def support?(item)
