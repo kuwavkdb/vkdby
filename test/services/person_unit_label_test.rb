@@ -46,6 +46,17 @@ class PersonUnitLabelTest < ActiveSupport::TestCase
                        '[パンプキンストア|http://artist.aremond.net/pumpkinstore/](サポート){{fn 2014/08/28~}}')
   end
 
+  test '{{temp}}の項目（要出典など）は除く（issue #1970）' do
+    # 最後の期間が{{temp}}だけなら、それより前の期間のユニットに ex- を付ける
+    assert_equal 'ex-バンドA', label('[[バンドA]] → {{temp VOID → TweiT → Far East Dizain,要出典}}')
+    # 注記がなくても除く
+    assert_equal 'ex-バンドA', label('[[バンドA]] → {{temp バンドB}}')
+    # 同じ期間に{{temp}}でない項目があればそちら
+    assert_equal 'バンドA', label('[[バンドB]] → {{temp バンドC,要出典}}、[[バンドA]]')
+    # {{temp}}しかなければ付けない
+    assert_nil label('{{temp VOID → TweiT → Far East Dizain,要出典}}')
+  end
+
   test '//で始まるコメント行は末尾の「→」の判定に使わない' do
     assert_equal 'ソロ', label("ソロ\n// メモ →")
   end
