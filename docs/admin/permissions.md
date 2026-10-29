@@ -68,6 +68,7 @@
 | Units / People — 一覧からのStatus一括更新 | bulk_update_status |
 | Units — 仮登録のユニットを本登録にして一般公開する（issue #1764） | confirm_provisional |
 | Units — 簡単登録で「仮登録として保存する」を外し、公開状態で作成する（issue #1764） | quick_create（`provisional` の指定のみ） |
+| Units — ユニット投稿から作成するとき「仮登録として保存する」を外し、公開状態で作成する。admin 以外が投稿から作成したユニットは常に仮登録になる（issue #1965） | create（`unit_submission_id` があるときの `provisional` の指定のみ） |
 | 仮登録ユニットの公開ページ（`/キー`）の閲覧。admin 以外とログインしていない人には 404 になり、一覧・検索・サイトマップ等にも出ない（issue #1764） | ― （公開側 `ProfilesController#show` ほか） |
 | Unit Submissions（ログイン不要の投稿フォームからの投稿一覧・添付画像の確認・却下。却下時に添付画像を削除。変換済み投稿に残った画像を変換先 Unit の「画像」セクションへ追加） | 全アクション（index / reject / add_image_to_unit） |
 | Units — 投稿からの新規作成時に、投稿画像を「画像」セクションへ引き継ぐ（admin 以外が作成した場合は画像を引き継がない） | new / create（画像の選択欄・引き継ぎのみ） |
@@ -112,7 +113,7 @@
 | `admin?` でない | Units / People 一覧のリダイレクト元「物理削除」ボタン |
 | `admin?` でない | Units / People 一覧のチェックボックス・一括Status更新バー |
 | `admin?` でない | Unit 編集画面の「本登録にする」ボタン |
-| `admin?` でない | Unit 簡単登録フォームの「仮登録として保存する」チェックボックス（代わりに「仮登録になる」旨の案内を表示） |
+| `admin?` でない | Unit 簡単登録フォーム・投稿からの Unit 作成フォームの「仮登録として保存する」チェックボックス（代わりに「仮登録になる」旨の案内を表示） |
 | ログインしていない | 公開ページ（ユニットページ）のスナップショット見出し・メンバー行の「編集」「個人」リンク |
 | `admin?` でない | 年指定なしの日付ページ（`/date/-/:month/:day`）下部の「今日は何の日？」Xシェア用テキスト・コピーボタン（出来事・誕生日の2つ。投稿文バッチと同じ内容、issue #1890） |
 
@@ -126,7 +127,7 @@
 - ログイン履歴（`OperationLog`）の記録: `app/controllers/sessions_controller.rb`（ログイン成功時）
 - ログイン履歴の参照: `app/controllers/admin/operation_logs_controller.rb`（`require_admin`）
 - Unit Submissions（投稿の一覧・添付画像の確認・却下、変換済みで利用了承済みの投稿画像の変換先 Unit への追加、承認時のUnit新規作成フォームへの引き継ぎ）: `app/controllers/admin/unit_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/units_controller.rb#new/#create`
-- 仮登録ユニット（issue #1764）: カラム `units.provisional`、公開側で使うスコープ `Unit.publicly_visible`（`app/models/unit.rb`）。簡単登録での強制・本登録への切り替えは `app/controllers/admin/units_controller.rb#quick_unit_params/#confirm_provisional`（`require_admin`）、公開ページでの 404 判定は `app/controllers/profiles_controller.rb#show`
+- 仮登録ユニット（issue #1764）: カラム `units.provisional`、公開側で使うスコープ `Unit.publicly_visible`（`app/models/unit.rb`）。簡単登録・投稿からの作成（issue #1965）での強制・本登録への切り替えは `app/controllers/admin/units_controller.rb#quick_unit_params/#unit_submission_provisional?/#confirm_provisional`（`require_admin`）、公開ページでの 404 判定は `app/controllers/profiles_controller.rb#show`
 - 投稿画像の引き継ぎ（選んだ画像を Unit の「画像」セクションへ移し、残りは縮小して投稿に残す）: `app/services/unit_submission_image_transfer.rb`。`Admin::UnitsController#new/#create` では `current_user.admin?` のときだけ行う
 - Trend Submissions（投稿の一覧・却下、承認時のTrend新規作成フォームへの引き継ぎ）: `app/controllers/admin/trend_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/trends_controller.rb#new/#create`
 - Venue Submissions（投稿の一覧・却下・対応済み、登録時の会場新規作成フォームへの引き継ぎ、編集画面での訂正の表示）: `app/controllers/admin/venue_submissions_controller.rb`（`require_admin`）、`app/controllers/admin/venues_controller.rb#new/#create/#edit`（`current_user.admin?` のときのみ）
