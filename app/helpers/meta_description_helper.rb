@@ -20,7 +20,7 @@ module MetaDescriptionHelper
   def unit_meta_description(unit, members: [])
     solo = unit.solo?
     head = "#{name_with_kana(unit.name, unit.name_kana)}は#{unit_meta_description_period(unit, solo:)}" \
-           "#{solo ? 'アーティスト' : 'バンド'}#{'（活動休止中）' if unit.hiatus?}。"
+           "#{solo ? 'アーティスト' : 'バンド'}#{'（活動休止中）' if unit.hiatus?}。#{unit_meta_description_transition(unit)}"
     tail = solo ? 'アーティストの歴史や経歴、音源等を掲載。' : 'バンドの歴史やメンバーの経歴、音源等を掲載。'
     names = solo ? [] : members.map(&:name).compact_blank
     room = ApplicationHelper::META_DESCRIPTION_MAX_LENGTH - head.length - tail.length
@@ -47,13 +47,24 @@ module MetaDescriptionHelper
 
   private
 
-  # 「2012年結成、2018年解散の」。準備中・不明のユニットと、結成年・解散年がどちらも読めないユニットは何も書かない
+  # 移行したユニット（issue #1996）の「2018年に〇〇として活動を継続。」。活動の終わりの年が読めなければ年を省く。
+  # 公開側に出せる後継ユニットが無ければ何も書かない
+  def unit_meta_description_transition(unit)
+    successor = unit.visible_transitioned_unit
+    return '' unless successor
+
+    year = unit.dissolution_date&.first(4)
+    "#{"#{year}年に" if year}#{successor.name}として活動を継続。"
+  end
+
+  # 「2012年結成、2018年解散の」。準備中・不明のユニットと、結成年・解散年がどちらも読めないユニットは何も書かない。
+  # 移行したユニットは解散していないので、活動の終わりは unit_meta_description_transition で書く
   def unit_meta_description_period(unit, solo:)
-    return '' unless unit.active? || unit.hiatus? || unit.disbanded?
+    return '' unless unit.active? || unit.hiatus? || unit.disbanded? || unit.transitioned?
 
     parts = []
     parts << "#{unit.founding_date.first(4)}年#{solo ? '活動開始' : '結成'}" if unit.founding_date
-    parts << "#{unit.dissolution_date.first(4)}年#{solo ? '活動終了' : '解散'}" if unit.dissolution_date
+    parts << "#{unit.dissolution_date.first(4)}年#{solo ? '活動終了' : '解散'}" if unit.dissolution_date && unit.disbanded?
     parts.any? ? "#{parts.join('、')}の" : ''
   end
 

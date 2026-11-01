@@ -49,7 +49,8 @@ class UnitSubmission < ApplicationRecord
   accepts_nested_attributes_for :links, allow_destroy: true, reject_if: proc { |attrs| attrs['url'].blank? }
 
   enum :unit_type, { band: 0, unit: 1, session: 2, solo: 3, limited: 4, moved: 5, other: 99 }
-  enum :status, { pre: 0, active: 1, freeze: 2, disbanded: 3, unknown: 99 }
+  # Unit の status と同じ値を持つ（issue #1996 で移行を追加）
+  enum :status, { pre: 0, active: 1, freeze: 2, disbanded: 3, transitioned: 4, unknown: 99 }
   enum :submission_status, { pending: 0, rejected: 1, converted: 2 }
 
   UNIT_TYPE_TRANSLATIONS = {

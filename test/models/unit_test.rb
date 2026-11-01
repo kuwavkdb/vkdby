@@ -256,4 +256,51 @@ class UnitTest < ActiveSupport::TestCase
     assert_not visible_alias.hidden
     assert hidden_alias.hidden
   end
+
+  test 'transitioned_unit_key= は key（大文字・小文字を区別しない）で後継ユニットを指定し、空なら外す（issue #1996）' do
+    successor = Unit.create!(name: 'Successor Unit', key: 'successor-unit-test', status: :active)
+    unit = Unit.create!(name: 'Transitioned Unit', key: 'transitioned-unit-test', status: :transitioned)
+
+    unit.update!(transitioned_unit_key: 'SUCCESSOR-unit-test')
+    assert_equal successor, unit.reload.transitioned_unit
+    assert_equal 'successor-unit-test', unit.transitioned_unit_key
+    assert_equal [unit], successor.predecessor_units.to_a
+
+    unit.update!(transitioned_unit_key: '')
+    assert_nil unit.reload.transitioned_unit
+  end
+
+  test '存在しないキーと自分自身は後継ユニットに指定できない（issue #1996）' do
+    unit = Unit.create!(name: 'Transitioned Self', key: 'transitioned-self-test', status: :transitioned)
+
+    assert_not unit.update(transitioned_unit_key: 'no-such-unit-key')
+    assert_includes unit.errors[:transitioned_unit_key], 'に一致するユニットがありません'
+
+    assert_not unit.update(transitioned_unit_key: unit.key)
+    assert_includes unit.errors[:transitioned_unit_key], 'に自分自身は指定できません'
+  end
+
+  test 'visible_transitioned_unit はステータスが移行のときだけ、公開している後継ユニットを返す（issue #1996）' do
+    successor = Unit.create!(name: 'Visible Successor', key: 'visible-successor-test', status: :active)
+    unit = Unit.create!(name: 'Visible Transitioned', key: 'visible-transitioned-test', status: :transitioned,
+                        transitioned_unit: successor)
+
+    assert_equal successor, unit.visible_transitioned_unit
+    assert_equal [unit], successor.visible_predecessor_units.to_a
+
+    unit.update!(status: :disbanded)
+    assert_nil unit.visible_transitioned_unit
+    assert_empty successor.visible_predecessor_units
+
+    unit.update!(status: :transitioned)
+    successor.update!(provisional: true)
+    assert_nil unit.visible_transitioned_unit
+  end
+
+  test '移行したユニットも活動期間の終わりを解散日とする（issue #1996）' do
+    unit = Unit.create!(name: 'Transitioned Date', key: 'transitioned-date-test', status: :transitioned,
+                        activity_period: [{ 'from' => '2012/04/**', 'to' => '2018/12/24' }])
+
+    assert_equal '2018-12-24', unit.dissolution_date
+  end
 end
