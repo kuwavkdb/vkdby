@@ -139,16 +139,4 @@ class UnitMetaDescriptionTest < ActionDispatch::IntegrationTest
 
     assert_equal Rails.application.config.site_description, meta_description
   end
-
-  test '移行したバンドは解散と書かず、後継ユニットとして活動を継続したことを書く（issue #1996）' do
-    successor = Unit.create!(name: 'Meta Successor', key: 'meta-successor', status: :active)
-    unit = Unit.create!(name: 'Meta Transitioned', key: 'meta-transitioned', status: :transitioned,
-                        transitioned_unit: successor,
-                        activity_period: [{ 'from' => '2012/04/**', 'to' => '2018/12/24' }])
-
-    get profile_path(unit.key)
-
-    assert_equal 'Meta Transitionedは2012年結成のバンド。2018年にMeta Successorとして活動を継続。' \
-                 'バンドの歴史やメンバーの経歴、音源等を掲載。', meta_description
-  end
 end
