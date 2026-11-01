@@ -122,6 +122,18 @@ module WikiParser # rubocop:disable Metrics/ModuleLength
     strip_history_comments(history_text).end_with?('→')
   end
 
+  # 状況のわからない人に出す言い回し。「現在」がいつかわからないため「活動状況不明」とする（issue #1992）
+  HISTORY_UNKNOWN_LABEL = '活動状況不明'
+
+  # 表示用の経歴。経歴が「→」で終わっていれば、最後の期間のあとに「活動状況不明」の行を足す。末尾の「→」は
+  # 読み捨てられ、最後に書かれたユニットに在籍中のように見えてしまうため（issue #1939）。
+  # 足す行は {{category 引退}} などを解析した結果と同じ形にし、バッジで出す（issue #1992）
+  def history_items_with_unknown(items, history_text)
+    return items if items.empty? || !history_ends_with_arrow?(history_text)
+
+    items + [[{ unit_name: '', notes: [HISTORY_UNKNOWN_LABEL] }]]
+  end
+
   private
 
   # Filter out comment lines starting with //

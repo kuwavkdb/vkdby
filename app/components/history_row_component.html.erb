@@ -31,7 +31,7 @@
         <% end %>
       <% if item[:notes].present? %>
         <% item[:notes].each do |note| %>
-          <span class="text-xs font-normal text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded ml-2"><%= note %></span>
+          <%= helpers.history_note_badge(note) %>
         <% end %>
       <% end %>
     </span>

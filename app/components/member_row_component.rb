@@ -93,25 +93,15 @@ class MemberRowComponent < ViewComponent::Base
     true
   end
 
+  # 個人と紐づいたメンバーは、ステータスから状態の行を補った経歴を出す（issue #1992）。
+  # どちらも経歴が「→」で終わっていれば「活動状況不明」の行を足す（issue #1939）
   def person_history_items
     if @member.person&.old_history.present?
-      @member.person.parse_old_history
+      @member.person.history_items_with_status
     elsif @member.inline_history.present?
-      @member.parse_inline_history
+      @member.history_items_with_unknown(@member.parse_inline_history, @member.inline_history)
     else
       []
-    end
-  end
-
-  # 経歴が「→」で終わっていれば、最後の期間のあとに「現在不明」の行を出す。末尾の「→」は
-  # 読み捨てられ、最後に書かれたユニットに在籍中のように見えてしまうため（issue #1939）
-  def history_ends_with_arrow?
-    if @member.person&.old_history.present?
-      @member.person.history_ends_with_arrow?(@member.person.old_history)
-    elsif @member.inline_history.present?
-      @member.history_ends_with_arrow?(@member.inline_history)
-    else
-      false
     end
   end
 end
