@@ -1,0 +1,27 @@
+<%# 楽天アフィリエイトのウィジェット（issue #1990）。size: 広告のサイズ（楽天のウィジェット作成画面で選べる "728x200" などの値）、ts: 広告タグの rakuten_ts の値（サイズごとに異なる）、
+    media: 広告を読み込む画面幅のメディアクエリ、class: 表示する画面幅を絞るクラス（media と揃える）。
+    本番かつ未ログイン時のみ表示する。media に合わない画面幅では広告のスクリプト自体を読み込まない。
+    「広告」の表記は、広告が実際に書き込まれたときだけ出す（rakuten_widget_controller が data-filled を付ける） %>
+<% if Rails.env.production? && !(defined?(logged_in?) && logged_in?) %>
+  <% config = {
+       design: "slide",
+       affiliateId: "0346b04f.01a040ba.082aa422.43e5b988",
+       items: "ctsmatch",
+       genreId: "0",
+       size: size,
+       target: "_blank",
+       theme: "gray",
+       border: "on",
+       auto_mode: "on",
+       genre_title: "off",
+       recommend: "on",
+       ts: ts
+     } %>
+  <div data-controller="rakuten-widget"
+       data-rakuten-widget-config-value="<%= config.to_json %>"
+       data-rakuten-widget-media-value="<%= media %>"
+       class="group <%= local_assigns[:class] %> max-w-full overflow-hidden mx-auto mt-8 px-4 sm:px-6 lg:px-8">
+    <p class="hidden group-data-filled:block mb-2 text-center text-xs text-zinc-500 dark:text-zinc-400">広告</p>
+    <div data-rakuten-widget-target="slot" class="flex justify-center"></div>
+  </div>
+<% end %>
