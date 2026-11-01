@@ -49,6 +49,9 @@ application.register("quick-unit-form", QuickUnitFormController)
 import QuickUnitYamlPasteController from "controllers/quick_unit_yaml_paste_controller"
 application.register("quick-unit-yaml-paste", QuickUnitYamlPasteController)
 
+import RakutenWidgetController from "controllers/rakuten_widget_controller"
+application.register("rakuten-widget", RakutenWidgetController)
+
 import SearchSuggestController from "controllers/search_suggest_controller"
 application.register("search-suggest", SearchSuggestController)
 

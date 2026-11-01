@@ -572,6 +572,11 @@
       <% end %>
       <%= yield %>
     </main>
+    <%# 728x200 が余白込みで収まる lg 以上では 728x200 を、それより狭い画面では 300x250 を表示する %>
+    <% unless content_for?(:disable_adsense) %>
+      <%= render 'layouts/rakuten_widget', size: "728x200", ts: "1793501531221", media: "(min-width: 1024px)", class: "hidden lg:block" %>
+      <%= render 'layouts/rakuten_widget', size: "300x250", ts: "1793501868908", media: "(max-width: 1023.98px)", class: "lg:hidden" %>
+    <% end %>
     <% if @footer_page %>
       <footer class="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 mt-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
