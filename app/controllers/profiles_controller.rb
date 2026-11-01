@@ -92,6 +92,8 @@ class ProfilesController < ApplicationController
 
   def load_person_data
     @old_history_items = @resource.parse_old_history
+    # 経歴欄には、ステータスから状態の行を補ったものを出す（issue #1992）。meta description は補う前のものを使う
+    @display_history_items = @resource.history_items_with_status(@old_history_items)
 
     @trends = viewable_trends.where('people @> ?', [{ person_id: @resource.id }].to_json)
                              .order(date: :desc).limit(10)

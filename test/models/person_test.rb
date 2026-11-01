@@ -126,6 +126,41 @@ class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
     assert_nil item[:internal_url]
   end
 
+  test 'history_items_with_status は引退の人の経歴に引退が書かれていなければ末尾に引退の行を補う' do
+    person = Person.new(status: :retirement, old_history: '[[BandA]] → [[BandB]]')
+
+    assert_equal [{ unit_name: '', notes: ['引退'] }], person.history_items_with_status.last
+  end
+
+  test 'history_items_with_status は活動休止・死去の人にもその状態の行を補う' do
+    assert_equal ['活動休止'], Person.new(status: :hiatus, old_history: '[[BandA]]').history_items_with_status.last[0][:notes]
+    assert_equal ['死去'], Person.new(status: :passed_away, old_history: '[[BandA]]').history_items_with_status.last[0][:notes]
+  end
+
+  test 'history_items_with_status は経歴のどこかに状態が書かれていれば補わない' do
+    [
+      '[[BandA]] → {{category 引退}}{{fn 2010/12/28}}',
+      '[[BandA]] → 引退',
+      '[[BandA]] → 引退、レーシングドライバーに転向',
+      '[[BandA]] → {{category 引退}} → {{temp BandB(name),要出典}}'
+    ].each do |history|
+      person = Person.new(status: :retirement, old_history: history)
+      assert_equal person.parse_old_history, person.history_items_with_status, history
+    end
+  end
+
+  test 'history_items_with_status はユニットの項目に添えた活動休止の注記を状態とみなさない' do
+    person = Person.new(status: :hiatus, old_history: '[[BandA]]{{fn 2021/11/17活動休止}}')
+
+    assert_equal ['活動休止'], person.history_items_with_status.last[0][:notes]
+  end
+
+  test 'history_items_with_status は経歴が「→」で終わる人・経歴が空の人・対象外のステータスの人には補わない' do
+    assert_equal 1, Person.new(status: :retirement, old_history: '[[BandA]] →').history_items_with_status.size
+    assert_empty Person.new(status: :retirement, old_history: '').history_items_with_status
+    assert_equal 1, Person.new(status: :active, old_history: '[[BandA]]').history_items_with_status.size
+  end
+
   test 'parse_old_history は旧wiki形式の外部リンク[LinkText|URL]のURLがサイト内相対パスの場合internal_urlとして扱う' do
     history_str = '[くりから。|/kurikara]'
     person = Person.new(old_history: history_str)

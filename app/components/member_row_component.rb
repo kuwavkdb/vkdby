@@ -93,9 +93,10 @@ class MemberRowComponent < ViewComponent::Base
     true
   end
 
+  # 個人と紐づいたメンバーは、ステータスから状態の行を補った経歴を出す（issue #1992）
   def person_history_items
     if @member.person&.old_history.present?
-      @member.person.parse_old_history
+      @member.person.history_items_with_status
     elsif @member.inline_history.present?
       @member.parse_inline_history
     else
