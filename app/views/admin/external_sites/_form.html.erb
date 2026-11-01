@@ -1,4 +1,15 @@
 <%= form_with(model: [:admin, external_site], class: "space-y-8 divide-y divide-gray-200 dark:divide-gray-700") do |form| %>
+  <% if external_site.errors.any? %>
+    <div class="bg-red-50 dark:bg-red-900/50 p-4 rounded text-red-700 dark:text-red-100" role="alert">
+      <h2><%= external_site.errors.count %>件のエラーがあるため保存できませんでした:</h2>
+      <ul class="list-disc list-inside">
+        <% external_site.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
   <div class="space-y-8 divide-y divide-gray-200 dark:divide-gray-700">
     <div>
       <div>
