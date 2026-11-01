@@ -24,6 +24,7 @@
 |---|---|
 | Units — 閲覧・作成・編集 | index / new / create / edit / update / show / search / quick_new / quick_create |
 | Units — 簡単登録でのメモ入力・仮登録（一般非公開）での作成。admin 以外が簡単登録したユニットは常に仮登録になる。一覧の「仮登録のみ」で仮登録ユニットを絞り込める（issue #1764） | quick_new / quick_create / index |
+| Units — ステータス「移行」（別ユニットとして活動を継続）の後継ユニットを key で指定する。公開ページに後継ユニットへのリンクと、後継ユニット側に「前身」が出る（issue #1996） | new / create / edit / update / quick_new / quick_create |
 | People — 閲覧・作成・編集 | index / new / create / edit / update / search |
 | Index Groups / タグ（Tag Indices）— 閲覧・作成・編集・削除・並べ替え・グループ移動 | 全アクション |
 | Trends — 閲覧・作成・編集（会場の紐付け・会場の表示名の上書きを含む） | index / new / create / edit / update |

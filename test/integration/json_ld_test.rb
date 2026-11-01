@@ -270,4 +270,15 @@ class JsonLdTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/Cla
     assert_nil data['memberOf']
     assert_equal ['別名義'], data['alternateName']
   end
+
+  test '個人の所属には移行したユニットを含めない（issue #1996）' do
+    person = Person.create!(name: 'JsonLd Transitioned Member', key: 'json-ld-transitioned-member', status: :active)
+    unit = Unit.create!(name: 'JsonLd Transitioned', key: 'json-ld-transitioned', status: :transitioned)
+    unit.unit_snapshots.create!(snapshot_date: Date.current, current: true)
+        .snapshot_people.create!(person: person, part: :vocal, sort_order: 1)
+
+    get profile_path(person.key)
+
+    assert_nil json_ld_data['memberOf']
+  end
 end

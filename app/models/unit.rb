@@ -50,7 +50,13 @@ class Unit < ApplicationRecord # rubocop:disable Metrics/ClassLength
   has_many :unit_snapshots, dependent: :destroy
   has_many :temporary_snapshot_people, foreign_key: :hint_unit_id, inverse_of: :hint_unit, dependent: :nullify
   enum :unit_type, { band: 0, unit: 1, session: 2, solo: 3, limited: 4, moved: 5, other: 99 }
-  enum :status, { pre: 0, active: 1, freeze: 2, disbanded: 3, unknown: 99 }
+  enum :status, { pre: 0, active: 1, freeze: 2, disbanded: 3, transitioned: 4, unknown: 99 }
+
+  # ステータス「移行」（別ユニットとして活動を継続）のときの後継ユニット（issue #1996）。後継は1つだけ。
+  # 後継ユニット側からは、移行してきたユニットを前身として辿る
+  belongs_to :transitioned_unit, class_name: 'Unit', optional: true, inverse_of: :predecessor_units
+  has_many :predecessor_units, class_name: 'Unit', foreign_key: :transitioned_unit_id,
+                               inverse_of: :transitioned_unit, dependent: :nullify
 
   # 仮登録（provisional: true）のユニットは admin 以外には表示しない（issue #1764）。
   # 公開側でユニットを取得するときは kept ではなくこのスコープを使う。
@@ -108,12 +114,14 @@ class Unit < ApplicationRecord # rubocop:disable Metrics/ClassLength
   # そのまま500エラーになる（issue #1244でCustomPageに見つかった同種の不具合）
   validates :old_key, uniqueness: true, allow_blank: true
   validate :key_immutable, on: :update
+  validate :transitioned_unit_must_exist_and_differ
 
   STATUS_TRANSLATIONS = {
     'pre' => '準備中',
     'active' => '活動中',
     'freeze' => '活動休止',
     'disbanded' => '解散',
+    'transitioned' => '移行',
     'unknown' => '不明'
   }.freeze
 
@@ -123,6 +131,30 @@ class Unit < ApplicationRecord # rubocop:disable Metrics/ClassLength
 
   def status_text
     STATUS_TRANSLATIONS[status] || status.humanize
+  end
+
+  # 管理画面では後継ユニットをキーで指定する（issue #1996）。空にすると後継ユニットを外す
+  def transitioned_unit_key
+    @transitioned_unit_key || transitioned_unit&.key
+  end
+
+  def transitioned_unit_key=(value)
+    @transitioned_unit_key = value.to_s.strip
+    self.transitioned_unit = @transitioned_unit_key.presence &&
+                             Unit.with_discarded.find_by('LOWER(key) = ?', @transitioned_unit_key.downcase)
+  end
+
+  # 公開側に出す後継ユニット。ステータスが「移行」のときだけ返す。
+  # 削除済み・仮登録・非公開のユニットは、一覧と同じく出さない
+  def visible_transitioned_unit
+    return unless transitioned? && transitioned_unit_id
+
+    Unit.for_index.published.find_by(id: transitioned_unit_id)
+  end
+
+  # 公開側に出す前身のユニット（このユニットを後継として「移行」したユニット）
+  def visible_predecessor_units
+    Unit.for_index.published.where(status: :transitioned, transitioned_unit_id: id).order(:id)
   end
 
   def vkdb_url
@@ -173,6 +205,14 @@ class Unit < ApplicationRecord # rubocop:disable Metrics/ClassLength
   end
 
   private
+
+  def transitioned_unit_must_exist_and_differ
+    if @transitioned_unit_key.present? && transitioned_unit.nil?
+      errors.add(:transitioned_unit_key, 'に一致するユニットがありません')
+    elsif transitioned_unit_id.present? && transitioned_unit_id == id
+      errors.add(:transitioned_unit_key, 'に自分自身は指定できません')
+    end
+  end
 
   def key_immutable
     return if key_change_in_progress
