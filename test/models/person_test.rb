@@ -155,8 +155,15 @@ class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
     assert_equal ['活動休止'], person.history_items_with_status.last[0][:notes]
   end
 
-  test 'history_items_with_status は経歴が「→」で終わる人・経歴が空の人・対象外のステータスの人には補わない' do
-    assert_equal 1, Person.new(status: :retirement, old_history: '[[BandA]] →').history_items_with_status.size
+  test 'history_items_with_status は経歴が「→」で終わる人には状態ではなく活動状況不明の行を足す' do
+    %i[retirement active].each do |status|
+      items = Person.new(status: status, old_history: '[[BandA]] →').history_items_with_status
+
+      assert_equal [{ unit_name: '', notes: ['活動状況不明'] }], items.last, status
+    end
+  end
+
+  test 'history_items_with_status は経歴が空の人・対象外のステータスの人には補わない' do
     assert_empty Person.new(status: :retirement, old_history: '').history_items_with_status
     assert_equal 1, Person.new(status: :active, old_history: '[[BandA]]').history_items_with_status.size
   end

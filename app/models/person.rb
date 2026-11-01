@@ -182,11 +182,13 @@ class Person < ApplicationRecord
 
   # 表示用の経歴（個人ページ・バンドページ）。ステータスが活動休止・引退・死去なのに経歴にその状態が
   # 書かれていなければ、最後に書かれたユニットに在籍中のように見えないよう、末尾に状態の行を補う（issue #1992）。
-  # 補う行は {{category 引退}} を解析した結果と同じ形にする。経歴が「→」で終わる人は「活動状況不明」の扱い（issue #1939）のまま補わない。
+  # 補う行は {{category 引退}} を解析した結果と同じ形にする。経歴が「→」で終わる人は、状態ではなく「活動状況不明」の行を足す。
   # 今の所属の判定（meta description など）には使わず、parse_old_history の結果をそのまま使う
   def history_items_with_status(items = parse_old_history)
+    return history_items_with_unknown(items, old_history) if history_ends_with_arrow?(old_history)
+
     words = HISTORY_STATUS_WORDS[status]
-    return items if words.nil? || items.empty? || history_ends_with_arrow?(old_history)
+    return items if words.nil? || items.empty?
     return items if items.flatten.any? { |item| history_item_states?(item, words) }
 
     items + [[{ unit_name: '', notes: [status_text] }]]
