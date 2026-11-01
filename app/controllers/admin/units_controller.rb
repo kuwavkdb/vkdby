@@ -283,6 +283,7 @@ module Admin
 
     def unit_params
       params.require(:unit).permit(:name, :name_kana, :key, :status, :unit_type, :old_key, :destination_key, :note,
+                                   :transitioned_unit_key,
                                    tag_index_ids: [],
                                    links_attributes: %i[id text url active sort_order _destroy],
                                    name_logs_attributes: %i[name name_kana],
@@ -299,7 +300,7 @@ module Admin
     # admin 以外は送られてきた値にかかわらず常に仮登録にする。
     def quick_unit_params
       quick_rename_nested_attributes_keys!
-      permitted = params.require(:unit).permit(:name, :key, :unit_type, :status, :note, :provisional,
+      permitted = params.require(:unit).permit(:name, :key, :unit_type, :status, :note, :provisional, :transitioned_unit_key,
                                                activity_periods_attributes: %i[from to label],
                                                links_attributes: %i[text url])
       permitted[:provisional] = true unless current_user.admin? && permitted.key?(:provisional)

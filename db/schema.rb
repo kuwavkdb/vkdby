@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_22_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_01_054118) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -453,6 +453,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_000000) do
     t.integer "unit_type"
     t.datetime "updated_at", null: false
     t.boolean "provisional", default: false, null: false
+    t.bigint "transitioned_unit_id"
     t.index "((aliases)::text) gin_trgm_ops", name: "index_units_on_aliases_trgm", using: :gin
     t.index "((name_log)::text) gin_trgm_ops", name: "index_units_on_name_log_trgm", using: :gin
     t.index ["aliases"], name: "index_units_on_aliases", using: :gin
@@ -461,6 +462,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_000000) do
     t.index ["name"], name: "index_units_on_name", opclass: :gin_trgm_ops, using: :gin
     t.index ["name_kana"], name: "index_units_on_name_kana", opclass: :gin_trgm_ops, using: :gin
     t.index ["provisional"], name: "index_units_on_provisional", where: "(provisional = true)"
+    t.index ["transitioned_unit_id"], name: "index_units_on_transitioned_unit_id"
   end
 
   create_table "update_logs", force: :cascade do |t|
@@ -597,6 +599,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_000000) do
   add_foreign_key "unit_people", "units"
   add_foreign_key "unit_snapshots", "units"
   add_foreign_key "unit_submissions", "units", column: "converted_unit_id"
+  add_foreign_key "units", "units", column: "transitioned_unit_id", on_delete: :nullify
   add_foreign_key "update_logs", "users"
   add_foreign_key "venue_submissions", "venues"
   add_foreign_key "venue_submissions", "venues", column: "converted_venue_id"

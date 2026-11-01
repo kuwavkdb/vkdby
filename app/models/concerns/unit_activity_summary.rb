@@ -40,12 +40,12 @@ module UnitActivitySummary
     self.class.partial_dates(activity_periods.map(&:from)).min
   end
 
-  # 解散したユニットの、最も新しい活動終了日。
+  # 解散・移行（issue #1996）したユニットの、最も新しい活動終了日。移行もこのユニットとしての活動は終わっているため
   # 終わりの日付が空・日付として読めない（"2019頃"・"状況不明"・"活動中" など）活動期間が1つでもあるときは、
   # 解散したのかどうか・いつ解散したのかが確かでないため nil にする（前の解散日を最後の解散日と
   # 取り違えないため。issue #1937）
   def dissolution_date
-    return unless disbanded?
+    return unless disbanded? || transitioned?
     return if activity_periods.any? { |period| self.class.partial_date(period.to).nil? }
 
     self.class.partial_dates(activity_periods.map(&:to)).max

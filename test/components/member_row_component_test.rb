@@ -71,4 +71,22 @@ class MemberRowComponentTest < ActionView::TestCase
     assert_selector "a[href='https://x.com/vocalist']"
     assert_no_text '(Instagram)'
   end
+
+  test '経歴が「→」で終わるメンバーは最後に活動状況不明のバッジを出す（issue #1992）' do
+    member = UnitPerson.new(part: 'vocal', inline_history: '[[BandA]] →')
+
+    render_inline(MemberRowComponent.new(member: member))
+
+    assert_selector '.history-row span.ring-1', text: '活動状況不明'
+    assert_no_text '現在不明'
+  end
+
+  test '経歴の {{category 個人/状況不明}} は活動状況不明のバッジで出す（issue #1992）' do
+    member = UnitPerson.new(part: 'vocal', inline_history: '[[BandA]] → {{category 個人/状況不明}}')
+
+    render_inline(MemberRowComponent.new(member: member))
+
+    assert_selector '.history-row span.ring-1', text: '活動状況不明'
+    assert_no_text '個人/状況不明'
+  end
 end

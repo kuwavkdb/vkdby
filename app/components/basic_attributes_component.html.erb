@@ -43,6 +43,20 @@
   <dl class="grid grid-cols-1 @[20rem]:grid-cols-2 gap-x-6 gap-y-3">
     <%= render BasicAttributeItemComponent.with_collection(compact_items) %>
 
+    <%# 移行先・前身のユニット（issue #1996）。名前が長いと2列の枠では折り返すため、活動時期と同じく横幅いっぱいの行にする %>
+    <% unit_link_class = "text-indigo-700 dark:text-amber-400 underline decoration-indigo-600/25 dark:decoration-amber-400/40 underline-offset-2 hover:decoration-indigo-600 dark:hover:decoration-amber-400 transition-colors" %>
+    <% [["移行先", Array(transitioned_unit)], ["前身", predecessor_units]].each do |label, units| %>
+      <% next if units.empty? %>
+      <div class="@[20rem]:col-span-2 flex flex-row justify-between items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3">
+        <dt class="text-sm font-semibold tracking-tighter text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3"><%= label %></dt>
+        <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 text-right">
+          <% units.each_with_index do |unit, index| %>
+            <%= "、" if index.positive? %><%= link_to unit.name, profile_path(unit.key), class: unit_link_class %>
+          <% end %>
+        </dd>
+      </div>
+    <% end %>
+
     <% if @resource.is_a?(Unit) && @resource.activity_periods.present? %>
       <div class="@[20rem]:col-span-2 flex flex-row justify-between items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3">
         <dt class="text-sm font-semibold tracking-tighter text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3">活動時期</dt>
