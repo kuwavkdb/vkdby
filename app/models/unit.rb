@@ -133,7 +133,8 @@ class Unit < ApplicationRecord # rubocop:disable Metrics/ClassLength
     STATUS_TRANSLATIONS[status] || status.humanize
   end
 
-  # 管理画面では後継ユニットをキーで指定する（issue #1996）。空にすると後継ユニットを外す
+  # 管理画面では後継ユニットをキーで指定する（issue #1996）。空にすると後継ユニットを外す。
+  # 入力したキーは、保存できなかったときに入力欄へ戻すためだけに持ち、保存したら後継ユニットのキーを返す
   def transitioned_unit_key
     @transitioned_unit_key || transitioned_unit&.key
   end
@@ -221,8 +222,13 @@ class Unit < ApplicationRecord # rubocop:disable Metrics/ClassLength
     errors.add(:key, 'cannot be changed once set')
   end
 
+  after_save :clear_transitioned_unit_key
   after_commit :expire_timeline_cache
   after_commit :expire_sidebar_cache
+
+  def clear_transitioned_unit_key
+    @transitioned_unit_key = nil
+  end
 
   def expire_timeline_cache
     Rails.cache.delete(TimelineController::CACHE_KEY)
