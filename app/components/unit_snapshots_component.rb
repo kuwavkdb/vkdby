@@ -25,6 +25,14 @@ class UnitSnapshotsComponent < ViewComponent::Base
     @snapshots.present?
   end
 
+  # この人数を超えるスナップショットには、メンバーの絞り込み欄を出す（issue #1999）
+  MEMBER_FILTER_THRESHOLD = 10
+
+  # メンバーの絞り込み欄はユニットページ本体だけに出す（{{snapshot}}プラグインには出さない）
+  def member_filter?(snapshot)
+    @summary_preview && snapshot.snapshot_people.size > MEMBER_FILTER_THRESHOLD
+  end
+
   # 管理者には、メンバー行ごとにスナップショットメンバー編集画面への直リンクを出す（issue #1761）
   def admin_unit_id
     @unit&.id if @admin
