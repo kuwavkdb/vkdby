@@ -33,6 +33,8 @@ export default class extends Controller {
             this.applyState(true)
             if (this.openValue) {
                 this.dispatch('opened')
+            } else {
+                this.dispatch('closed')
             }
         }
     }
