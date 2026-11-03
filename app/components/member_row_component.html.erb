@@ -1,4 +1,5 @@
-<div class="bg-white dark:bg-slate-800 p-3 border-b border-slate-100 dark:border-slate-700 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
+<%# data-member-filter-target: ユニットページのスナップショットで、メンバーを絞り込む対象の行（issue #1999） %>
+<div data-member-filter-target="row" class="bg-white dark:bg-slate-800 p-3 border-b border-slate-100 dark:border-slate-700 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
   <div>
     <div class="flex items-center justify-between gap-3 md:gap-4 flex-wrap sm:flex-nowrap">
       <div class="flex items-center gap-3 md:gap-4 flex-1">
@@ -32,11 +33,13 @@
         <% end %>
         <% if (path = edit_path) %>
           <%= link_to "編集", path, class: admin_link_classes,
-                aria: { label: "#{@member.name}をメンバー編集" }, onclick: "event.stopPropagation()" %>
+                aria: { label: "#{@member.name}をメンバー編集" }, data: { member_filter_ignore: true },
+                onclick: "event.stopPropagation()" %>
         <% end %>
         <% if (path = person_edit_path) %>
           <%= link_to "個人", path, class: admin_link_classes,
-                aria: { label: "#{@member.name}の個人情報を編集" }, onclick: "event.stopPropagation()" %>
+                aria: { label: "#{@member.name}の個人情報を編集" }, data: { member_filter_ignore: true },
+                onclick: "event.stopPropagation()" %>
         <% end %>
       </div>
     </div>

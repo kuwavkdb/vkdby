@@ -34,6 +34,9 @@ application.register("link-title-suggest", LinkTitleSuggestController)
 import MarkdownPreviewController from "controllers/markdown_preview_controller"
 application.register("markdown-preview", MarkdownPreviewController)
 
+import MemberFilterController from "controllers/member_filter_controller"
+application.register("member-filter", MemberFilterController)
+
 import MicroadController from "controllers/microad_controller"
 application.register("microad", MicroadController)
 

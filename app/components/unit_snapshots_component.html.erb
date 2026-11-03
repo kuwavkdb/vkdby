@@ -4,7 +4,14 @@
         開けるようにidを付ける（toggleコントローラがハッシュと一致したら展開する、issue #1761）。
         {{snapshot}}プラグイン（summary_preview: false）は同じスナップショットを複数埋め込める
         ため、id重複を避けて付けない %>
-    <section <%= tag.attributes(id: (@summary_preview ? "snapshot-#{snapshot.id}" : nil)) %> data-controller="toggle" data-toggle-open-value="<%= snapshot.current? && @summary_preview %>">
+    <% member_filter = member_filter?(snapshot) %>
+    <section <%= tag.attributes(id: (@summary_preview ? "snapshot-#{snapshot.id}" : nil)) %>
+             data-controller="toggle<%= ' member-filter' if member_filter %>"
+             data-toggle-open-value="<%= snapshot.current? && @summary_preview %>"
+             <% if member_filter %>
+               data-action="toggle:opened->member-filter#show toggle:closed->member-filter#hide"
+               data-member-filter-mark-class-value="rounded-sm bg-yellow-200 text-zinc-900 dark:bg-amber-400 dark:text-zinc-900"
+             <% end %>>
       <div class="flex items-center justify-between mb-6 border-b border-slate-200 dark:border-slate-700 pb-2">
         <button type="button" data-action="click->toggle#toggle"
                 class="flex items-center justify-between gap-2 flex-1 min-w-0 -mx-1 px-1 py-0.5 rounded text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-amber-400">
@@ -31,6 +38,19 @@
           <%= link_to "編集", edit_admin_unit_unit_snapshot_path(@unit, snapshot), class: "text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-amber-400 transition-colors ml-2 shrink-0", onclick: "event.stopPropagation()" %>
         <% end %>
       </div>
+      <% if member_filter %>
+        <%# メンバーの絞り込み欄（issue #1999）。開いている間だけ出し、閉じたら絞り込みを解除する %>
+        <div class="mb-3" data-member-filter-target="form" hidden>
+          <label for="member-filter-<%= snapshot.id %>" class="sr-only">このスナップショットのメンバーを絞り込む</label>
+          <input type="search" id="member-filter-<%= snapshot.id %>" autocomplete="off"
+                 placeholder="パート・名前・経歴で絞り込み"
+                 data-member-filter-target="input" data-action="input->member-filter#filter"
+                 aria-describedby="member-filter-status-<%= snapshot.id %>"
+                 class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 dark:focus-visible:ring-amber-400">
+          <p id="member-filter-status-<%= snapshot.id %>" class="mt-1 text-xs text-zinc-500 dark:text-zinc-400"
+             data-member-filter-target="status" aria-live="polite"></p>
+        </div>
+      <% end %>
       <% if snapshot.current? || !@summary_preview %>
         <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm" data-toggle-target="area" data-action="click->toggle#expand">
           <%= render MemberRowComponent.with_collection(snapshot.snapshot_people.sort_by(&:sort_order), hide_active: true, hide_status: snapshot.past?, admin_unit_id: admin_unit_id) %>
