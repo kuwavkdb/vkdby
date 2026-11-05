@@ -117,13 +117,7 @@ module Admin
       @unit_snapshots = @unit.unit_snapshots.includes(snapshot_people: :person)
                              .order(past: :asc, current: :desc, snapshot_index: :asc)
       @unit.links.build # Build an empty link for the form
-      @wiki_page_imports = @unit.wiki_page_imports.includes(:wikipage).order(updated_at: :desc)
-      # 未処理の情報の訂正の投稿（issue #1902）。投稿の管理は admin のみのため admin にだけ表示する
-      @profile_corrections = @unit.profile_corrections.pending.recent if current_user.admin?
-      @update_logs = UpdateLog.for_unit(@unit)
-                              .includes(:user)
-                              .order(created_at: :desc)
-                              .limit(50)
+      load_edit_sidebar
     end
 
     def create
@@ -155,6 +149,7 @@ module Admin
         @unit_snapshots = @unit.unit_snapshots.includes(snapshot_people: :person)
                                .order(past: :asc, current: :desc, snapshot_index: :asc)
         @unit.links.build if @unit.links.none?(&:new_record?)
+        load_edit_sidebar
         render :edit, status: :unprocessable_entity
       end
     end
@@ -276,6 +271,17 @@ module Admin
     end
 
     private
+
+    # 編集画面の取り込み元・更新履歴・未処理の訂正。保存に失敗して描き直すときにも使う（issue #2007）
+    def load_edit_sidebar
+      @wiki_page_imports = @unit.wiki_page_imports.includes(:wikipage).order(updated_at: :desc)
+      # 未処理の情報の訂正の投稿（issue #1902）。投稿の管理は admin のみのため admin にだけ表示する
+      @profile_corrections = @unit.profile_corrections.pending.recent if current_user.admin?
+      @update_logs = UpdateLog.for_unit(@unit)
+                              .includes(:user)
+                              .order(created_at: :desc)
+                              .limit(50)
+    end
 
     def set_unit
       @unit = Unit.with_discarded.find(params[:id])

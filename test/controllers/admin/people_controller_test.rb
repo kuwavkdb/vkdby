@@ -126,6 +126,17 @@ module Admin
       assert_equal 'Renamed Person', @person.name
     end
 
+    # issue #2007: 保存に失敗して編集画面を描き直すときに、取り込み元パネルなどで落ちない
+    test 'update re-renders the edit page with errors when a link URL is invalid' do
+      patch admin_person_path(@person), params: {
+        person: { links_attributes: { '0' => { text: '公式サイト', url: 'example.com' } } }
+      }
+
+      assert_response :unprocessable_entity
+      assert_includes response.body, 'は http:// または https:// で始まるURLを入力してください'
+      assert_empty @person.links.reload
+    end
+
     test 'change_key requires admin role' do
       patch change_key_admin_person_path(@person), params: { new_key: 'attempted-new-key' }
 
