@@ -18,10 +18,24 @@
 require 'test_helper'
 
 class ExternalSiteTest < ActiveSupport::TestCase
+  test 'name is required' do
+    site = ExternalSite.new(site_key: 'ameblo', url_pattern: 'https://ameblo.jp/{account}/')
+
+    assert_not site.valid?
+    assert site.errors.added?(:name, :blank)
+  end
+
+  test 'url_pattern does not need the {account} placeholder' do
+    site = ExternalSite.new(site_key: 'linkcore', name: 'LinkCore', url_pattern: 'https://linkco.re/')
+
+    assert site.valid?
+  end
+
   test 'link_title_suggestions returns the name and url_pattern of sites with a name' do
     ExternalSite.create!(site_key: 'ameblo', name: 'Ameba Blog', url_pattern: 'https://ameblo.jp/{account}/')
-    ExternalSite.create!(site_key: 'noname', url_pattern: 'https://example.com/{account}/')
-    ExternalSite.create!(site_key: 'blank', name: '', url_pattern: 'https://example.org/{account}/')
+    # 表示名の必須化より前に登録された、表示名が空のサイト
+    ExternalSite.new(site_key: 'noname', url_pattern: 'https://example.com/{account}/').save!(validate: false)
+    ExternalSite.new(site_key: 'blank', name: '', url_pattern: 'https://example.org/{account}/').save!(validate: false)
 
     assert_equal [{ name: 'Ameba Blog', url_pattern: 'https://ameblo.jp/{account}/' }], ExternalSite.link_title_suggestions
   end

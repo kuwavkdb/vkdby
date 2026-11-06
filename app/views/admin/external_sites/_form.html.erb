@@ -33,7 +33,7 @@
           <div class="mt-2">
             <%= form.text_field :name, class: "block w-full rounded-md border-0 py-1.5 text-gray-900 dark:text-gray-100 dark:bg-gray-800 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-700 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" %>
           </div>
-          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">ユニット・個人のリンク欄で、URL がこのサイトのものならタイトルに入る名前（例: 'Ameba Blog'）。空なら補完に使わない</p>
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">ユニット・個人のリンク欄で、URL がこのサイトのものならタイトルに入る名前（例: 'Ameba Blog'）</p>
         </div>
 
         <div class="sm:col-span-6">
@@ -41,7 +41,7 @@
           <div class="mt-2">
             <%= form.text_field :url_pattern, class: "block w-full rounded-md border-0 py-1.5 text-gray-900 dark:text-gray-100 dark:bg-gray-800 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-700 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" %>
           </div>
-          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Use <code>{account}</code> as a placeholder for the account name. Example: <code>https://ameblo.jp/{account}/</code></p>
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">アカウント名の部分は <code>{account}</code> と書く（例: <code>https://ameblo.jp/{account}/</code>）。<code>{account}</code> は省略でき、省略するとこの URL で始まるリンクに一致する</p>
         </div>
       </div>
     </div>
