@@ -575,4 +575,3 @@ class TrendsControllerTest < ActionDispatch::IntegrationTest
     assert_operator body.index('告知画像'), :<, body.index('same-day-items-heading')
   end
 end
-

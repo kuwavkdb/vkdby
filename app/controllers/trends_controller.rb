@@ -41,12 +41,14 @@ class TrendsController < ApplicationController
 
     return unless @trend.units.present?
 
-    first_unit_id = @trend.units.first&.dig('unit_id')
-    @unit = @related_units[first_unit_id]
-    return unless @unit
+    @unit = @related_units[@trend.units.first&.dig('unit_id')]
+    load_unit_context(@unit) if @unit
+  end
 
-    unit = @unit
+  private
 
+  # 動向の1件目のユニットについて、メンバー（スナップショット）・アイテム・同じユニットの動向を読み込む
+  def load_unit_context(unit)
     candidate_date = @trend.snapshot_date || @trend.date
     @snapshot = unit.unit_snapshots
                     .includes(snapshot_people: :person)
@@ -67,8 +69,6 @@ class TrendsController < ApplicationController
                                   .order(date: :asc)
     @unit_trends_related_units = related_units_for(@unit_trends)
   end
-
-  private
 
   # 公開画面から閲覧可能なTrendの範囲。adminロールのみ非公開（active: false・
   # 公開開始日時が未到来）のTrendも参照でき、管理画面プレビュー用途に使う

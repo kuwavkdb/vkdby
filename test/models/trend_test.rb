@@ -42,7 +42,7 @@
 #
 require 'test_helper'
 
-class TrendTest < ActiveSupport::TestCase
+class TrendTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
   include ActiveJob::TestHelper
 
   # test "the truth" do

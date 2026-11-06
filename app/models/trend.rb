@@ -47,7 +47,7 @@
 #
 #  fk_rails_...  (venue_id => venues.id)
 #
-class Trend < ApplicationRecord
+class Trend < ApplicationRecord # rubocop:disable Metrics/ClassLength
   include OgpImageAttachable
 
   # 開催場所（issue #1689）。1件のTrendにつき会場は1件のみ
