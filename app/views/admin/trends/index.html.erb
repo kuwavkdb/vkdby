@@ -66,7 +66,10 @@
               <%= link_to trend.title.presence || "(No title)", trend_path(trend), class: "text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300", target: "_blank" %>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-              <% if trend.active %>
+              <% if trend.publish_scheduled? %>
+                <%# 公開予約中は公開開始日時を出す（issue #2014） %>
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"><%= trend_unpublished_label(trend) %></span>
+              <% elsif trend.active %>
                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Active</span>
               <% else %>
                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200">Inactive</span>

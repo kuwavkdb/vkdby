@@ -6,11 +6,15 @@
 #
 #  id                   :bigint           not null, primary key
 #  active               :boolean          default(TRUE), not null
+#  bottom_image_alt     :string
 #  content              :text
 #  date                 :date             not null
 #  day_unknown          :boolean          default(FALSE), not null
 #  etc_phenomenon       :integer
+#  image_alt            :string
 #  month_unknown        :boolean          default(FALSE), not null
+#  news_release         :boolean          default(FALSE), not null
+#  news_release_source  :string
 #  people               :jsonb
 #  person_name_in_title :boolean          default(FALSE), not null
 #  person_phenomenon    :integer

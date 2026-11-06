@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_01_054118) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_130002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -337,12 +337,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_054118) do
 
   create_table "trends", force: :cascade do |t|
     t.boolean "active", default: true, null: false
+    t.string "bottom_image_alt"
     t.text "content"
     t.datetime "created_at", null: false
     t.date "date", null: false
     t.boolean "day_unknown", default: false, null: false
     t.integer "etc_phenomenon"
+    t.string "image_alt"
     t.boolean "month_unknown", default: false, null: false
+    t.boolean "news_release", default: false, null: false
+    t.string "news_release_source"
     t.integer "old_trend_id"
     t.integer "old_wiki_id"
     t.jsonb "people"

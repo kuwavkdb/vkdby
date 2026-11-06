@@ -358,4 +358,236 @@ class TrendsControllerTest < ActionDispatch::IntegrationTest
     admin = User.create!(email: 'trend-share-admin@example.com', name: 'Admin', password: 'password', role: :admin)
     post login_path, params: { email: admin.email, password: 'password' }
   end
+
+  test 'show renders the news release label for a news release trend (issue #2014)' do
+    trend = Trend.create!(title: 'News release trend', date: Date.current,
+                          publish_start_at: Time.zone.local(2020, 1, 2, 3, 4, 5),
+                          etc_phenomenon: :other, news_release: true, news_release_source: 'Example Records')
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_select 'span', text: 'ニュースリリース'
+    assert_select 'span', text: 'Example Records'
+    assert_select 'time', text: '2020年1月2日 3時04分'
+  end
+
+  test 'show does not render the news release label for an ordinary trend' do
+    trend = Trend.create!(title: 'Ordinary trend', date: Date.current, publish_start_at: 1.minute.ago,
+                          etc_phenomenon: :other)
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_select 'span', text: 'ニュースリリース', count: 0
+  end
+
+  test 'index renders the news release label next to a news release trend (issue #2014)' do
+    Trend.create!(title: 'News release listing trend', date: Date.current, publish_start_at: 1.minute.ago,
+                  etc_phenomenon: :other, news_release: true, news_release_source: 'Example Records')
+
+    get trends_path
+
+    assert_response :success
+    assert_select 'span', text: 'ニュースリリース', count: 1
+  end
+
+  test 'index does not list a scheduled news release before its publish_start_at when logged out (issue #2014)' do
+    Trend.create!(title: 'Embargoed news release', date: Date.current, publish_start_at: 1.day.from_now,
+                  etc_phenomenon: :other, news_release: true, news_release_source: 'Example Records')
+
+    get trends_path
+
+    assert_response :success
+    assert_not_includes response.body, 'Embargoed news release'
+  end
+
+  test 'show renders the publish_start_at of a scheduled trend for an admin (issue #2014)' do
+    trend = Trend.create!(title: 'Scheduled trend for admin', date: Date.current,
+                          publish_start_at: Time.zone.local(2099, 1, 2, 3, 4, 5), etc_phenomenon: :other)
+    login_as_admin
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_includes response.body, '2099/01/02 03:04:05 公開'
+    assert_not_includes response.body, '非公開（管理者のみ閲覧可）'
+  end
+
+  test 'index renders the publish_start_at of a scheduled trend for an admin (issue #2014)' do
+    Trend.create!(title: 'Scheduled listing trend for admin', date: Date.current,
+                  publish_start_at: Time.zone.local(2099, 1, 2, 3, 4, 5), etc_phenomenon: :other)
+    login_as_admin
+
+    get trends_path
+
+    assert_response :success
+    assert_includes response.body, '2099/01/02 03:04:05 公開'
+  end
+
+  test 'show marks an unpublished unit trend in the related list for an admin (issue #2014)' do
+    unit = Unit.create!(name: 'Related Unpublished Unit', key: 'trend-related-unpublished-unit', status: :active)
+    trend = Trend.create!(title: 'Current published trend', date: Date.new(2020, 12, 5), publish_start_at: 1.minute.ago,
+                          unit_phenomenon: :other, units: [{ 'unit_id' => unit.id, 'name' => unit.name }])
+    Trend.create!(title: 'Related scheduled trend', date: Date.new(2020, 12, 6), publish_start_at: 1.day.from_now,
+                  unit_phenomenon: :other, units: [{ 'unit_id' => unit.id, 'name' => unit.name }])
+    login_as_admin
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_includes response.body, 'Related scheduled trend'
+    assert_select '.sr-only', text: '（未公開）', count: 1
+  end
+
+  test 'show renders the scheduled badge beside the publish time of a scheduled news release for an admin (issue #2014)' do
+    trend = Trend.create!(title: 'Scheduled news release', date: Date.current,
+                          publish_start_at: Time.zone.local(2099, 1, 2, 3, 4, 5), etc_phenomenon: :other,
+                          news_release: true, news_release_source: 'Example Records')
+    login_as_admin
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_select 'time', text: '2099年1月2日 3時04分'
+    assert_select 'time + span', text: '公開予定', count: 1
+    assert_not_includes response.body, '2099/01/02 03:04:05 公開'
+  end
+
+  test 'show renders the attached image with the title as alt text when image_alt is blank (issue #2014)' do
+    trend = Trend.create!(title: 'Image trend', date: Date.current, publish_start_at: 1.minute.ago, etc_phenomenon: :other)
+    trend.image.attach(io: file_fixture('submission_image.png').open, filename: 'a.png', content_type: 'image/png')
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_select "figure img[alt='Image trend']"
+  end
+
+  test 'show uses the attached image as og:image only for a news release (issue #2014)' do
+    news = Trend.create!(title: 'News image', date: Date.current, publish_start_at: 1.minute.ago, etc_phenomenon: :other,
+                         news_release: true, news_release_source: 'Example Records')
+    news.image.attach(io: file_fixture('submission_image.png').open, filename: 'news.png', content_type: 'image/png')
+    plain = Trend.create!(title: 'Plain image', date: Date.current, publish_start_at: 1.minute.ago, etc_phenomenon: :other)
+    plain.image.attach(io: file_fixture('submission_image.png').open, filename: 'plain.png', content_type: 'image/png')
+
+    get trend_path(news)
+    assert_select "meta[property='og:image'][content*='news.png']"
+
+    get trend_path(plain)
+    assert_select "meta[property='og:image'][content*='plain.png']", count: 0
+  end
+
+  test 'show renders the body of a news release as plain text keeping blank lines (issue #2014)' do
+    trend = Trend.create!(title: 'Plain body', date: Date.current, publish_start_at: 1.minute.ago, etc_phenomenon: :other,
+                          news_release: true, news_release_source: 'Example Records',
+                          content: "1行目\n\n\n\n* 箇条書きではない\n<b>太字ではない</b>")
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_select 'div.whitespace-pre-line' do |elements|
+      assert_includes elements.first.text, "1行目\n\n\n\n* 箇条書きではない"
+    end
+    assert_includes response.body, '&lt;b&gt;太字ではない&lt;/b&gt;'
+    assert_select 'div.whitespace-pre-line li', count: 0
+  end
+
+  test 'show renders [ニュースリリース] at the head of the X share text of a news release (issue #2014)' do
+    trend = Trend.create!(title: 'ニュースの件名', date: Date.new(2026, 11, 6), publish_start_at: 1.minute.ago,
+                          etc_phenomenon: :other, news_release: true, news_release_source: 'Example Records')
+    login_as_admin
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_select "textarea[aria-label='Xシェア用テキスト']" do |elements|
+      assert elements.first.text.strip.start_with?('[ニュースリリース] 2026/11/06 ニュースの件名')
+    end
+  end
+
+  test 'show does not render [ニュースリリース] in the X share text of an ordinary trend' do
+    trend = Trend.create!(title: '普通の件名', date: Date.new(2026, 11, 6), publish_start_at: 1.minute.ago, etc_phenomenon: :other)
+    login_as_admin
+
+    get trend_path(trend)
+
+    assert_select "textarea[aria-label='Xシェア用テキスト']" do |elements|
+      assert_not_includes elements.first.text, '[ニュースリリース]'
+    end
+  end
+
+  test 'show lists items released on the trend date by the same artist below the trend (issue #2014)' do
+    unit = Unit.create!(name: 'Same Day Unit', key: 'trend-same-day-unit', status: :active)
+    person = Person.create!(name: 'Same Day Person', key: 'trend-same-day-person')
+    trend = Trend.create!(title: 'Release trend', date: Date.new(2026, 11, 6), publish_start_at: 1.minute.ago,
+                          unit_phenomenon: :other, units: [{ 'unit_id' => unit.id, 'name' => unit.name }],
+                          people: [{ 'person_id' => person.id, 'name' => person.name }])
+    Item.create!(title: 'Unit Same Day Single', release_date: Date.new(2026, 11, 6), link_url: 'https://example.com/same-day-unit',
+                 artists: [{ 'name' => unit.name, 'key' => unit.key }])
+    Item.create!(title: 'Person Same Day Single', release_date: Date.new(2026, 11, 6), link_url: 'https://example.com/same-day-person',
+                 artists: [{ 'name' => person.name, 'key' => person.key }])
+    Item.create!(title: 'Unit Other Day Single', release_date: Date.new(2026, 11, 7), link_url: 'https://example.com/other-day',
+                 artists: [{ 'name' => unit.name, 'key' => unit.key }])
+    Item.create!(title: 'Other Artist Same Day Single', release_date: Date.new(2026, 11, 6), link_url: 'https://example.com/other-artist',
+                 artists: [{ 'name' => 'Other Artist', 'key' => 'other-artist' }])
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_select 'section[aria-labelledby=same-day-items-heading]' do
+      assert_select '*', text: /Unit Same Day Single/
+      assert_select '*', text: /Person Same Day Single/
+      assert_select '*', text: /Unit Other Day Single/, count: 0
+      assert_select '*', text: /Other Artist Same Day Single/, count: 0
+    end
+    # 同じ日に発売のアイテムは、下の Recent Items に重ねて出さない
+    assert_select 'h3', text: 'Unit Same Day Single', count: 1
+  end
+
+  test 'show does not list same day items for a trend whose day is unknown (issue #2014)' do
+    unit = Unit.create!(name: 'Day Unknown Unit', key: 'trend-day-unknown-unit', status: :active)
+    trend = Trend.create!(title: 'Day unknown trend', date: Date.new(2026, 11, 1), day_unknown: true, publish_start_at: 1.minute.ago,
+                          unit_phenomenon: :other, units: [{ 'unit_id' => unit.id, 'name' => unit.name }])
+    Item.create!(title: 'First Day Single', release_date: Date.new(2026, 11, 1), link_url: 'https://example.com/first-day',
+                 artists: [{ 'name' => unit.name, 'key' => unit.key }])
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_select 'section[aria-labelledby=same-day-items-heading]', count: 0
+  end
+
+  test 'show renders the bottom image above the same day items (issue #2014)' do
+    unit = Unit.create!(name: 'Bottom Image Unit', key: 'trend-bottom-image-unit', status: :active)
+    trend = Trend.create!(title: 'Bottom image trend', date: Date.new(2026, 11, 6), publish_start_at: 1.minute.ago,
+                          unit_phenomenon: :other, units: [{ 'unit_id' => unit.id, 'name' => unit.name }],
+                          bottom_image_alt: '告知画像')
+    trend.bottom_image.attach(io: file_fixture('submission_image.png').open, filename: 'bottom.png', content_type: 'image/png')
+    Item.create!(title: 'Bottom Image Single', release_date: Date.new(2026, 11, 6), link_url: 'https://example.com/bottom-image',
+                 artists: [{ 'name' => unit.name, 'key' => unit.key }])
+
+    get trend_path(trend)
+
+    assert_response :success
+    assert_select "figure img[alt='告知画像']", count: 1
+    body = response.body
+    assert_operator body.index('告知画像'), :<, body.index('same-day-items-heading')
+  end
+
+  test 'show renders news release images without rounded corners (issue #2014)' do
+    news = Trend.create!(title: 'Square image news', date: Date.current, publish_start_at: 1.minute.ago, etc_phenomenon: :other,
+                         news_release: true, news_release_source: 'Example Records')
+    news.image.attach(io: file_fixture('submission_image.png').open, filename: 'top.png', content_type: 'image/png')
+    news.bottom_image.attach(io: file_fixture('submission_image.png').open, filename: 'bottom.png', content_type: 'image/png')
+    plain = Trend.create!(title: 'Rounded image trend', date: Date.current, publish_start_at: 1.minute.ago, etc_phenomenon: :other)
+    plain.image.attach(io: file_fixture('submission_image.png').open, filename: 'plain.png', content_type: 'image/png')
+
+    get trend_path(news)
+    assert_select 'figure img', count: 2
+    assert_select 'figure img.rounded-lg', count: 0
+
+    get trend_path(plain)
+    assert_select 'figure img.rounded-lg', count: 1
+  end
 end
