@@ -4,6 +4,8 @@ require 'test_helper'
 
 module Admin
   class TrendsControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
+    include ActiveJob::TestHelper
+
     setup do
       post login_path, params: { email: users(:one).email, password: 'password' }
       @trend = trends(:one)
@@ -195,6 +197,58 @@ module Admin
       assert_equal '渋谷CLUB QUATTRO', trend.venue_name
     end
 
+    test 'create saves news_release (issue #2014)' do
+      post admin_trends_path, params: {
+        trend: { date: '2026/09/01', publish_start_at: Time.current, active: '1', unit_phenomenon: 'live',
+                 title: 'ニュースリリースの動向', news_release: '1',
+                 news_release_source: 'Example Records' }
+      }
+
+      assert Trend.last.news_release?
+      assert_equal 'Example Records', Trend.last.news_release_source
+    end
+
+    test 'update attaches an image with alt text (issue #2014)' do
+      patch admin_trend_path(@trend), params: {
+        trend: { image: fixture_file_upload('submission_image.png', 'image/png'), image_alt: 'ジャケット写真' }
+      }
+
+      assert_redirected_to edit_admin_trend_path(@trend)
+      @trend.reload
+      assert @trend.image.attached?
+      assert_equal 'ジャケット写真', @trend.image_alt
+    end
+
+    test 'update rejects a non-image file (issue #2014)' do
+      patch admin_trend_path(@trend), params: {
+        trend: { image: Rack::Test::UploadedFile.new(StringIO.new('not an image'), 'text/plain', original_filename: 'note.txt') }
+      }
+
+      assert_response :unprocessable_entity
+      assert_not @trend.reload.image.attached?
+    end
+
+    test 'update attaches and removes the bottom image (issue #2014)' do
+      patch admin_trend_path(@trend), params: {
+        trend: { bottom_image: fixture_file_upload('submission_image.png', 'image/png'), bottom_image_alt: '告知画像' }
+      }
+      assert @trend.reload.bottom_image.attached?
+      assert_equal '告知画像', @trend.bottom_image_alt
+
+      perform_enqueued_jobs { patch admin_trend_path(@trend), params: { trend: { remove_bottom_image: '1' } } }
+
+      assert_not @trend.reload.bottom_image.attached?
+    end
+
+    test 'edit renders the fields for both images (issue #2014)' do
+      get edit_admin_trend_path(@trend)
+
+      assert_response :success
+      assert_select "input[type=file][name='trend[image]']"
+      assert_select "input[type=file][name='trend[bottom_image]']"
+      assert_select "input[name='trend[bottom_image_alt]']"
+    end
+
     test 'update can clear the venue' do
       venue = Venue.create!(key: 'club-quattro', name: 'CLUB QUATTRO')
       @trend.update!(venue: venue)
@@ -224,6 +278,15 @@ module Admin
 
       assert_response :success
       assert_select "form[action='#{admin_trend_path(@trend)}'] input[name='_method'][value='delete']"
+    end
+
+    test 'index shows the publish_start_at of a scheduled trend in the status column (issue #2014)' do
+      @trend.update!(active: true, publish_start_at: Time.zone.local(2099, 1, 2, 3, 4, 5))
+
+      get admin_trends_path
+
+      assert_response :success
+      assert_includes response.body, '2099/01/02 03:04:05 公開'
     end
 
     test 'destroy deletes the trend and redirects to the index' do

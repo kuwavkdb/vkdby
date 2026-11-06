@@ -22,7 +22,8 @@
       </div>
     <% end %>
     <%= render "admin/profile_corrections/pending", profile_corrections: @profile_corrections if @profile_corrections.present? %>
-    <div class="md:grid md:grid-cols-5 md:gap-8">
+    <%# 旧Wikiテキスト欄はフォーカス時にこの枠（左右2カラム全体）の幅まで広げる（issue #2004） %>
+    <div class="md:grid md:grid-cols-5 md:gap-8" data-widen-on-focus-boundary>
       <div class="md:col-span-2">
         <div class="bg-white shadow rounded-lg p-6 mb-6 dark:bg-gray-800">
           <%= render "form", unit: @unit %>

@@ -6,11 +6,15 @@
 #
 #  id                   :bigint           not null, primary key
 #  active               :boolean          default(TRUE), not null
+#  bottom_image_alt     :string
 #  content              :text
 #  date                 :date             not null
 #  day_unknown          :boolean          default(FALSE), not null
 #  etc_phenomenon       :integer
+#  image_alt            :string
 #  month_unknown        :boolean          default(FALSE), not null
+#  news_release         :boolean          default(FALSE), not null
+#  news_release_source  :string
 #  people               :jsonb
 #  person_name_in_title :boolean          default(FALSE), not null
 #  person_phenomenon    :integer
@@ -38,7 +42,7 @@
 #
 require 'test_helper'
 
-class TrendTest < ActiveSupport::TestCase
+class TrendTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
   include ActiveJob::TestHelper
 
   # test "the truth" do
@@ -49,6 +53,46 @@ class TrendTest < ActiveSupport::TestCase
     assert Trend.new(active: true, publish_start_at: 1.minute.ago).published?
     assert_not Trend.new(active: false, publish_start_at: 1.minute.ago).published?
     assert_not Trend.new(active: true, publish_start_at: 1.minute.from_now).published?
+  end
+
+  test 'publish_scheduled? is true only when active and publish_start_at is in the future' do
+    assert Trend.new(active: true, publish_start_at: 1.minute.from_now).publish_scheduled?
+    assert_not Trend.new(active: true, publish_start_at: 1.minute.ago).publish_scheduled?
+    assert_not Trend.new(active: false, publish_start_at: 1.minute.from_now).publish_scheduled?
+  end
+
+  test 'news_release defaults to false' do
+    assert_not Trend.new.news_release?
+  end
+
+  test 'image_alt_text falls back to the title when image_alt is blank' do
+    assert_equal 'Title', Trend.new(title: 'Title').image_alt_text
+    assert_equal 'Alt', Trend.new(title: 'Title', image_alt: 'Alt').image_alt_text
+  end
+
+  test 'image must be an image file' do
+    trend = Trend.new(date: Date.current, publish_start_at: Time.current, etc_phenomenon: :other)
+    trend.image.attach(io: StringIO.new('text'), filename: 'note.txt', content_type: 'text/plain')
+
+    assert_not trend.valid?
+    assert trend.errors.key?(:image)
+  end
+
+  test 'remove_image purges the attached image on save' do
+    trend = Trend.create!(date: Date.current, publish_start_at: Time.current, etc_phenomenon: :other)
+    trend.image.attach(io: file_fixture('submission_image.png').open, filename: 'a.png', content_type: 'image/png')
+
+    perform_enqueued_jobs { trend.update!(remove_image: true) }
+
+    assert_not trend.reload.image.attached?
+  end
+
+  test 'news_release_source is required only for a news release' do
+    attrs = { date: Date.current, publish_start_at: Time.current, etc_phenomenon: :other }
+
+    assert_not Trend.new(**attrs, news_release: true).valid?
+    assert Trend.new(**attrs, news_release: true, news_release_source: 'Label').valid?
+    assert Trend.new(**attrs).valid?
   end
 
   test 'published scope excludes inactive trends and trends whose publish_start_at is in the future' do

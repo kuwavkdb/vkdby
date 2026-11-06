@@ -38,6 +38,21 @@ module TrendsHelper
     text.to_s.sub(Trend::TITLE_TRAILING_PARENTHETICAL_PATTERN, '')
   end
 
+  # 管理者向けに未公開の動向へ付けるバッジの文言。公開予約中なら公開開始日時（日本時間）、
+  # 「公開する」にチェックがなければ unpublished_text を返す（issue #2014）
+  def trend_unpublished_label(trend, unpublished_text: '非公開')
+    return unpublished_text unless trend.publish_scheduled?
+
+    "#{trend.publish_start_at.in_time_zone.strftime('%Y/%m/%d %H:%M:%S')} 公開"
+  end
+
+  # ニュースリリースのラベル。濃い地に白文字で、amber のヘッダー上でも一覧の白地でも読めるようにする（issue #2014）
+  def trend_news_release_label(extra_class: nil)
+    tag.span('ニュースリリース',
+             class: ['inline-block whitespace-nowrap px-2 py-0.5 rounded text-xs font-bold',
+                     'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900', extra_class])
+  end
+
   # Trend詳細ページのヘッダに表示している日付ラベルを返す（issue #1313）。
   # ロジック本体はTrend#date_labelに集約（ページ<title>・OGP画像でも使うため、issue #1319）
   def trend_date_label(trend)
@@ -70,7 +85,8 @@ module TrendsHelper
     title = strip_tags(format_wiki_title(trend.title, link: false)).presence
     primary_name, secondary_name = trend_show_person_badge_in_title?(trend) ? [person_names, unit_names] : [unit_names, person_names]
 
-    lines = [[trend_date_label(trend), primary_name, title].compact_blank.join(' ')]
+    # ニュースリリースは1行目の先頭に [ニュースリリース] を付ける（issue #2014）
+    lines = [[('[ニュースリリース]' if trend.news_release?), trend_date_label(trend), primary_name, title].compact_blank.join(' ')]
     lines << secondary_name if secondary_name.present?
     lines << trend_url(trend)
     lines << '#vkdb'

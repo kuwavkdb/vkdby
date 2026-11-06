@@ -97,5 +97,8 @@ application.register("venue-map", VenueMapController)
 import VenuePickerController from "controllers/venue_picker_controller"
 application.register("venue-picker", VenuePickerController)
 
+import WidenOnFocusController from "controllers/widen_on_focus_controller"
+application.register("widen-on-focus", WidenOnFocusController)
+
 import YoutubeCarouselController from "controllers/youtube_carousel_controller"
 application.register("youtube-carousel", YoutubeCarouselController)

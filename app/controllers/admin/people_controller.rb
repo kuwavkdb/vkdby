@@ -46,13 +46,7 @@ module Admin
 
     def edit
       @person.links.build # Always add an empty link field for new entries
-      @wiki_page_imports = @person.wiki_page_imports.includes(:wikipage).order(updated_at: :desc)
-      # 未処理の情報の訂正の投稿（issue #1902）。投稿の管理は admin のみのため admin にだけ表示する
-      @profile_corrections = @person.profile_corrections.pending.recent if current_user.admin?
-      @update_logs = UpdateLog.for_person(@person)
-                              .includes(:user)
-                              .order(created_at: :desc)
-                              .limit(50)
+      load_edit_sidebar
     end
 
     def create
@@ -72,6 +66,8 @@ module Admin
         record_update_log(@person, action: 'update')
         redirect_to edit_admin_person_path(@person), notice: 'Person updated successfully.'
       else
+        @person.links.build if @person.links.none?(&:new_record?)
+        load_edit_sidebar
         render :edit, status: :unprocessable_entity
       end
     end
@@ -201,6 +197,17 @@ module Admin
     end
 
     private
+
+    # 編集画面の取り込み元・更新履歴・未処理の訂正。保存に失敗して描き直すときにも使う（issue #2007）
+    def load_edit_sidebar
+      @wiki_page_imports = @person.wiki_page_imports.includes(:wikipage).order(updated_at: :desc)
+      # 未処理の情報の訂正の投稿（issue #1902）。投稿の管理は admin のみのため admin にだけ表示する
+      @profile_corrections = @person.profile_corrections.pending.recent if current_user.admin?
+      @update_logs = UpdateLog.for_person(@person)
+                              .includes(:user)
+                              .order(created_at: :desc)
+                              .limit(50)
+    end
 
     def person_history_summary(person)
       # 末尾が「{{category ...}}」等のステータスタグのみの場合 unit_name が空になるため、

@@ -52,4 +52,21 @@ class TrendsHelperTest < ActionView::TestCase
     assert_equal yearly_path(year: 2020),
                  trend_date_path(Trend.new(date: Date.new(2020, 1, 1), day_unknown: true, month_unknown: true))
   end
+
+  test 'trend_unpublished_labelは公開予約中なら公開開始日時を日本時間で返す' do
+    trend = Trend.new(active: true, publish_start_at: Time.utc(2099, 1, 2, 3, 4, 5))
+
+    assert_equal '2099/01/02 12:04:05 公開', trend_unpublished_label(trend)
+  end
+
+  test 'trend_unpublished_labelは公開するにチェックがなければ非公開の文言を返す' do
+    trend = Trend.new(active: false, publish_start_at: Time.utc(2099, 1, 2, 3, 4, 5))
+
+    assert_equal '非公開', trend_unpublished_label(trend)
+    assert_equal '非公開（管理者のみ閲覧可）', trend_unpublished_label(trend, unpublished_text: '非公開（管理者のみ閲覧可）')
+  end
+
+  test 'trend_news_release_labelはニュースリリースのラベルを返す' do
+    assert_equal 'ニュースリリース', Nokogiri::HTML.fragment(trend_news_release_label).text
+  end
 end

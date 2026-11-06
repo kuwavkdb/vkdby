@@ -6,11 +6,15 @@
 #
 #  id                   :bigint           not null, primary key
 #  active               :boolean          default(TRUE), not null
+#  bottom_image_alt     :string
 #  content              :text
 #  date                 :date             not null
 #  day_unknown          :boolean          default(FALSE), not null
 #  etc_phenomenon       :integer
+#  image_alt            :string
 #  month_unknown        :boolean          default(FALSE), not null
+#  news_release         :boolean          default(FALSE), not null
+#  news_release_source  :string
 #  people               :jsonb
 #  person_name_in_title :boolean          default(FALSE), not null
 #  person_phenomenon    :integer
@@ -43,13 +47,24 @@
 #
 #  fk_rails_...  (venue_id => venues.id)
 #
-class Trend < ApplicationRecord
+class Trend < ApplicationRecord # rubocop:disable Metrics/ClassLength
   include OgpImageAttachable
 
   # 開催場所（issue #1689）。1件のTrendにつき会場は1件のみ
   belongs_to :venue, optional: true
   # 投稿フォームの投稿から作った動向を削除しても、投稿側の外部キーで止まらないよう参照を外す（issue #1923）
   has_many :trend_submissions, foreign_key: :converted_trend_id, inverse_of: :converted_trend, dependent: :nullify
+
+  # 詳細画面に出す画像（issue #2014）。image はヘッダーの下・本文の上に出し、ニュースリリースのときは
+  # OGP 画像にも使う。bottom_image は本文の下・同じ日に発売のアイテムの上に出す
+  IMAGE_ATTACHMENTS = %i[image bottom_image].freeze
+  has_one_attached :image
+  has_one_attached :bottom_image
+  # 管理画面のフォームの「画像を削除する」チェック。保存後に添付を外す。
+  # 同時に新しい画像を選んでいた場合は、差し替えとみなして削除しない
+  attribute :remove_image, :boolean, default: false
+  attribute :remove_bottom_image, :boolean, default: false
+  after_save :purge_removed_images
 
   # Enums
   enum :unit_phenomenon, {
@@ -120,6 +135,9 @@ class Trend < ApplicationRecord
   validates :date, presence: true
   validates :active, inclusion: { in: [true, false] }
   validates :publish_start_at, presence: true
+  # ニュースリリースは発信元を詳細画面に出すため必須（issue #2014）
+  validates :news_release_source, presence: true, if: :news_release?
+  validate :images_must_be_images
   validate :must_have_at_least_one_phenomenon
 
   # タイトル末尾の半角括弧書き（会場名等の補足）にマッチする正規表現。
@@ -163,6 +181,27 @@ class Trend < ApplicationRecord
     active? && publish_start_at <= Time.current
   end
 
+  # 「公開する」にチェックがあり、公開開始日時が未来の動向（公開予約中）。
+  # 管理者向けの「YYYY/MM/DD HH:MM:SS 公開」表示に使う（issue #2014）
+  def publish_scheduled?
+    active? && publish_start_at.present? && publish_start_at > Time.current
+  end
+
+  # 画像の代替テキスト。任意入力で、空なら動向のタイトルを使う（issue #2014）
+  def image_alt_text
+    image_alt.presence || title.to_s
+  end
+
+  # 本文の下の画像の代替テキスト。任意入力で、空なら動向のタイトルを使う（issue #2014）
+  def bottom_image_alt_text
+    bottom_image_alt.presence || title.to_s
+  end
+
+  # ニュースリリースで画像を添付していれば、その画像を OGP 画像に使う（issue #2014）
+  def news_release_image_for_ogp?
+    news_release? && image.attached?
+  end
+
   # Trend詳細ページのヘッダ・ページ<title>・OGP画像で共通して使う日付ラベル。
   # month_unknown/day_unknownに応じて年 → 年月 → 年月日の粒度で表示する（issue #1313, #1319）
   def date_label
@@ -201,5 +240,26 @@ class Trend < ApplicationRecord
   def ogp_image_attachable_text_changed?
     saved_change_to_title? || saved_change_to_units? ||
       saved_change_to_date? || saved_change_to_month_unknown? || saved_change_to_day_unknown?
+  end
+
+  def images_must_be_images
+    IMAGE_ATTACHMENTS.each do |name|
+      attachment = public_send(name)
+      next unless attachment.attached?
+      next if attachment.blob.content_type.to_s.start_with?('image/')
+
+      errors.add(name, 'は画像ファイルを選んでください')
+    end
+  end
+
+  def purge_removed_images
+    IMAGE_ATTACHMENTS.each do |name|
+      flag = :"remove_#{name}"
+      next unless public_send(flag)
+
+      attachment = public_send(name)
+      attachment.purge_later if attachment.attached? && !attachment_changes.key?(name.to_s)
+      public_send(:"#{flag}=", false)
+    end
   end
 end

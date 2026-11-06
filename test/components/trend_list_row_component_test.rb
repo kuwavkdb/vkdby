@@ -74,4 +74,24 @@ class TrendListRowComponentTest < ActiveSupport::TestCase
     assert_includes text, '2020/12'
     assert_not_includes text, '2020/12/01'
   end
+
+  test 'marks an unpublished trend with a dashed border and screen reader text' do
+    trend = Trend.create!(title: 'Scheduled Trend', date: Date.current, publish_start_at: 1.day.from_now,
+                          unit_phenomenon: :other)
+
+    render_inline(TrendListRowComponent.new(trend: trend))
+
+    assert_selector 'div.border-dashed'
+    assert_selector '.sr-only', text: '（未公開）'
+  end
+
+  test 'does not mark a published trend' do
+    trend = Trend.create!(title: 'Published Trend', date: Date.current, publish_start_at: 1.minute.ago,
+                          unit_phenomenon: :other)
+
+    render_inline(TrendListRowComponent.new(trend: trend))
+
+    assert_no_selector 'div.border-dashed'
+    assert_no_selector '.sr-only', text: '（未公開）'
+  end
 end
