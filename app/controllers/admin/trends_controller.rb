@@ -37,7 +37,8 @@ module Admin
       @venue_name_prefill = params[:venue_name].to_s.presence
       @trend = Trend.new(trend_params_for_new)
       @trend.date ||= Date.current
-      @trend.publish_start_at ||= Time.current
+      # 公開開始日時の入力欄は分までにするため、初期値も分の頭にそろえる（issue #2024）
+      @trend.publish_start_at ||= Time.current.beginning_of_minute
       @trend.active = true
 
       if params[:trend_submission_id].present?
