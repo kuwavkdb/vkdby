@@ -19,6 +19,11 @@ ja:
         source_url: "情報源のURL"
         email: "メールアドレス"
       trend:
+        news_release_source: "発信元"
+        image: "画像"
+        image_alt: "画像の代替テキスト"
+        bottom_image: "本文の下の画像"
+        bottom_image_alt: "本文の下の画像の代替テキスト"
         unit_phenomenon:
           announcement: お知らせ
           formation: 結成

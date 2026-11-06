@@ -71,6 +71,23 @@
     </label>
   </div>
 
+  <!-- News Release（issue #2014）。日付・公開の行とは分けて、チェックと発信元を1行に並べる -->
+  <div>
+    <div class="flex flex-wrap items-end gap-x-8 gap-y-4">
+      <%# items-end で入力欄の下端に揃うため、pb-2.5 でチェックボックスを入力欄の縦中央に合わせる %>
+      <label class="inline-flex items-center pb-2.5">
+        <%= form.check_box :news_release, class: "form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
+        <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">ニュースリリース</span>
+      </label>
+      <div class="w-full sm:w-80">
+        <%= form.label :news_release_source, "発信元", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+        <%= form.text_field :news_release_source, aria: { describedby: "trend_news_release_source_hint" },
+              class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+      </div>
+    </div>
+    <p id="trend_news_release_source_hint" class="mt-1 text-xs text-gray-500 dark:text-gray-400">発信元はニュースリリースの場合は必須。動向の詳細画面に表示する（例: レーベル・事務所名）</p>
+  </div>
+
   <!-- Phenomenon Selection -->
   <div>
     <h3 class="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">動向種別（少なくとも1つ選択）</h3>
@@ -256,11 +273,19 @@
     <%= form.text_field :title, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
   </div>
 
+  <!-- 本文の上の画像（issue #2014）。詳細画面ではヘッダーの下・本文の上に出し、ニュースリリースのときは OGP 画像にも使う -->
+  <%= render "admin/trends/image_field", form: form, trend: trend, name: :image, label: "本文の上の画像",
+        hint: "詳細画面の本文の上に表示する。ニュースリリースのときは SNS で共有したときの画像（OGP 画像）にも使う" %>
+
   <div>
     <%= form.label :content, "本文", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
     <%= form.text_area :content, rows: 4, class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
-    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Wiki形式をサポート</p>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Wiki形式をサポート。ニュースリリースのときは Wiki 形式を使わず、改行・空行を入力どおりに表示する</p>
   </div>
+
+  <!-- 本文の下の画像（issue #2014）。詳細画面では本文の下・同じ日に発売のアイテムの上に出す -->
+  <%= render "admin/trends/image_field", form: form, trend: trend, name: :bottom_image, label: "本文の下の画像",
+        hint: "詳細画面の本文の下（同じ日に発売のアイテムの上）に表示する" %>
 
   <!-- Quote Section -->
   <div class="border-t border-gray-200 dark:border-gray-700 pt-6">

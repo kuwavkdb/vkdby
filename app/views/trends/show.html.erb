@@ -14,7 +14,10 @@
 <%# ユニット名/タイトル入りのog:image（issue #1319、Unit/Personのプロフィールページ向け実装
     issue #1259と同じ仕組み）。生成できない場合（libvips未導入等）はogp_image_relative_urlがnilを返し、
     application_helper#og_image_urlのデフォルト画像フォールバックに任せる %>
-<% if (ogp_image_path = @trend.ogp_image_relative_url) %>
+<%# ニュースリリースで画像を添付していれば、その画像をog:imageに使う（issue #2014） %>
+<% if @trend.news_release_image_for_ogp? %>
+  <% content_for :og_image, "#{request.base_url}#{rails_blob_path(@trend.image, only_path: true)}" %>
+<% elsif (ogp_image_path = @trend.ogp_image_relative_url) %>
   <% content_for :og_image, "#{request.base_url}#{ogp_image_path}" %>
 <% end %>
 <div class="flex justify-center">
@@ -24,8 +27,11 @@
             visible: defined?(logged_in?) && logged_in?) %>
       <%# ヘッダの日付はtext-amber-900だとbg-amber-500背景（当時）とのコントラスト比が約4.2:1でWCAG AA（4.5:1）未達だった。
           タイトル（h1）と同じtext-zinc-900に揃えてコントラスト比を約8.3:1まで改善（issue #1322） %>
-      <% unless @trend.published? %>
-        <span class="inline-block mb-2 px-2 py-0.5 rounded text-xs font-bold bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/40 dark:text-red-300 dark:border-red-700">非公開（管理者のみ閲覧可）</span>
+      <%# ニュースリリースで公開予約中なら、公開予約のバッジは下の公開日時の横に出す（issue #2014） %>
+      <% scheduled_badge_beside_publish_time = @trend.news_release? && @trend.publish_scheduled? %>
+      <% unless @trend.published? || scheduled_badge_beside_publish_time %>
+        <%# 公開予約中なら公開開始日時を出す（issue #2014） %>
+        <span class="inline-block mb-2 px-2 py-0.5 rounded text-xs font-bold bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/40 dark:text-red-300 dark:border-red-700"><%= trend_unpublished_label(@trend, unpublished_text: "非公開（管理者のみ閲覧可）") %></span>
       <% end %>
       <div class="flex items-center gap-3 text-sm text-zinc-900 font-mono mb-2 font-bold">
         <%= link_to trend_date_label(@trend), trend_date_path(@trend), class: "hover:underline transition-colors" %>
@@ -105,9 +111,39 @@
       <% end %>
     </div>
     <div class="p-5 md:p-8">
+      <% if @trend.news_release? %>
+        <%# ニュースリリースのラベル・発信元・公開日時（情報解禁日時）。ヘッダーの下、本文の上の画像より上に出す（issue #2014） %>
+        <p class="mb-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-bold text-zinc-700 dark:text-zinc-200">
+          <%= trend_news_release_label %>
+          <% if @trend.news_release_source.present? %>
+            <span><%= @trend.news_release_source %></span>
+          <% end %>
+          <%# 公開日時と「公開予定」は一続きの情報なので、間は詰めたままにする %>
+          <span class="inline-flex flex-wrap items-center gap-2">
+            <time datetime="<%= @trend.publish_start_at.iso8601 %>" class="font-mono"><%= @trend.publish_start_at.strftime('%Y年%-m月%-d日 %-H時%M分') %></time>
+            <% if scheduled_badge_beside_publish_time %>
+              <%# 日時はすぐ左に出しているので、文言は「公開予定」だけにする %>
+              <span class="inline-block px-2 py-0.5 rounded text-xs font-bold bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/40 dark:text-red-300 dark:border-red-700">公開予定</span>
+            <% end %>
+          </span>
+        </p>
+      <% end %>
+      <% if @trend.image.attached? %>
+        <%# 動向の画像（issue #2014）。ヘッダーの下・本文の上に出す。代替テキストが空ならタイトルを使う %>
+        <figure class="mb-6">
+          <%= image_tag rails_blob_path(@trend.image, disposition: :inline), alt: @trend.image_alt_text,
+                fetchpriority: "high", class: "mx-auto block h-auto max-h-[400px] w-auto max-w-full rounded-lg" %>
+        </figure>
+      <% end %>
 
       <div class="prose prose-slate dark:prose-invert max-w-none">
-        <%= format_wiki_content(@trend.content) %>
+        <% if @trend.news_release? %>
+          <%# ニュースリリースの本文はプレーンテキスト。Wiki形式（simple_format）を通すと続く空行が
+              1つの段落区切りにまとめられるため、エスケープしてそのまま出し、改行・空行を保つ（issue #2014） %>
+          <div class="whitespace-pre-line"><%= @trend.content %></div>
+        <% else %>
+          <%= format_wiki_content(@trend.content) %>
+        <% end %>
 
         <% if @trend.quote.present? %>
           <% if twitter_url?(@trend.quote_url) %>
@@ -139,7 +175,27 @@
           <% end %>
         <% end %>
       </div>
-      
+
+      <% if @trend.bottom_image.attached? %>
+        <%# 本文の下の画像（issue #2014）。同じ日に発売のアイテムの上に出す。代替テキストが空ならタイトルを使う %>
+        <figure class="mt-8">
+          <%= image_tag rails_blob_path(@trend.bottom_image, disposition: :inline), alt: @trend.bottom_image_alt_text,
+                loading: "lazy", class: "mx-auto block h-auto max-h-[400px] w-auto max-w-full rounded-lg" %>
+        </figure>
+      <% end %>
+
+      <% if @same_day_items.present? %>
+        <%# 動向の日付と同じ発売日で、同じアーティストのアイテム（issue #2014） %>
+        <section class="mt-8" aria-labelledby="same-day-items-heading">
+          <div class="flex items-center justify-between mb-4 border-b border-zinc-200 dark:border-zinc-700 pb-2">
+            <h2 id="same-day-items-heading" class="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">同じ日に発売のアイテム</h2>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <%= render ItemCardComponent.with_collection(@same_day_items) %>
+          </div>
+        </section>
+      <% end %>
+
       <% if @snapshot || @unit_trends.present? %>
         <div class="mt-10 grid gap-8 grid-cols-1 md:grid-cols-[1fr_360px] items-start">
           <% if @snapshot %>

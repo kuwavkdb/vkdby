@@ -105,7 +105,9 @@ module Admin
       params.require(:trend).permit(
         :date, :day_unknown, :month_unknown,
         :snapshot_date,
-        :publish_start_at, :active,
+        :publish_start_at, :active, :news_release, :news_release_source,
+        :image, :image_alt, :remove_image,
+        :bottom_image, :bottom_image_alt, :remove_bottom_image,
         :title, :content,
         :quote, :quote_title, :quote_url,
         :via_name, :via_url,

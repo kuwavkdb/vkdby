@@ -18,6 +18,9 @@ class TrendListRowComponent < ViewComponent::Base
 
   def current? = @current
 
+  # ログイン時（管理者）にしか見えない未公開の動向。公開中の動向と見分けられるよう、破線の枠で囲む（issue #2014）
+  def unpublished? = !@trend.published?
+
   # 自ユニット（resource）が動向登録時点で現在と異なる名前で登録されている場合のみ、
   # その別名をバッジ表示する。他ユニットが併記されている動向でも他ユニット名は表示しない（issue #1658）
   def unit_badges

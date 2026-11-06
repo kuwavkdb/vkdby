@@ -1,35 +1,40 @@
-<% if current? %>
-  <div class="flex items-start gap-3 text-sm">
-    <%# 日付列は固定幅(w-24)だとAndroid標準の等幅フォント（総称フォントmonospaceが
-        Roboto Mono等にフォールバックし、Menlo/Consolas等デスクトップ用より字幅が広い）で
-        "YYYY/MM/DD"がはみ出し、gap-3の余白を食いつぶして隣列と間隔がなくなっていた。
-        固定幅をやめてwhitespace-nowrapで折り返しのみ防止し、実際の描画幅に委ねる（issue #1322） %>
-    <div class="shrink-0 whitespace-nowrap text-slate-500 font-mono text-sm pt-0.5 font-bold">
-      <%= @trend.date_label %>
+<%# 未公開の動向（管理者にだけ見える）は破線の枠で囲み、読み上げ向けに「未公開」と添える（issue #2014） %>
+<div class="<%= class_names('rounded border border-dashed border-zinc-400 dark:border-zinc-500 px-2 py-1': unpublished?) %>">
+  <% if current? %>
+    <div class="flex items-start gap-3 text-sm">
+      <%# 日付列は固定幅(w-24)だとAndroid標準の等幅フォント（総称フォントmonospaceが
+          Roboto Mono等にフォールバックし、Menlo/Consolas等デスクトップ用より字幅が広い）で
+          "YYYY/MM/DD"がはみ出し、gap-3の余白を食いつぶして隣列と間隔がなくなっていた。
+          固定幅をやめてwhitespace-nowrapで折り返しのみ防止し、実際の描画幅に委ねる（issue #1322） %>
+      <div class="shrink-0 whitespace-nowrap text-slate-500 font-mono text-sm pt-0.5 font-bold">
+        <%= @trend.date_label %>
+      </div>
+      <div class="grow">
+        <p class="font-bold text-slate-500">
+          <% unit_badges.each do |name| %>
+            <span class="px-1.5 py-0.5 rounded text-[11px] align-middle bg-slate-100 dark:bg-slate-800 text-slate-500"><%= name %></span>
+          <% end %>
+          <% if unpublished? %><span class="sr-only">（未公開）</span><% end %>
+          <%= format_wiki_title(@trend.title, link: false) %>
+        </p>
+      </div>
     </div>
-    <div class="grow">
-      <p class="font-bold text-slate-500">
-        <% unit_badges.each do |name| %>
-          <span class="px-1.5 py-0.5 rounded text-[11px] align-middle bg-slate-100 dark:bg-slate-800 text-slate-500"><%= name %></span>
-        <% end %>
-        <%= format_wiki_title(@trend.title, link: false) %>
-      </p>
-    </div>
-  </div>
-<% else %>
-  <%# リンク色はサイト全体の標準（.markdown-content/.wiki-content aやmember_row_component・
-      history_row_componentと同じ、ライトはindigo-700・ダークはamber-400）に統一している（issue #1322, #1571） %>
-  <%= link_to trend_path(@trend), class: "flex items-start gap-3 text-sm group" do %>
-    <div class="shrink-0 whitespace-nowrap text-indigo-700 dark:text-amber-400 font-mono text-sm pt-0.5 font-bold">
-      <%= @trend.date_label %>
-    </div>
-    <div class="grow">
-      <p class="font-bold text-indigo-700 dark:text-amber-400 underline decoration-indigo-600/25 dark:decoration-amber-400/40 underline-offset-2 group-hover:decoration-indigo-600 dark:group-hover:decoration-amber-400 transition-colors">
-        <% unit_badges.each do |name| %>
-          <span class="px-1.5 py-0.5 rounded text-[11px] align-middle bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 no-underline"><%= name %></span>
-        <% end %>
-        <%= format_wiki_title(@trend.title, link: false) %>
-      </p>
-    </div>
+  <% else %>
+    <%# リンク色はサイト全体の標準（.markdown-content/.wiki-content aやmember_row_component・
+        history_row_componentと同じ、ライトはindigo-700・ダークはamber-400）に統一している（issue #1322, #1571） %>
+    <%= link_to trend_path(@trend), class: "flex items-start gap-3 text-sm group" do %>
+      <div class="shrink-0 whitespace-nowrap text-indigo-700 dark:text-amber-400 font-mono text-sm pt-0.5 font-bold">
+        <%= @trend.date_label %>
+      </div>
+      <div class="grow">
+        <p class="font-bold text-indigo-700 dark:text-amber-400 underline decoration-indigo-600/25 dark:decoration-amber-400/40 underline-offset-2 group-hover:decoration-indigo-600 dark:group-hover:decoration-amber-400 transition-colors">
+          <% unit_badges.each do |name| %>
+            <span class="px-1.5 py-0.5 rounded text-[11px] align-middle bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 no-underline"><%= name %></span>
+          <% end %>
+          <% if unpublished? %><span class="sr-only">（未公開）</span><% end %>
+          <%= format_wiki_title(@trend.title, link: false) %>
+        </p>
+      </div>
+    <% end %>
   <% end %>
-<% end %>
+</div>
