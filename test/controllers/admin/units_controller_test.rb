@@ -55,6 +55,17 @@ module Admin
       assert_equal 'Renamed Unit', @unit.name
     end
 
+    # issue #2007: 保存に失敗して編集画面を描き直すときに、取り込み元パネルなどで落ちない
+    test 'update re-renders the edit page with errors when a link URL is invalid' do
+      patch admin_unit_path(@unit), params: {
+        unit: { links_attributes: { '0' => { text: '公式サイト', url: 'example.com' } } }
+      }
+
+      assert_response :unprocessable_entity
+      assert_includes response.body, 'は http:// または https:// で始まるURLを入力してください'
+      assert_empty @unit.links.reload
+    end
+
     test 'create allows setting key' do
       assert_difference('Unit.count') do
         post admin_units_path, params: {
