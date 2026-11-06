@@ -129,10 +129,11 @@
         </p>
       <% end %>
       <% if @trend.image.attached? %>
-        <%# 動向の画像（issue #2014）。ヘッダーの下・本文の上に出す。代替テキストが空ならタイトルを使う %>
+        <%# 動向の画像（issue #2014）。ヘッダーの下・本文の上に出す。代替テキストが空ならタイトルを使う。
+            ニュースリリースは配布された画像をそのまま見せるため角丸にしない %>
         <figure class="mb-6">
           <%= image_tag rails_blob_path(@trend.image, disposition: :inline), alt: @trend.image_alt_text,
-                fetchpriority: "high", class: "mx-auto block h-auto max-h-[400px] w-auto max-w-full rounded-lg" %>
+                fetchpriority: "high", class: class_names("mx-auto block h-auto max-h-[400px] w-auto max-w-full", "rounded-lg": !@trend.news_release?) %>
         </figure>
       <% end %>
 
@@ -180,7 +181,7 @@
         <%# 本文の下の画像（issue #2014）。同じ日に発売のアイテムの上に出す。代替テキストが空ならタイトルを使う %>
         <figure class="mt-8">
           <%= image_tag rails_blob_path(@trend.bottom_image, disposition: :inline), alt: @trend.bottom_image_alt_text,
-                loading: "lazy", class: "mx-auto block h-auto max-h-[400px] w-auto max-w-full rounded-lg" %>
+                loading: "lazy", class: class_names("mx-auto block h-auto max-h-[400px] w-auto max-w-full", "rounded-lg": !@trend.news_release?) %>
         </figure>
       <% end %>
 

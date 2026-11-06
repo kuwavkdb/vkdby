@@ -574,4 +574,20 @@ class TrendsControllerTest < ActionDispatch::IntegrationTest
     body = response.body
     assert_operator body.index('告知画像'), :<, body.index('same-day-items-heading')
   end
+
+  test 'show renders news release images without rounded corners (issue #2014)' do
+    news = Trend.create!(title: 'Square image news', date: Date.current, publish_start_at: 1.minute.ago, etc_phenomenon: :other,
+                         news_release: true, news_release_source: 'Example Records')
+    news.image.attach(io: file_fixture('submission_image.png').open, filename: 'top.png', content_type: 'image/png')
+    news.bottom_image.attach(io: file_fixture('submission_image.png').open, filename: 'bottom.png', content_type: 'image/png')
+    plain = Trend.create!(title: 'Rounded image trend', date: Date.current, publish_start_at: 1.minute.ago, etc_phenomenon: :other)
+    plain.image.attach(io: file_fixture('submission_image.png').open, filename: 'plain.png', content_type: 'image/png')
+
+    get trend_path(news)
+    assert_select 'figure img', count: 2
+    assert_select 'figure img.rounded-lg', count: 0
+
+    get trend_path(plain)
+    assert_select 'figure img.rounded-lg', count: 1
+  end
 end
