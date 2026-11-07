@@ -63,7 +63,9 @@
 
     <div>
       <%= form.label :publish_start_at, "公開開始日時", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
-      <%= form.datetime_field :publish_start_at, class: "mt-1 block rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white", required: true %>
+      <%# 値を秒まで入れると、ブラウザは初期値の秒を基準に60秒刻みでしか受け付けず、
+          ちょうどの時刻が無効になる。分までにして刻みの基準を :00 秒にする（issue #2024） %>
+      <%= form.datetime_field :publish_start_at, value: trend.publish_start_at&.strftime("%Y-%m-%dT%H:%M"), class: "mt-1 block rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white", required: true %>
     </div>
     <label class="inline-flex items-center">
       <%= form.check_box :active, class: "form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" %>
