@@ -39,10 +39,11 @@ class ExternalSite < ApplicationRecord
   ].freeze
 
   validates :site_key, presence: true, uniqueness: true
+  validates :name, presence: true
   validates :url_pattern, presence: true
-  validates :url_pattern, format: { with: /\A.*\{account\}.*\z/, message: 'must contain {account} placeholder' }
 
-  # リンク欄のタイトル補完（link_title_suggest_controller.js）に渡す、表示名と URL パターンの一覧
+  # リンク欄のタイトル補完（link_title_suggest_controller.js）に渡す、表示名と URL パターンの一覧。
+  # 表示名の必須化（#2011）より前に登録された、表示名が空のサイトは除く
   def self.link_title_suggestions
     where.not(name: [nil, '']).order(:site_key).map { |site| { name: site.name, url_pattern: site.url_pattern } }
   end
