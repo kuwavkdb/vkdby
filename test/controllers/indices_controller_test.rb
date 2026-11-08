@@ -73,4 +73,16 @@ class IndicesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, '転送設定されています'
     assert_includes response.body, 'href="/units/example"'
   end
+
+  test 'show displays the edit link only to logged-in users' do
+    tag_index = TagIndex.create!(name: "Edit Link Index #{SecureRandom.hex(4)}")
+    edit_link = %(href="#{edit_admin_tag_index_path(tag_index)}")
+
+    get index_show_path(tag_index)
+    assert_not_includes response.body, edit_link
+
+    post login_path, params: { email: users(:one).email, password: 'password' }
+    get index_show_path(tag_index)
+    assert_includes response.body, edit_link
+  end
 end

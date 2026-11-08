@@ -1,7 +1,10 @@
 <% content_for :title, @index.name %>
 <div class="flex justify-center">
-  <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
-    <div class="mb-6">
+  <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8 relative">
+    <%= render HeaderActionLinkComponent.new(label: "Edit", url: edit_admin_tag_index_path(@index), theme: :plain,
+          visible: logged_in?) %>
+    <%# 右上の Edit と重ならないよう右側を空ける %>
+    <div class="mb-6 pr-16">
       <% index_group = @index.index_group %>
       <%= link_to index_group ? indices_group_path(index_group.id) : indices_groups_path,
             class: "inline-flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-indigo-500 dark:hover:text-amber-400 transition-colors" do %>

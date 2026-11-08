@@ -84,7 +84,7 @@
             <div class="flex items-center gap-4">
               <%= link_to "Units: #{index.units.count}", admin_units_path(tag_index_id: index.id), class: "text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline" %>
               <%= link_to "People: #{index.people.count}", admin_people_path(tag_index_id: index.id), class: "text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline" %>
-              <%= link_to "名称変更", edit_admin_tag_index_path(index), class: "text-xs px-2 py-1 rounded border text-gray-600 border-gray-300 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700" %>
+              <%= link_to "変更", edit_admin_tag_index_path(index), class: "text-xs px-2 py-1 rounded border text-gray-600 border-gray-300 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700" %>
               <%= button_to index.active? ? "非表示" : "表示", admin_tag_index_path(index, tag_index: { active: !index.active? }), method: :patch, class: "text-xs px-2 py-1 rounded border #{index.active? ? 'text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/30' : 'text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30'}" %>
               <%= button_to "削除", admin_tag_index_path(index), method: :delete, class: "text-xs px-2 py-1 rounded border text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/30", onclick: "return confirm('「#{j index.name}」を削除しますか？紐づくUnit/Personとの関連も削除されます。')" %>
             </div>
@@ -158,7 +158,7 @@
             <div class="flex items-center gap-4">
               <%= link_to "Units: #{index.units.count}", admin_units_path(tag_index_id: index.id), class: "text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline" %>
               <%= link_to "People: #{index.people.count}", admin_people_path(tag_index_id: index.id), class: "text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline" %>
-              <%= link_to "名称変更", edit_admin_tag_index_path(index), class: "text-xs px-2 py-1 rounded border text-gray-600 border-gray-300 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700" %>
+              <%= link_to "変更", edit_admin_tag_index_path(index), class: "text-xs px-2 py-1 rounded border text-gray-600 border-gray-300 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700" %>
               <%= button_to index.active? ? "非表示" : "表示", admin_tag_index_path(index, tag_index: { active: !index.active? }), method: :patch, class: "text-xs px-2 py-1 rounded border #{index.active? ? 'text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/30' : 'text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30'}" %>
               <%= button_to "削除", admin_tag_index_path(index), method: :delete, class: "text-xs px-2 py-1 rounded border text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/30", onclick: "return confirm('「#{j index.name}」を削除しますか？紐づくUnit/Personとの関連も削除されます。')" %>
             </div>
