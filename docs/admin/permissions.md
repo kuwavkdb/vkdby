@@ -26,7 +26,7 @@
 | Units — 簡単登録でのメモ入力・仮登録（一般非公開）での作成。admin 以外が簡単登録したユニットは常に仮登録になる。一覧の「仮登録のみ」で仮登録ユニットを絞り込める（issue #1764） | quick_new / quick_create / index |
 | Units — ステータス「移行」（別ユニットとして活動を継続）の後継ユニットを key で指定する。公開ページに後継ユニットへのリンクと、後継ユニット側に「前身」が出る（issue #1996） | new / create / edit / update / quick_new / quick_create |
 | People — 閲覧・作成・編集 | index / new / create / edit / update / search |
-| Index Groups / タグ（Tag Indices）— 閲覧・作成・編集・削除・並べ替え・グループ移動 | 全アクション |
+| Index Groups / タグ（Tag Indices）— 閲覧・作成・編集（関連ページURL・転送設定を含む）・削除・並べ替え・グループ移動 | 全アクション |
 | Trends — 閲覧・作成・編集（会場の紐付け・会場の表示名の上書きを含む） | index / new / create / edit / update |
 | Venues（会場）— 閲覧・作成・編集（名前の履歴・別名・リンクの編集を含む）、Trendフォームの会場サジェスト。編集画面の右上に公開ページ（`/venues/キー`）へのリンク（転送元は転送先の公開ページ、論理削除済みなど公開ページがない会場は非表示、issue #1787）。一覧の会場名から公開ページを新しいタブで開く（論理削除済み・転送元はリンクなし）。座標（緯度・経度）の確認・手入力（都道府県・エリアページの地図に使う。住所から自動取得し、手入力した座標は自動取得で上書きしない。両方空にすると自動取得に戻る、issue #1801） | index / new / create / edit / update / show / search |
 | External Sites — 閲覧・作成・編集・削除。表示名を登録すると、ユニット・個人の編集画面のリンク欄で、URL がそのサイトの `url_pattern` に一致したときにタイトルを補完する（タイトルが空のときだけ。issue #1909）。一覧の下に、登録しなくても補完できるサービス（`ExternalSite::BUILTIN_LINK_TITLES`）を表示する | 全アクション |

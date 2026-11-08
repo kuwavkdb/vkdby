@@ -249,6 +249,24 @@ module Admin
       assert_select "input[name='trend[bottom_image_alt]']"
     end
 
+    test 'new renders publish_start_at down to the minute (issue #2024)' do
+      travel_to Time.zone.local(2026, 11, 6, 20, 55, 28) do
+        get new_admin_trend_path
+      end
+
+      assert_response :success
+      assert_select "input[type='datetime-local'][name='trend[publish_start_at]'][value='2026-11-06T20:55']"
+    end
+
+    test 'edit renders publish_start_at down to the minute (issue #2024)' do
+      @trend.update!(publish_start_at: Time.zone.local(2026, 11, 7, 19, 59, 28))
+
+      get edit_admin_trend_path(@trend)
+
+      assert_response :success
+      assert_select "input[type='datetime-local'][name='trend[publish_start_at]'][value='2026-11-07T19:59']"
+    end
+
     test 'update can clear the venue' do
       venue = Venue.create!(key: 'club-quattro', name: 'CLUB QUATTRO')
       @trend.update!(venue: venue)

@@ -64,6 +64,7 @@ export default class extends Controller {
     }
 
     // 外部サイトの url_pattern（例: https://ameblo.jp/{account}/）の {account} を任意の文字列とみなして照合する。
+    // {account} を含まないパターンは、そのパターンで始まる URL に一致する。
     // スキームと先頭の www. は区別せず、パターンより後ろに続くパス・クエリがあっても一致とする
     guessTitleFromSites(url) {
         const target = this.stripScheme(url.href)
@@ -72,7 +73,7 @@ export default class extends Controller {
     }
 
     sitePatternRegExp(pattern) {
-        if (!pattern || !pattern.includes("{account}")) return null
+        if (!pattern) return null
 
         const body = this.stripScheme(pattern).replace(/\/+$/, "")
         const source = body

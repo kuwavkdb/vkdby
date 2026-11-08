@@ -70,5 +70,18 @@ module Admin
 
       assert_redirected_to admin_index_group_path(group)
     end
+
+    # issue #2027
+    test 'update saves related url and redirect flag' do
+      tag_index = TagIndex.create!(name: '転送タグ')
+
+      patch admin_tag_index_path(tag_index), params: {
+        tag_index: { related_url: '/units/example', redirect_to_related_url: '1' }
+      }
+
+      tag_index.reload
+      assert_equal '/units/example', tag_index.related_url
+      assert tag_index.redirect_to_related_url
+    end
   end
 end

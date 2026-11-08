@@ -31,6 +31,22 @@
         <%= f.text_field :name, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
       </div>
 
+      <div class="mb-4">
+        <%= f.label :related_url, "関連ページURL", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+        <%= f.text_field :related_url, placeholder: "/units/example", aria: { describedby: "related_url_help" },
+              class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+        <p id="related_url_help" class="mt-1 text-xs text-gray-500 dark:text-gray-400">「/」で始まるサイト内のパスを入力します。</p>
+      </div>
+
+      <div class="mb-4">
+        <div class="flex items-center">
+          <%= f.check_box :redirect_to_related_url, aria: { describedby: "redirect_to_related_url_help" },
+                class: "h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600" %>
+          <%= f.label :redirect_to_related_url, "タグページから関連ページへ転送する", class: "ml-2 block text-sm text-gray-900 dark:text-gray-100" %>
+        </div>
+        <p id="redirect_to_related_url_help" class="mt-1 ml-6 text-xs text-gray-500 dark:text-gray-400">ログイン中は転送せず、タグページに案内を表示します。</p>
+      </div>
+
       <div class="mb-6 flex items-center">
         <%= f.check_box :active, class: "h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600" %>
         <%= f.label :active, "表示中にする", class: "ml-2 block text-sm text-gray-900 dark:text-gray-100" %>

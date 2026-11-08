@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # 詳細・一覧ページのヘッダー右上に表示する管理者向けアクションリンク（Edit / Add など）。
-# items/trends の show・index や ProfileHeaderComponent（Unit/Person/Venue）で共通利用する。
+# items/trends の show・index や ProfileHeaderComponent（Unit/Person/Venue）、indices#show で共通利用する。
 class HeaderActionLinkComponent < ViewComponent::Base
   THEMES = {
     # amber系ヘッダー（items/trends の show・index）向け
@@ -15,6 +15,12 @@ class HeaderActionLinkComponent < ViewComponent::Base
       text: 'text-white/80 hover:text-white',
       border: 'border-white/20',
       focus_outline: 'focus-visible:outline-white'
+    },
+    # 白・濃灰のカード上（索引のタグページ indices#show）向け
+    plain: {
+      text: 'text-zinc-600 hover:text-indigo-600 dark:text-zinc-300 dark:hover:text-amber-400',
+      border: 'border-zinc-300 dark:border-zinc-600',
+      focus_outline: 'focus-visible:outline-indigo-500 dark:focus-visible:outline-amber-400'
     }
   }.freeze
 
