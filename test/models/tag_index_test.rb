@@ -34,4 +34,19 @@ class TagIndexTest < ActiveSupport::TestCase
   test 'blank related url is normalized to nil' do
     assert_nil TagIndex.new(related_url: '  ').related_url
   end
+
+  test 'related url rejects the tag own page' do
+    tag_index = TagIndex.create!(name: "自己転送タグ #{SecureRandom.hex(4)}")
+    ["/index/show/#{tag_index.id}", "/index/show/#{tag_index.id}/", "/index/show/#{tag_index.id}?a=1"].each do |url|
+      tag_index.related_url = url
+      assert_not tag_index.valid?, url
+      assert tag_index.errors.added?(:related_url, 'にこのタグ自身のページは指定できません'), url
+    end
+  end
+
+  test 'related url accepts another tag page' do
+    tag_index = TagIndex.create!(name: "別タグ転送 #{SecureRandom.hex(4)}")
+    tag_index.related_url = "/index/show/#{tag_index.id + 1}"
+    assert tag_index.valid?
+  end
 end

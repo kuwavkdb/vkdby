@@ -4,15 +4,15 @@
 #
 # Table name: tag_indices
 #
-#  id             :bigint           not null, primary key
-#  active         :boolean          default(TRUE), not null
-#  name           :string           not null
-#  order_in_group :integer
-#  redirect_to_related_url :boolean     default(FALSE), not null
-#  related_url    :string
-#  created_at     :datetime         not null
-#  updated_at     :datetime         not null
-#  index_group_id :integer
+#  id                      :bigint           not null, primary key
+#  active                  :boolean          default(TRUE), not null
+#  name                    :string           not null
+#  order_in_group          :integer
+#  redirect_to_related_url :boolean          default(FALSE), not null
+#  related_url             :string
+#  created_at              :datetime         not null
+#  updated_at              :datetime         not null
+#  index_group_id          :integer
 #
 # Indexes
 #
@@ -38,6 +38,7 @@ class TagIndex < ApplicationRecord
   validates :related_url, format: { with: INTERNAL_PATH_PATTERN, message: 'は「/」で始まるサイト内のパスで入力してください' },
                           allow_blank: true
   validates :related_url, presence: { message: 'は転送する場合は必須です' }, if: :redirect_to_related_url?
+  validate :related_url_not_self
 
   normalizes :related_url, with: ->(url) { url.strip.presence }
 
@@ -47,12 +48,24 @@ class TagIndex < ApplicationRecord
   scope :group_active, -> { left_joins(:index_group).where(index_groups: { active: [true, nil] }) }
 
   # 絞り込みボタンや説明文で使う表示名。「状況/活動中」のような「グループ/」の前置きを除く（issue #1957）
-  # タグページから関連ページへ転送するか
+  def short_name
+    name.sub(%r{\A[^/]*/}, '')
+  end
+
+  # タグページからの転送先のパス。転送しない場合は nil
   def redirect_target
     related_url if redirect_to_related_url? && related_url.present?
   end
 
-  def short_name
-    name.sub(%r{\A[^/]*/}, '')
+  private
+
+  # 自分自身のタグページへ転送すると無限ループになるため弾く
+  def related_url_not_self
+    return if related_url.blank? || new_record?
+
+    path = related_url.split(/[?#]/, 2).first.chomp('/')
+    return unless path == Rails.application.routes.url_helpers.index_show_path(self)
+
+    errors.add(:related_url, 'にこのタグ自身のページは指定できません')
   end
 end

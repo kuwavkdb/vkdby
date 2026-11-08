@@ -70,7 +70,7 @@ module Admin
 
       assert_redirected_to admin_index_group_path(group)
     end
-  
+
     # issue #2027
     test 'update saves related url and redirect flag' do
       tag_index = TagIndex.create!(name: '転送タグ')
