@@ -50,6 +50,7 @@ class IndicesControllerTest < ActionDispatch::IntegrationTest
 
     get index_show_path(tag_index)
 
+    assert_response :moved_permanently
     assert_redirected_to '/units/example'
   end
 

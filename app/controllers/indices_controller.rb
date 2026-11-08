@@ -18,8 +18,8 @@ class IndicesController < ApplicationController
 
   def show
     @index = TagIndex.find(params[:id])
-    # 転送設定のあるタグは関連ページへ転送する。ログイン中は転送せず、タグページに案内を出す（issue #2027）
-    return redirect_to @index.redirect_target if @index.redirect_target && !logged_in?
+    # 転送設定のあるタグは関連ページへ恒久的に転送する（301）。ログイン中は転送せず、タグページに案内を出す（issue #2027）
+    return redirect_to @index.redirect_target, status: :moved_permanently if @index.redirect_target && !logged_in?
 
     @people = @index.people.kept.order(:name_kana, :name)
     @units = @index.units.publicly_visible.order(:name_kana, :name)
