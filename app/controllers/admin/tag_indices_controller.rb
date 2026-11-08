@@ -53,7 +53,7 @@ module Admin
     end
 
     def tag_index_params
-      params.require(:tag_index).permit(:name, :active, :index_group_id)
+      params.require(:tag_index).permit(:name, :active, :index_group_id, :related_url, :redirect_to_related_url)
     end
   end
 end

@@ -8,6 +8,8 @@
 #  active         :boolean          default(TRUE), not null
 #  name           :string           not null
 #  order_in_group :integer
+#  redirect_to_related_url :boolean     default(FALSE), not null
+#  related_url    :string
 #  created_at     :datetime         not null
 #  updated_at     :datetime         not null
 #  index_group_id :integer
@@ -23,6 +25,9 @@
 #  fk_rails_...  (index_group_id => index_groups.id)
 #
 class TagIndex < ApplicationRecord
+  # 関連ページはサイト内のパスに限る（"/" で始まり、2文字目が "/" やバックスラッシュでない）。外部サイトへの転送を防ぐ（issue #2027）
+  INTERNAL_PATH_PATTERN = %r{\A/(?![/\\])\S*\z}
+
   has_many :items, class_name: 'TagIndexItem', dependent: :destroy
   has_many :people, through: :items, source: :indexable, source_type: 'Person'
   has_many :units, through: :items, source: :indexable, source_type: 'Unit'
@@ -30,6 +35,11 @@ class TagIndex < ApplicationRecord
   belongs_to :index_group, optional: true
 
   validates :name, presence: true, uniqueness: true
+  validates :related_url, format: { with: INTERNAL_PATH_PATTERN, message: 'は「/」で始まるサイト内のパスで入力してください' },
+                          allow_blank: true
+  validates :related_url, presence: { message: 'は転送する場合は必須です' }, if: :redirect_to_related_url?
+
+  normalizes :related_url, with: ->(url) { url.strip.presence }
 
   scope :ordered, -> { order(order_in_group: :asc) }
   scope :active, -> { where(active: true) }
@@ -37,6 +47,11 @@ class TagIndex < ApplicationRecord
   scope :group_active, -> { left_joins(:index_group).where(index_groups: { active: [true, nil] }) }
 
   # 絞り込みボタンや説明文で使う表示名。「状況/活動中」のような「グループ/」の前置きを除く（issue #1957）
+  # タグページから関連ページへ転送するか
+  def redirect_target
+    related_url if redirect_to_related_url? && related_url.present?
+  end
+
   def short_name
     name.sub(%r{\A[^/]*/}, '')
   end

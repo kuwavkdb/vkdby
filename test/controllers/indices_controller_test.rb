@@ -42,4 +42,35 @@ class IndicesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_not_includes response.body, 'Provisional Tagged Unit'
   end
+
+  # issue #2027
+  test 'show redirects to the related page when redirect is enabled' do
+    tag_index = TagIndex.create!(name: "Redirect Index #{SecureRandom.hex(4)}",
+                                 related_url: '/units/example', redirect_to_related_url: true)
+
+    get index_show_path(tag_index)
+
+    assert_redirected_to '/units/example'
+  end
+
+  test 'show does not redirect when redirect is disabled' do
+    tag_index = TagIndex.create!(name: "No Redirect Index #{SecureRandom.hex(4)}", related_url: '/units/example')
+
+    get index_show_path(tag_index)
+
+    assert_response :success
+    assert_not_includes response.body, '転送設定されています'
+  end
+
+  test 'show does not redirect logged-in users and shows a notice instead' do
+    tag_index = TagIndex.create!(name: "Logged In Index #{SecureRandom.hex(4)}",
+                                 related_url: '/units/example', redirect_to_related_url: true)
+    post login_path, params: { email: users(:one).email, password: 'password' }
+
+    get index_show_path(tag_index)
+
+    assert_response :success
+    assert_includes response.body, '転送設定されています'
+    assert_includes response.body, 'href="/units/example"'
+  end
 end

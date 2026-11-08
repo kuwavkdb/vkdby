@@ -12,6 +12,16 @@
       <% end %>
     </div>
 
+    <%# 転送設定のあるタグをログイン中に開いたときの案内（issue #2027） %>
+    <% if @index.redirect_target %>
+      <div class="mb-6 rounded-lg border border-amber-300 bg-amber-50 dark:border-amber-500/50 dark:bg-amber-900/30 p-4 text-sm text-amber-900 dark:text-amber-100" role="note">
+        このタグは
+        <%= link_to @index.redirect_target, @index.redirect_target,
+              class: "font-bold underline text-indigo-700 hover:text-indigo-900 dark:text-amber-400 dark:hover:text-amber-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 rounded" %>
+        へ転送設定されています（ログイン中のため転送していません）。
+      </div>
+    <% end %>
+
     <header class="mb-8">
       <h1 class="text-3xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-3">
         <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-base rounded-lg font-black uppercase tracking-widest">INDEX</span>

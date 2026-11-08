@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_130002) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_08_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -284,6 +284,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_130002) do
     t.integer "index_group_id"
     t.string "name", null: false
     t.integer "order_in_group"
+    t.boolean "redirect_to_related_url", default: false, null: false
+    t.string "related_url"
     t.datetime "updated_at", null: false
     t.index ["index_group_id", "order_in_group"], name: "index_tag_indices_on_index_group_id_and_order_in_group"
     t.index ["index_group_id"], name: "index_tag_indices_on_index_group_id"
