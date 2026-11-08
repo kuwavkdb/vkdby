@@ -11,6 +11,9 @@ ja:
     attributes:
       link:
         url: "URL"
+      tag_index:
+        related_url: "関連ページURL"
+        redirect_to_related_url: "関連ページへの転送"
       venue:
         latitude: "緯度"
         longitude: "経度"
