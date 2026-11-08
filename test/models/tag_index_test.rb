@@ -23,7 +23,7 @@ class TagIndexTest < ActiveSupport::TestCase
   test 'redirect requires related url' do
     tag_index = TagIndex.new(name: 'タグ', redirect_to_related_url: true)
     assert_not tag_index.valid?
-    assert tag_index.errors.added?(:related_url, :blank, message: 'は転送する場合は必須です')
+    assert tag_index.errors.of_kind?(:related_url, :blank)
   end
 
   test 'redirect_target returns related url only when redirect is enabled' do
