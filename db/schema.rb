@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_08_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_09_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -361,6 +361,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_120000) do
     t.date "snapshot_date"
     t.string "title"
     t.integer "unit_phenomenon"
+    t.bigint "unit_snapshot_id"
     t.jsonb "units"
     t.datetime "updated_at", null: false
     t.bigint "venue_id"
@@ -370,6 +371,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_120000) do
     t.index ["date"], name: "index_trends_on_date"
     t.index ["people"], name: "index_trends_on_people", using: :gin
     t.index ["unit_phenomenon"], name: "index_trends_on_unit_phenomenon"
+    t.index ["unit_snapshot_id"], name: "index_trends_on_unit_snapshot_id"
     t.index ["units"], name: "index_trends_on_units", using: :gin
     t.index ["venue_id"], name: "index_trends_on_venue_id"
   end
@@ -599,6 +601,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_120000) do
   add_foreign_key "temporary_snapshot_people", "people"
   add_foreign_key "temporary_snapshot_people", "units", column: "hint_unit_id"
   add_foreign_key "trend_submissions", "trends", column: "converted_trend_id"
+  add_foreign_key "trends", "unit_snapshots", on_delete: :nullify
   add_foreign_key "trends", "venues"
   add_foreign_key "unit_logs", "units"
   add_foreign_key "unit_people", "people"

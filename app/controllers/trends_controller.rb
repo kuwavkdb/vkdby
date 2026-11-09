@@ -49,13 +49,11 @@ class TrendsController < ApplicationController
 
   # 動向の1件目のユニットについて、メンバー（スナップショット）・アイテム・同じユニットの動向を読み込む
   def load_unit_context(unit)
-    candidate_date = @trend.snapshot_date || @trend.date
-    @snapshot = unit.unit_snapshots
-                    .includes(snapshot_people: :person)
-                    .find_by(snapshot_date: candidate_date) ||
-                unit.unit_snapshots
-                    .includes(snapshot_people: :person)
-                    .find_by(current: true)
+    snapshots = unit.unit_snapshots.includes(snapshot_people: :person)
+    # 指定されたスナップショットを優先し、なければ動向の日付 → 現在のスナップショットの順で選ぶ（issue #2031）
+    @snapshot = (@trend.unit_snapshot_id && snapshots.find_by(id: @trend.unit_snapshot_id)) ||
+                snapshots.find_by(snapshot_date: @trend.date) ||
+                snapshots.find_by(current: true)
 
     scopes = []
     scopes << Item.kept.by_artist_key(unit.key) if unit.key.present?
