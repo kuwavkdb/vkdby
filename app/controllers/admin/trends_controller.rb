@@ -153,6 +153,9 @@ module Admin
       @snapshots = unit.unit_snapshots
                        .includes(snapshot_people: :person)
                        .display_order
+      # 未指定のときは、動向の日付と同じ日付のスナップショットを初期値として選んでおく
+      @selected_snapshot_id = @trend.unit_snapshot_id ||
+                              (@trend.date && @snapshots.find { |s| s.snapshot_date == @trend.date }&.id)
     end
 
     # 公開の投稿フォーム(TrendSubmission)からの「承認」導線。投稿内容を新規作成フォームの
