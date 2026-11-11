@@ -105,7 +105,7 @@ module Admin
     def trend_params
       params.require(:trend).permit(
         :date, :day_unknown, :month_unknown,
-        :snapshot_date,
+        :unit_snapshot_id,
         :publish_start_at, :active, :news_release, :news_release_source,
         :image, :image_alt, :remove_image,
         :bottom_image, :bottom_image_alt, :remove_bottom_image,
@@ -121,7 +121,7 @@ module Admin
         whitelisted[:people] = parse_json_field(params[:trend][:people_json])
         whitelisted.delete(:units_json)
         whitelisted.delete(:people_json)
-        whitelisted[:snapshot_date] = nil if whitelisted[:snapshot_date].blank?
+        whitelisted[:unit_snapshot_id] = nil if whitelisted[:unit_snapshot_id].blank?
       end
     end
 
@@ -149,10 +149,13 @@ module Admin
       unit = Unit.find_by(id: units.first['unit_id'])
       return unless unit
 
+      # 日付のないスナップショットも選べるよう、ユニットページと同じ並びで全件を候補にする（issue #2031）
       @snapshots = unit.unit_snapshots
                        .includes(snapshot_people: :person)
-                       .where.not(snapshot_date: nil)
-                       .order(snapshot_date: :asc)
+                       .display_order
+      # 未指定のときは、動向の日付と同じ日付のスナップショットを初期値として選んでおく
+      @selected_snapshot_id = @trend.unit_snapshot_id ||
+                              (@trend.date && @snapshots.find { |s| s.snapshot_date == @trend.date }&.id)
     end
 
     # 公開の投稿フォーム(TrendSubmission)からの「承認」導線。投稿内容を新規作成フォームの
