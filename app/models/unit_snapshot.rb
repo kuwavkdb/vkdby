@@ -42,6 +42,13 @@ class UnitSnapshot < ApplicationRecord
     snapshot_people.sort_by(&:sort_order).map(&:name).join('、')
   end
 
+  # メンバーを末尾に追加するときの並び順（保存済みメンバーの最大値 + 1。いなければ 1）
+  def next_sort_order
+    return 1 if new_record?
+
+    snapshot_people.maximum(:sort_order).to_i + 1
+  end
+
   # 同じユニットの、自分自身を除く他のスナップショット（コピー・移動先の候補）
   def siblings
     unit.unit_snapshots.where.not(id: id).display_order
