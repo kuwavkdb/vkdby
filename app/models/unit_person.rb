@@ -39,7 +39,7 @@ class UnitPerson < ApplicationRecord
   belongs_to :person, optional: true
 
   enum :status, { undefined: 0, active: 1, pending: 2, left: 3, concerned: 4, pre: 5 }
-  enum :part, { vocal: 0, guitar: 1, bass: 2, drums: 3, keyboard: 4, dj: 5, unknown: 99 }
+  enum :part, { vocal: 0, guitar: 1, bass: 2, drums: 3, keyboard: 4, dj: 5, manipulator: 6, unknown: 99 }
 
   validates :status, presence: true
   validates :part, presence: true

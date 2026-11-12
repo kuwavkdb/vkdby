@@ -56,7 +56,7 @@ members:
 ```
 
 - トップレベルの各キーは省略可（分かる範囲だけ書けばよい）
-- `part` は `vocal` / `guitar` / `bass` / `drums` / `keyboard` / `dj` / `unknown`
+- `part` は `vocal` / `guitar` / `bass` / `drums` / `keyboard` / `dj` / `manipulator` / `unknown`
 - `name_kana` はメンバー名のヨミガナ（省略可）。`SnapshotPerson#extra_profile` の `name_kana` に保存され、後で Person として独立させたときに `Person#name_kana` へ引き継がれる
 - `extra_profile` の各項目も省略可。`birthday` は `Unit#activity_period` と同じマスク形式ではなく、月日のみの文字列（例: `7/12`）を想定（`SnapshotPerson#extra_profile_person_attributes` がこの形式をパースする。issue #1619）
 - `sns` はメンバー個人の SNS アカウントの配列（省略可）。`SnapshotPerson#sns` に保存され、後で Person として独立・紐付けしたときに Person のリンクへ引き継がれる。X（Twitter）は `"@handle"`、それ以外のサービスは URL で書く。**`@` で始まる値は YAML の予約文字のため必ずダブルクォートで囲む**（囲まないと「フォームに反映」でエラーになる）
@@ -82,7 +82,7 @@ https://www.vkdb.jp/admin/units/quick_new?<パラメーター>
 | `unit[note]` | ユニット全体についての管理用メモ（任意。`Unit#note`。公開ページには出ない）。情報源のURLや、読み取れなかった・判断に迷った点を書く |
 | `unit[members][<index>][person_name]` | メンバー名。`<index>` は `0` 始まりの連番 |
 | `unit[members][<index>][name_kana]` | メンバー名のヨミガナ（任意） |
-| `unit[members][<index>][part]` | パート。`vocal` / `guitar` / `bass` / `drums` / `keyboard` / `dj` / `unknown` |
+| `unit[members][<index>][part]` | パート。`vocal` / `guitar` / `bass` / `drums` / `keyboard` / `dj` / `manipulator` / `unknown` |
 | `unit[members][<index>][sns][]` | メンバー個人の SNS アカウント（任意・複数可）。X は `@handle`、それ以外は URL。複数あればパラメーターを繰り返す |
 | `unit[activity_periods][<index>][from]` | 活動期間の開始（任意）。`Unit#activity_period`（マスク形式を許容するテキスト）に入る値で、結成日・活動開始日が読み取れれば入れる。例: `2010/01/**` |
 | `unit[activity_periods][<index>][to]` | 活動期間の終了（任意）。活動中なら空にする |
