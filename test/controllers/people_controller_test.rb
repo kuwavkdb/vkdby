@@ -258,4 +258,19 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
     assert_select '#people-filters:not([hidden])'
     assert_select 'button[aria-controls="people-filters"][aria-expanded="true"]'
   end
+
+  # issue #2042: ひらがなだけの検索語は、カタカナのヨミガナでも探す
+  test 'index and search find a person by katakana reading when queried with hiragana' do
+    Person.create!(name: 'HiraganaPeopleIndex', name_kana: 'ヒラガナジンブツイチラン', key: 'hiragana-people-index', status: :active)
+
+    get people_path(q: ' ひらがなじんぶつ ')
+
+    assert_response :success
+    assert_includes response.body, 'HiraganaPeopleIndex'
+
+    get search_people_path(q: 'ひらがなじんぶつ')
+
+    assert_response :success
+    assert_includes response.parsed_body.pluck('name'), 'HiraganaPeopleIndex'
+  end
 end
