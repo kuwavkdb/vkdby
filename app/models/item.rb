@@ -36,6 +36,10 @@ class Item < ApplicationRecord
   validates :title, presence: true
   validates :release_date, presence: true
   validates :link_url, presence: true, uniqueness: true
+  # 空欄のASINを空文字のまま保存すると、一意インデックス（index_items_on_asin）で
+  # 空文字どうしが重複とみなされ、2件目の保存が例外になる。NULLどうしは重複とみなされない
+  # ため、空ならnilにする（issue #2040）
+  normalizes :asin, with: ->(asin) { asin.strip.presence }
   validates :asin, uniqueness: true, allow_blank: true
 
   after_commit :expire_new_releases_sidebar_cache
