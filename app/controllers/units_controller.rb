@@ -9,7 +9,7 @@ class UnitsController < ApplicationController
                                    .count
 
     scope = Unit.for_index.order(updated_at: :desc)
-    scope = scope.matching_name_keyword(like_pattern(normalize_search_query(params[:q]))) if params[:q].present?
+    scope = scope.matching_name_keyword(like_patterns(normalize_search_query(params[:q]))) if params[:q].present?
     @selected_tag_ids = params[:tag_ids]&.to_unsafe_h&.transform_values(&:presence)&.compact || {}
     if @selected_tag_ids.any?
       @selected_tag_ids.each_value do |tag_id|
@@ -35,17 +35,17 @@ class UnitsController < ApplicationController
       return
     end
 
-    conn = ActiveRecord::Base.connection
-    quoted_exact = conn.quote(q)
-    quoted_prefix = conn.quote(like_pattern(q, match: :prefix))
-    units = Unit.publicly_visible.where('name ILIKE :q OR name_kana ILIKE :q', q: like_pattern(q))
-                .order(Arel.sql(<<~SQL.squish))
-                  CASE
-                    WHEN name = #{quoted_exact} OR name_kana = #{quoted_exact} THEN 0
-                    WHEN name ILIKE #{quoted_prefix} OR name_kana ILIKE #{quoted_prefix} THEN 1
-                    ELSE 2
-                  END
-                SQL
+    # ひらがなだけの検索語は、カタカナにした語でも探す（issue #2042）
+    variants = SearchQuery.variants(q)
+    relevance_order = Arel.sql(ActiveRecord::Base.sanitize_sql_array([<<~SQL.squish, { exact: variants, prefix: like_patterns(q, match: :prefix) }]))
+      CASE
+        WHEN name = ANY (ARRAY[:exact]) OR name_kana = ANY (ARRAY[:exact]) THEN 0
+        WHEN name ILIKE ANY (ARRAY[:prefix]) OR name_kana ILIKE ANY (ARRAY[:prefix]) THEN 1
+        ELSE 2
+      END
+    SQL
+    units = Unit.publicly_visible.where('name ILIKE ANY (ARRAY[:q]) OR name_kana ILIKE ANY (ARRAY[:q])', q: like_patterns(q))
+                .order(relevance_order)
                 .order(name_kana: :asc)
                 .limit(10)
                 .pluck(:name, :name_kana, :key)

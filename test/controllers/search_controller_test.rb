@@ -235,4 +235,50 @@ class SearchControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
     assert_select "a[href='#{profile_path(unit.key, anchor: "snapshot-#{snapshot.id}")}']", text: /UniqueUnlinkedSearchMember/
     assert_includes response.body, '個人ページなし'
   end
+
+  # issue #2042: 前後の空白は除いて探す
+  test 'index ignores leading and trailing spaces in the query' do
+    Unit.create!(name: 'TrimSearchUnit', key: 'trim-search-unit', status: :active)
+
+    get search_path(q: "\u3000TrimSearchUnit ")
+
+    assert_response :success
+    assert_includes response.body, 'TrimSearchUnit'
+  end
+
+  # issue #2042: ひらがなだけの検索語は、カタカナのヨミガナ・名前でも探す
+  test 'index finds units, people and members by katakana when queried with hiragana' do
+    Unit.create!(name: 'HiraganaSearchUnit', name_kana: 'ヒラガナケンサクユニット', key: 'hiragana-search-unit', status: :active)
+    Person.create!(name: 'HiraganaSearchPerson', name_kana: 'ヒラガナケンサクジンブツ', key: 'hiragana-search-person', status: :active)
+    unit = Unit.create!(name: 'HiraganaSearchMemberUnit', key: 'hiragana-search-member-unit', status: :active)
+    unit.unit_snapshots.create!(active: true).snapshot_people.create!(person_name: 'ヒラガナケンサクメンバー')
+
+    get search_path(q: 'ひらがなけんさく')
+
+    assert_response :success
+    assert_includes response.body, 'HiraganaSearchUnit'
+    assert_includes response.body, 'HiraganaSearchPerson'
+    assert_includes response.body, 'ヒラガナケンサクメンバー'
+  end
+
+  # issue #2042: カタカナにした語でも探すが、元のひらがなの名前も見つかる
+  test 'index still finds a unit whose name is hiragana when queried with hiragana' do
+    Unit.create!(name: 'ひらがなめいゆにっと', key: 'hiragana-name-unit', status: :active)
+
+    get search_path(q: 'ひらがなめい')
+
+    assert_response :success
+    assert_includes response.body, 'ひらがなめいゆにっと'
+  end
+
+  # issue #2042: カタカナにした語でヨミガナと完全一致したものを、部分一致より上に並べる
+  test 'index ranks an exact katakana match first when queried with hiragana' do
+    Unit.create!(name: 'KanaRankPartial', name_kana: 'アアカナジュンイ', key: 'kana-rank-partial', status: :active)
+    Unit.create!(name: 'KanaRankExact', name_kana: 'カナジュンイ', key: 'kana-rank-exact', status: :active)
+
+    get search_path(q: 'かなじゅんい')
+
+    assert_response :success
+    assert_operator response.body.index('KanaRankExact'), :<, response.body.index('KanaRankPartial')
+  end
 end

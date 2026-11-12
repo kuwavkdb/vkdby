@@ -66,8 +66,9 @@ class ApplicationController < ActionController::Base
 
   # 全角英数字（ＡＢＣ１２３など）で検索してもDB上の半角表記とマッチするよう、
   # 検索クエリをNFKCで正規化する（全角→半角、半角カナ→全角カナなど）。
+  # 前後の空白も除く。全角空白はNFKCで半角になるので、あわせて除ける（issue #2042）。
   def normalize_search_query(query)
-    query.to_s.unicode_normalize(:nfkc)
+    query.to_s.unicode_normalize(:nfkc).strip
   end
 
   # LIKE / ILIKE 用のパターンを返す。検索語に含まれる % と _ （と \\）を
@@ -77,6 +78,12 @@ class ApplicationController < ActionController::Base
   def like_pattern(query, match: :partial)
     escaped = ActiveRecord::Base.sanitize_sql_like(query.to_s)
     match == :prefix ? "#{escaped}%" : "%#{escaped}%"
+  end
+
+  # 検索語の別表記（ひらがなだけならカタカナにした語。SearchQuery.variants）ごとの LIKE / ILIKE パターンを返す。
+  # 受け取る側では `列 ILIKE ANY (ARRAY[:q])` のように使う（issue #2042）。
+  def like_patterns(query, match: :partial)
+    SearchQuery.variants(query).map { |variant| like_pattern(variant, match:) }
   end
 
   def valid_year?(year)

@@ -69,15 +69,17 @@ class Unit < ApplicationRecord # rubocop:disable Metrics/ClassLength
   # 一覧ページ（/units?q=）の検索条件。名前系の列（名前・ヨミガナ・名前の履歴・別名）だけを探す。
   # セクション名・メンバー名まで探す matching_keyword は重く、クローラーによる q と tag_ids の組み合わせ
   # アクセスでレスポンスタイムが悪化したため（issue #1855）、一覧ページでは使わない。
-  # pattern は like_pattern でエスケープ済みの ILIKE パターンを渡す。
-  scope :matching_name_keyword, lambda { |pattern|
-    where('units.name ILIKE :q OR units.name_kana ILIKE :q OR units.name_log::text ILIKE :q OR units.aliases::text ILIKE :q',
-          q: pattern)
+  # patterns は like_pattern / like_patterns でエスケープ済みの ILIKE パターン（1つまたは配列）を渡す。
+  # 配列のときは、どれか1つに一致すればよい（ひらがなの検索語をカタカナでも探すため。issue #2042）。
+  scope :matching_name_keyword, lambda { |patterns|
+    where('units.name ILIKE ANY (ARRAY[:q]) OR units.name_kana ILIKE ANY (ARRAY[:q]) ' \
+          'OR units.name_log::text ILIKE ANY (ARRAY[:q]) OR units.aliases::text ILIKE ANY (ARRAY[:q])',
+          q: Array(patterns))
   }
 
   # サイト内検索（/search）の検索条件。名前系の列に加えて、セクション名・メンバー名でも探す（issue #1841）。
   # 一覧ページ（/units?q=）は軽い matching_name_keyword を使うため、範囲は意図して分けている（issue #1855）。
-  # pattern は like_pattern でエスケープ済みの ILIKE パターンを渡す。
+  # patterns は matching_name_keyword と同じく、ILIKE パターン（1つまたは配列）を渡す（issue #2042）。
   # 紐づくSection（discard済み・非公開を除く）の名前もマッチ対象にする。
   # スナップショットのメンバー名（person_name / name_alias）もマッチ対象にし、
   # 個人ページのないメンバー名からも所属ユニットを辿れるようにする（issue #1768）。
@@ -85,23 +87,24 @@ class Unit < ApplicationRecord # rubocop:disable Metrics/ClassLength
   # メンバー情報は廃止予定の unit_people ではなく snapshot_people を参照する。
   # OR EXISTS (...) で書くと units の名前系の列のtrigram indexを組み合わせて使えず全件走査になるため、
   # 条件ごとに units.id を集めて UNION する形にしている。
-  scope :matching_keyword, lambda { |pattern|
-    where(<<~SQL.squish, q: pattern, section_type: 'Unit')
+  scope :matching_keyword, lambda { |patterns|
+    where(<<~SQL.squish, q: Array(patterns), section_type: 'Unit')
       units.id IN (
         SELECT id FROM units
-        WHERE name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q
+        WHERE name ILIKE ANY (ARRAY[:q]) OR name_kana ILIKE ANY (ARRAY[:q])
+          OR name_log::text ILIKE ANY (ARRAY[:q]) OR aliases::text ILIKE ANY (ARRAY[:q])
         UNION
         SELECT sectionable_id FROM sections
         WHERE sectionable_type = :section_type
           AND discarded_at IS NULL
           AND active = TRUE
-          AND name ILIKE :q
+          AND name ILIKE ANY (ARRAY[:q])
         UNION
         SELECT unit_snapshots.unit_id FROM unit_snapshots
         INNER JOIN snapshot_people ON snapshot_people.unit_snapshot_id = unit_snapshots.id
         WHERE unit_snapshots.active = TRUE
           AND snapshot_people.discarded_at IS NULL
-          AND (snapshot_people.person_name ILIKE :q OR snapshot_people.name_alias ILIKE :q)
+          AND (snapshot_people.person_name ILIKE ANY (ARRAY[:q]) OR snapshot_people.name_alias ILIKE ANY (ARRAY[:q]))
       )
     SQL
   }

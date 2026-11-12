@@ -36,18 +36,19 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
       return
     end
 
-    conn = ActiveRecord::Base.connection
-    quoted_exact = conn.quote(q)
-    quoted_prefix = conn.quote(like_pattern(q, match: :prefix))
+    # ひらがなだけの検索語は、カタカナにした語でも探す（issue #2042）
+    variants = SearchQuery.variants(q)
+    relevance_order = Arel.sql(ActiveRecord::Base.sanitize_sql_array([<<~SQL.squish, { exact: variants, prefix: like_patterns(q, match: :prefix) }]))
+      CASE
+        WHEN name = ANY (ARRAY[:exact]) OR name_kana = ANY (ARRAY[:exact]) THEN 0
+        WHEN name ILIKE ANY (ARRAY[:prefix]) OR name_kana ILIKE ANY (ARRAY[:prefix]) THEN 1
+        ELSE 2
+      END
+    SQL
     people = Person.kept
-                   .where('name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q OR aliases::text ILIKE :q', q: like_pattern(q))
-                   .order(Arel.sql(<<~SQL.squish))
-                     CASE
-                       WHEN name = #{quoted_exact} OR name_kana = #{quoted_exact} THEN 0
-                       WHEN name ILIKE #{quoted_prefix} OR name_kana ILIKE #{quoted_prefix} THEN 1
-                       ELSE 2
-                     END
-                   SQL
+                   .where('name ILIKE ANY (ARRAY[:q]) OR name_kana ILIKE ANY (ARRAY[:q]) ' \
+                          'OR name_log::text ILIKE ANY (ARRAY[:q]) OR aliases::text ILIKE ANY (ARRAY[:q])', q: like_patterns(q))
+                   .order(relevance_order)
                    .order(name_kana: :asc)
                    .limit(SUGGESTION_LIMIT)
                    .pluck(:name, :name_kana, :key)
@@ -122,7 +123,7 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
 
   def build_scope
     scope = base_scope.order(updated_at: :desc)
-    scope = scope.matching_name_keyword(like_pattern(normalize_search_query(params[:q]))) if params[:q].present?
+    scope = scope.matching_name_keyword(like_patterns(normalize_search_query(params[:q]))) if params[:q].present?
 
     @selected_tag_ids.each_value do |tag_id|
       scope = scope.where(id: Person.joins(:tag_indices).where(tag_indices: { id: tag_id }).select(:id))

@@ -101,4 +101,19 @@ class UnitsControllerTest < ActionDispatch::IntegrationTest
     get units_path(q: 'UniqueIndexUnitAlias')
     assert_includes response.body, 'IndexFormerNameUnit'
   end
+
+  # issue #2042: ひらがなだけの検索語は、カタカナのヨミガナでも探す
+  test 'index and search find a unit by katakana reading when queried with hiragana' do
+    Unit.create!(name: 'HiraganaUnitsIndex', name_kana: 'ヒラガナユニットイチラン', key: 'hiragana-units-index', status: :active)
+
+    get units_path(q: ' ひらがなゆにっと ')
+
+    assert_response :success
+    assert_includes response.body, 'HiraganaUnitsIndex'
+
+    get search_units_path(q: 'ひらがなゆにっと')
+
+    assert_response :success
+    assert_includes response.parsed_body.pluck('name'), 'HiraganaUnitsIndex'
+  end
 end

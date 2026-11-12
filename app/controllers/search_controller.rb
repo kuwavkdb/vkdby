@@ -9,20 +9,21 @@ class SearchController < ApplicationController
     if @query.present?
       normalized_query = normalize_search_query(@query)
       search_pattern = like_pattern(normalized_query)
-      exact_pattern = ActiveRecord::Base.sanitize_sql_like(normalized_query)
-      relevance_order = Arel.sql(
-        "CASE WHEN name ILIKE #{Unit.connection.quote(exact_pattern)} THEN 0 " \
-        "WHEN name ILIKE #{Unit.connection.quote("#{exact_pattern}%")} THEN 1 " \
-        "WHEN name_kana ILIKE #{Unit.connection.quote(exact_pattern)} THEN 0 " \
-        "WHEN name_kana ILIKE #{Unit.connection.quote("#{exact_pattern}%")} THEN 1 " \
-        'ELSE 2 END'
-      )
+      # ひらがなだけの検索語は、カタカナにした語でもユニット・個人を探す（issue #2042）
+      search_patterns = like_patterns(normalized_query)
+      exact_patterns = SearchQuery.variants(normalized_query).map { |variant| ActiveRecord::Base.sanitize_sql_like(variant) }
+      prefix_patterns = like_patterns(normalized_query, match: :prefix)
+      relevance_order = Arel.sql(ActiveRecord::Base.sanitize_sql_array([<<~SQL.squish, { exact: exact_patterns, prefix: prefix_patterns }]))
+        CASE WHEN name ILIKE ANY (ARRAY[:exact]) OR name_kana ILIKE ANY (ARRAY[:exact]) THEN 0
+             WHEN name ILIKE ANY (ARRAY[:prefix]) OR name_kana ILIKE ANY (ARRAY[:prefix]) THEN 1
+             ELSE 2 END
+      SQL
       # 対象（for_index）は「View all →」の行き先（/units?q=・/people?q=）と共通（issue #1841）。
       # 検索条件は、一覧ページより広い matching_keyword（セクション名・メンバー名も探す）を使う（issue #1855）。
-      @units = Unit.for_index.matching_keyword(search_pattern)
+      @units = Unit.for_index.matching_keyword(search_patterns)
                    .order(relevance_order, updated_at: :desc)
                    .limit(15)
-      @people = Person.for_index.matching_keyword(search_pattern)
+      @people = Person.for_index.matching_keyword(search_patterns)
                       .order(relevance_order, updated_at: :desc)
                       .limit(PEOPLE_LIMIT).load
       # 個人ページのないメンバーも個人と同じ欄に、個人ページのある人の後ろに並べる。合計で PEOPLE_LIMIT 件まで（issue #1843）
