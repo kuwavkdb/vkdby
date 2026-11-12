@@ -15,6 +15,40 @@
   body {
     @apply bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 min-h-screen antialiased font-sans;
   }
+
+  /* チェックボックス・ラジオボタンの共通スタイル（issue #2033）。
+     各ビューで指定している form-checkbox / form-radio / text-indigo-600 / focus:ring-* 等は
+     @tailwindcss/forms プラグイン前提のクラスで、本プロジェクトでは読み込んでいないため効かず、
+     ブラウザ標準の小さく薄い見た目のままになっていた。ネイティブの部品のまま accent-color で
+     選択時の色を付け、少し大きくし、キーボード操作時のフォーカス表示を明示する。
+     base レイヤーに置くので、h-4 w-4 などのユーティリティを指定した箇所はそちらが優先される */
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: 1.125rem;
+    height: 1.125rem;
+    accent-color: var(--color-indigo-600);
+    cursor: pointer;
+    vertical-align: middle;
+
+    @variant dark {
+      accent-color: var(--color-amber-400);
+    }
+  }
+
+  input[type="checkbox"]:disabled,
+  input[type="radio"]:disabled {
+    cursor: not-allowed;
+  }
+
+  input[type="checkbox"]:focus-visible,
+  input[type="radio"]:focus-visible {
+    outline: 2px solid var(--color-indigo-500);
+    outline-offset: 2px;
+
+    @variant dark {
+      outline-color: var(--color-amber-400);
+    }
+  }
 }
 
 @layer components {
