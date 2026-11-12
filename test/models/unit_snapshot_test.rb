@@ -59,4 +59,17 @@ class UnitSnapshotTest < ActiveSupport::TestCase
       snapshot.destroy
     end
   end
+
+  test 'next_sort_order returns max sort_order + 1' do
+    assert_equal 3, unit_snapshots(:one).next_sort_order
+  end
+
+  test 'next_sort_order returns 1 when snapshot has no members' do
+    snapshot = UnitSnapshot.create!(unit: units(:two), snapshot_date: Date.new(2000, 1, 1))
+    assert_equal 1, snapshot.next_sort_order
+  end
+
+  test 'next_sort_order returns 1 for unsaved snapshot' do
+    assert_equal 1, UnitSnapshot.new(unit: units(:two)).next_sort_order
+  end
 end

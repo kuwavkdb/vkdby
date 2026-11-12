@@ -99,7 +99,7 @@ module Admin
 
     def set_snapshot_edit_ivars
       @snapshot_people = @unit_snapshot.snapshot_people.includes(:person).order(:sort_order)
-      @snapshot_person = @unit_snapshot.snapshot_people.build
+      @snapshot_person = @unit_snapshot.snapshot_people.build(sort_order: @unit_snapshot.next_sort_order)
       @other_unit_snapshots = @unit_snapshot.siblings
     end
 
