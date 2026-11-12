@@ -206,7 +206,7 @@
                   <%= link_to trend_unit_display_name(@trend.units.first, @unit), profile_path(@unit.key), class: "text-sm font-bold text-slate-800 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-amber-400 transition-colors" %>
                   <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Members</span>
                 </h2>
-                <% if @snapshot.label.present? && @trend.snapshot_date.blank? %>
+                <% if @snapshot.label.present? && @trend.unit_snapshot_id.blank? %>
                   <span class="text-xs font-black px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"><%= @snapshot.label %></span>
                 <% end %>
                 <% if @snapshot.current? %>

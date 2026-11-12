@@ -25,7 +25,7 @@
             readonly: true %>
     </div>
 
-    <div class="col-span-6">
+    <div class="col-span-6 sm:col-span-3">
       <div data-controller="person-select"
            data-person-select-url-value="<%= search_admin_people_path %>"
            class="relative">
@@ -60,33 +60,77 @@
       </div>
     </div>
 
-    <div class="col-span-6">
+    <div class="col-span-6 sm:col-span-3">
       <%= form.label :person_name, "名前", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
       <%= form.text_field :person_name,
             class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white",
-            placeholder: "Personに紐付けない場合の名前、またはこのスナップショット限定で表示名を上書きする場合に入力",
+            placeholder: "例: 山田太郎",
             data: { "person-select-target": "personName" } %>
       <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Personに紐付けない場合はその名前として、紐付けている場合はこのスナップショット限定の表示名（上書き・任意）として使用します。</p>
     </div>
 
-    <div class="col-span-3 sm:col-span-2">
-      <%= form.label :part, "パート", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
-      <%= form.select :part,
-            SnapshotPerson.parts.keys.map { |k| [k.humanize, k] }, {},
-            class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    <fieldset class="col-span-6">
+      <legend class="block text-sm font-semibold text-gray-900 dark:text-gray-100">パート</legend>
+      <div class="mt-2 flex flex-wrap gap-x-4 gap-y-2">
+        <% SnapshotPerson.parts.each_key do |k| %>
+          <label class="inline-flex items-center">
+            <%= form.radio_button :part, k %>
+            <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"><%= k.humanize %></span>
+          </label>
+        <% end %>
+      </div>
+    </fieldset>
+
+    <div class="col-span-2 sm:col-span-1">
+      <%# 隣の入力欄と高さをそろえるため、見出し1行分（h-5）の上余白と、入力欄と同じ上下の余白・枠（透明）を付ける %>
+      <label class="mt-6 flex items-center gap-2 border border-transparent py-1.5">
+        <%= form.check_box :support %>
+        <span class="text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-100">サポート</span>
+      </label>
     </div>
 
-    <div class="col-span-3 sm:col-span-2">
+    <div class="col-span-4">
       <%= form.label :part_alias, "パート表記（別名）", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
       <%= form.text_field :part_alias,
             class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white",
             placeholder: "例: Vo.&Gt." %>
     </div>
 
-    <div class="col-span-3 sm:col-span-1">
+    <div class="col-span-2 sm:col-span-1">
       <%= form.label :sort_order, "並び順", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
       <%= form.number_field :sort_order,
             class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" %>
+    </div>
+
+    <%# SNS と経歴は左右に並べる。説明文の長さが左右で違うため、入力欄は下端にそろえる（mt-auto） %>
+    <div class="col-span-6 sm:col-span-3 flex flex-col">
+      <%= form.label :sns, "SNSアカウント", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">1行につき1アカウントを入力してください。</p>
+      <%= form.text_area :sns,
+            value: (snapshot_person.sns || []).join("\n"),
+            class: "mt-auto block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-xs",
+            rows: 4,
+            placeholder: "@username\nhttps://example.com/profile" %>
+    </div>
+
+    <div class="col-span-6 sm:col-span-3 flex flex-col">
+      <%= form.label :inline_history, "経歴（このスナップショット限定）", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
+      <% if snapshot_person.person_id.present? %>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
+          Personに紐付いているため編集できません。経歴は
+          <%= link_to "Person側の編集画面", edit_admin_person_path(snapshot_person.person), class: "underline text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
+          から編集してください。
+        </p>
+        <%= form.text_area :inline_history,
+              class: "mt-auto block w-full rounded-md border border-gray-300 shadow-sm px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-xs bg-gray-50 dark:bg-gray-800",
+              rows: 4,
+              readonly: true %>
+      <% else %>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">Personに紐付いていないメンバーの経歴として登録できます。</p>
+        <%= form.text_area :inline_history,
+              class: "mt-auto block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-xs",
+              rows: 4 %>
+      <% end %>
     </div>
 
     <div class="col-span-6">
@@ -101,45 +145,12 @@
       </div>
     </div>
 
-    <div class="col-span-6">
-      <label class="flex items-center gap-2">
-        <%= form.check_box :support, class: "rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600" %>
-        <span class="text-sm font-medium text-gray-900 dark:text-gray-100">サポートメンバー</span>
-      </label>
-    </div>
-
-    <div class="col-span-6">
-      <%= form.label :sns, "SNSアカウント", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">1行につき1アカウントを入力してください。</p>
-      <%= form.text_area :sns,
-            value: (snapshot_person.sns || []).join("\n"),
-            class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-xs",
-            rows: 3,
-            placeholder: "@username\nhttps://example.com/profile" %>
-    </div>
-
-    <div class="col-span-6">
-      <%= form.label :inline_history, "経歴（このスナップショット限定）", class: "block text-sm font-semibold text-gray-900 dark:text-gray-100" %>
-      <% if snapshot_person.person_id.present? %>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
-          Personに紐付いているため編集できません。経歴は
-          <%= link_to "Person側の編集画面", edit_admin_person_path(snapshot_person.person), class: "underline text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" %>
-          から編集してください。
-        </p>
-        <%= form.text_area :inline_history,
-              class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-xs bg-gray-50 dark:bg-gray-800",
-              rows: 4,
-              readonly: true %>
-      <% else %>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">Personに紐付いていないメンバーの経歴として登録できます。</p>
-        <%= form.text_area :inline_history,
-              class: "mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-2 py-1.5 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-xs",
-              rows: 4 %>
-      <% end %>
-    </div>
-
-    <div class="col-span-6">
-      <h3 class="block text-sm font-semibold text-gray-900 dark:text-gray-100">補足プロフィール（このスナップショット限定の下書き）</h3>
+    <%# 紐付け済みのときは入力欄が無効で編集できないため、既定で閉じておく（issue #2013） %>
+    <details class="col-span-6 group/extra" <%= "open" if snapshot_person.person_id.blank? %>>
+      <summary class="flex w-fit cursor-pointer list-none items-center gap-1 rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 [&::-webkit-details-marker]:hidden">
+        <svg class="h-4 w-4 text-gray-500 transition-transform group-open/extra:rotate-90 dark:text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">補足プロフィール（このスナップショット限定の下書き）</h3>
+      </summary>
       <% extra_profile = snapshot_person.extra_profile || {} %>
       <% if snapshot_person.person_id.present? %>
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
@@ -204,10 +215,16 @@
           </div>
         </div>
       </div>
-    </div>
+    </details>
   </div>
 
-  <div class="flex justify-end pt-2">
+  <%# フォームが長くてもスクロールせずに保存できるよう、画面下部に固定する（issue #2013）。
+      背景色は下の内容と重ならないよう、フォームを囲む枠の色に合わせて呼び出し側から渡す %>
+  <div class="sticky bottom-0 z-10 -mx-6 flex items-center justify-end border-t border-gray-200 px-6 py-3 dark:border-gray-700 <%= local_assigns.fetch(:footer_bg_class, "bg-white dark:bg-gray-800") %>">
+    <%# 呼び出し側から渡されたリンク（キャンセル等）を送信ボタンの左に並べる %>
+    <% if local_assigns[:footer_actions].present? %>
+      <div class="mr-4 flex items-center gap-4"><%= footer_actions %></div>
+    <% end %>
     <%= form.submit snapshot_person.persisted? ? "更新" : "作成", class: "inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer" %>
   </div>
 <% end %>

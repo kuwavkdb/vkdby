@@ -45,7 +45,7 @@ module Admin
       end
 
       snapshot_people = target_snapshots.map do |snapshot|
-        snapshot.snapshot_people.build(snapshot_person_attributes.merge(sort_order: next_sort_order(snapshot)))
+        snapshot.snapshot_people.build(snapshot_person_attributes.merge(sort_order: snapshot.next_sort_order))
       end
 
       if target_snapshots.all?(&:valid?)
@@ -93,13 +93,6 @@ module Admin
       @unit_snapshots = @unit.unit_snapshots.order(:snapshot_index)
       flash.now[:alert] = "振り分けに失敗しました: #{messages.join('、')}"
       render :assign, status: :unprocessable_entity
-    end
-
-    # 既存メンバーの末尾に追加する（SnapshotPersonCopyMover と同じ考え方）
-    def next_sort_order(snapshot)
-      return 1 if snapshot.new_record?
-
-      snapshot.snapshot_people.maximum(:sort_order).to_i + 1
     end
 
     # フォームには元の値が初期入力されているため、送信された値はそのまま使う（空欄なら空で保存）。

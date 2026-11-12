@@ -33,18 +33,21 @@
 #  updated_at           :datetime         not null
 #  old_trend_id         :integer
 #  old_wiki_id          :integer
+#  unit_snapshot_id     :bigint
 #  venue_id             :bigint
 #
 # Indexes
 #
-#  index_trends_on_date             (date)
-#  index_trends_on_people           (people) USING gin
-#  index_trends_on_unit_phenomenon  (unit_phenomenon)
-#  index_trends_on_units            (units) USING gin
-#  index_trends_on_venue_id         (venue_id)
+#  index_trends_on_date              (date)
+#  index_trends_on_people            (people) USING gin
+#  index_trends_on_unit_phenomenon   (unit_phenomenon)
+#  index_trends_on_unit_snapshot_id  (unit_snapshot_id)
+#  index_trends_on_units             (units) USING gin
+#  index_trends_on_venue_id          (venue_id)
 #
 # Foreign Keys
 #
+#  fk_rails_...  (unit_snapshot_id => unit_snapshots.id) ON DELETE => nullify
 #  fk_rails_...  (venue_id => venues.id)
 #
 class Trend < ApplicationRecord # rubocop:disable Metrics/ClassLength
@@ -52,6 +55,8 @@ class Trend < ApplicationRecord # rubocop:disable Metrics/ClassLength
 
   # 開催場所（issue #1689）。1件のTrendにつき会場は1件のみ
   belongs_to :venue, optional: true
+  # 詳細画面に出すメンバー（スナップショット）の指定。日付のないスナップショットも選べるようIDで持つ（issue #2031）
+  belongs_to :unit_snapshot, optional: true
   # 投稿フォームの投稿から作った動向を削除しても、投稿側の外部キーで止まらないよう参照を外す（issue #1923）
   has_many :trend_submissions, foreign_key: :converted_trend_id, inverse_of: :converted_trend, dependent: :nullify
 
