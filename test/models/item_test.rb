@@ -281,4 +281,18 @@ class ItemTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
   ensure
     Rails.cache = original_cache
   end
+
+  test 'blank asin is normalized to nil (issue #2040)' do
+    assert_nil Item.new(asin: '').asin
+    assert_nil Item.new(asin: '  ').asin
+    assert_equal 'B0EXAMPLE', Item.new(asin: ' B0EXAMPLE ').asin
+  end
+
+  test 'multiple items without asin can be saved (issue #2040)' do
+    first = Item.create!(title: 'No ASIN 1', release_date: Date.current, link_url: 'https://example.com/no-asin-1', asin: '')
+    second = Item.create!(title: 'No ASIN 2', release_date: Date.current, link_url: 'https://example.com/no-asin-2', asin: '')
+
+    assert_nil first.reload.asin
+    assert_nil second.reload.asin
+  end
 end

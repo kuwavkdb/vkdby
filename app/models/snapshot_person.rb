@@ -88,27 +88,28 @@ class SnapshotPerson < ApplicationRecord # rubocop:disable Metrics/ClassLength
   # 同名でもユニットが違えば同一人物か判断できないため、別の件として返す。
   # discard済みのメンバー、非表示のスナップショット、公開一覧の対象外（Unit.for_index 以外）のユニットは除く。
   # 関係者スナップショット（past: true）の人も含める。遷移先は unit_snapshot.unit と unit_snapshot_id から作る。
+  # ひらがなだけの検索語は、カタカナにした語でも探す（SearchQuery.variants。issue #2042）。
   def self.unlinked_matching(query)
-    pattern = "%#{sanitize_sql_like(query)}%"
+    exacts = SearchQuery.variants(query).map { |variant| sanitize_sql_like(variant) }
+    patterns = exacts.map { |exact| "%#{exact}%" }
     candidates = unscoped
                  .select('DISTINCT ON (unit_snapshots.unit_id, snapshot_people.person_name) snapshot_people.*')
                  .joins(:unit_snapshot)
                  .where(person_id: nil, discarded_at: nil)
                  .where(unit_snapshots: { active: true, unit_id: Unit.for_index.select(:id) })
-                 .where(<<~SQL.squish, q: pattern)
-                   snapshot_people.person_name ILIKE :q OR snapshot_people.name_alias ILIKE :q
-                   OR snapshot_people.extra_profile->>'name_kana' ILIKE :q
+                 .where(<<~SQL.squish, q: patterns)
+                   snapshot_people.person_name ILIKE ANY (ARRAY[:q]) OR snapshot_people.name_alias ILIKE ANY (ARRAY[:q])
+                   OR snapshot_people.extra_profile->>'name_kana' ILIKE ANY (ARRAY[:q])
                  SQL
                  .order(Arel.sql(<<~SQL.squish))
                    unit_snapshots.unit_id, snapshot_people.person_name,
                    unit_snapshots.current DESC, unit_snapshots.snapshot_date DESC NULLS LAST, unit_snapshots.id DESC
                  SQL
 
-    exact = sanitize_sql_like(query)
     from(candidates, :snapshot_people)
-      .order(Arel.sql(sanitize_sql_array([<<~SQL.squish, { exact:, prefix: "#{exact}%" }])))
-        CASE WHEN snapshot_people.person_name ILIKE :exact THEN 0
-             WHEN snapshot_people.person_name ILIKE :prefix THEN 1
+      .order(Arel.sql(sanitize_sql_array([<<~SQL.squish, { exact: exacts, prefix: exacts.map { |e| "#{e}%" } }])))
+        CASE WHEN snapshot_people.person_name ILIKE ANY (ARRAY[:exact]) THEN 0
+             WHEN snapshot_people.person_name ILIKE ANY (ARRAY[:prefix]) THEN 1
              ELSE 2 END
       SQL
       .order(:person_name, :id)

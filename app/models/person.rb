@@ -85,30 +85,32 @@ class Person < ApplicationRecord
   # 一覧ページ（/people?q=）の検索条件。名前系の列（名前・ヨミガナ・名前の履歴・別名）と old_history だけを探す。
   # セクション名まで探す matching_keyword は重く、クローラーによる q と tag_ids の組み合わせアクセスで
   # レスポンスタイムが悪化したため（issue #1855）、一覧ページでは使わない。
-  # pattern は like_pattern でエスケープ済みの ILIKE パターンを渡す。
-  scope :matching_name_keyword, lambda { |pattern|
-    where('people.name ILIKE :q OR people.name_kana ILIKE :q OR people.name_log::text ILIKE :q ' \
-          'OR people.aliases::text ILIKE :q OR people.old_history ILIKE :q', q: pattern)
+  # patterns は like_pattern / like_patterns でエスケープ済みの ILIKE パターン（1つまたは配列）を渡す。
+  # 配列のときは、どれか1つに一致すればよい（ひらがなの検索語をカタカナでも探すため。issue #2042）。
+  scope :matching_name_keyword, lambda { |patterns|
+    where('people.name ILIKE ANY (ARRAY[:q]) OR people.name_kana ILIKE ANY (ARRAY[:q]) ' \
+          'OR people.name_log::text ILIKE ANY (ARRAY[:q]) OR people.aliases::text ILIKE ANY (ARRAY[:q]) ' \
+          'OR people.old_history ILIKE ANY (ARRAY[:q])', q: Array(patterns))
   }
 
   # サイト内検索（/search）の検索条件。名前系の列に加えて、セクション名でも探す（issue #1841）。
   # 一覧ページ（/people?q=）は軽い matching_name_keyword を使うため、範囲は意図して分けている（issue #1855）。
-  # pattern は like_pattern でエスケープ済みの ILIKE パターンを渡す。
+  # patterns は matching_name_keyword と同じく、ILIKE パターン（1つまたは配列）を渡す（issue #2042）。
   # 紐づくSection（discard済み・非公開を除く）の名前もマッチ対象にする。
   # OR EXISTS (...) で書くと people の名前系の列のtrigram indexを組み合わせて使えず全件走査になるため、
   # 条件ごとに people.id を集めて UNION する形にしている。
-  scope :matching_keyword, lambda { |pattern|
-    where(<<~SQL.squish, q: pattern, section_type: 'Person')
+  scope :matching_keyword, lambda { |patterns|
+    where(<<~SQL.squish, q: Array(patterns), section_type: 'Person')
       people.id IN (
         SELECT id FROM people
-        WHERE name ILIKE :q OR name_kana ILIKE :q OR name_log::text ILIKE :q
-          OR aliases::text ILIKE :q OR old_history ILIKE :q
+        WHERE name ILIKE ANY (ARRAY[:q]) OR name_kana ILIKE ANY (ARRAY[:q]) OR name_log::text ILIKE ANY (ARRAY[:q])
+          OR aliases::text ILIKE ANY (ARRAY[:q]) OR old_history ILIKE ANY (ARRAY[:q])
         UNION
         SELECT sectionable_id FROM sections
         WHERE sectionable_type = :section_type
           AND discarded_at IS NULL
           AND active = TRUE
-          AND name ILIKE :q
+          AND name ILIKE ANY (ARRAY[:q])
       )
     SQL
   }
