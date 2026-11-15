@@ -67,8 +67,10 @@ namespace :snapshot_people do
     results.each do |result|
       row = result.row
       label = result.skipped? ? "[SKIP: #{SnapshotPersonNameBackfill::SKIP_REASONS[result.reason]}]" : '[OK]'
+      where = [row['unit_name'], row['snapshot_label'], row['matched_by']].compact_blank.join(' / ')
+      where = "（#{where}）" if where.present?
       puts "#{label} SnapshotPerson ##{row['snapshot_person_id']} Person ##{row['person_id']}: " \
-           "#{row['current_person_name']} → #{row['wiki_name']}"
+           "#{row['current_person_name']} → #{row['wiki_name']} #{where}".rstrip
     end
 
     skipped = results.select(&:skipped?)

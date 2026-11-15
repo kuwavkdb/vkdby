@@ -55,7 +55,7 @@ def tsv_cell(value)
 end
 
 kind_filter = ENV['KIND'].presence || 'renamed'
-abort "エラー: KIND は renamed / notation / all のいずれかを指定してください" unless %w[renamed notation all].include?(kind_filter)
+abort 'エラー: KIND は renamed / notation / all のいずれかを指定してください' unless %w[renamed notation all].include?(kind_filter)
 
 output = ENV['OUTPUT'].presence || Rails.root.join('db/data/issue_1972_snapshot_person_names.tsv')
 FileUtils.mkdir_p(File.dirname(output))
@@ -68,13 +68,21 @@ Unit.with_discarded.where.not(old_wiki_id: nil).find_each do |unit|
   next unless wikipage
 
   snapshots = unit.unit_snapshots.to_a
+  seen_dates = Set.new
   WikiMemberNameExtractor.new(wikipage).sections.each do |section|
-    # 取り込み時、同じ日付のセクションは最初の1つだけスナップショットになる。日付があれば日付で、なければ順番で対応付ける
-    snapshot = if section[:date]
-                 snapshots.find { |s| s.past == section[:past] && s.snapshot_date == section[:date] }
-               else
-                 snapshots.find { |s| s.past == section[:past] && s.snapshot_index == section[:snapshot_index] }
-               end
+    # 取り込み時（WikipageImporterV2#create_snapshot）、同じ日付のセクションは最初の1つだけスナップショットになり、
+    # 2つ目以降は飛ばされる。ここでも2つ目以降は照合しない（同じ行を2回書き出さないため）
+    if section[:date]
+      next unless seen_dates.add?(section[:date])
+
+      matched_by = 'date'
+      snapshot = snapshots.find { |s| s.past == section[:past] && s.snapshot_date == section[:date] }
+    else
+      # 日付がなければ順番で対応付ける。新サイトでの追加・並べ替えで別の時期と結び付くことがあるため、
+      # matched_by=index として TSV で見分けられるようにする
+      matched_by = 'index'
+      snapshot = snapshots.find { |s| s.past == section[:past] && s.snapshot_index == section[:snapshot_index] }
+    end
     next unless snapshot
 
     targets = SnapshotPerson.with_discarded.includes(:person)
@@ -100,14 +108,16 @@ Unit.with_discarded.where.not(old_wiki_id: nil).find_each do |unit|
       counts[kind.to_sym] += 1
       next if kind == 'same' || (kind_filter != 'all' && kind != kind_filter)
 
+      counts[:"matched_by_#{matched_by}"] += 1
       rows << [snapshot_person.id, snapshot_person.person_id, snapshot_person.old_person_key,
-               current_name, wiki_name, kind]
+               current_name, wiki_name, kind, matched_by, unit.name, snapshot.label]
     end
   end
 end
 
 File.open(output, 'w') do |file|
-  file.puts SnapshotPersonNameBackfill::HEADERS.join("\t")
+  headers = SnapshotPersonNameBackfill::HEADERS + SnapshotPersonNameBackfill::REFERENCE_HEADERS
+  file.puts headers.join("\t")
   rows.sort_by(&:first).each { |row| file.puts row.map { |value| tsv_cell(value) }.join("\t") }
 end
 
@@ -116,3 +126,5 @@ puts "  別の名前（renamed）: #{counts[:renamed]}"
 puts "  表記の違いだけ（notation）: #{counts[:notation]}"
 puts "  同じ名前: #{counts[:same]}"
 puts "  旧wikiと照合できなかった: #{counts[:unmatched]}"
+puts "書き出した行のうち、スナップショットを順番で対応付けた行（matched_by=index）: #{counts[:matched_by_index]}"
+puts '  別の時期のスナップショットと結び付いていないか、TSV で目視確認してください' if counts[:matched_by_index].positive?

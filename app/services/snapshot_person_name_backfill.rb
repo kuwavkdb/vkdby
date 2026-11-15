@@ -12,6 +12,9 @@
 # - 紐付け先 Person の名前が書き出し時と同じ
 class SnapshotPersonNameBackfill
   HEADERS = %w[snapshot_person_id person_id old_person_key current_person_name wiki_name kind].freeze
+  # 書き出し結果を目視確認するための列（反映には使わない）。
+  # matched_by: スナップショットを日付で対応付けたか（date）、日付がなく順番で対応付けたか（index）
+  REFERENCE_HEADERS = %w[matched_by unit_name snapshot_label].freeze
 
   SKIP_REASONS = {
     not_found: 'SnapshotPerson が見つからない',

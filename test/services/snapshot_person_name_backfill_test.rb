@@ -95,6 +95,19 @@ class SnapshotPersonNameBackfillTest < ActiveSupport::TestCase
     end
   end
 
+  test 'read_tsv keeps the reference columns for visual checks' do
+    Tempfile.create(['names', '.tsv']) do |file|
+      headers = SnapshotPersonNameBackfill::HEADERS + SnapshotPersonNameBackfill::REFERENCE_HEADERS
+      file.puts headers.join("\t")
+      file.puts [1, 2, 'MaSa', '聖月', 'MaSa', 'renamed', 'index', 'Distray', '結成時'].join("\t")
+      file.flush
+
+      row = SnapshotPersonNameBackfill.read_tsv(file.path).first
+
+      assert_equal %w[index Distray 結成時], row.values_at('matched_by', 'unit_name', 'snapshot_label')
+    end
+  end
+
   test 'read_tsv raises when a column is missing' do
     Tempfile.create(['names', '.tsv']) do |file|
       file.puts %w[snapshot_person_id wiki_name].join("\t")
