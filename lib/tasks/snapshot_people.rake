@@ -51,4 +51,32 @@ namespace :snapshot_people do
 
     puts "\n完了。#{apply ? '追加' : '追加予定'}: #{total}件"
   end
+
+  desc '紐付け済みSnapshotPersonのperson_nameに旧wikiでの在籍時の表示名を入れる（issue #1972）。既定はdry-run、APPLY=1で実行'
+  task backfill_person_name: :environment do
+    apply = ENV['APPLY'] == '1'
+    path = ENV['FILE'].presence || Rails.root.join('db/data/issue_1972_snapshot_person_names.tsv')
+    abort "エラー: #{path} が見つかりません" unless File.exist?(path)
+
+    puts apply ? '== APPLY: person_name を更新します ==' : '== DRY RUN: 更新予定を表示します（実行するには APPLY=1） =='
+    puts "TSV: #{path}"
+
+    rows = SnapshotPersonNameBackfill.read_tsv(path)
+    results = SnapshotPersonNameBackfill.new(rows, apply: apply).call
+
+    results.each do |result|
+      row = result.row
+      label = result.skipped? ? "[SKIP: #{SnapshotPersonNameBackfill::SKIP_REASONS[result.reason]}]" : '[OK]'
+      where = [row['unit_name'], row['snapshot_label'], row['matched_by']].compact_blank.join(' / ')
+      where = "（#{where}）" if where.present?
+      puts "#{label} SnapshotPerson ##{row['snapshot_person_id']} Person ##{row['person_id']}: " \
+           "#{row['current_person_name']} → #{row['wiki_name']} #{where}".rstrip
+    end
+
+    skipped = results.select(&:skipped?)
+    puts "\n完了。#{apply ? '更新' : '更新予定'}: #{results.size - skipped.size}件 / スキップ: #{skipped.size}件（TSV #{rows.size}行）"
+    skipped.group_by(&:reason).each do |reason, items|
+      puts "  - #{SnapshotPersonNameBackfill::SKIP_REASONS[reason]}: #{items.size}件"
+    end
+  end
 end
