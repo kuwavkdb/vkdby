@@ -5,7 +5,7 @@
 <% if Rails.env.production? && !(defined?(logged_in?) && logged_in?) %>
   <% config = {
        design: "slide",
-       affiliateId: "0346b04f.01a040ba.082aa422.43e5b988",
+       affiliateId: Rails.application.config.rakuten_widget_affiliate_id,
        items: "ctsmatch",
        genreId: "0",
        size: size,

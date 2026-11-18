@@ -78,6 +78,30 @@ class ItemsHelperTest < ActionView::TestCase
     assert_equal 'タワレコで購入', item_purchase_label(item)
   end
 
+  test '検索語はアーティスト名とタイトルをつなぎ、タイトル先頭のアーティスト名は外す' do
+    item = Item.new(title: 'バンド 1st Album', artists: [{ 'name' => 'バンド' }])
+    assert_equal 'バンド 1st Album', item_search_keyword(item)
+  end
+
+  test '検索語のアーティスト名は alias を優先する' do
+    item = Item.new(title: 'Single', artists: [{ 'name' => '正式名', 'alias' => '表記名' }])
+    assert_equal '表記名 Single', item_search_keyword(item)
+  end
+
+  test '検索語ではタイトル末尾の付記を外す' do
+    artists = [{ 'name' => 'バンド' }]
+    assert_equal 'バンド Live', item_search_keyword(Item.new(title: 'Live [DVD]', artists:))
+    assert_equal 'バンド Single', item_search_keyword(Item.new(title: 'Single (初回限定盤)', artists:))
+    assert_equal 'バンド Single', item_search_keyword(Item.new(title: 'Single (初回限定盤)(DVD付)', artists:))
+    assert_equal 'バンド Single', item_search_keyword(Item.new(title: 'Single（通常盤）', artists:))
+  end
+
+  test '検索語ではタイトル末尾以外の括弧と、外すとタイトルが空になる括弧は外さない' do
+    artists = [{ 'name' => 'バンド' }]
+    assert_equal 'バンド (仮)タイトル', item_search_keyword(Item.new(title: '(仮)タイトル (通常盤)', artists:))
+    assert_equal 'バンド (無題)', item_search_keyword(Item.new(title: '(無題)', artists:))
+  end
+
   test 'key があればkeyベースのパスを返す' do
     assert_equal '/some-key', artist_profile_path({ 'key' => 'some-key', 'old_key' => 'legacy', 'name' => '名前' })
   end

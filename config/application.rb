@@ -122,6 +122,12 @@ module Vkdby
     # （ItemConverter#build_amazon_url）。IDが変更になった場合はコード修正不要でENV側だけ差し替える
     config.amazon_associate_tag = ENV.fetch('AMAZON_ASSOCIATE_TAG', 'vkdb07-22')
 
+    # 楽天アフィリエイトのID。ウィジェットとリンクで、楽天の管理画面が発行するIDが異なるため分けて持つ
+    # ウィジェット（layouts/_rakuten_widget、issue #1990）用
+    config.rakuten_widget_affiliate_id = ENV.fetch('RAKUTEN_WIDGET_AFFILIATE_ID', '0346b04f.01a040ba.082aa422.43e5b988')
+    # 楽天市場へのリンク（RakutenUrlBuilder、issue #2057）用。管理画面の「リンク作成」で作られるリンクの /ichiba/ の後ろの値
+    config.rakuten_link_affiliate_id = ENV.fetch('RAKUTEN_LINK_AFFILIATE_ID', '11d92a14.cf19b75e.11d92a15.0cd8932e')
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files
