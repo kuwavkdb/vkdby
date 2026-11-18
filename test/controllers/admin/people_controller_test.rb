@@ -9,6 +9,15 @@ module Admin
       @person = Person.create!(name: 'Existing Person', key: 'existing-person-controller-test', status: :active)
     end
 
+    # issue #2060: フォームが2段組みになるため、新規作成画面も編集画面と同じ幅にする
+    test 'new renders the form in the same wide container as edit' do
+      get new_admin_person_path
+
+      assert_response :success
+      assert_select 'div.max-w-7xl form'
+      assert_select 'div.max-w-2xl', count: 0
+    end
+
     test 'search finds a person whose name is half-width when queried with full-width alphanumerics' do
       Person.create!(name: 'ABC123', key: 'zenkaku-search-admin-people-test', status: :active)
 
