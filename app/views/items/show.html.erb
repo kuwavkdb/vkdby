@@ -43,7 +43,7 @@
                     "#{amazon_image_url(@item.image_url, 416)} 416w",
                     "#{amazon_image_url(@item.image_url, 512)} 512w",
                   ].join(", ")
-                  [src, srcset, "(min-width: 640px) 208px, 256px"]
+                  [src, srcset, "(min-width: 640px) 224px, 256px"]
                 else
                   [@item.image_url, nil, nil]
                 end
@@ -52,12 +52,12 @@
               <%= link_to amazon_url, target: "_blank", rel: "noopener noreferrer" do %>
                 <img src="<%= img_src %>" srcset="<%= img_srcset %>" sizes="<%= img_sizes %>"
                      width="256" height="256"
-                     alt="<%= @item.title %>" class="w-64 h-64 sm:w-52 sm:h-52 object-scale-down shadow-md hover:opacity-90 transition-opacity">
+                     alt="<%= @item.title %>" class="w-64 h-64 sm:w-56 sm:h-56 object-scale-down shadow-md hover:opacity-90 transition-opacity">
               <% end %>
             <% else %>
               <img src="<%= img_src %>" srcset="<%= img_srcset %>" sizes="<%= img_sizes %>"
                    width="256" height="256"
-                   alt="<%= @item.title %>" class="w-64 h-64 sm:w-52 sm:h-52 object-scale-down shadow-md">
+                   alt="<%= @item.title %>" class="w-64 h-64 sm:w-56 sm:h-56 object-scale-down shadow-md">
             <% end %>
           </div>
         <% end %>
@@ -88,15 +88,7 @@
             <% end %>
 
             <%
-              artist_labels = @item.artists.map { |a| a['alias'].presence || a['name'] }
-              title_keyword = @item.title.dup
-              artist_labels.each do |label|
-                if title_keyword.start_with?("#{label} ") || title_keyword.start_with?("#{label}　")
-                  title_keyword = title_keyword.sub(/\A#{Regexp.escape(label)}[\s　]+/, '')
-                  break
-                end
-              end
-              search_keyword = [artist_labels.join(' '), title_keyword].reject(&:blank?).join(' ')
+              search_keyword = item_search_keyword(@item)
               tower_search_url = "https://tower.jp/search/item/#{ERB::Util.url_encode(search_keyword.gsub('.', ' '))}"
               tower_url = "//ck.jp.ap.valuecommerce.com/servlet/referral?sid=2143338&pid=881339479&vc_url=#{ERB::Util.url_encode(tower_search_url)}"
             %>
@@ -129,6 +121,15 @@
                 <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd" />
               </svg>
               Yahoo!ショッピング で検索
+            <% end %>
+
+            <%# 楽天市場の検索結果へのアフィリエイトリンク（issue #2057）。Yahoo! と同じく常に表示する %>
+            <%= link_to RakutenUrlBuilder.search(search_keyword), target: "_blank", rel: "noopener noreferrer",
+                class: "#{btn} border-2 border-red-700 bg-white hover:bg-red-50 text-red-700 dark:border-red-400 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-red-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:focus-visible:outline-amber-400" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 shrink-0" aria-hidden="true">
+                <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd" />
+              </svg>
+              楽天市場 で検索
             <% end %>
           </div>
         </div>

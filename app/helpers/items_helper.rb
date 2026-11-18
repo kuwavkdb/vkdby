@@ -54,6 +54,24 @@ module ItemsHelper
     tower_records_url?(item.link_url)
   end
 
+  # 末尾の付記（[DVD]・(初回限定盤)・（通常盤）など）。末尾以外の括弧は対象にしない（issue #2057）
+  TRAILING_NOTE = /[\s　]*(?:\[[^\[\]]*\]|\([^()]*\)|（[^（）]*）)\z/
+
+  # 販売サイトの検索ボタン（TOWER RECORDS・Yahoo!・楽天市場）に使う検索語。
+  # アーティスト名 ＋ タイトルにする。タイトル先頭のアーティスト名と、タイトル末尾の付記は外す
+  def item_search_keyword(item)
+    artist_labels = item.artists.map { |a| a['alias'].presence || a['name'] }
+    title_keyword = item.title.to_s
+    artist_labels.each do |label|
+      if title_keyword.start_with?("#{label} ") || title_keyword.start_with?("#{label}　")
+        title_keyword = title_keyword.sub(/\A#{Regexp.escape(label)}[\s　]+/, '')
+        break
+      end
+    end
+    title_keyword = strip_trailing_notes(title_keyword)
+    [artist_labels.join(' '), title_keyword].compact_blank.join(' ')
+  end
+
   # アーティストのプロフィールページへのパスを生成
   # 優先順位: key > old_key。どちらも無い(名前のみの)アーティストはページが存在しないためリンクにしない
   def artist_profile_path(artist_data)
@@ -108,6 +126,13 @@ module ItemsHelper
   end
 
   private
+
+  # タイトル末尾の付記を、続けて付いているものも含めて外す。外すと何も残らないタイトルはそのまま返す
+  def strip_trailing_notes(title)
+    stripped = title.strip
+    stripped = stripped.sub(TRAILING_NOTE, '') while stripped.match?(TRAILING_NOTE)
+    stripped.presence || title.strip
+  end
 
   # 購入リンクのドメイン（先頭の www. は省く）。URLとして解釈できなければnil
   def purchase_link_domain(url)

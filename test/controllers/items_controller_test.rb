@@ -134,6 +134,21 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Me
     assert_not_includes response.body, %(href="/#{ERB::Util.url_encode('名前のみのアーティスト'.encode('EUC-JP'))}.html")
   end
 
+  test 'show renders a Rakuten search link built from the search keyword even without an ASIN' do
+    item = Item.create!(
+      title: 'Rakuten Item (初回限定盤)',
+      artists: [{ 'name' => '楽天テストバンド' }],
+      release_date: '2026-03-01',
+      link_url: "https://www.example-shop.jp/items/#{SecureRandom.hex(4)}"
+    )
+
+    get item_path(item)
+
+    assert_response :success
+    assert_includes response.body, '楽天市場 で検索'
+    assert_includes response.body, ERB::Util.html_escape(RakutenUrlBuilder.search('楽天テストバンド Rakuten Item'))
+  end
+
   test 'show renders a see-all button per artist whose own related item count exceeds 10, linking only to that artist' do
     unit_a = Unit.create!(name: 'Artist A', key: "artist-a-#{SecureRandom.hex(4)}", status: :active)
     unit_b = Unit.create!(name: 'Artist B', key: "artist-b-#{SecureRandom.hex(4)}", status: :active)
