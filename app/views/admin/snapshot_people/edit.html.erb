@@ -26,7 +26,7 @@
           以下の内容でPersonを新規作成し、このメンバーに紐付けます:
           名前「<%= @snapshot_person.person_name %>」/
           Key「<%= @snapshot_person.person_key.presence || "未設定" %>」/
-          Part「<%= @snapshot_person.part.humanize %>」
+          Part「<%= Person.part_label(@snapshot_person.part) %>」
           <% extra_profile = @snapshot_person.extra_profile.presence %>
           <% if extra_profile %>
             / ヨミガナ「<%= extra_profile["name_kana"].presence || "未設定" %>」

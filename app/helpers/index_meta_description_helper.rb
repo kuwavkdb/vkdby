@@ -42,12 +42,14 @@ module IndexMetaDescriptionHelper
 
   # 個人索引の、個人の項目での絞り込みの表示名。パート→出身地→状況→血液型の順。
   # 状況・血液型の「不明」は、どちらの不明か分かるよう「状況不明」「血液型不明」と書く。
+  # パートの表示名は MetaDescriptionHelper::PART_NAMES にあればそれを、無いもの（etc）は Person.part_label を使う。
   # hometown は登録されている出身地（絞り込みの候補）にあるものだけを渡す。自由に入れられる値をそのまま
   # 説明文や見出しの下に出さないため（PeopleController#index の @described_hometown）
   def people_index_filter_names(part: nil, hometown: nil, status: nil, blood: nil)
     status_name = status == 'unknown' ? '状況不明' : Person::STATUS_TRANSLATIONS[status]
     blood_name = blood == 'Unknown' ? '血液型不明' : "#{blood}型" if blood.present?
-    [MetaDescriptionHelper::PART_NAMES[part], hometown.presence, status_name, blood_name].compact
+    part_name = MetaDescriptionHelper::PART_NAMES[part] || (Person.part_label(part) if part.present?)
+    [part_name, hometown.presence, status_name, blood_name].compact
   end
 
   # 選んだタグの表示名。絞り込みグループの順→グループ内の順に並べる。コントローラは tag_ids のキーに関係なく値で

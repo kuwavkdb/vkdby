@@ -21,7 +21,7 @@
                       when 'SnapshotPerson'
                         sp = log.loggable
                         if sp
-                          sp_part = sp.part_alias.presence || sp.part.humanize
+                          sp_part = sp.part_alias.presence || Person.part_label(sp.part)
                           "#{sp.name} (#{sp_part})"
                         end
                       end %>

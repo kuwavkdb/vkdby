@@ -8,7 +8,7 @@
         compact_items << { label: "パート", value: capture do %>
           <div class="flex flex-wrap justify-end gap-1">
             <% @resource.parts.each do |part| %>
-              <%= link_to part.humanize, people_path(part: part), class: badge_class %>
+              <%= link_to Person.part_label(part), people_path(part: part), class: badge_class %>
             <% end %>
           </div>
         <% end }

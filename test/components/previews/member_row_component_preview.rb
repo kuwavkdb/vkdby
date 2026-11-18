@@ -23,15 +23,4 @@ class MemberRowComponentPreview < ViewComponent::Preview
     )
     render(MemberRowComponent.new(member: member))
   end
-
-  def with_active_hidden
-    person = Person.new(name: 'Hidden Status Person', key: 'hidden_person')
-    member = UnitPerson.new(
-      person: person,
-      part: 'guitar',
-      status: 'active',
-      sns: ['https://example.com/guitarist']
-    )
-    render(MemberRowComponent.new(member: member, hide_active: true))
-  end
 end
