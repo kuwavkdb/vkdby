@@ -525,7 +525,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
     person_key = person&.cache_key_with_version || 'noperson'
     html = plugin_cache_fetch('member', person_key, Digest::MD5.hexdigest(args)) do
       member = MemberPluginRow.new(part: part, name: display_name, person: person, sns: link.presence && [link])
-      render(MemberRowComponent.new(member: member, hide_status: true)).to_s
+      render(MemberRowComponent.new(member: member)).to_s
     end
     register_plugin_placeholder(placeholders, html)
   end
@@ -589,7 +589,7 @@ module ApplicationHelper # rubocop:disable Metrics/ModuleLength
         sns: link.presence && [link],
         inline_history: person ? nil : data.to_s.strip.presence
       )
-      render(MemberRowComponent.new(member: member, hide_status: true)).to_s
+      render(MemberRowComponent.new(member: member)).to_s
     end
     register_plugin_placeholder(placeholders, html)
   end

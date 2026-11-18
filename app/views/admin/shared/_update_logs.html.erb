@@ -33,7 +33,7 @@
                   <span class="text-gray-400 dark:text-gray-500">: <%= section_name %></span>
                 <% end %>
                 <% if log.loggable_type == 'SnapshotPerson' && (sp = log.loggable) %>
-                  <% sp_part = sp.part_alias.presence || sp.part.humanize %>
+                  <% sp_part = sp.part_alias.presence || Person.part_label(sp.part) %>
                   <span class="text-gray-400 dark:text-gray-500">: <%= sp.name %> (<%= sp_part %>)</span>
                 <% end %>
               </td>

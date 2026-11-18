@@ -21,6 +21,10 @@ class IndexMetaDescriptionHelperTest < ActionView::TestCase
     assert_empty people_index_filter_names
   end
 
+  test 'people_index_filter_namesはパートのetcを「etc.」と書く（issue #2039）' do
+    assert_equal %w[etc.], people_index_filter_names(part: 'etc')
+  end
+
   test 'people_index_filter_namesは状況・血液型の不明を書き分ける（issue #1959）' do
     assert_equal %w[状況不明 血液型不明], people_index_filter_names(status: 'unknown', blood: 'Unknown')
   end

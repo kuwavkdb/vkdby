@@ -147,7 +147,7 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
 
     [
       { param: :part, name: 'パート', selected: @selected_part,
-        options: Person::AVAILABLE_PARTS.map { |p| { value: p, label: p.humanize, count: counts[:part][p] || 0 } } },
+        options: Person::AVAILABLE_PARTS.map { |p| { value: p, label: Person.part_label(p), count: counts[:part][p] || 0 } } },
       { param: :blood, name: '血液型', selected: @selected_blood,
         options: BLOOD_TYPES.map { |b| { value: b, label: b == 'Unknown' ? '不明' : b, count: counts[:blood][b] || 0 } } },
       { param: :hometown, name: '出身地', selected: @selected_hometown,

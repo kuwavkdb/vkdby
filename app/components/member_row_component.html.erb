@@ -26,11 +26,6 @@
             <%= sns_icon(sns_icon_for(sns_account), css_class: "w-4 h-4") %>
           <% end %>
         <% end %>
-        <% if show_status? %>
-          <span class="<%= status_classes %>">
-            <%= @member.status %>
-          </span>
-        <% end %>
         <% if (path = edit_path) %>
           <%= link_to "編集", path, class: admin_link_classes,
                 aria: { label: "#{@member.name}をメンバー編集" }, data: { member_filter_ignore: true },

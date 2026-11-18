@@ -186,6 +186,11 @@ class SnapshotPersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/Cla
     assert_equal [], SnapshotPerson.new(sns: nil).sns_link_attributes
   end
 
+  test 'build_person_for_independence はパートの etc を引き継ぎ、unknown は引き継がない（issue #2039）' do
+    assert_equal %w[etc], SnapshotPerson.new(person_name: 'Etc Guy', part: :etc).build_person_for_independence.parts
+    assert_equal [], SnapshotPerson.new(person_name: 'Unknown Guy', part: :unknown).build_person_for_independence.parts
+  end
+
   test 'build_person_for_independence builds links from sns' do
     sp = SnapshotPerson.new(person_name: 'Sns Guy', person_key: 'sns_guy', part: :vocal, sns: ['@sns_guy'])
 

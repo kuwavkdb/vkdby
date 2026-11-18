@@ -54,7 +54,7 @@ class SnapshotPerson < ApplicationRecord # rubocop:disable Metrics/ClassLength
   belongs_to :person, optional: true
 
   enum :status, { undefined: 0, active: 1, pending: 2, left: 3, concerned: 4, pre: 5 }
-  enum :part, { vocal: 0, guitar: 1, bass: 2, drums: 3, keyboard: 4, dj: 5, manipulator: 6, unknown: 99 }
+  enum :part, { vocal: 0, guitar: 1, bass: 2, drums: 3, keyboard: 4, dj: 5, manipulator: 6, etc: 7, unknown: 99 }
 
   validates :status, presence: true
   validates :part, presence: true
@@ -146,7 +146,7 @@ class SnapshotPerson < ApplicationRecord # rubocop:disable Metrics/ClassLength
 
   # 管理画面で表示するパート表記（別名があれば別名）
   def part_label
-    part_alias.presence || part.humanize
+    part_alias.presence || Person.part_label(part)
   end
 
   # SNSアカウントを1行1件のテキストで受け取る（メンバー編集・一括編集の両フォームで使う）。空なら nil にする。
