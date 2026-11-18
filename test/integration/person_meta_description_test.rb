@@ -64,6 +64,17 @@ class PersonMetaDescriptionTest < ActionDispatch::IntegrationTest
     assert_equal 'Meta Nothingはアーティスト。経歴や在籍バンド、音源等を掲載。', meta_description
   end
 
+  test 'パートのetcは書かず、パートが etc だけの人はパートが無い人と同じにする（issue #2039）' do
+    only_etc = Person.create!(name: 'Meta Etc', key: 'meta-etc', status: :active, parts: %w[etc], old_history: '[[Meta Band]]')
+    with_vocal = Person.create!(name: 'Meta Etc Vocal', key: 'meta-etc-vocal', status: :active, parts: %w[etc vocal])
+
+    get profile_path(only_etc.key)
+    assert_equal 'Meta EtcはMeta Bandのメンバー。経歴や在籍バンド、音源等を掲載。', meta_description
+
+    get profile_path(with_vocal.key)
+    assert_equal 'Meta Etc Vocalはボーカル。経歴や在籍バンド、音源等を掲載。', meta_description
+  end
+
   test '過去の在籍バンドが多いときは160字に収まる件数だけ並べて「他」とし、締めの文を残す' do
     person = Person.create!(name: 'Meta Many Units', key: 'meta-many-units', status: :active, parts: %w[bass],
                             old_history: "#{Array.new(30) { |i| "[[過去のバンド#{i.to_s.rjust(2, '0')}]]" }.join(' → ')} →")

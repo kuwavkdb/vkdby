@@ -34,6 +34,13 @@ require 'test_helper'
 
 class PersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
   include ActiveJob::TestHelper
+  test 'part_label は DJ と etc. を特別な表記にし、それ以外は先頭だけ大文字にする（issue #2039）' do
+    assert_equal 'DJ', Person.part_label('dj')
+    assert_equal 'etc.', Person.part_label('etc')
+    assert_equal 'Vocal', Person.part_label('vocal')
+    assert_equal 'Vocal', Person.part_label(:vocal)
+  end
+
   test 'parse_old_history parses simple history' do
     person = Person.new(old_history: 'BandA → BandB')
     history = person.parse_old_history

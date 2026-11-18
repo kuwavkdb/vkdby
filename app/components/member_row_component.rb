@@ -9,11 +9,8 @@ class MemberRowComponent < ViewComponent::Base
   # ときに、そのスナップショットが属するユニットのidを渡す（issue #1761）。nilなら出さない。
   # 個人（Person）と紐づいたメンバーは経歴・プロフィールを個人側で編集する（スナップショット
   # メンバー編集画面では編集できない、issue #1619）ため、個人の編集画面へのリンクも並べて出す
-  def initialize(member:, hide_active: false, hide_left: false, hide_status: false, admin_unit_id: nil)
+  def initialize(member:, admin_unit_id: nil)
     @member = member
-    @hide_active = hide_active
-    @hide_left = hide_left
-    @hide_status = hide_status
     @admin_unit_id = admin_unit_id
   end
 
@@ -39,9 +36,9 @@ class MemberRowComponent < ViewComponent::Base
   end
 
   # パートの表示名。別名（part_alias、"Vocal&Guitar" など先頭だけ大文字の表記）に合わせて
-  # 先頭だけ大文字にする。DJ は略語なのですべて大文字にする（issue #1939）
+  # 先頭だけ大文字にする。DJ・etc. は Person.part_label の特別な表記にする（issue #1939, #2039）
   def part_label
-    @member.part == 'dj' ? 'DJ' : @member.part.capitalize
+    Person.part_label(@member.part)
   end
 
   private
@@ -66,31 +63,6 @@ class MemberRowComponent < ViewComponent::Base
     'text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-amber-400 ' \
       'rounded transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 ' \
       'focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-amber-400'
-  end
-
-  def status_classes
-    base_classes = 'text-[0.65rem] font-black uppercase px-2 py-0.5 rounded-md'
-    color_classes = case @member.status
-                    when 'active'
-                      'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400'
-                    when 'left'
-                      'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400'
-                    when 'pre'
-                      'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400'
-                    when 'pending'
-                      'bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-400'
-                    else
-                      'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-                    end
-    "#{base_classes} #{color_classes}"
-  end
-
-  def show_status?
-    return false if @hide_status
-    return false if @hide_active && @member.status == 'active'
-    return false if @hide_left && @member.status == 'left'
-
-    true
   end
 
   # 個人と紐づいたメンバーは、ステータスから状態の行を補った経歴を出す（issue #1992）。

@@ -89,4 +89,16 @@ class MemberRowComponentTest < ActionView::TestCase
     assert_selector '.history-row span.ring-1', text: '活動状況不明'
     assert_no_text '個人/状況不明'
   end
+
+  test 'パートの etc は「etc.」と表示する（issue #2039）' do
+    render_inline(MemberRowComponent.new(member: UnitPerson.new(part: 'etc')))
+
+    assert_text 'etc.'
+  end
+
+  test 'ステータスのバッジは表示しない（issue #2039）' do
+    render_inline(MemberRowComponent.new(member: UnitPerson.new(part: 'vocal', status: 'left')))
+
+    assert_no_text 'left'
+  end
 end

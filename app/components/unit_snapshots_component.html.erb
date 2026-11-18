@@ -53,7 +53,7 @@
       <% end %>
       <% if snapshot.current? || !@summary_preview %>
         <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm" data-toggle-target="area" data-action="click->toggle#expand">
-          <%= render MemberRowComponent.with_collection(snapshot.snapshot_people.sort_by(&:sort_order), hide_active: true, hide_status: snapshot.past?, admin_unit_id: admin_unit_id) %>
+          <%= render MemberRowComponent.with_collection(snapshot.snapshot_people.sort_by(&:sort_order), admin_unit_id: admin_unit_id) %>
         </div>
       <% else %>
         <div class="border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-3 shadow-sm"

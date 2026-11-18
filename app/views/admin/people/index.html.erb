@@ -76,7 +76,7 @@
               <% end %>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-              <%= person.parts&.map(&:humanize)&.join(", ") %>
+              <%= person.parts&.map { |part| Person.part_label(part) }&.join(", ") %>
             </td>
             <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs break-all">
               <% if person.key.present? %>
