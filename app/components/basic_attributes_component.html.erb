@@ -1,8 +1,12 @@
 <section class="@container">
-  <h2 class="text-sm font-bold uppercase tracking-widest text-zinc-600 dark:text-zinc-300 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-2">基本情報</h2>
+  <%# 項目ごとに枠があるため、見出しの下の余白は小さめにする（issue #2071） %>
+  <h2 class="text-sm font-bold uppercase tracking-widest text-zinc-600 dark:text-zinc-300 mb-3 border-b border-zinc-200 dark:border-zinc-800 pb-2">基本情報</h2>
   <%
     compact_items = []
     badge_class = "inline-block whitespace-nowrap bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-200 px-2 py-0.5 rounded text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/70 transition-colors border border-indigo-200 dark:border-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+    status_value = capture { tag.span(@resource.status_text, class: "whitespace-nowrap") } if @resource.status.present?
+    # 個人の項目の順番: パート → ステータス → 血液型 → 出身地 → 誕生日（issue #2071）。
+    # 誕生日は年付きだと幅を取るため最後に置き、項目の数が奇数なら2列分の幅になるようにする
     if @resource.is_a?(Person)
       if @resource.parts.present?
         compact_items << { label: "パート", value: capture do %>
@@ -12,6 +16,13 @@
             <% end %>
           </div>
         <% end }
+      end
+      compact_items << { label: "ステータス", value: status_value } if status_value
+      if @resource.blood.present?
+        compact_items << { label: "血液型", value: capture { link_to @resource.blood, people_path(blood: @resource.blood), class: badge_class } }
+      end
+      if @resource.hometown.present?
+        compact_items << { label: "出身地", value: capture { link_to @resource.hometown, people_path(hometown: @resource.hometown), class: badge_class } }
       end
       if @resource.birthday.present?
         compact_items << { label: "誕生日", value: capture do %>
@@ -26,30 +37,27 @@
           </div>
         <% end }
       end
-      if @resource.blood.present?
-        compact_items << { label: "血液型", value: capture { link_to @resource.blood, people_path(blood: @resource.blood), class: badge_class } }
-      end
-      if @resource.hometown.present?
-        compact_items << { label: "出身地", value: capture { link_to @resource.hometown, people_path(hometown: @resource.hometown), class: badge_class } }
-      end
     elsif @resource.is_a?(Unit) && @resource.unit_type.present?
       compact_items << { label: "種別", value: capture { tag.span(@resource.unit_type, class: "whitespace-nowrap") } }
     end
 
-    if @resource.status.present?
-      compact_items << { label: "ステータス", value: capture { tag.span(@resource.status_text, class: "whitespace-nowrap") } }
-    end
+    # 個人はステータスをパートの次に出すため、それ以外（ユニット）だけここで足す
+    compact_items << { label: "ステータス", value: status_value } if status_value && !@resource.is_a?(Person)
   %>
-  <dl class="grid grid-cols-1 @[20rem]:grid-cols-2 gap-x-6 gap-y-3">
+  <dl class="grid grid-cols-1 @[20rem]:grid-cols-2 gap-1">
     <%= render BasicAttributeItemComponent.with_collection(compact_items) %>
 
-    <%# 移行先・前身のユニット（issue #1996）。名前が長いと2列の枠では折り返すため、活動時期と同じく横幅いっぱいの行にする %>
+    <%# 移行先・前身のユニット（issue #1996）。名前が長いと2列の枠では折り返すため、活動時期と同じく横幅いっぱいの行にする。
+        横幅いっぱいの行も、2列の項目と同じ薄い枠の形にする（issue #2071） %>
+    <% item_class = BasicAttributeItemComponent::ITEM_CLASS %>
+    <% label_class = BasicAttributeItemComponent::LABEL_CLASS %>
+    <% value_class = BasicAttributeItemComponent::VALUE_CLASS %>
     <% unit_link_class = "text-indigo-700 dark:text-amber-400 underline decoration-indigo-600/25 dark:decoration-amber-400/40 underline-offset-2 hover:decoration-indigo-600 dark:hover:decoration-amber-400 transition-colors" %>
     <% [["移行先", Array(transitioned_unit)], ["前身", predecessor_units]].each do |label, units| %>
       <% next if units.empty? %>
-      <div class="@[20rem]:col-span-2 flex flex-row justify-between items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3">
-        <dt class="text-sm font-semibold tracking-tighter text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3"><%= label %></dt>
-        <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 text-right">
+      <div class="@[20rem]:col-span-2 <%= item_class %>">
+        <dt class="<%= label_class %>"><%= label %></dt>
+        <dd class="<%= value_class %>">
           <% units.each_with_index do |unit, index| %>
             <%= "、" if index.positive? %><%= link_to unit.name, profile_path(unit.key), class: unit_link_class %>
           <% end %>
@@ -58,9 +66,9 @@
     <% end %>
 
     <% if @resource.is_a?(Unit) && @resource.activity_periods.present? %>
-      <div class="@[20rem]:col-span-2 flex flex-row justify-between items-baseline border-b border-zinc-100 dark:border-zinc-800 pb-3">
-        <dt class="text-sm font-semibold tracking-tighter text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3">活動時期</dt>
-        <dd class="text-[0.9375rem] font-bold text-zinc-900 dark:text-zinc-100 grid gap-x-3 justify-end" style="grid-template-columns: auto auto">
+      <div class="@[20rem]:col-span-2 <%= item_class %>">
+        <dt class="<%= label_class %>">活動時期</dt>
+        <dd class="<%= value_class %> grid gap-x-3 justify-end" style="grid-template-columns: auto auto">
           <% @resource.activity_periods.each do |period| %>
             <span class="text-xs font-normal text-zinc-600 dark:text-zinc-300 text-right self-center"><%= period.label %></span>
             <span class="whitespace-nowrap font-mono text-sm"><%= period.from %><span class="text-[0.6rem] text-zinc-400 dark:text-zinc-500">〜</span><%= period.to.presence || '現在' %></span>
@@ -70,9 +78,9 @@
     <% end %>
 
     <% if visible_tag_indices.present? %>
-      <div class="@[20rem]:col-span-2 flex flex-row justify-between items-baseline pb-3">
-        <dt class="text-sm font-semibold tracking-tighter text-zinc-500 dark:text-zinc-400 whitespace-nowrap mr-3">タグ</dt>
-        <dd class="text-right flex flex-wrap justify-end gap-2">
+      <div class="@[20rem]:col-span-2 <%= item_class %>">
+        <dt class="<%= label_class %>">タグ</dt>
+        <dd class="<%= BasicAttributeItemComponent::VALUE_PLACEMENT_CLASS %> flex flex-wrap justify-end gap-2">
           <% visible_tag_indices.each do |tag| %>
             <%= link_to tag.name, index_show_path(tag.id), class: badge_class %>
           <% end %>
