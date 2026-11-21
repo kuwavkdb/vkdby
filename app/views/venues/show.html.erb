@@ -48,6 +48,9 @@
             <div class="my-3">
               <% if @venue.closed? %>
                 <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2">閉店した会場のため、現在は別の施設になっている場合があります。</p>
+              <% elsif @venue.suspended? %>
+                <%# issue #2075 %>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2">休業中の会場です。営業の再開については会場の案内をご確認ください。</p>
               <% end %>
               <div class="aspect-[4/3] w-full overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800">
                 <iframe src="<%= google_maps_embed_url(map_query) %>"
