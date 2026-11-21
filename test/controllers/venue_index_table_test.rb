@@ -42,4 +42,17 @@ class VenueIndexTableTest < ActionDispatch::IntegrationTest
     assert_select 'table thead th', text: '動向'
     assert_select 'table tbody td', text: '1'
   end
+
+  # issue #2075
+  test '休業中の会場は名前の横に「休業」を添える' do
+    Venue.create!(key: 'suspended-hall', name: '休業中のホール', prefecture: '東京都', status: :suspended)
+    Venue.create!(key: 'active-hall', name: '営業中のホール', prefecture: '東京都')
+
+    get venue_prefecture_path('東京都')
+
+    assert_select 'th', text: /休業中のホール\s*休業/
+    assert_select 'th', text: /営業中のホール/ do |ths|
+      assert_no_match(/休業/, ths.first.text.sub('営業中のホール', ''))
+    end
+  end
 end

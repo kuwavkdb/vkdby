@@ -217,4 +217,9 @@ class VenueTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
     assert_equal '東京都新宿区1-1', Venue.new(address: 'MAP:東京都新宿区1-1').map_query
     assert_nil Venue.new(address: '東京都新宿区1-1', venue_type: :streaming).map_query
   end
+
+  # issue #2075
+  test 'status_text は休業を「休業」と書く' do
+    assert_equal '休業', Venue.new(status: :suspended).status_text
+  end
 end

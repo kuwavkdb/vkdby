@@ -56,4 +56,15 @@ class VenueMapTest < ActionDispatch::IntegrationTest
     assert_select 'iframe', count: 1
     assert_includes response.body, '閉店した会場のため'
   end
+
+  # issue #2075
+  test 'show notes that a suspended venue is closed for now' do
+    venue = Venue.create!(key: 'suspended', name: '休業中の会場', status: :suspended, address: '東京都新宿区')
+
+    get venue_path(venue.key)
+
+    assert_response :success
+    assert_includes response.body, '休業中の会場です。'
+    assert_not_includes response.body, '閉店した会場のため'
+  end
 end

@@ -5,7 +5,7 @@
 # 都道府県・エリアの値をそのまま使う。都道府県ページにはエリアが空の会場も含める。
 # /venues/area/未設定 は都道府県が未設定の会場の一覧（issue #1810）。
 # ?venue_type= で種別を絞り込める（issue #1810）。
-# 地図にプロットするのは座標があり、閉店・配信ではない会場（Venue.mappable）。一覧は会場一覧と同じく全件を表示する
+# 地図にプロットするのは座標があり、閉店・休業・配信ではない会場（Venue.mappable）。一覧は会場一覧と同じく全件を表示する
 class VenueAreasController < ApplicationController
   def show
     # Middleware::EucJpUrlFixer がパス中の%XXを%25XXに再エンコードするため、日本語の値は

@@ -28,10 +28,10 @@ module VenueGeocodable
     before_save :sync_coordinates_source
     after_commit :enqueue_geocoding, on: %i[create update], if: :geocoding_needed?
 
-    # 地図にプロットする会場。座標があり、閉店・配信（物理的な所在地がない）ではないもの。
+    # 地図にプロットする会場。座標があり、閉店・休業（issue #2075）・配信（物理的な所在地がない）ではないもの。
     # 論理削除・転送元のスタブの除外は呼び出し側（Venue.kept）で行う
     scope :mappable, lambda {
-      where.not(latitude: nil).where.not(longitude: nil).where.not(status: :closed).where.not(venue_type: :streaming)
+      where.not(latitude: nil).where.not(longitude: nil).where.not(status: %i[closed suspended]).where.not(venue_type: :streaming)
     }
   end
 
@@ -90,7 +90,7 @@ module VenueGeocodable
   end
 
   def mappable?
-    coordinates? && !closed? && !streaming?
+    coordinates? && !closed? && !suspended? && !streaming?
   end
 
   private

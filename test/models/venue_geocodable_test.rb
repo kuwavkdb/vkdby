@@ -123,6 +123,14 @@ class VenueGeocodableTest < ActiveSupport::TestCase # rubocop:disable Metrics/Cl
     assert_not closed.mappable?
   end
 
+  # issue #2075
+  test 'mappable excludes suspended venues' do
+    suspended = create_venue(latitude: 35.7, longitude: 139.7, status: :suspended)
+
+    assert_not_includes Venue.mappable.to_a, suspended
+    assert_not suspended.mappable?
+  end
+
   test 'geocode_all fetches coordinates of venues without them and skips manual ones' do
     missing = create_venue(address: '東京都新宿区歌舞伎町1-12-9')
     not_found = create_venue(address: '存在しない住所')
