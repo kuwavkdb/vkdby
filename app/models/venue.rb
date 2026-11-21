@@ -60,7 +60,8 @@ class Venue < ApplicationRecord # rubocop:disable Metrics/ClassLength
   has_many :venue_submissions, dependent: :nullify
 
   enum :venue_type, { live_house: 0, hall: 1, studio: 2, outdoor: 3, streaming: 4, other: 99 }
-  enum :status, { active: 1, closed: 2, unknown: 99 }
+  # suspended: 休業（改装・一時休業など、閉店ではないが今は営業していない。issue #2075）
+  enum :status, { active: 1, closed: 2, suspended: 3, unknown: 99 }
 
   VENUE_TYPE_TRANSLATIONS = {
     'live_house' => 'ライブハウス',
@@ -73,6 +74,7 @@ class Venue < ApplicationRecord # rubocop:disable Metrics/ClassLength
 
   STATUS_TRANSLATIONS = {
     'active' => '営業中',
+    'suspended' => '休業',
     'closed' => '閉店',
     'unknown' => '不明'
   }.freeze

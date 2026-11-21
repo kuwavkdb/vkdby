@@ -19,7 +19,8 @@
   <div class="bg-white dark:bg-slate-800 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700 p-5 md:p-8">
     <header class="mb-8 text-center flex flex-col items-center">
       <h1 class="text-3xl font-black text-zinc-800 dark:text-zinc-100 flex items-center justify-center gap-3">
-        <span class="text-person">PEOPLE</span>
+        <%# 狭い画面では「ヴィジュアル系」の後で改行するよう、2つの語をそれぞれ折り返さないかたまりにする（issue #2073） %>
+        <span class="text-person"><span class="inline-block">ヴィジュアル系</span> <span class="inline-block">バンドマン・個人</span></span>
       </h1>
       <%# meta description と同じ文を見出しの下に表示する。件数もこの文で示す（issue #1959） %>
       <p class="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-300"><%= people_description %></p>

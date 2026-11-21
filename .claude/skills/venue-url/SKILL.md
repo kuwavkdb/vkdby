@@ -32,7 +32,7 @@ https://www.vkdb.jp/admin/venues/new?<パラメーター>
 | `venue[name_kana]` | 読み（カタカナ）。公式に読みが書かれていなければ、表記から素直に読める場合のみ入れる |
 | `venue[key]` | 公開ページの URL に使う識別子（手順3） |
 | `venue[venue_type]` | `live_house`（ライブハウス）/ `hall`（ホール）/ `studio`（スタジオ）/ `outdoor`（野外）/ `streaming`（配信）/ `other`。迷ったら省略（デフォルトは `live_house`） |
-| `venue[status]` | `active`（営業中）/ `closed`（閉店）/ `unknown`。閉店・閉館が明記されている場合のみ `closed`。それ以外は省略（デフォルトは `active`） |
+| `venue[status]` | `active`（営業中）/ `suspended`（休業）/ `closed`（閉店）/ `unknown`。閉店・閉館が明記されている場合のみ `closed`、休業・休館（改装・一時休業など）が明記されている場合のみ `suspended`。それ以外は省略（デフォルトは `active`） |
 | `venue[prefecture]` | 都道府県。**「東京都」「大阪府」「北海道」のように正式な表記**で入れる（「東京」は無視される）。海外の会場は `海外` |
 | `venue[area]` | エリア。一覧で絞り込みに使う短い地名（例: `渋谷`、`新宿`、`梅田`、`栄`）。最寄り駅名や地区名から決める |
 | `venue[address]` | 住所（郵便番号は含めない。例: `東京都渋谷区道玄坂2-14-8`） |

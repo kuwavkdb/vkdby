@@ -22,7 +22,8 @@
           <th scope="row" class="py-2.5 pl-5 md:pl-2 pr-3 text-left font-normal">
             <%= link_to venue.name, venue_path(venue.key),
                   class: "font-bold text-indigo-700 dark:text-amber-400 underline decoration-indigo-600/25 dark:decoration-amber-400/40 underline-offset-2 hover:decoration-indigo-600 dark:hover:decoration-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 rounded-sm transition-colors" %>
-            <% if venue.closed? %>
+            <%# 閉店・休業（issue #2075）の会場は名前の横に状態を添える %>
+            <% if venue.closed? || venue.suspended? %>
               <span class="ml-1 text-xs px-1.5 py-0.5 rounded bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200 whitespace-nowrap"><%= venue.status_text %></span>
             <% end %>
           </th>
