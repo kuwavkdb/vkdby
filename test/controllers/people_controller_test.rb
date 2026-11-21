@@ -3,6 +3,14 @@
 require 'test_helper'
 
 class PeopleControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
+  # issue #2073
+  test 'index の見出しは「ヴィジュアル系 バンドマン・個人」' do
+    get people_path
+
+    assert_response :success
+    assert_select 'h1 span', text: 'ヴィジュアル系 バンドマン・個人'
+  end
+
   test 'index finds a person whose name is half-width when queried with full-width alphanumerics' do
     Person.create!(name: 'ABC123', key: 'zenkaku-search-people-index-test', status: :active)
 

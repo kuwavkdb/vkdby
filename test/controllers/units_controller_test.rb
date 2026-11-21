@@ -3,6 +3,14 @@
 require 'test_helper'
 
 class UnitsControllerTest < ActionDispatch::IntegrationTest
+  # issue #2073
+  test 'index の見出しは「ヴィジュアル系 バンド・ユニット」' do
+    get units_path
+
+    assert_response :success
+    assert_select 'h1 span', text: 'ヴィジュアル系 バンド・ユニット'
+  end
+
   test 'index finds a unit whose name is half-width when queried with full-width alphanumerics' do
     Unit.create!(name: 'ABC123', key: 'zenkaku-search-units-index-test', status: :active)
 
