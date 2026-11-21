@@ -12,11 +12,11 @@
 <div class="flex justify-center">
   <div class="bg-white dark:bg-zinc-900 shadow-2xl rounded-none md:rounded-3xl overflow-hidden w-full max-w-5xl animate-in slide-in-from-bottom-5 duration-700">
     <div class="p-5 md:p-8 relative">
-      <%# ヘッダーはユニット・個人の一覧（UNITS / PEOPLE）と揃える。色はProfileHeaderComponentの会場の色（teal）に合わせる %>
+      <%# ヘッダーはユニット・個人の一覧と揃える。色はProfileHeaderComponentの会場の色（teal）に合わせる %>
       <header class="mb-8 text-center flex flex-col items-center">
         <h1 class="text-3xl font-black text-zinc-800 dark:text-zinc-100 flex items-center justify-center gap-3">
-          <span class="text-teal-700 dark:text-teal-400">VENUES</span>
-          <span class="text-zinc-500 dark:text-zinc-400 text-lg font-bold"><%= @total_count %> records</span>
+          <span class="text-teal-700 dark:text-teal-400 text-center">ライブハウス・ホール</span>
+          <span class="text-zinc-500 dark:text-zinc-400 text-lg font-bold whitespace-nowrap"><%= number_with_delimiter(@total_count) %> 件</span>
         </h1>
         <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300">都道府県を選ぶと、その地域の会場を地図と一覧で見られます。</p>
       </header>

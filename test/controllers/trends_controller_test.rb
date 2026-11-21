@@ -3,6 +3,16 @@
 require 'test_helper'
 
 class TrendsControllerTest < ActionDispatch::IntegrationTest
+  # issue #2073
+  test 'index の見出しは「ヴィジュアル系 ニュース・動向」、title は「ニュース・動向 一覧」' do
+    get trends_path
+
+    assert_response :success
+    assert_select 'h1 span', text: 'ヴィジュアル系 ニュース・動向'
+    assert_select 'h1 span', text: /\A[\d,]+ 件\z/
+    assert_select 'title', text: 'ニュース・動向 一覧 - vkdb.jp'
+  end
+
   test 'index does not render a discarded unit referenced by a trend' do
     unit = Unit.create!(name: 'Discarded Trend Unit', key: 'discarded-unit-trends-test', status: :active)
     unit.discard

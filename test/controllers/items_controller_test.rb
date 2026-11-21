@@ -23,6 +23,21 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest # rubocop:disable Me
     assert_not_includes response.body, 'Discarded Person'
   end
 
+  # issue #2073
+  test 'index の見出しは「ヴィジュアル系 音源・アイテム」、title は「音源・アイテム 一覧」。絞り込み時はアーティスト名を前に付ける' do
+    get items_path
+
+    assert_response :success
+    assert_select 'h1 span', text: 'ヴィジュアル系 音源・アイテム'
+    assert_select 'h1 span', text: /\A[\d,]+ 件\z/
+    assert_select 'title', text: '音源・アイテム 一覧 - vkdb.jp'
+
+    unit = Unit.create!(name: 'Heading Unit', key: 'heading-unit-items-test', status: :active)
+    get items_path(key: unit.key)
+
+    assert_select 'title', text: 'Heading Unit - 音源・アイテム 一覧 - vkdb.jp'
+  end
+
   test 'index resolves artist info for a kept unit key' do
     unit = Unit.create!(name: 'Kept Unit', key: 'kept-unit-items-test', status: :active)
 
