@@ -22,7 +22,8 @@ class VenuesControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
     get venues_path
 
     assert_response :success
-    assert_select 'h1', text: /3 records/
+    assert_select 'h1', text: /3 件/
+    assert_select 'h1 span', text: 'ライブハウス・ホール' # issue #2073
     assert_select "nav[aria-label='都道府県から会場を探す'] h2", text: '関東'
     assert_select "nav[aria-label='都道府県から会場を探す'] h2", text: '近畿'
     assert_select "a[href='#{venue_prefecture_path('東京都')}']", text: /東京都\s*2/
