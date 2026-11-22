@@ -34,11 +34,13 @@
       </thead>
       <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
         <% @unit_submissions.each do |submission| %>
-          <tr>
-            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-              <%= submission.created_at.strftime('%Y-%m-%d %H:%M') %>
+          <%# 内容が長い投稿でも受付日時・アクションが内容の冒頭と同じ高さに来るよう、上寄せにする（issue #2095） %>
+          <tr class="align-top">
+            <%# IPv6 など長い IP アドレスで欄が広がらないよう、日付だけ折り返さず、IP アドレスは途中で折り返す %>
+            <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">
+              <span class="whitespace-nowrap"><%= submission.created_at.strftime('%Y-%m-%d') %></span><br><%= submission.created_at.strftime('%H:%M') %>
               <% if submission.submitter_ip.present? %>
-                <span class="block text-xs text-gray-400"><%= submission.submitter_ip %></span>
+                <span class="block text-xs text-gray-500 dark:text-gray-400 break-all"><%= submission.submitter_ip %></span>
               <% end %>
             </td>
             <td class="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">
@@ -96,7 +98,7 @@
               <% end %>
             </td>
             <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs">
-              <p class="whitespace-pre-wrap break-words"><%= submission.note %></p>
+              <%= render "admin/shared/collapsible_text", text: submission.note %>
               <% if submission.email.present? %>
                 <p class="mt-1 text-xs">連絡先: <%= submission.email %></p>
               <% end %>
@@ -113,8 +115,8 @@
                 </div>
               <% elsif submission.converted? %>
                 <% if submission.converted_unit %>
-                  <%= link_to "#{submission.converted_unit.name} を見る", edit_admin_unit_path(submission.converted_unit),
-                        class: "text-indigo-600 dark:text-indigo-400 hover:underline" %>
+                  <%= link_to edit_admin_unit_path(submission.converted_unit),
+                        class: "text-indigo-600 dark:text-indigo-400 hover:underline" do %><%= submission.converted_unit.name %><br>を見る<% end %>
                 <% else %>
                   <span class="text-gray-400">生成元Unitが見つかりません</span>
                 <% end %>
