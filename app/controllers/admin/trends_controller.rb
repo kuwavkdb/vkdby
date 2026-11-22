@@ -29,6 +29,8 @@ module Admin
       # Load related units for display
       all_unit_ids = @trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
       @related_units = Unit.where(id: all_unit_ids).index_by(&:id)
+      all_person_ids = @trends.flat_map { |t| t.people&.map { |p| p['person_id'] } }.compact.uniq
+      @related_people = Person.where(id: all_person_ids).index_by(&:id)
     end
 
     def new

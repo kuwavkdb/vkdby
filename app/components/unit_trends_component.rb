@@ -13,6 +13,12 @@ class UnitTrendsComponent < ViewComponent::Base
     @related_units    = related_units
   end
 
+  # 個人名を件名の前に出す動向（issue #2092）のため、一覧の動向に紐づく個人をまとめて引く。
+  # ユニット・個人のページと動向の詳細ページの両方で使うため、呼び出し側ではなくここで引く
+  def related_people
+    @related_people ||= Trend.related_people_for(@trends)
+  end
+
   def current?(trend)
     @current_trend_id.present? && trend.id == @current_trend_id
   end
