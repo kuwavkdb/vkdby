@@ -41,7 +41,7 @@
                   <div><%= trend_person_display_name(person_data, @related_people[person_data['person_id']]) %></div>
                 <% end %>
                 <% if trend.people.size > 2 %>
-                  <div class="text-xs text-gray-400">+<%= trend.people.size - 2 %> more</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">+<%= trend.people.size - 2 %> more</div>
                 <% end %>
               <% elsif trend.units.present? %>
                 <% trend.units.first(2).each do |unit_data| %>
@@ -49,7 +49,7 @@
                   <div><%= unit&.name || unit_data['name'] %></div>
                 <% end %>
                 <% if trend.units.size > 2 %>
-                  <div class="text-xs text-gray-400">+<%= trend.units.size - 2 %> more</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">+<%= trend.units.size - 2 %> more</div>
                 <% end %>
               <% else %>
                 <span class="text-gray-400">-</span>

@@ -6,7 +6,8 @@ module TrendLeadBadgesHelper
   # 一覧で件名の前に出す、ユニット・個人のページへのリンクのバッジ
   LEAD_BADGE_LINK_CLASS = 'inline-block px-2 py-0.5 rounded text-sm font-semibold bg-indigo-50 text-indigo-600 ' \
                           'hover:bg-indigo-100 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800 ' \
-                          'transition-colors mr-1 border border-indigo-200 dark:border-indigo-700'
+                          'transition-colors mr-1 border border-indigo-200 dark:border-indigo-700 ' \
+                          'focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400'
 
   # 一覧（動向の一覧・日付別・月別・年別・会場ページなど）で件名の前に出すバッジ（issue #2092）。
   # 詳細ページと同じ判定（trend_show_person_badge_in_title?）で個人名を出す動向は、ユニット名の代わりに個人名を出す。

@@ -51,18 +51,6 @@
 #  fk_rails_...  (venue_id => venues.id)
 #
 class Trend < ApplicationRecord # rubocop:disable Metrics/ClassLength
-  # 一覧で件名の前のバッジ（ユニット名、または個人名、issue #2092）を出すのに要る列。
-  # 一覧で select を絞るときはこれも含める（TrendsHelper#trend_show_person_badge_in_title? の判定に使う）
-  LEAD_BADGE_COLUMNS = %i[units people person_phenomenon person_name_in_title].freeze
-
-  # 一覧の動向に紐づく個人（Trend詳細と同じく Person.kept）を id で引けるようにする（issue #2092）
-  def self.related_people_for(trends)
-    person_ids = trends.flat_map { |trend| (trend.people || []).map { |data| data['person_id'] } }.compact.uniq
-    return {} if person_ids.empty?
-
-    Person.kept.where(id: person_ids).index_by(&:id)
-  end
-
   include OgpImageAttachable
 
   # 開催場所（issue #1689）。1件のTrendにつき会場は1件のみ
@@ -144,6 +132,18 @@ class Trend < ApplicationRecord # rubocop:disable Metrics/ClassLength
       .pluck(:units)
       .flat_map { |arr| Array(arr).map { |u| u['unit_id'].to_i } }
       .uniq
+  end
+
+  # 一覧で件名の前のバッジ（ユニット名、または個人名、issue #2092）を出すのに要る列。
+  # 一覧で select を絞るときはこれも含める（TrendsHelper#trend_show_person_badge_in_title? の判定に使う）
+  LEAD_BADGE_COLUMNS = %i[units people person_phenomenon person_name_in_title].freeze
+
+  # 一覧の動向に紐づく個人（Trend詳細と同じく Person.kept）を id で引けるようにする（issue #2092）
+  def self.related_people_for(trends)
+    person_ids = trends.flat_map { |trend| (trend.people || []).map { |data| data['person_id'] } }.compact.uniq
+    return {} if person_ids.empty?
+
+    Person.kept.where(id: person_ids).index_by(&:id)
   end
 
   before_validation { self.venue_name = venue_name.to_s.strip.presence }
