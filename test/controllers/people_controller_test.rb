@@ -119,6 +119,36 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
     assert_includes response.body, person.name
   end
 
+  # issue #2094: 誕生年の絞り込み
+  test 'index filters by birth year and orders by birthday' do
+    later = Person.create!(name: 'Birth Year Later', key: 'birth-year-later', status: :active, birth_year: 1965,
+                           birthday: Date.new(1904, 9, 1), parts: %w[guitar])
+    earlier = Person.create!(name: 'Birth Year Earlier', key: 'birth-year-earlier', status: :active, birth_year: 1965,
+                             birthday: Date.new(1904, 2, 1), parts: %w[vocal])
+    Person.create!(name: 'Other Birth Year', key: 'birth-year-other', status: :active, birth_year: 1970)
+
+    get people_path(birth_year: '1965')
+
+    assert_response :success
+    names = css_select('#results h3, #results [role=heading]').map { |node| node.text.strip }
+    assert_equal([earlier.name, later.name], names.grep(/\ABirth Year/))
+    assert_not_includes response.body, 'Other Birth Year'
+    assert_includes css_select('meta[name="description"]').first['content'], '1965年生まれ'
+    assert_select "a[href*='birth_year=1965']", text: /1965/
+
+    get people_path(birth_year: '1965', part: 'guitar')
+
+    assert_includes response.body, later.name
+    assert_not_includes response.body, earlier.name
+  end
+
+  test 'index ignores an invalid birth year' do
+    get people_path(birth_year: '19x5')
+
+    assert_response :success
+    assert_not_includes css_select('meta[name="description"]').first['content'], '年生まれ'
+  end
+
   test 'index reuses cached person data filter option counts instead of recomputing them every request' do
     original_cache = Rails.cache
     Rails.cache = ActiveSupport::Cache::MemoryStore.new

@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
-# /peopleの索引ページのフィルタ選択肢（パート・血液型・出身地・ステータス）ごとの
+# /peopleの索引ページのフィルタ選択肢（パート・血液型・出身地・ステータス・誕生年）ごとの
 # 件数を集計する。件数はPersonのparts/blood/hometown/statusが変化した時にしか
 # 変わらないため、索引ページアクセスごとに毎回集計せずキャッシュする（既存の
 # サイドバーキャッシュ issue #1602 と同様の方針）。PeopleController#index側の
 # 失効はPerson#expire_filter_counts_cacheから呼ばれる。
 class PersonFilterCounts
-  CACHE_KEY = 'people/index_filter_counts'
+  # 誕生年の件数（birth_year）を足したため、ローリングデプロイ中の新旧混在を避けるようキーに v2 を付ける
+  CACHE_KEY = 'people/index_filter_counts/v2'
   CACHE_TTL = 10.minutes
   RACE_CONDITION_TTL = 10.seconds
 
@@ -25,11 +26,17 @@ class PersonFilterCounts
       part: Person::AVAILABLE_PARTS.index_with { |p| base_scope.where('parts @> ?::jsonb', [p].to_json).count },
       blood: Person::BLOOD_TYPES.index_with { |b| base_scope.where(blood: b).count },
       hometown: hometown_counts,
-      status: Person.statuses.keys.index_with { |s| base_scope.where(status: s).count }
+      status: Person.statuses.keys.index_with { |s| base_scope.where(status: s).count },
+      birth_year: birth_year_counts
     }
   end
 
   private
+
+  # 誕生年ごとの人数（古い年から順、issue #2094）
+  def birth_year_counts
+    base_scope.where.not(birth_year: nil).group(:birth_year).order(:birth_year).count
+  end
 
   def base_scope
     Person.for_index
