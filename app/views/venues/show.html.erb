@@ -108,28 +108,9 @@
                   <%= trend.date_label %>
                 </div>
                 <div class="grow">
-                  <%# 個人名を件名の前に出す動向（Trend詳細と同じ判定、issue #1796）は、個人名 → ユニット名の順に並べる %>
-                  <% if trend_show_person_badge_in_title?(trend) %>
-                    <% trend.people.each do |person_data| %>
-                      <% person = @related_people[person_data['person_id']] %>
-                      <% display_name = trend_person_display_name(person_data, person) %>
-                      <% if person %>
-                        <%= link_to display_name, profile_path(person.key), class: badge_link_class %>
-                      <% elsif display_name.present? %>
-                        <%= unit_name_badge(display_name) %>
-                      <% end %>
-                    <% end %>
-                  <% end %>
-                  <% (trend.units || []).each do |unit_data| %>
-                    <% unit = @related_units[unit_data['unit_id']] %>
-                    <% display_name = trend_unit_display_name(unit_data, unit) %>
-                    <%# 公開中のユニットはユニットのページへリンクする。見た目は/trends一覧のユニットバッジに揃える（issue #1782） %>
-                    <% if unit %>
-                      <%= link_to display_name, profile_path(unit.key), class: badge_link_class %>
-                    <% elsif display_name.present? %>
-                      <%= unit_name_badge(display_name) %>
-                    <% end %>
-                  <% end %>
+                  <%# 件名の前のユニット名。個人名を件名の前に出す動向（Trend詳細と同じ判定、issue #1796）は、
+                      ユニット名の代わりに個人名を出す（issue #2092）。見た目は/trends一覧のバッジに揃える（issue #1782） %>
+                  <%= trend_lead_badges(trend, related_units: @related_units, related_people: @related_people, link_class: badge_link_class) %>
                   <%= link_to format_wiki_title(trend.title, link: false), trend_path(trend),
                         class: "font-bold text-indigo-700 dark:text-amber-400 underline decoration-indigo-600/25 dark:decoration-amber-400/40 underline-offset-2 hover:decoration-indigo-600 dark:hover:decoration-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400 rounded-sm transition-colors" %>
                 </div>

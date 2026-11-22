@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-# 会場ページの動向一覧で、個人名を件名の前に出す動向の個人名（issue #1796）
+# 会場ページの動向一覧で、個人名を件名の前に出す動向の個人名（issue #1796, #2092）
 class VenueTrendPersonBadgeTest < ActionDispatch::IntegrationTest
   setup do
     @venue = Venue.create!(key: 'shinjuku-loft', name: '新宿LOFT')
@@ -21,7 +21,8 @@ class VenueTrendPersonBadgeTest < ActionDispatch::IntegrationTest
     assert_select 'span', text: '未登録の個人'
   end
 
-  test 'shows person names before unit names when person_name_in_title is set' do
+  # issue #2092: 一覧ではユニット名の代わりに個人名を出す（#1796 では個人名 → ユニット名の両方を並べていた）
+  test 'shows person names instead of unit names when person_name_in_title is set' do
     create_trend(unit_phenomenon: :live, person_name_in_title: true,
                  units: [{ 'unit_id' => @unit.id, 'name' => 'ユニットA' }],
                  people: [{ 'person_id' => @person.id, 'name' => '個人A' }])
@@ -29,8 +30,8 @@ class VenueTrendPersonBadgeTest < ActionDispatch::IntegrationTest
     get venue_path(@venue.key)
 
     assert_response :success
-    hrefs = css_select('#venue-trends-heading ~ ul a').map { |a| a['href'] }
-    assert_equal [profile_path(@person.key), profile_path(@unit.key)], hrefs.first(2)
+    assert_select "a[href='#{profile_path(@person.key)}']", text: '個人A'
+    assert_select "a[href='#{profile_path(@unit.key)}']", count: 0
   end
 
   test 'does not show person names for a unit trend without the person priority' do

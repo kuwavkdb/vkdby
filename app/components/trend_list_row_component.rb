@@ -8,18 +8,29 @@ class TrendListRowComponent < ViewComponent::Base
 
   with_collection_parameter :trend
 
-  def initialize(trend:, current: false, resource: nil, related_units: {})
+  def initialize(trend:, current: false, resource: nil, related_units: {}, related_people: {})
     super()
-    @trend         = trend
-    @current       = current
-    @resource      = resource
-    @related_units = related_units
+    @trend          = trend
+    @current        = current
+    @resource       = resource
+    @related_units  = related_units
+    @related_people = related_people || {}
   end
 
   def current? = @current
 
   # ログイン時（管理者）にしか見えない未公開の動向。公開中の動向と見分けられるよう、破線の枠で囲む（issue #2014）
   def unpublished? = !@trend.published?
+
+  # 件名の前に出す名前のバッジ。個人名を件名の前に出す動向（Trend詳細と同じ判定）は、ユニット名の代わりに
+  # 紐づく個人の名前をすべて出す（個人のページでは本人の名前も出す、issue #2092）。それ以外は unit_badges
+  def lead_badges
+    return unit_badges unless trend_show_person_badge_in_title?(@trend)
+
+    @trend.people.filter_map do |person_data|
+      trend_person_display_name(person_data, @related_people[person_data['person_id']]).presence
+    end
+  end
 
   # 自ユニット（resource）が動向登録時点で現在と異なる名前で登録されている場合のみ、
   # その別名をバッジ表示する。他ユニットが併記されている動向でも他ユニット名は表示しない（issue #1658）

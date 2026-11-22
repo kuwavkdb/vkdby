@@ -64,6 +64,9 @@ application.register("sortable", SortableController)
 import TagGroupSelectController from "controllers/tag_group_select_controller"
 application.register("tag-group-select", TagGroupSelectController)
 
+import TextClampController from "controllers/text_clamp_controller"
+application.register("text-clamp", TextClampController)
+
 import ThemeController from "controllers/theme_controller"
 application.register("theme", ThemeController)
 

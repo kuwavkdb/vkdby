@@ -1,0 +1,17 @@
+<%# 投稿一覧の長い文（issue #2095）。長い文は6行で切って出し、「全文を表示」で開閉する。
+    短い文（6行以内かつ200字以内）はそのまま出す。切る必要があるかどうかは、表示したあと text-clamp コントローラーが実際の高さで判断する。
+    locals: text（出す文）、prefix（文の前に付ける見出し。任意）、text_class（文に足すクラス。任意） %>
+<% text = text.to_s %>
+<% prefix = local_assigns[:prefix] %>
+<% text_class = local_assigns[:text_class] %>
+<% if text.lines.size > 6 || text.length > 200 %>
+  <% content_id = "collapsible-text-#{SecureRandom.hex(4)}" %>
+  <div data-controller="text-clamp">
+    <p id="<%= content_id %>" class="whitespace-pre-wrap break-words line-clamp-6 <%= text_class %>" data-text-clamp-target="content"><%= prefix %><%= text %></p>
+    <button type="button" data-text-clamp-target="button" data-action="text-clamp#toggle"
+            aria-expanded="false" aria-controls="<%= content_id %>"
+            class="mt-1 text-xs font-medium text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-amber-400">全文を表示</button>
+  </div>
+<% else %>
+  <p class="whitespace-pre-wrap break-words <%= text_class %>"><%= prefix %><%= text %></p>
+<% end %>

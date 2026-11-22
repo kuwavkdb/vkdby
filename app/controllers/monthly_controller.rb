@@ -10,6 +10,7 @@ class MonthlyController < ApplicationController
     @daily_trend_counts = calculate_daily_trend_counts(@date)
     @day_unknown_trends = fetch_day_unknown_trends(@date)
     @related_units = load_related_units(@day_unknown_trends)
+    @related_people = Trend.related_people_for(@day_unknown_trends)
   end
 
   private

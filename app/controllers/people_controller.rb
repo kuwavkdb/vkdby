@@ -115,10 +115,19 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
     @selected_blood = params[:blood] if BLOOD_TYPES.include?(params[:blood])
     @selected_hometown = params[:hometown].presence
     @selected_status = params[:status] if Person.statuses.key?(params[:status])
+    @selected_birth_year = selected_birth_year
+  end
+
+  # 誕生年の絞り込み（issue #2094）。4桁の数字で、1900年から今年までのときだけ受け付ける。
+  # 絞り込みの選択肢（文字列）と見比べるため、文字列のまま持つ
+  def selected_birth_year
+    year = params[:birth_year].to_s
+    year if year.match?(/\A\d{4}\z/) && (1900..Date.current.year).cover?(year.to_i)
   end
 
   def any_filter_selected?
-    @selected_tag_ids.any? || [@selected_part, @selected_blood, @selected_hometown, @selected_status].any?(&:present?)
+    @selected_tag_ids.any? ||
+      [@selected_part, @selected_blood, @selected_hometown, @selected_status, @selected_birth_year].any?(&:present?)
   end
 
   def build_scope
@@ -132,8 +141,13 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
     scope = scope.where(blood: @selected_blood) if @selected_blood
     scope = scope.where(hometown: @selected_hometown) if @selected_hometown
     scope = scope.where(status: @selected_status) if @selected_status
+    scope = scope.where(birth_year: @selected_birth_year.to_i) if @selected_birth_year
 
-    any_filter_selected? ? scope.reorder(name_kana: :asc) : scope
+    return scope unless any_filter_selected?
+    # 誕生年で絞ったときは誕生日順（月日、同じ日はよみがな順）に並べる（issue #2094）
+    return scope.reorder(Arel.sql('birthday ASC NULLS LAST'), name_kana: :asc) if @selected_birth_year
+
+    scope.reorder(name_kana: :asc)
   end
 
   def registered_hometown?(hometown)
@@ -153,7 +167,9 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
       { param: :hometown, name: '出身地', selected: @selected_hometown,
         options: counts[:hometown].map { |h, c| { value: h, label: h, count: c } } },
       { param: :status, name: 'ステータス', selected: @selected_status,
-        options: Person.statuses.keys.map { |s| { value: s, label: Person::STATUS_TRANSLATIONS[s], count: counts[:status][s] || 0 } } }
+        options: Person.statuses.keys.map { |s| { value: s, label: Person::STATUS_TRANSLATIONS[s], count: counts[:status][s] || 0 } } },
+      { param: :birth_year, name: '誕生年', selected: @selected_birth_year,
+        options: (counts[:birth_year] || {}).map { |year, count| { value: year.to_s, label: year.to_s, count: } } }
     ]
   end
 end
