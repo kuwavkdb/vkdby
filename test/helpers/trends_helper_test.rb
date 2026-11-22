@@ -4,6 +4,7 @@ require 'test_helper'
 
 class TrendsHelperTest < ActionView::TestCase
   include TrendsHelper
+  include TrendLeadBadgesHelper
 
   test 'unit_name_badgeはユニット名をzincのバッジ<span>で返す' do
     html = unit_name_badge('名前だけのユニット')
@@ -68,5 +69,42 @@ class TrendsHelperTest < ActionView::TestCase
 
   test 'trend_news_release_labelはニュースリリースのラベルを返す' do
     assert_equal 'ニュースリリース', Nokogiri::HTML.fragment(trend_news_release_label).text
+  end
+
+  # issue #2092: 一覧の件名の前のバッジ
+  def lead_badge_trend(**attrs)
+    Trend.new(title: 'T', date: Date.current, publish_start_at: Time.current, **attrs)
+  end
+
+  test 'trend_lead_badgesは通常の動向でユニット名を出し、個人名は出さない' do
+    unit = Unit.new(id: 1, key: 'lead-unit', name: 'ユニットA')
+    trend = lead_badge_trend(unit_phenomenon: :live, units: [{ 'unit_id' => 1, 'name' => 'ユニットA' }],
+                             people: [{ 'person_id' => 2, 'name' => '個人A' }])
+
+    html = trend_lead_badges(trend, related_units: { 1 => unit }, related_people: {})
+
+    assert_includes html, %(href="/lead-unit")
+    assert_not_includes html, '個人A'
+  end
+
+  test 'trend_lead_badgesは個人名を件名前に優先表示する動向でユニット名の代わりに個人名を出す' do
+    person = Person.new(id: 2, key: 'lead-person', name: '個人A')
+    trend = lead_badge_trend(unit_phenomenon: :live, person_name_in_title: true,
+                             units: [{ 'unit_id' => 1, 'name' => 'ユニットA' }],
+                             people: [{ 'person_id' => 2, 'name' => '個人A' }, { 'person_id' => nil, 'name' => '未登録の個人' }])
+
+    html = trend_lead_badges(trend, related_units: {}, related_people: { 2 => person })
+
+    assert_includes html, %(href="/lead-person")
+    assert_includes html, '未登録の個人'
+    assert_not_includes html, 'ユニットA'
+  end
+
+  test 'trend_lead_badgesはcurrent_unit_nameなら今のユニット名を出す' do
+    unit = Unit.new(id: 1, key: 'lead-unit', name: '今の名前')
+    trend = lead_badge_trend(unit_phenomenon: :live, units: [{ 'unit_id' => 1, 'name' => '登録時の名前' }])
+
+    assert_includes trend_lead_badges(trend, related_units: { 1 => unit }, current_unit_name: true), '今の名前'
+    assert_includes trend_lead_badges(trend, related_units: { 1 => unit }), '登録時の名前'
   end
 end

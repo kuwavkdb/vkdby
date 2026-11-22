@@ -94,4 +94,29 @@ class TrendListRowComponentTest < ActiveSupport::TestCase
     assert_no_selector 'div.border-dashed'
     assert_no_selector '.sr-only', text: '（未公開）'
   end
+
+  # issue #2092: 個人名を件名前に優先表示する動向は、ユニット名の代わりに個人名を出す（個人のページでは本人の名前も）
+  test 'lead_badges shows person names instead of unit badges when person_name_in_title is set' do
+    unit = Unit.create!(name: 'Renamed Now', key: 'trend-row-person-priority-unit', status: :active)
+    person = Person.create!(name: '個人A', key: 'trend-row-person-priority', status: :active)
+    trend = Trend.create!(title: 'Trend', date: Date.current, publish_start_at: Time.current,
+                          unit_phenomenon: :other, person_name_in_title: true,
+                          units: [{ 'unit_id' => unit.id, 'name' => 'Old Name' }],
+                          people: [{ 'person_id' => person.id, 'name' => '個人A' }])
+
+    on_unit_page = TrendListRowComponent.new(trend: trend, resource: unit, related_units: { unit.id => unit },
+                                             related_people: { person.id => person })
+    on_person_page = TrendListRowComponent.new(trend: trend, resource: person, related_people: { person.id => person })
+
+    assert_equal ['個人A'], on_unit_page.lead_badges
+    assert_equal ['個人A'], on_person_page.lead_badges
+  end
+
+  test 'lead_badges falls back to unit_badges for a normal trend' do
+    unit = Unit.create!(name: 'Renamed Now', key: 'trend-row-normal-unit', status: :active)
+    trend = Trend.create!(title: 'Trend', date: Date.current, publish_start_at: Time.current,
+                          unit_phenomenon: :other, units: [{ 'unit_id' => unit.id, 'name' => 'Old Name' }])
+
+    assert_equal ['Old Name'], TrendListRowComponent.new(trend: trend, resource: unit, related_units: { unit.id => unit }).lead_badges
+  end
 end

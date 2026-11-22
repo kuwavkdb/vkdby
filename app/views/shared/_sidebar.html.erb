@@ -61,7 +61,8 @@
                 class: "block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors #{'font-bold' if trend.date == Date.current}" do %>
               <div class="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mb-1">
                 <span class="tabular-nums text-sm font-extrabold text-slate-700 dark:text-slate-300 shrink-0 w-10"><%= trend.date.strftime('%-m/%-d') %></span>
-                <% if trend.units.present? %>
+                <%# 個人名を件名の前に出す動向（Trend詳細と同じ判定）は、ユニット名を出さず個人名だけにする（issue #2092） %>
+                <% if trend.units.present? && !trend_show_person_badge_in_title?(trend) %>
                   <% trend.units.each do |u| %>
                     <% unit = @weekly_trend_units[u['unit_id']] %>
                     <% name = trend_unit_display_name(u, unit) %>
