@@ -47,11 +47,13 @@
       </thead>
       <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
         <% @venue_submissions.each do |submission| %>
-          <tr>
-            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-              <%= submission.created_at.strftime('%Y-%m-%d %H:%M') %>
+          <%# 内容が長い投稿でも受付日時・アクションが内容の冒頭と同じ高さに来るよう、上寄せにする（issue #2095） %>
+          <tr class="align-top">
+            <%# IPv6 など長い IP アドレスで欄が広がらないよう、日付だけ折り返さず、IP アドレスは途中で折り返す %>
+            <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">
+              <span class="whitespace-nowrap"><%= submission.created_at.strftime('%Y-%m-%d') %></span><br><%= submission.created_at.strftime('%H:%M') %>
               <% if submission.submitter_ip.present? %>
-                <span class="block text-xs text-gray-500">IP: <%= submission.submitter_ip %></span>
+                <span class="block text-xs text-gray-500 dark:text-gray-400 break-all">IP: <%= submission.submitter_ip %></span>
               <% end %>
             </td>
             <td class="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">
@@ -70,7 +72,7 @@
             </td>
             <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-300 max-w-sm">
               <% if submission.correction? %>
-                <p class="whitespace-pre-wrap break-words"><%= submission.correction %></p>
+                <%= render "admin/shared/collapsible_text", text: submission.correction %>
               <% else %>
                 <p><%= [submission.prefecture, submission.area].compact_blank.join(" ") %></p>
                 <% if submission.address.present? %><p><%= submission.address %></p><% end %>
@@ -79,7 +81,7 @@
                 </p>
               <% end %>
               <% if submission.note.present? %>
-                <p class="mt-1 text-xs whitespace-pre-wrap break-words">補足: <%= submission.note %></p>
+                <%= render "admin/shared/collapsible_text", text: submission.note, prefix: "補足: ", text_class: "mt-1 text-xs" %>
               <% end %>
             </td>
             <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs">
@@ -113,7 +115,7 @@
               <% elsif submission.converted? %>
                 <% venue = submission.converted_venue || submission.venue %>
                 <% if venue %>
-                  <%= link_to "#{venue.name} を見る", edit_admin_venue_path(venue), class: link_class %>
+                  <%= link_to edit_admin_venue_path(venue), class: link_class do %><%= venue.name %><br>を見る<% end %>
                 <% else %>
                   <span class="text-gray-500">会場が見つかりません</span>
                 <% end %>

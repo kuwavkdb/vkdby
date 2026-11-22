@@ -25,48 +25,50 @@
       <thead class="bg-gray-50 dark:bg-gray-700">
         <tr>
           <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">受付日時</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">対象</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">日付/動向種別</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">対象/日付/動向種別</th>
           <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">内容</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">出典/連絡先</th>
           <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">アクション</th>
         </tr>
       </thead>
       <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
         <% @trend_submissions.each do |submission| %>
-          <tr>
-            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-              <%= submission.created_at.strftime('%Y-%m-%d %H:%M') %>
+          <%# 内容が長い投稿でも受付日時・アクションが内容の冒頭と同じ高さに来るよう、上寄せにする（issue #2095） %>
+          <tr class="align-top">
+            <%# IPv6 など長い IP アドレスで欄が広がらないよう、日付だけ折り返さず、IP アドレスは途中で折り返す %>
+            <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">
+              <span class="whitespace-nowrap"><%= submission.created_at.strftime('%Y-%m-%d') %></span><br><%= submission.created_at.strftime('%H:%M') %>
               <% if submission.submitter_ip.present? %>
-                <span class="block text-xs text-gray-400">IP: <%= submission.submitter_ip %></span>
+                <span class="block text-xs text-gray-500 dark:text-gray-400 break-all">IP: <%= submission.submitter_ip %></span>
               <% end %>
             </td>
             <td class="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">
               <%= submission.target_name %>
-              <span class="block text-xs text-gray-400"><%= submission.target_type == 'unit' ? 'ユニット（バンド）' : '個人' %></span>
+              <span class="block text-xs text-gray-500 dark:text-gray-400"><%= submission.target_type == 'unit' ? 'ユニット（バンド）' : '個人' %></span>
               <% if submission.target_id.present? %>
                 <span class="inline-block mt-1 px-1.5 py-0.5 text-xs font-medium rounded bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">紐付け済み</span>
               <% end %>
               <% if submission.is_related_person? %>
                 <span class="inline-block mt-1 px-1.5 py-0.5 text-xs font-medium rounded bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">本人・関係者</span>
               <% end %>
-            </td>
-            <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">
-              <%= submission.date&.strftime('%Y/%m/%d') %><br>
-              <%= submission.phenomenon_label %>
-              <% if submission.venue_name.present? %>
-                <span class="block mt-1">会場: <%= submission.venue_name %></span>
-              <% end %>
+              <%# 日付・動向種別・会場は対象の下にまとめる（列を分けると表が横に広がるため） %>
+              <div class="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+                <%= submission.date&.strftime('%Y/%m/%d') %><br>
+                <%= submission.phenomenon_label %>
+                <% if submission.venue_name.present? %>
+                  <span class="block mt-1">会場: <%= submission.venue_name %></span>
+                <% end %>
+              </div>
             </td>
             <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs">
               <p class="font-medium text-gray-900 dark:text-gray-100"><%= submission.title %></p>
-              <p class="mt-1 whitespace-pre-wrap break-words"><%= submission.content %></p>
-            </td>
-            <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs">
-              <%= link_to submission.via_url, submission.via_url, target: "_blank", rel: "noopener", class: "text-indigo-600 dark:text-indigo-400 hover:underline break-all" %>
-              <% if submission.email.present? %>
-                <p class="mt-1 text-xs">連絡先: <%= submission.email %></p>
-              <% end %>
+              <%= render "admin/shared/collapsible_text", text: submission.content, text_class: "mt-1" %>
+              <%# 出典・連絡先は内容の下にまとめる（列を分けると表が横に広がるため） %>
+              <div class="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700 text-xs space-y-1">
+                <p>出典: <%= link_to submission.via_url, submission.via_url, target: "_blank", rel: "noopener", class: "text-indigo-600 dark:text-indigo-400 hover:underline break-all" %></p>
+                <% if submission.email.present? %>
+                  <p class="break-all">連絡先: <%= submission.email %></p>
+                <% end %>
+              </div>
             </td>
             <td class="px-4 py-4 whitespace-nowrap text-sm">
               <% if submission.pending? %>
@@ -84,10 +86,10 @@
                 </div>
               <% elsif submission.converted? %>
                 <% if submission.converted_trend %>
-                  <%= link_to "#{submission.converted_trend.title} を見る", edit_admin_trend_path(submission.converted_trend),
-                        class: "text-indigo-600 dark:text-indigo-400 hover:underline" %>
+                  <%= link_to edit_admin_trend_path(submission.converted_trend),
+                        class: "text-indigo-600 dark:text-indigo-400 hover:underline" do %><%= submission.converted_trend.title %><br>を見る<% end %>
                 <% else %>
-                  <span class="text-gray-500">対応済み（Trend作成なし）</span>
+                  <span class="text-gray-500">対応済み<br>（作成なし）</span>
                 <% end %>
               <% else %>
                 <span class="text-gray-500">却下済み</span>
@@ -97,7 +99,7 @@
         <% end %>
         <% if @trend_submissions.none? %>
           <tr>
-            <td colspan="6" class="px-4 py-8 text-center text-sm text-gray-400">該当する投稿はありません</td>
+            <td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">該当する投稿はありません</td>
           </tr>
         <% end %>
       </tbody>

@@ -27,6 +27,23 @@ module Admin
       assert_includes response.body, @submission.target_name
     end
 
+    # issue #2095: 長い内容は6行で切り、「全文を表示」で開閉する。短い内容はそのまま出す。行は上寄せにする
+    test 'index clamps long content with a toggle and keeps short content as is' do
+      login_as_admin
+      @submission.update!(content: '短い内容')
+      TrendSubmission.create!(target_type: :unit, target_name: 'Long Unit', date: Date.new(2026, 1, 1),
+                              via_url: 'https://example.com/long', phenomenon: Trend.unit_phenomenons['announcement'],
+                              content: Array.new(20) { |i| "#{i + 1}行目" }.join("\n"))
+
+      get admin_trend_submissions_path
+
+      assert_response :success
+      assert_select "[data-controller='text-clamp'] p.line-clamp-6", text: /1行目.*20行目/m
+      assert_select "[data-controller='text-clamp'] button[aria-expanded='false']", text: '全文を表示', count: 1
+      assert_select 'p', text: '短い内容'
+      assert_select 'tbody tr.align-top', count: 2
+    end
+
     test 'index filters by status' do
       login_as_admin
       rejected = TrendSubmission.create!(target_type: :unit, target_name: 'Rejected Unit',
@@ -82,7 +99,7 @@ module Admin
       assert_nil @submission.converted_trend
 
       get admin_trend_submissions_path(status: 'converted')
-      assert_includes response.body, '対応済み（Trend作成なし）'
+      assert_includes response.body, '対応済み<br>（作成なし）'
     end
 
     test 'index shows the resolve button for pending submissions' do
