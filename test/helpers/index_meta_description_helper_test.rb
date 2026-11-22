@@ -25,6 +25,10 @@ class IndexMetaDescriptionHelperTest < ActionView::TestCase
     assert_equal %w[etc.], people_index_filter_names(part: 'etc')
   end
 
+  test 'people_index_filter_namesは誕生年を「〇〇年生まれ」と最後に書く（issue #2094）' do
+    assert_equal %w[ボーカル B型 1979年生まれ], people_index_filter_names(part: 'vocal', blood: 'B', birth_year: '1979')
+  end
+
   test 'people_index_filter_namesは状況・血液型の不明を書き分ける（issue #1959）' do
     assert_equal %w[状況不明 血液型不明], people_index_filter_names(status: 'unknown', blood: 'Unknown')
   end

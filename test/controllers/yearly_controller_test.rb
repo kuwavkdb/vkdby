@@ -30,4 +30,16 @@ class YearlyControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, '非公開の月日不明動向'
     assert_not_includes response.body, '公開予定の月日不明動向'
   end
+
+  # issue #2094: 「Birthdays」欄のアンカーと、誕生年で絞り込んだ個人一覧へのリンク
+  test '年別ページの「Birthdays」欄にアンカーと個人一覧の絞り込みへのリンクを付ける' do
+    Person.create!(name: 'Anchor Person', key: 'yearly-anchor-person', status: :active,
+                   birth_year: 1985, birthday: Date.new(1904, 3, 3))
+
+    get yearly_path(year: 1985)
+
+    assert_response :success
+    assert_select 'section#birthdays', text: /Anchor Person/
+    assert_select "section#birthdays a[href='#{people_path(birth_year: 1985)}']"
+  end
 end
