@@ -2,7 +2,7 @@
 
 class YearlyController < ApplicationController
   def index
-    @start_year = 1970
+    @start_year = DatePageRange::MIN_YEAR
     @end_year = Date.current.year
     @years = (@start_year..@end_year).to_a.reverse
   end
