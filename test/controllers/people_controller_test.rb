@@ -297,6 +297,35 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
     assert_select 'button[aria-controls="people-filters"][aria-expanded="true"]'
   end
 
+  # issue #2097: タグのグループ（カナ索引）の行は、そのグループのタグが指定されているときだけ出す
+  test 'index hides the tag group row when no tag of the group is selected' do
+    group = IndexGroup.create!(name: '個人カナ索引', people_filter_order: 1)
+    TagIndex.create!(name: '個人カナ索引/ア行', index_group: group, order_in_group: 1)
+
+    get people_path
+
+    assert_response :success
+    assert_select '#people-filters a[href*="tag_ids"]', count: 0
+  end
+
+  test 'index shows the tag group row and filters by it when a tag of the group is selected' do
+    group = IndexGroup.create!(name: '個人カナ索引', people_filter_order: 1)
+    a_row = TagIndex.create!(name: '個人カナ索引/ア行', index_group: group, order_in_group: 1)
+    TagIndex.create!(name: '個人カナ索引/カ行', index_group: group, order_in_group: 2)
+    tagged = Person.create!(name: 'アオイ', key: 'people-index-kana-tagged', status: :active)
+    Person.create!(name: 'カオル', key: 'people-index-kana-untagged', status: :active)
+    TagIndexItem.create!(tag_index: a_row, indexable: tagged)
+
+    get people_path(tag_ids: { group.id.to_s => a_row.id.to_s })
+
+    assert_response :success
+    assert_select '#people-filters a.bg-indigo-600', text: /ア行\s*\(1\)/
+    assert_select '#people-filters a', text: /カ行/
+    assert_select '#people-filters a', text: 'ALL'
+    assert_includes response.body, 'アオイ'
+    assert_not_includes response.body, 'カオル'
+  end
+
   # issue #2042: ひらがなだけの検索語は、カタカナのヨミガナでも探す
   test 'index and search find a person by katakana reading when queried with hiragana' do
     Person.create!(name: 'HiraganaPeopleIndex', name_kana: 'ヒラガナジンブツイチラン', key: 'hiragana-people-index', status: :active)
