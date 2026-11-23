@@ -58,12 +58,14 @@
   <!-- 情報（右側。全体をitem#showへのリンクにし、アーティストタグだけ上に重ねてクリック可能にする） -->
   <div class="relative flex-1 px-4 py-2 min-w-0 flex flex-col" data-controller="item-card-artists">
     <%# タイトル下のoverflow-hiddenラッパーに阻まれず領域全体を覆うため、専用のリンクを重ねる（実体のリンクはタイトルの方） %>
-    <%= link_to "", item_path(@item), class: "absolute inset-0", "aria-hidden": "true", tabindex: "-1" %>
+    <%# 長い商品名はフェードアウトで末尾が隠れるため、マウスを重ねると全文が見えるよう title を付ける（issue #2102）。
+        タイトル以外の余白にマウスを重ねたときも出るよう、重ねたリンクにも付ける（aria-hidden なので読み上げは重ならない） %>
+    <%= link_to "", item_path(@item), class: "absolute inset-0", "aria-hidden": "true", tabindex: "-1", title: @item.title %>
     <!-- タイトル + アーティスト（合わせて5行相当の高さに制限し、実際の溢れをJSで検知してフェードアウトさせる） -->
     <div class="max-h-[7rem] flex flex-col gap-2 overflow-hidden" data-item-card-artists-target="content">
       <!-- タイトル -->
       <div class="relative z-10">
-        <%= link_to item_path(@item), class: "block" do %>
+        <%= link_to item_path(@item), class: "block", title: @item.title do %>
           <h3 class="font-bold text-indigo-700 dark:text-amber-400 hover:text-indigo-800 dark:hover:text-amber-300 transition-colors"><%= @item.title %></h3>
         <% end %>
       </div>

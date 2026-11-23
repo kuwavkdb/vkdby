@@ -65,6 +65,27 @@ class ItemCardComponentPreview < ViewComponent::Preview
     render(ItemCardComponent.new(item_card: item))
   end
 
+  # 商品名が長く、末尾がフェードアウトで隠れるカード。
+  # マウスを重ねると、title 属性で商品名の全文が表示される（issue #2102）。
+  # タイトルの下の余白や発売日のあたりに重ねても表示される。
+  # @label 長い商品名（省略あり）
+  def long_title_truncated
+    item = Item.new(
+      id: 6,
+      title: '【Amazon.co.jp限定】Artist LIVE 2025 BIRTHDAY CELEBRATION -誕生祭- (初回生産限定盤) (Blu-ray) - Artist (巾着付)',
+      release_date: Date.new(2027, 1, 29),
+      image_url: nil,
+      link_url: 'https://www.amazon.co.jp/exec/obidos/ASIN/B0EXAMPLE6/vkdb07-22/',
+      artists: [
+        { 'name' => 'lynch.', 'old_key' => '%A5%EA%A5%F3%A5%C1' },
+        { 'name' => 'DIR EN GREY', 'old_key' => '%A5%C7%A5%A3%A5%EB%A5%A2%A5%F3%A5%B0%A5%EC%A5%A4' }
+      ]
+    )
+
+    # アイテム一覧（2列）の1列ぶんの幅にそろえ、本番と同じように省略されるようにする
+    render_with_template(locals: { item: })
+  end
+
   def with_key_artist
     item = Item.new(
       id: 5,
