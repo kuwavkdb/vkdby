@@ -28,7 +28,7 @@
         compact_items << { label: "誕生日", value: capture do %>
           <div class="flex flex-wrap justify-end items-center gap-0.5">
             <% if @resource.birth_year.present? %>
-              <%= link_to @resource.birth_year.to_s, yearly_path(year: @resource.birth_year), class: badge_class %>
+              <%= link_to @resource.birth_year.to_s, birth_year_path, class: badge_class %>
               <span class="text-xs font-bold text-zinc-400 dark:text-zinc-500 px-1">/</span>
             <% end %>
             <%= link_to birthday_date_path(month: @resource.birthday.month, day: @resource.birthday.day), class: badge_class do %>

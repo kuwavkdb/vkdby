@@ -87,7 +87,7 @@ class ApplicationController < ActionController::Base
   end
 
   def valid_year?(year)
-    year >= 1970 && year <= Date.current.year + 10
+    DatePageRange.cover?(year)
   end
 
   def render_not_found(query: nil)

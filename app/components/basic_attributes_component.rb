@@ -27,6 +27,12 @@ class BasicAttributesComponent < ViewComponent::Base
     @predecessor_units ||= @resource.visible_predecessor_units.to_a
   end
 
+  # 誕生年のリンク先。年別ページがない1969年以前は、個人一覧の誕生年の絞り込み（issue #2094）へ向ける（issue #2101）
+  def birth_year_path
+    year = @resource.birth_year
+    DatePageRange.cover?(year) ? yearly_path(year:) : people_path(birth_year: year)
+  end
+
   private
 
   def attributes_present?
