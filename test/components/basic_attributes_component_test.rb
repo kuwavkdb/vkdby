@@ -20,4 +20,22 @@ class BasicAttributesComponentTest < ViewComponent::TestCase
 
     assert_equal %w[種別 ステータス], page.all('dl > div > dt').map(&:text).first(2)
   end
+
+  # issue #2101: 年別ページは1970年以降しかないため、1969年以前の誕生年は個人一覧の誕生年の絞り込みへリンクする
+  test '1969年以前の誕生年は個人一覧の誕生年の絞り込みへリンクする' do
+    person = Person.new(name: 'Old Person', key: 'old-person', birthday: Date.new(Person::DUMMY_BIRTH_YEAR, 7, 12), birth_year: 1969)
+
+    render_inline(BasicAttributesComponent.new(resource: person))
+
+    assert_selector "a[href='/people?birth_year=1969']", text: '1969'
+    assert_no_selector "a[href='/date/1969']"
+  end
+
+  test '1970年以降の誕生年は年別ページへリンクする' do
+    person = Person.new(name: 'New Person', key: 'new-person', birthday: Date.new(Person::DUMMY_BIRTH_YEAR, 7, 12), birth_year: 1970)
+
+    render_inline(BasicAttributesComponent.new(resource: person))
+
+    assert_selector "a[href='/date/1970']", text: '1970'
+  end
 end
