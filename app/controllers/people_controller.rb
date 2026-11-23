@@ -9,8 +9,8 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
   SUGGESTION_LIMIT = 10
 
   def index
-    load_tag_filter_groups
     load_selected_filters
+    load_tag_filter_groups
 
     scope = build_scope
     # ビューの @people.any? で存在確認のクエリが別に走らないよう、ここで読み込んでおく（issue #1855）
@@ -103,10 +103,23 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
     @base_scope ||= Person.for_index
   end
 
+  # タグのグループ（今は「個人カナ索引」だけ）は旧サイトから引き継いだもので、互換性のために残している。
+  # 絞り込み欄には、そのグループのタグが tag_ids に指定されているときだけ行を出す（issue #2097）。
+  # 指定がなければ行もタグごとの件数も要らないので、件数の集計を省く
   def load_tag_filter_groups
-    @filter_groups = IndexGroup.for_people.where.not(name: PERSON_DATA_TAG_GROUP_NAMES).includes(:tag_indices)
+    selected_group_ids = @selected_tag_ids.keys.filter_map { |key| Integer(key, exception: false) }
+    @filter_groups = if selected_group_ids.any?
+                       IndexGroup.for_people.where.not(name: PERSON_DATA_TAG_GROUP_NAMES)
+                                 .where(id: selected_group_ids).includes(:tag_indices).to_a
+                     else
+                       []
+                     end
     all_tag_index_ids = @filter_groups.flat_map { |g| g.tag_indices.map(&:id) }
-    @tag_person_counts = TagIndexItem.where(tag_index_id: all_tag_index_ids, indexable_type: 'Person').group(:tag_index_id).count
+    @tag_person_counts = if all_tag_index_ids.any?
+                           TagIndexItem.where(tag_index_id: all_tag_index_ids, indexable_type: 'Person').group(:tag_index_id).count
+                         else
+                           {}
+                         end
   end
 
   def load_selected_filters
