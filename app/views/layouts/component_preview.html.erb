@@ -8,6 +8,8 @@
 
     <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%# フェードアウトなど Stimulus で付ける見た目も本番と同じに確認できるよう、JavaScript も読み込む（issue #2102） %>
+    <%= javascript_importmap_tags %>
   </head>
 
   <body class="bg-gray-100 dark:bg-slate-900 min-h-screen" style="padding: 20px;">
