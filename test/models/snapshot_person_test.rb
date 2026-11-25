@@ -191,6 +191,10 @@ class SnapshotPersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/Cla
     assert_equal [], SnapshotPerson.new(person_name: 'Unknown Guy', part: :unknown).build_person_for_independence.parts
   end
 
+  test 'build_person_for_independence はパートの staff（関係者）を引き継がない（issue #2108）' do
+    assert_equal [], SnapshotPerson.new(person_name: 'Staff Guy', part: :staff).build_person_for_independence.parts
+  end
+
   test 'build_person_for_independence builds links from sns' do
     sp = SnapshotPerson.new(person_name: 'Sns Guy', person_key: 'sns_guy', part: :vocal, sns: ['@sns_guy'])
 

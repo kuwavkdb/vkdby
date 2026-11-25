@@ -56,13 +56,13 @@ module UnitActivitySummary
     status == 'freeze'
   end
 
-  # 現在のスナップショットの在籍メンバー（サポート・非公開の個人を除く）を並び順で返す。
+  # 現在のスナップショットの在籍メンバー（サポート・関係者（パート staff。issue #2108）・非公開の個人を除く）を並び順で返す。
   # snapshots には表示用に読み込み済みのスナップショット（snapshot_people を含む）を渡す
   def current_public_members(snapshots)
     snapshot = snapshots.find { |s| s.current? && !s.past? }
     return [] unless snapshot
 
-    members = snapshot.snapshot_people.select { |sp| sp.active? && !sp.support? }.sort_by(&:sort_order)
+    members = snapshot.snapshot_people.select { |sp| !sp.staff? && !sp.support? }.sort_by(&:sort_order)
     person_ids = members.filter_map(&:person_id)
     return members if person_ids.empty?
 

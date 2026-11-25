@@ -6,7 +6,7 @@
 # ユニット・個人のページでは、ジャンル（ヴィジュアル系）はサイトの方向性であってユニット自体の分類ではないため書かない。
 module MetaDescriptionHelper
   # Person#parts（Person::AVAILABLE_PARTS）の表記。パートを足したら、ここにも足す。
-  # etc（関係者など）は「〇〇はetc.。」のように文にならないため入れず、パートなしと同じ文にする（issue #2039）
+  # etc は「〇〇はetc.。」のように文にならないため入れず、パートなしと同じ文にする（issue #2039）
   PART_NAMES = {
     'vocal' => 'ボーカル', 'guitar' => 'ギター', 'bass' => 'ベース', 'drums' => 'ドラム', 'keyboard' => 'キーボード',
     'dj' => 'DJ', 'dancer' => 'ダンサー', 'manipulator' => 'マニピュレーター'
