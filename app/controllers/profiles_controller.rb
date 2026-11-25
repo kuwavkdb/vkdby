@@ -37,7 +37,6 @@ class ProfilesController < ApplicationController
       load_items
       load_same_kana_resources
     end
-
   rescue ActiveRecord::RecordNotFound
     render_not_found(query: params[:key])
   end
