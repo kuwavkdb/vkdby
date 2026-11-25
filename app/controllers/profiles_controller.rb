@@ -3,7 +3,10 @@
 class ProfilesController < ApplicationController
   include SidebarLoadable
 
-  before_action :load_sidebar_data, only: :show, unless: -> { request.format.json? }
+  # 個人・ユニットのページはHTMLだけを返す。以前はJSONでレコードの全項目（管理用メモや、
+  # 非公開の個人の誕生日など）を返しており、使っている箇所もなかったため廃止した（issue #2114）
+  before_action :reject_non_html, only: :show
+  before_action :load_sidebar_data, only: :show
 
   def show
     # with_attached_ogp_image: ogp_image_relative_url内のattached?判定が毎アクセスN+1で
@@ -35,15 +38,8 @@ class ProfilesController < ApplicationController
       load_same_kana_resources
     end
 
-    respond_to do |format|
-      format.html
-      format.json { render json: @resource }
-    end
   rescue ActiveRecord::RecordNotFound
-    respond_to do |format|
-      format.html { render_not_found(query: params[:key]) }
-      format.json { render json: { error: 'Resource not found' }, status: :not_found }
-    end
+    render_not_found(query: params[:key])
   end
 
   def update_logs
@@ -83,6 +79,11 @@ class ProfilesController < ApplicationController
   end
 
   private
+
+  # Accept: */*（curlの既定や、SNSのリンクプレビューの取得など）はHTMLとして扱う
+  def reject_non_html
+    head :not_acceptable unless request.format.html? || request.format == Mime::ALL
+  end
 
   # 仮登録のユニット（issue #1764）は admin のみ閲覧できる
   def viewable_units = current_user&.admin? ? Unit.kept : Unit.publicly_visible
