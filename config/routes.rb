@@ -182,10 +182,12 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
       get :units
     end
   end
+  # 公開中のバンドからランダムに1件を選んでリダイレクトする（issue #2124）。
+  # 下の units#show（/units/:key）に取られないよう、resources :units より前に書く
+  get 'units/random', to: 'random_units#show', as: :random_units
   resources :units, param: :key, only: %i[index show], constraints: { key: %r{[^/]+} } do
     collection do
       get :search
-      get :random
     end
   end
   resources :unit_submissions, only: %i[new create]
