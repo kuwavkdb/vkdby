@@ -26,6 +26,15 @@ class UnitsController < ApplicationController
     @total_unit_count = @filtered ? Unit.for_index.count : @pagy.count
   end
 
+  # 公開中のバンドからランダムに1件を選び、そのページへリダイレクトする（issue #2124）。
+  # ステータスでは絞らず、解散済み・活動休止中のバンドも対象にする。
+  # 毎回違うバンドを返すため、ブラウザや CDN にリダイレクトをキャッシュさせない。
+  def random
+    response.headers['Cache-Control'] = 'no-store'
+    key = Unit.for_index.published.band.order(Arel.sql('RANDOM()')).pick(:key)
+    redirect_to key ? profile_path(key) : units_path
+  end
+
   # 一覧ページの入力候補（JSON）。候補には名前そのものを並べるため、名前・よみがな系の列だけを探す。
   # セクション名やメンバー名でも探す matching_keyword（/search）とは、意図して範囲を分けている（issue #1841、#1855）。
   def search

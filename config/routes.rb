@@ -185,6 +185,7 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
   resources :units, param: :key, only: %i[index show], constraints: { key: %r{[^/]+} } do
     collection do
       get :search
+      get :random
     end
   end
   resources :unit_submissions, only: %i[new create]
