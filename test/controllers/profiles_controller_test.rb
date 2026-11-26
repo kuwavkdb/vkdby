@@ -9,6 +9,28 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  # issue #2114: 個人・ユニットのページはJSONを返さない（以前は管理用メモなど全項目を返していた）
+  test 'show does not respond with JSON' do
+    unit = Unit.create!(name: 'Json Unit', key: 'json-unit', status: :active, note: 'internal memo')
+    person = Person.create!(name: 'Json Person', key: 'json-person', status: :active, note: 'internal memo')
+
+    [unit.key, person.key, 'missing-json-key'].each do |key|
+      get profile_path(key), headers: { 'Accept' => 'application/json' }
+
+      assert_response :not_acceptable
+      assert_not_includes response.body, 'internal memo'
+    end
+  end
+
+  test 'show responds with HTML to Accept: */*' do
+    unit = Unit.create!(name: 'Any Accept Unit', key: 'any-accept-unit', status: :active)
+
+    get profile_path(unit.key), headers: { 'Accept' => '*/*' }
+
+    assert_response :success
+    assert_equal 'text/html', response.media_type
+  end
+
   test 'should show person with dot in key' do
     person = Person.create!(name: 'Mr.Dot', key: 'mr.dot', old_key: 'Mr.Dot', status: :active)
     get profile_path(person.key)

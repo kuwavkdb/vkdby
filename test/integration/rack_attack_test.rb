@@ -66,6 +66,18 @@ class RackAttackTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test 'ランダムなバンドへのリダイレクトは、IPごとに1分30回を超えると429になる（issue #2124）' do
+    with_rack_attack_memory_store do
+      30.times do
+        get '/units/random'
+        assert_response :redirect
+      end
+
+      get '/units/random'
+      assert_response :too_many_requests
+    end
+  end
+
   test '制限・ブロックしたリクエストは規則の名前・パス・User-Agent・IPをログに出す（issue #1863）' do
     output = StringIO.new
     original_logger = Rails.logger

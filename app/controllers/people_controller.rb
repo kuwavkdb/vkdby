@@ -68,13 +68,6 @@ class PeopleController < ApplicationController # rubocop:disable Metrics/ClassLe
     render json: { error: 'Person not found' }, status: :not_found
   end
 
-  def show
-    @person = Person.kept.find_by!(key: params[:key])
-    render json: @person
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Person not found' }, status: :not_found
-  end
-
   private
 
   # 個人ページのないメンバー（issue #1843）。検索語だけで探しているときの1ページ目にだけ出す。

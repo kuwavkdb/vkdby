@@ -174,7 +174,9 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
   get '/index/:index_group', to: 'indices#index', as: :indices_group
   get '/index/show/:id', to: 'indices#show', as: :index_show
 
-  resources :people, param: :key, only: %i[index show], constraints: { key: %r{[^/]+} } do
+  # 個人・ユニットのページは /:key（profiles#show）。/people/:key・/units/:key でレコードを
+  # JSONで返す show は、使っている箇所がなく全項目を返していたため廃止した（issue #2114）
+  resources :people, param: :key, only: %i[index], constraints: { key: %r{[^/]+} } do
     collection do
       get :search
     end
@@ -182,7 +184,9 @@ Rails.application.routes.draw do # rubocop:disable Metrics/BlockLength
       get :units
     end
   end
-  resources :units, param: :key, only: %i[index show], constraints: { key: %r{[^/]+} } do
+  # 公開中のバンドからランダムに1件を選んでリダイレクトする（issue #2124）
+  get 'units/random', to: 'random_units#show', as: :random_units
+  resources :units, param: :key, only: %i[index], constraints: { key: %r{[^/]+} } do
     collection do
       get :search
     end
