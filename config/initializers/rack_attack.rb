@@ -10,6 +10,11 @@ Rack::Attack.throttle('search/ip', limit: 30, period: 60) do |req|
   req.ip if req.path.start_with?('/people/search', '/units/search', '/search')
 end
 
+# ランダムなバンドへのリダイレクト: キャッシュさせない作りのため、IP ごとに 60 秒間 30 リクエストまで（issue #2124）
+Rack::Attack.throttle('units_random/ip', limit: 30, period: 60) do |req|
+  req.ip if req.path == '/units/random'
+end
+
 # /people, /units の q・tag_ids 絞り込みリクエストか判定する
 # tag_ids は組み合わせが事実上無限大になり、ILIKE 全文検索と合わさって重いクエリになる
 people_units_filter_request = lambda do |req|
