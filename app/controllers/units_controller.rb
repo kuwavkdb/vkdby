@@ -52,11 +52,4 @@ class UnitsController < ApplicationController
                 .map { |name, name_kana, key| { name:, name_kana:, key: } }
     render json: units
   end
-
-  def show
-    @unit = Unit.publicly_visible.find_by!(key: params[:key])
-    render json: @unit
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Unit not found' }, status: :not_found
-  end
 end

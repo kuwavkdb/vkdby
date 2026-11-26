@@ -340,4 +340,18 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest # rubocop:disable M
     assert_response :success
     assert_includes response.parsed_body.pluck('name'), 'HiraganaPeopleIndex'
   end
+
+  # issue #2114: レコードをJSONで返していた /people/:key は廃止した（/people/:key/units は残す）
+  test '/people/:key is not routed' do
+    Person.create!(name: 'No Json Person', key: 'no-json-person', status: :active, note: 'internal memo')
+
+    get '/people/no-json-person', headers: { 'Accept' => 'application/json' }
+
+    assert_response :not_found
+    assert_not_includes response.body, 'internal memo'
+
+    get units_person_path('no-json-person')
+
+    assert_response :success
+  end
 end
