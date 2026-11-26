@@ -64,7 +64,7 @@ class UnitsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # issue #1764
-  test 'index, search and show exclude provisional units' do
+  test 'index and search exclude provisional units' do
     Unit.create!(name: 'Hidden Provisional Band', name_kana: 'ヒドゥン', key: 'hidden-provisional-band', provisional: true)
 
     get units_path(q: 'Hidden Provisional')
@@ -72,9 +72,16 @@ class UnitsControllerTest < ActionDispatch::IntegrationTest
 
     get search_units_path(q: 'Hidden Provisional')
     assert_empty response.parsed_body
+  end
 
-    get unit_path('hidden-provisional-band', format: :json)
+  # issue #2114: レコードをJSONで返していた /units/:key は廃止した
+  test '/units/:key is not routed' do
+    Unit.create!(name: 'No Json Unit', key: 'no-json-unit', note: 'internal memo')
+
+    get '/units/no-json-unit', headers: { 'Accept' => 'application/json' }
+
     assert_response :not_found
+    assert_not_includes response.body, 'internal memo'
   end
 
   # issue #1855: 一覧ページの検索は名前系の列だけを探す。セクション名・メンバー名で探すのは /search だけ
