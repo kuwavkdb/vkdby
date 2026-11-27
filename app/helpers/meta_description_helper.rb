@@ -9,7 +9,8 @@ module MetaDescriptionHelper
   # etc（関係者など）は「〇〇はetc.。」のように文にならないため入れず、パートなしと同じ文にする（issue #2039）
   PART_NAMES = {
     'vocal' => 'ボーカル', 'guitar' => 'ギター', 'bass' => 'ベース', 'drums' => 'ドラム', 'keyboard' => 'キーボード',
-    'dj' => 'DJ', 'dancer' => 'ダンサー', 'manipulator' => 'マニピュレーター'
+    'piano' => 'ピアノ', 'violin' => 'ヴァイオリン',
+    'dj' => 'DJ', 'dancer' => 'ダンサー', 'performer' => 'パフォーマー', 'manipulator' => 'マニピュレーター'
   }.freeze
 
   # ユニットのページ。例:
