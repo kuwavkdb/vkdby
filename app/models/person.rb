@@ -56,7 +56,7 @@ class Person < ApplicationRecord
   enum :status, { pre: 0, active: 1, free: 2, hiatus: 3, retirement: 90, passed_away: 98, unknown: 99 }
 
   # Valid parts for a person
-  AVAILABLE_PARTS = %w[vocal guitar bass drums keyboard violin piano dj dancer manipulator etc].freeze
+  AVAILABLE_PARTS = %w[vocal guitar bass drums keyboard piano violin dj dancer performer manipulator etc].freeze
 
   # パートの表示名で、先頭だけ大文字にしない特別な表記（issue #2039）。DJ は略語なのですべて大文字、
   # etc（関係者など、演奏パートに当てはまらない人）は「etc.」にする
