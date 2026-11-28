@@ -59,8 +59,10 @@ class Person < ApplicationRecord
   AVAILABLE_PARTS = %w[vocal guitar bass drums keyboard piano violin dj dancer performer manipulator etc].freeze
 
   # パートの表示名で、先頭だけ大文字にしない特別な表記（issue #2039）。DJ は略語なのですべて大文字、
-  # etc（関係者など、演奏パートに当てはまらない人）は「etc.」にする
-  PART_LABELS = { 'dj' => 'DJ', 'etc' => 'etc.' }.freeze
+  # etc（演奏パートに当てはまらない人）は「etc.」にする。
+  # staff（マネージャー・ローディなどの関係者。issue #2108）はメンバー（SnapshotPerson など）だけのパートで、
+  # AVAILABLE_PARTS には入れない
+  PART_LABELS = { 'dj' => 'DJ', 'etc' => 'etc.', 'staff' => '関係者' }.freeze
 
   # パートの表示名。Person#parts と、メンバー（SnapshotPerson など）の part の両方に使う。
   # 特別な表記が無いパートは先頭だけ大文字にする（"vocal" → "Vocal"）
