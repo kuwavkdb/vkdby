@@ -1,0 +1,8 @@
+<%# パートの選択肢1つぶん（アイコン + パート名のタイル）。issue #2144 %>
+<%# input: ラジオボタンまたはチェックボックス。選ばれるとタイルの枠と背景が変わる %>
+<%# アイコンの無いパートは、パート名の文字だけを出す %>
+<label class="group inline-flex cursor-pointer items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-50 has-checked:border-indigo-600 has-checked:bg-indigo-50 has-checked:text-indigo-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 dark:has-checked:border-indigo-400 dark:has-checked:bg-indigo-950 dark:has-checked:text-white">
+  <%= input %>
+  <%= part_icon(part, css_class: "h-5 w-5 shrink-0 text-gray-500 group-has-checked:text-indigo-600 dark:text-gray-400 dark:group-has-checked:text-indigo-300") %>
+  <span><%= Person.part_label(part) %></span>
+</label>

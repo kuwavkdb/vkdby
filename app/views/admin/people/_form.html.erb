@@ -181,12 +181,10 @@
 
     <div class="mb-6 break-inside-avoid">
       <label class="block text-sm font-semibold text-gray-900 dark:text-gray-100">パート</label>
-      <div class="mt-2 flex flex-wrap gap-4">
+      <div class="mt-2 flex flex-wrap gap-2">
         <% Person::AVAILABLE_PARTS.each do |part| %>
-          <label class="inline-flex items-center">
-            <%= form.check_box :parts, { multiple: true, class: "form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" }, part, nil %>
-            <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"><%= Person.part_label(part) %></span>
-          </label>
+          <%= render "admin/shared/part_option", part:,
+                input: form.check_box(:parts, { multiple: true, class: "form-checkbox text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600" }, part, nil) %>
         <% end %>
       </div>
     </div>
