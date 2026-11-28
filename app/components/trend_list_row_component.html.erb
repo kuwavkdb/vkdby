@@ -12,7 +12,7 @@
       <div class="grow">
         <p class="font-bold text-slate-500">
           <% lead_badges.each do |name| %>
-            <span class="px-1.5 py-0.5 rounded text-[11px] align-middle bg-slate-100 dark:bg-slate-800 text-slate-500"><%= name %></span>
+            <span class="px-1.5 py-0.5 rounded text-xs align-middle bg-slate-100 dark:bg-slate-800 text-slate-500"><%= name %></span>
           <% end %>
           <% if unpublished? %><span class="sr-only">（未公開）</span><% end %>
           <%= format_wiki_title(@trend.title, link: false) %>
@@ -29,7 +29,7 @@
       <div class="grow">
         <p class="font-bold text-indigo-700 dark:text-amber-400 underline decoration-indigo-600/25 dark:decoration-amber-400/40 underline-offset-2 group-hover:decoration-indigo-600 dark:group-hover:decoration-amber-400 transition-colors">
           <% lead_badges.each do |name| %>
-            <span class="px-1.5 py-0.5 rounded text-[11px] align-middle bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 no-underline"><%= name %></span>
+            <span class="px-1.5 py-0.5 rounded text-xs align-middle bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 no-underline"><%= name %></span>
           <% end %>
           <% if unpublished? %><span class="sr-only">（未公開）</span><% end %>
           <%= format_wiki_title(@trend.title, link: false) %>

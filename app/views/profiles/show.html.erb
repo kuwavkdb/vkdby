@@ -210,7 +210,7 @@
 
           <% if @resource.is_a?(Person) && @trends.present? %>
             <div id="trends">
-              <%= render UnitTrendsComponent.new(trends: @trends) %>
+              <%= render UnitTrendsComponent.new(trends: @trends, resource: @resource, related_units: @trend_related_units) %>
             </div>
 
             <div class="mt-4 flex flex-wrap gap-3">
