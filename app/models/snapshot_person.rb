@@ -54,7 +54,10 @@ class SnapshotPerson < ApplicationRecord # rubocop:disable Metrics/ClassLength
   belongs_to :person, optional: true
 
   enum :status, { undefined: 0, active: 1, pending: 2, left: 3, concerned: 4, pre: 5 }
-  enum :part, { vocal: 0, guitar: 1, bass: 2, drums: 3, keyboard: 4, dj: 5, manipulator: 6, etc: 7, staff: 8, unknown: 99 }
+  # 個人のパート（Person::AVAILABLE_PARTS）にあるものは、ここにもそろえる（issue #2143）。staff・unknown はメンバーだけ。
+  # 管理画面の選択欄はハッシュの順に並ぶため、数値の順ではなく個人と同じ並びで書く。既存の数値は変えない
+  enum :part, { vocal: 0, guitar: 1, bass: 2, drums: 3, keyboard: 4, piano: 9, violin: 10,
+                dj: 5, dancer: 11, performer: 12, manipulator: 6, etc: 7, staff: 8, unknown: 99 }
 
   validates :status, presence: true
   validates :part, presence: true

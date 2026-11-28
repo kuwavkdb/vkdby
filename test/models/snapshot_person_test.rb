@@ -191,6 +191,20 @@ class SnapshotPersonTest < ActiveSupport::TestCase # rubocop:disable Metrics/Cla
     assert_equal [], SnapshotPerson.new(person_name: 'Unknown Guy', part: :unknown).build_person_for_independence.parts
   end
 
+  # issue #2143: メンバーだけのパート（staff・unknown）を除き、個人のパートとそろえておく。どちらかだけに足して食い違わないようにする
+  test 'メンバーのパートは staff・unknown を除いて個人のパートと同じで、並びも同じ' do
+    member_parts = SnapshotPerson.parts.keys - %w[staff unknown]
+
+    assert_equal Person::AVAILABLE_PARTS, member_parts
+    assert_equal SnapshotPerson.parts, TemporarySnapshotPerson.parts
+  end
+
+  test 'build_person_for_independence は piano・violin・dancer・performer を引き継ぐ（issue #2143）' do
+    %w[piano violin dancer performer].each do |part|
+      assert_equal [part], SnapshotPerson.new(person_name: 'Part Guy', part:).build_person_for_independence.parts
+    end
+  end
+
   test 'build_person_for_independence はパートの staff（関係者）を引き継がない（issue #2108）' do
     assert_equal [], SnapshotPerson.new(person_name: 'Staff Guy', part: :staff).build_person_for_independence.parts
   end
