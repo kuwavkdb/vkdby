@@ -18,6 +18,25 @@ module Admin
       assert_select 'div.max-w-2xl', count: 0
     end
 
+    # issue #2146: 左右の段（4:6）に入る項目を固定する
+    test 'edit places basic fields in the left column and status, parts and long texts in the right column' do
+      get edit_admin_person_path(@person)
+
+      assert_response :success
+      assert_select '[data-widen-on-focus-boundary].lg\\:grid > div', count: 2
+      assert_select '[data-widen-on-focus-boundary] > div:first-child' do
+        assert_select 'input[name=?]', 'person[name]'
+        assert_select 'input[name=?]', 'person[status]', count: 0
+        assert_select 'input[name=?]', 'person[parts][]', count: 0
+      end
+      assert_select '[data-widen-on-focus-boundary] > div:last-child' do
+        assert_select 'input[type=radio][name=?]', 'person[status]', count: Person.statuses.size
+        assert_select 'input[name=?]', 'person[parts][]', count: Person::AVAILABLE_PARTS.size
+        assert_select 'textarea[name=?]', 'person[old_history]'
+        assert_select 'textarea[name=?]', 'person[note]'
+      end
+    end
+
     # issue #2144: パートの選択肢は、アイコンとパート名のタイルにする
     test 'edit renders part options as tiles with an icon and the part name' do
       get edit_admin_person_path(@person)
