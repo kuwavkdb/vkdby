@@ -256,6 +256,20 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'Old Trend Unit Name'
   end
 
+  # issue #2149: 個人ページの動向では、件名の前にユニット名を出す
+  test 'person trend list shows the unit name of the trend' do
+    person = Person.create!(name: 'Trend Badge Person', key: 'person-trend-unit-badge', status: :active)
+    unit = Unit.create!(name: 'Person Trend Badge Unit', key: 'person-trend-unit-badge-unit', status: :active)
+    Trend.create!(title: 'Person trend with unit', date: Date.current, publish_start_at: Time.current,
+                  unit_phenomenon: :other, units: [{ 'unit_id' => unit.id }],
+                  people: [{ 'person_id' => person.id, 'name' => 'Trend Badge Person' }])
+
+    get profile_path(person.key)
+
+    assert_response :success
+    assert_select '#trends span', text: 'Person Trend Badge Unit'
+  end
+
   test 'unit trend list hides unpublished and scheduled trends from a guest but shows them to an admin (issue #1891)' do
     unit = Unit.create!(name: 'Trend Visibility Unit', key: 'unit-trend-visibility', status: :active)
     units = [{ 'unit_id' => unit.id, 'name' => unit.name }]

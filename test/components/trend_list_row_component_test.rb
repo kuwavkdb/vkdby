@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-class TrendListRowComponentTest < ActiveSupport::TestCase
+class TrendListRowComponentTest < ActiveSupport::TestCase # rubocop:disable Metrics/ClassLength
   include ViewComponent::TestHelpers
 
   test 'unit_badges is empty when resource is not given' do
@@ -118,5 +118,29 @@ class TrendListRowComponentTest < ActiveSupport::TestCase
                           unit_phenomenon: :other, units: [{ 'unit_id' => unit.id, 'name' => 'Old Name' }])
 
     assert_equal ['Old Name'], TrendListRowComponent.new(trend: trend, resource: unit, related_units: { unit.id => unit }).lead_badges
+  end
+
+  # issue #2149: 個人のページでは、動向に設定されたユニットの名前をすべて出す
+  test 'unit_badges on a person page lists every unit of the trend' do
+    person = Person.create!(name: '個人B', key: 'trend-row-person-page', status: :active)
+    unit = Unit.create!(name: 'Current Unit', key: 'trend-row-person-page-unit', status: :active)
+    other_unit = Unit.create!(name: 'Other Current', key: 'trend-row-person-page-other', status: :active)
+    trend = Trend.create!(title: 'Trend', date: Date.current, publish_start_at: Time.current, unit_phenomenon: :other,
+                          units: [{ 'unit_id' => unit.id, 'name' => 'Old Name' }, { 'unit_id' => other_unit.id }],
+                          people: [{ 'person_id' => person.id, 'name' => '個人B' }])
+
+    component = TrendListRowComponent.new(trend: trend, resource: person,
+                                          related_units: { unit.id => unit, other_unit.id => other_unit })
+
+    assert_equal ['Old Name', 'Other Current'], component.unit_badges
+    assert_equal ['Old Name', 'Other Current'], component.lead_badges
+  end
+
+  test 'unit_badges on a person page is empty when the trend has no unit' do
+    person = Person.create!(name: '個人C', key: 'trend-row-person-page-no-unit', status: :active)
+    trend = Trend.create!(title: 'Trend', date: Date.current, publish_start_at: Time.current, etc_phenomenon: :other,
+                          people: [{ 'person_id' => person.id, 'name' => '個人C' }])
+
+    assert_empty TrendListRowComponent.new(trend: trend, resource: person).unit_badges
   end
 end
