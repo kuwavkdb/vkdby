@@ -8,14 +8,14 @@ class UnitMetaDescriptionTest < ActionDispatch::IntegrationTest
     css_select('meta[name="description"]').first['content']
   end
 
-  test '解散したバンドは結成年・解散年と最終メンバーを書き、サポート・脱退者は含めない' do
+  test '解散したバンドは結成年・解散年と最終メンバーを書き、サポート・関係者は含めない' do
     unit = Unit.create!(name: 'Meta Band', name_kana: 'メタバンド', key: 'meta-band', status: :disbanded, unit_type: :band,
                         activity_period: [{ 'from' => '2012/04/**', 'to' => '2014/**/**' },
                                           { 'from' => '2016/01/01', 'to' => '2018/12/24' }])
     snapshot = unit.unit_snapshots.create!(snapshot_date: Date.new(2018, 1, 1), current: true)
     snapshot.snapshot_people.create!(person_name: 'ボーカル', part: :vocal, sort_order: 1)
     snapshot.snapshot_people.create!(person_name: 'ギター', part: :guitar, sort_order: 2)
-    snapshot.snapshot_people.create!(person_name: '脱退者', part: :bass, status: :left, sort_order: 3)
+    snapshot.snapshot_people.create!(person_name: '関係者', part: :staff, sort_order: 3)
     snapshot.snapshot_people.create!(person_name: 'サポート', part: :drums, support: true, sort_order: 4)
 
     get profile_path(unit.key)

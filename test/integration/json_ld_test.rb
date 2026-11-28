@@ -92,7 +92,7 @@ class JsonLdTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/Cla
     snapshot = unit.unit_snapshots.create!(snapshot_date: Date.new(2020, 1, 1), current: true)
     snapshot.snapshot_people.create!(person: vocal, part: :vocal, sort_order: 1)
     snapshot.snapshot_people.create!(person_name: 'ページのないメンバー', part: :guitar, sort_order: 2)
-    snapshot.snapshot_people.create!(person_name: '脱退したメンバー', part: :bass, status: :left, sort_order: 3)
+    snapshot.snapshot_people.create!(person_name: '関係者', part: :staff, sort_order: 3)
     snapshot.snapshot_people.create!(person_name: 'サポートメンバー', part: :drums, support: true, sort_order: 4)
 
     get profile_path(unit.key)
@@ -128,9 +128,9 @@ class JsonLdTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/Cla
     current_unit = Unit.create!(name: 'JsonLd Current Unit', key: 'json-ld-current-unit', status: :active)
     current_unit.unit_snapshots.create!(snapshot_date: Date.current, current: true)
                 .snapshot_people.create!(person: person, part: :vocal, sort_order: 1)
-    left_unit = Unit.create!(name: 'JsonLd Left Unit', key: 'json-ld-left-unit', status: :active)
-    left_unit.unit_snapshots.create!(snapshot_date: Date.current, current: true)
-             .snapshot_people.create!(person: person, part: :vocal, status: :left, sort_order: 1)
+    staff_unit = Unit.create!(name: 'JsonLd Staff Unit', key: 'json-ld-staff-unit', status: :active)
+    staff_unit.unit_snapshots.create!(snapshot_date: Date.current, current: true)
+              .snapshot_people.create!(person: person, part: :staff, sort_order: 1)
 
     get profile_path(person.key)
 

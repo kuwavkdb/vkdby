@@ -109,7 +109,6 @@ module Admin
         person_name: form_value_or_pool(:person_name),
         part: params[:part].presence || @temporary_snapshot_person.part,
         part_alias: form_value_or_pool(:part_alias),
-        status: params[:status].presence || @temporary_snapshot_person.status,
         support: ActiveModel::Type::Boolean.new.cast(params[:support]) || false,
         sns: @temporary_snapshot_person.sns,
         inline_history: @temporary_snapshot_person.inline_history

@@ -90,6 +90,11 @@ class ProfilesController < ApplicationController
   # 非公開・公開予定の動向（issue #1891）は admin のみ閲覧できる（TrendsController と同じ）
   def viewable_trends = current_user&.admin? ? Trend.all : Trend.published
 
+  # 動向に設定されたユニットを、id から引けるようにまとめて取る（ユニット・個人のページで共通）
+  def trend_related_units(trends)
+    viewable_units.where(id: trends.flat_map { |t| t.units&.pluck('unit_id') }.compact.uniq).index_by(&:id)
+  end
+
   def load_person_data
     @old_history_items = @resource.parse_old_history
     # 経歴欄には、ステータスから状態の行を補ったものを出す（issue #1992）。meta description は補う前のものを使う
@@ -97,6 +102,8 @@ class ProfilesController < ApplicationController
 
     @trends = viewable_trends.where('people @> ?', [{ person_id: @resource.id }].to_json)
                              .order(date: :desc).limit(10)
+    # 動向の件名の前に出すユニット名のため、動向に設定されたユニットをまとめて引く（issue #2149）
+    @trend_related_units = trend_related_units(@trends)
   end
 
   def load_unit_data
@@ -105,8 +112,7 @@ class ProfilesController < ApplicationController
     @trends = viewable_trends.where('units @> ?', [{ unit_id: @resource.id }].to_json)
                              .order(date: :desc).limit(10)
 
-    trend_unit_ids = @trends.flat_map { |t| t.units&.map { |u| u['unit_id'] } }.compact.uniq
-    @trend_related_units = viewable_units.where(id: trend_unit_ids).index_by(&:id)
+    @trend_related_units = trend_related_units(@trends)
 
     @snapshots = @resource.unit_snapshots
                           .active

@@ -6,7 +6,7 @@
 module PersonMembershipSummary
   extend ActiveSupport::Concern
 
-  # 今在籍しているユニット（「現在」のスナップショットの在籍メンバー。サポート・関係者は除く）。
+  # 今在籍しているユニット（「現在」のスナップショットの在籍メンバー。サポート・関係者（パート staff。issue #2108）は除く）。
   # 解散・移行（別ユニットとして活動を継続。issue #1996）したユニットは「現在」のスナップショットが残っていても含めない。
   # 引退した人は、「現在」のスナップショットに在籍として残っていても今の所属は無いものとする
   # 死去した人は最後に在籍したユニットをそのまま返す。
@@ -14,7 +14,7 @@ module PersonMembershipSummary
   def current_units
     return [] if retirement?
 
-    membership_snapshot_people.where(status: :active)
+    membership_snapshot_people.where.not(part: :staff)
                               .where(unit_snapshots: { current: true })
                               .where(unit_snapshots: { unit_id: Unit.where.not(status: %i[disbanded transitioned]).select(:id) })
                               .order('unit_snapshots.unit_id')

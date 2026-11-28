@@ -324,6 +324,20 @@ module Admin
       assert_includes response.body, '出身地「東京都」'
     end
 
+    # issue #2144: パートの選択肢は、アイコンとパート名のタイルにする
+    test 'renders part options as tiles with an icon and the part name' do
+      sp = snapshot_people(:one)
+
+      get edit_admin_unit_unit_snapshot_snapshot_person_path(@unit, sp.unit_snapshot, sp)
+
+      assert_response :success
+      assert_select 'input[type=radio][name=?]', 'snapshot_person[part]', count: SnapshotPerson.parts.size
+      assert_select 'label:has(input[type=radio][value=guitar])' do
+        assert_select 'svg[aria-hidden="true"]', count: 1
+        assert_select 'span', text: 'Guitar'
+      end
+    end
+
     test 'renders edit form with single unified name field' do
       sp = snapshot_people(:one)
 

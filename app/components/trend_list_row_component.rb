@@ -32,10 +32,13 @@ class TrendListRowComponent < ViewComponent::Base
     end
   end
 
-  # 自ユニット（resource）が動向登録時点で現在と異なる名前で登録されている場合のみ、
+  # 個人のページ（resource が Person）では、動向に設定されたユニットの名前をすべてバッジ表示する（issue #2149）。
+  # ユニットのページでは、自ユニット（resource）が動向登録時点で現在と異なる名前で登録されている場合のみ、
   # その別名をバッジ表示する。他ユニットが併記されている動向でも他ユニット名は表示しない（issue #1658）
   def unit_badges
-    return [] unless @resource.is_a?(Unit) && @trend.units.present?
+    return [] if @trend.units.blank?
+    return person_page_unit_badges if @resource.is_a?(Person)
+    return [] unless @resource.is_a?(Unit)
 
     unit_data = @trend.units.find { |data| data['unit_id'] == @resource.id }
     return [] if unit_data.nil?
@@ -44,5 +47,14 @@ class TrendListRowComponent < ViewComponent::Base
     return [] if display_name.blank? || display_name == @resource.name
 
     [display_name]
+  end
+
+  private
+
+  # 名前は動向に保存された登録時の名前を優先し、無ければ今のユニット名（related_units から引く）
+  def person_page_unit_badges
+    @trend.units.filter_map do |unit_data|
+      trend_unit_display_name(unit_data, @related_units[unit_data['unit_id']]).presence
+    end.uniq
   end
 end

@@ -54,7 +54,10 @@ class SnapshotPerson < ApplicationRecord # rubocop:disable Metrics/ClassLength
   belongs_to :person, optional: true
 
   enum :status, { undefined: 0, active: 1, pending: 2, left: 3, concerned: 4, pre: 5 }
-  enum :part, { vocal: 0, guitar: 1, bass: 2, drums: 3, keyboard: 4, dj: 5, manipulator: 6, etc: 7, unknown: 99 }
+  # 個人のパート（Person::AVAILABLE_PARTS）にあるものは、ここにもそろえる（issue #2143）。staff・unknown はメンバーだけ。
+  # 管理画面の選択欄はハッシュの順に並ぶため、数値の順ではなく個人と同じ並びで書く。既存の数値は変えない
+  enum :part, { vocal: 0, guitar: 1, bass: 2, drums: 3, keyboard: 4, piano: 9, violin: 10,
+                dj: 5, dancer: 11, performer: 12, manipulator: 6, etc: 7, staff: 8, unknown: 99 }
 
   validates :status, presence: true
   validates :part, presence: true
@@ -230,10 +233,11 @@ class SnapshotPerson < ApplicationRecord # rubocop:disable Metrics/ClassLength
   # Person未紐付けのこのメンバーを、Personとして独立させる（issue #1596で追加されたcreate_person
   # アクションが呼ぶ）。name / key / parts / old_history に加え、extra_profile_person_attributes を
   # 通じて誕生日等の下書き情報も引き継ぐ（issue #1619）。sns は Person#links として引き継ぎ、
-  # Person の保存と同時に作成される（issue #1653）。
+  # Person の保存と同時に作成される（issue #1653）。パート unknown と staff（関係者。issue #2108）は
+  # Person のパートに無いため引き継がない。
   def build_person_for_independence
     person = Person.new({ name: person_name, key: person_key,
-                          parts: part == 'unknown' ? [] : [part],
+                          parts: %w[unknown staff].include?(part) ? [] : [part],
                           old_history: inline_history }
                          .merge(extra_profile_person_attributes))
     sns_link_attributes.each { |attrs| person.links.build(attrs) }

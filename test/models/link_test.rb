@@ -87,6 +87,26 @@ class LinkTest < ActiveSupport::TestCase
     assert_equal({ platform: 'YouTube', account: 'nonameactorsjp' }, link.sns_info)
   end
 
+  # issue #2141: 日本語のチャンネル名は符号化されたまま保存されているので、表示用に元の文字へ戻す
+  test 'sns_info decodes a percent-encoded YouTube handle' do
+    link = Link.new(url: 'https://www.youtube.com/@%E3%83%8D%E3%82%AA%E5%AF%86%E5%AE%A4%E7%B3%BB%E3%83%90%E3%83%B3%E3%83%89%E3%81%AE%E3%82%AB%E3%83%AA%E3%82%BD%E3%83%A1%E3%81%A7%E3%81%99')
+
+    assert_equal({ platform: 'YouTube', account: 'ネオ密室系バンドのカリソメです' }, link.sns_info)
+    assert_equal 'YouTube (ネオ密室系バンドのカリソメです)', link.display_text
+  end
+
+  test 'sns_info keeps a plus sign in the account name' do
+    link = Link.new(url: 'https://www.youtube.com/@a+b')
+
+    assert_equal 'a+b', link.sns_info[:account]
+  end
+
+  test 'sns_info keeps the raw account name when it does not decode to valid UTF-8' do
+    link = Link.new(url: 'https://www.youtube.com/@%FF%FE')
+
+    assert_equal '%FF%FE', link.sns_info[:account]
+  end
+
   test 'sns_info detects a YouTube channel URL with /c/ path' do
     link = Link.new(url: 'https://youtube.com/c/nonameactorsjp')
 

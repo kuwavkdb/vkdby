@@ -71,12 +71,10 @@
 
     <fieldset class="col-span-6">
       <legend class="block text-sm font-semibold text-gray-900 dark:text-gray-100">パート</legend>
-      <div class="mt-2 flex flex-wrap gap-x-4 gap-y-2">
+      <div class="mt-2 flex flex-wrap gap-2">
         <% SnapshotPerson.parts.each_key do |k| %>
-          <label class="inline-flex items-center">
-            <%= form.radio_button :part, k %>
-            <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"><%= Person.part_label(k) %></span>
-          </label>
+          <%= render "admin/shared/part_option", part: k,
+                input: form.radio_button(:part, k, class: "form-radio text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:bg-gray-700 dark:border-gray-600") %>
         <% end %>
       </div>
     </fieldset>
