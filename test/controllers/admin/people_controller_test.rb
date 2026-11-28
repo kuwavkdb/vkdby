@@ -14,8 +14,20 @@ module Admin
       get new_admin_person_path
 
       assert_response :success
-      assert_select 'div.max-w-7xl form'
+      assert_select 'div.max-w-\[88rem\] form'
       assert_select 'div.max-w-2xl', count: 0
+    end
+
+    # issue #2144: パートの選択肢は、アイコンとパート名のタイルにする
+    test 'edit renders part options as tiles with an icon and the part name' do
+      get edit_admin_person_path(@person)
+
+      assert_response :success
+      assert_select 'input[type=checkbox][name=?]', 'person[parts][]', count: Person::AVAILABLE_PARTS.size
+      assert_select 'label:has(input[type=checkbox][value=dj])' do
+        assert_select 'svg[aria-hidden="true"]', count: 1
+        assert_select 'span', text: 'DJ'
+      end
     end
 
     test 'search finds a person whose name is half-width when queried with full-width alphanumerics' do
