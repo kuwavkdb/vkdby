@@ -61,13 +61,13 @@ class Link < ApplicationRecord
 
     case url
     when %r{twitter\.com/([^/?]+)}, %r{x\.com/([^/?]+)}
-      { platform: 'Twitter', account: "@#{::Regexp.last_match(1)}" }
+      { platform: 'Twitter', account: "@#{decode_account(::Regexp.last_match(1))}" }
     when %r{instagram\.com/([^/?]+)}
-      { platform: 'Instagram', account: ::Regexp.last_match(1) }
+      { platform: 'Instagram', account: decode_account(::Regexp.last_match(1)) }
     when %r{youtube\.com/@([^/?]+)}, %r{youtube\.com/c/([^/?]+)}
-      { platform: 'YouTube', account: ::Regexp.last_match(1) }
+      { platform: 'YouTube', account: decode_account(::Regexp.last_match(1)) }
     when %r{tiktok\.com/@([^/?]+)}
-      { platform: 'TikTok', account: "@#{::Regexp.last_match(1)}" }
+      { platform: 'TikTok', account: "@#{decode_account(::Regexp.last_match(1))}" }
     when %r{open\.spotify\.com/(?:intl-[a-zA-Z-]+/)?artist/([a-zA-Z0-9]+)}
       { platform: 'Spotify', account: ::Regexp.last_match(1) }
     end
@@ -83,5 +83,18 @@ class Link < ApplicationRecord
     URI.parse(url).host || url
   rescue URI::InvalidURIError
     url
+  end
+
+  private
+
+  # URL から取り出したアカウント名を、表示用に元の文字へ戻す（issue #2141）。
+  # 日本語のチャンネル名などは %E3%83%8D... のように符号化されて保存されているため、そのままだと読めない。
+  # URI.decode_uri_component は CGI.unescape と違い「+」を空白に変えない。戻した結果が正しい UTF-8 で
+  # なければ（符号化の誤りなど）、元の文字のまま返す
+  def decode_account(account)
+    decoded = URI.decode_uri_component(account).force_encoding(Encoding::UTF_8)
+    decoded.valid_encoding? ? decoded : account
+  rescue ArgumentError
+    account
   end
 end
